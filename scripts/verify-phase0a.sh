@@ -12,7 +12,13 @@ xcrun swift --version
 
 python3 scripts/check-phase0a-surface.py
 xcrun swift-format lint --strict -r Sources Tests Package.swift
+
+rm -rf .artifacts/benchmarks
+mkdir -p .artifacts/benchmarks
+FOVEA_BENCHMARK_OUTPUT_DIR="$ROOT/.artifacts/benchmarks" \
+FOVEA_VERIFIED_COMMIT="$(git rev-parse HEAD 2>/dev/null || printf unverified-local)" \
 xcrun swift test
+python3 scripts/validate-benchmark-artifacts.py .artifacts/benchmarks/*.json
 
 if [ "${RUN_IOS_SIMULATOR:-1}" = "1" ]; then
     simulator_id=$(python3 scripts/select-ios-simulator.py)

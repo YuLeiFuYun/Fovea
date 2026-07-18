@@ -41,7 +41,8 @@ let package = Package(
       dependencies: [
         "ImageCraftCore", "AkashicCore", "AkashicMemory", "AkashicDisk",
         "FoveaHTTP", "FoveaCore",
-      ]
+      ],
+      resources: [.process("Fixtures")]
     ),
     .testTarget(
       name: "FoveaPhase0aTests",

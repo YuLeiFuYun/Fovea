@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fovea.invalid/schemas/benchmark-smoke-artifact.schema.json",
+  "title": "Fovea Phase 0a Benchmark Smoke Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workloadID",
+    "profileID",
+    "generatedAt",
+    "platform",
+    "architecture",
+    "operatingSystem",
+    "verifiedCommit",
+    "datasetLogicalItemCount",
+    "uniqueResourceCount",
+    "cacheState",
+    "sources",
+    "targets",
+    "trace",
+    "diagnostics",
+    "summary"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "workloadID": { "type": "string", "minLength": 1 },
+    "profileID": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "platform": { "type": "string", "minLength": 1 },
+    "architecture": { "type": "string", "minLength": 1 },
+    "operatingSystem": { "type": "string", "minLength": 1 },
+    "verifiedCommit": { "type": "string", "minLength": 1 },
+    "datasetLogicalItemCount": { "type": "integer", "minimum": 1 },
+    "uniqueResourceCount": { "type": "integer", "minimum": 1 },
+    "cacheState": { "type": "string", "minLength": 1 },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["resourceID", "pixelWidth", "pixelHeight", "byteCount", "sha256"],
+        "properties": {
+          "resourceID": { "type": "string", "minLength": 1 },
+          "pixelWidth": { "type": "integer", "minimum": 1 },
+          "pixelHeight": { "type": "integer", "minimum": 1 },
+          "byteCount": { "type": "integer", "minimum": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["width", "height"],
+        "properties": {
+          "width": { "type": "integer", "minimum": 1 },
+          "height": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "trace": { "type": "array", "minItems": 1 },
+    "diagnostics": { "type": "array", "minItems": 1 },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attemptedLoads",
+        "completedLoads",
+        "cancelledLoads",
+        "failedLoads",
+        "decodedMegapixels",
+        "sourceMegapixelsObserved",
+        "networkRequestCount",
+        "networkBytes",
+        "duplicateRequestCount",
+        "singleFlightJoinCount",
+        "fetchCancellationCount",
+        "originalEncodedHitCount",
+        "renderedMemoryHitCount",
+        "droppedDiagnosticEventCount"
+      ],
+      "properties": {
+        "attemptedLoads": { "type": "integer", "minimum": 1 },
+        "completedLoads": { "type": "integer", "minimum": 0 },
+        "cancelledLoads": { "type": "integer", "minimum": 0 },
+        "failedLoads": { "type": "integer", "minimum": 0 },
+        "decodedMegapixels": { "type": "number", "minimum": 0 },
+        "sourceMegapixelsObserved": { "type": "number", "minimum": 0 },
+        "baselinePhysicalFootprintBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "peakPhysicalFootprintBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "physicalFootprintDeltaBytes": { "type": ["integer", "null"] },
+        "networkRequestCount": { "type": "integer", "minimum": 0 },
+        "networkBytes": { "type": "integer", "minimum": 0 },
+        "duplicateRequestCount": { "type": "integer", "minimum": 0 },
+        "singleFlightJoinCount": { "type": "integer", "minimum": 0 },
+        "fetchCancellationCount": { "type": "integer", "minimum": 0 },
+        "originalEncodedHitCount": { "type": "integer", "minimum": 0 },
+        "renderedMemoryHitCount": { "type": "integer", "minimum": 0 },
+        "droppedDiagnosticEventCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
