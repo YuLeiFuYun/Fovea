@@ -7,6 +7,7 @@ final class DecodeStage: Sendable {
   private let diagnostics: any DiagnosticsSink
   private let permits: AsyncPermitPool
   private let executor = DispatchWorkExecutor(label: "dev.fovea.decode")
+  private let registry = SharedTaskRegistry<ScopedDecodeKey, DecodedImage>()
 
   init(
     decoder: any ImageDecoding,
@@ -24,19 +25,89 @@ final class DecodeStage: Sendable {
     )
   }
 
+  func cancelAll(namespace: SecurityNamespaceID) async {
+    _ = await registry.cancelAll { $0.namespace == namespace }
+  }
+
   @concurrent
   func image(
     from data: Data,
+    contentID: ContentID,
     request: ImageRequest,
+    generation: NamespaceGeneration,
     keyDigest: String
+  ) async throws -> DecodedImage {
+    let decodeKey = DecodeKey(
+      contentID: contentID,
+      targetWidth: request.target.width,
+      targetHeight: request.target.height,
+      decoderVersion: 1
+    )
+    let scopedKey = ScopedDecodeKey(
+      namespace: request.namespace,
+      generation: generation,
+      decodeKey: decodeKey
+    )
+    let subscription = await registry.subscribe(
+      key: scopedKey,
+      priority: request.priority
+    ) { [self] priorityControl in
+      try await performDecode(
+        data: data,
+        request: request,
+        keyDigest: keyDigest,
+        priorityControl: priorityControl
+      )
+    }
+
+    if subscription.wasJoined {
+      await diagnostics.record(
+        DiagnosticEvent(
+          kind: .decodeJoined,
+          keyDigest: keyDigest,
+          requestedPriority: request.priority,
+          effectivePriority: await subscription.priorityControl.currentPriority()
+        )
+      )
+    }
+
+    return try await withTaskCancellationHandler {
+      do {
+        let image = try await subscription.value()
+        try Task.checkCancellation()
+        await subscription.cancel()
+        return image
+      } catch {
+        await subscription.cancel()
+        if error is CancellationError { throw PipelineFailure.cancelled(stage: .decode) }
+        throw error
+      }
+    } onCancel: {
+      Task { await subscription.cancel() }
+    }
+  }
+
+  private func performDecode(
+    data: Data,
+    request: ImageRequest,
+    keyDigest: String,
+    priorityControl: SharedTaskPriorityControl
   ) async throws -> DecodedImage {
     try Task.checkCancellation()
     await diagnostics.record(
-      DiagnosticEvent(kind: .decodeQueued, keyDigest: keyDigest)
+      DiagnosticEvent(
+        kind: .decodeQueued,
+        keyDigest: keyDigest,
+        requestedPriority: request.priority
+      )
     )
     let permit: AsyncPermitPool.Permit
     do {
-      permit = try await permits.acquire()
+      let initialPriority = await priorityControl.currentPriority()
+      permit = try await permits.acquire(
+        priority: initialPriority,
+        priorityUpdates: await priorityControl.updates()
+      )
     } catch is CancellationError {
       throw PipelineFailure.cancelled(stage: .decode)
     } catch PermitPoolError.queueLimitExceeded {
@@ -48,8 +119,14 @@ final class DecodeStage: Sendable {
       throw PipelineFailure.internalFailure(stage: .decode)
     }
 
+    let effectivePriority = await priorityControl.currentPriority()
     await diagnostics.record(
-      DiagnosticEvent(kind: .decodeStarted, keyDigest: keyDigest)
+      DiagnosticEvent(
+        kind: .decodeStarted,
+        keyDigest: keyDigest,
+        requestedPriority: request.priority,
+        effectivePriority: effectivePriority
+      )
     )
 
     let probe: ImageProbe

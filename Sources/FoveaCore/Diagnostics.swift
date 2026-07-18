@@ -10,6 +10,7 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
   case originalEncodedHit
   case renderedMemoryHit
   case decodeQueued
+  case decodeJoined
   case decodeStarted
   case decodeCompleted
   case cacheReadFailed
@@ -33,6 +34,8 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
   public let targetWidth: Int?
   public let targetHeight: Int?
   public let reason: String?
+  public let requestedPriority: ImageRequestPriority?
+  public let effectivePriority: ImageRequestPriority?
   public let failureCategory: PipelineFailure.Category?
   public let failureStage: PipelineFailure.Stage?
   public let failureDisposition: PipelineFailure.Disposition?
@@ -48,6 +51,8 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
     targetWidth: Int? = nil,
     targetHeight: Int? = nil,
     reason: String? = nil,
+    requestedPriority: ImageRequestPriority? = nil,
+    effectivePriority: ImageRequestPriority? = nil,
     failureCategory: PipelineFailure.Category? = nil,
     failureStage: PipelineFailure.Stage? = nil,
     failureDisposition: PipelineFailure.Disposition? = nil
@@ -62,6 +67,8 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
     self.targetWidth = targetWidth
     self.targetHeight = targetHeight
     self.reason = reason
+    self.requestedPriority = requestedPriority
+    self.effectivePriority = effectivePriority
     self.failureCategory = failureCategory
     self.failureStage = failureStage
     self.failureDisposition = failureDisposition
@@ -79,6 +86,8 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
       targetWidth: targetWidth,
       targetHeight: targetHeight,
       reason: reason,
+      requestedPriority: requestedPriority,
+      effectivePriority: effectivePriority,
       failureCategory: failureCategory,
       failureStage: failureStage,
       failureDisposition: failureDisposition

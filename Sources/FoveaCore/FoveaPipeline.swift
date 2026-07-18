@@ -100,6 +100,7 @@ public final class FoveaPipeline: Sendable {
   public func revoke(namespace: SecurityNamespaceID) async throws {
     _ = await namespaceRegistry.revoke(namespace)
     await fetchStage.cancelAll(namespace: namespace)
+    await decodeStage.cancelAll(namespace: namespace)
     let cleanupFailed = await cache.cleanup(namespace: namespace)
     await diagnostics.record(
       DiagnosticEvent(
@@ -261,7 +262,9 @@ public final class FoveaPipeline: Sendable {
       )
       let image = try await decodeStage.image(
         from: cachedData,
+        contentID: ContentID(data: cachedData),
         request: request,
+        generation: generation,
         keyDigest: existing.variantKeyDigest
       )
       try Task.checkCancellation()
@@ -343,12 +346,6 @@ public final class FoveaPipeline: Sendable {
     let variant = request.fetchVariantKey(
       for: varySelection ?? HTTPVarySelection(fieldNames: [], values: [:])
     )
-    let image = try await decodeStage.image(
-      from: response.transport.body,
-      request: request,
-      keyDigest: variant.digestHex
-    )
-    try Task.checkCancellation()
     let contentID: ContentID
     do {
       contentID = try ContentID(
@@ -358,6 +355,14 @@ public final class FoveaPipeline: Sendable {
     } catch {
       throw PipelineFailure.invalidContentDigest
     }
+    let image = try await decodeStage.image(
+      from: response.transport.body,
+      contentID: contentID,
+      request: request,
+      generation: generation,
+      keyDigest: variant.digestHex
+    )
+    try Task.checkCancellation()
     let disposition = HTTPCachePolicy.disposition(
       headers: response.head.headers,
       isPrivateNamespace: request.authorizationContext != .public,
@@ -437,7 +442,13 @@ public final class FoveaPipeline: Sendable {
       return cached
     }
 
-    let image = try await decodeStage.image(from: data, request: request, keyDigest: keyDigest)
+    let image = try await decodeStage.image(
+      from: data,
+      contentID: contentID,
+      request: request,
+      generation: generation,
+      keyDigest: keyDigest
+    )
     try Task.checkCancellation()
     try await requireActive(generation, for: request.namespace)
     await cache.insertRendered(image, for: key)

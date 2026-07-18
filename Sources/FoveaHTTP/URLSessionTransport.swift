@@ -50,6 +50,15 @@ public actor URLSessionTransport: HTTPTransporting {
       stagingDirectory: stagingDirectory
     )
     let task = session.dataTask(with: request.request)
+    task.priority = request.priority.urlSessionTaskValue
+    let priorityUpdates = await request.priorityController?.updates()
+    let priorityTask = priorityUpdates.map { updates in
+      Task { @concurrent in
+        for await priority in updates {
+          task.priority = priority.urlSessionTaskValue
+        }
+      }
+    }
     let events = await eventRouter.events(
       for: task.taskIdentifier,
       credentialHeaderNames: request.credentialHeaderNames
@@ -58,6 +67,7 @@ public actor URLSessionTransport: HTTPTransporting {
     return try await withTaskCancellationHandler {
       task.resume()
       defer {
+        priorityTask?.cancel()
         task.cancel()
         eventRouter.unregister(taskID: task.taskIdentifier)
       }
@@ -100,6 +110,7 @@ public actor URLSessionTransport: HTTPTransporting {
         metrics: staged.metrics
       )
     } onCancel: {
+      priorityTask?.cancel()
       task.cancel()
       eventRouter.unregister(taskID: task.taskIdentifier)
     }

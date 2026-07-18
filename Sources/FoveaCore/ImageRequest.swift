@@ -20,6 +20,7 @@ public struct ImageRequest: Sendable {
   public let namespace: SecurityNamespaceID
   public let authorizationContext: AuthorizationContextID
   public let credentialGeneration: CredentialGeneration?
+  public let priority: ImageRequestPriority
   public let headers: [String: String]
   public let credentialHeaderNames: Set<String>
   public let headerVariantFingerprints: [String: HeaderVariantFingerprint]
@@ -31,6 +32,7 @@ public struct ImageRequest: Sendable {
     namespace: SecurityNamespaceID,
     authorizationContext: AuthorizationContextID = .public,
     credentialGeneration: CredentialGeneration? = nil,
+    priority: ImageRequestPriority = .normal,
     headers: [String: String] = [:],
     credentialHeaderNames: Set<String> = [],
     headerVariantFingerprints: [String: HeaderVariantFingerprint] = [:]
@@ -51,6 +53,7 @@ public struct ImageRequest: Sendable {
     self.namespace = namespace
     self.authorizationContext = authorizationContext
     self.credentialGeneration = credentialGeneration
+    self.priority = priority
     self.headers = normalizedHeaders
     self.credentialHeaderNames = normalizedCredentialNames
     self.headerVariantFingerprints = normalizedFingerprints
@@ -60,13 +63,15 @@ public struct ImageRequest: Sendable {
     url: URL,
     logicalSource: LogicalSourceID? = nil,
     target: TargetPixels,
-    appID: String
+    appID: String,
+    priority: ImageRequestPriority = .normal
   ) throws -> Self {
     try ImageRequest(
       url: url,
       logicalSource: logicalSource,
       target: target,
-      namespace: .publicNamespace(appID: appID)
+      namespace: .publicNamespace(appID: appID),
+      priority: priority
     )
   }
 

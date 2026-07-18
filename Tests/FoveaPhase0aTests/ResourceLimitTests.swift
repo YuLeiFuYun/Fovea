@@ -30,7 +30,7 @@ final class ResourceLimitTests: XCTestCase {
         group.addTask {
           let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/fetch-\(index).png")),
-            target: try TargetPixels(width: 20, height: 20),
+            target: try TargetPixels(width: 20 + index, height: 20 + index),
             appID: "tests"
           )
           _ = try await pipeline.image(for: request)
@@ -195,7 +195,7 @@ final class ResourceLimitTests: XCTestCase {
         group.addTask {
           let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/decode-\(index).png")),
-            target: try TargetPixels(width: 20, height: 20),
+            target: try TargetPixels(width: 20 + index, height: 20 + index),
             appID: "tests"
           )
           _ = try await pipeline.image(for: request)

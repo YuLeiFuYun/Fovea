@@ -67,14 +67,25 @@ final class FetchStage: Sendable {
       execution: executionKey
     )
     let authorizedRequest = urlRequest
-    let subscription = await registry.subscribe(key: scopedKey) { [self] in
+    let subscription = await registry.subscribe(
+      key: scopedKey,
+      priority: request.priority
+    ) { [self] priorityControl in
       await diagnostics.record(
-        DiagnosticEvent(kind: .fetchQueued, keyDigest: executionKey.digestHex)
+        DiagnosticEvent(
+          kind: .fetchQueued,
+          keyDigest: executionKey.digestHex,
+          requestedPriority: request.priority
+        )
       )
       do {
         let permit: AsyncPermitPool.Permit
         do {
-          permit = try await permits.acquire()
+          let initialPriority = await priorityControl.currentPriority()
+          permit = try await permits.acquire(
+            priority: initialPriority,
+            priorityUpdates: await priorityControl.updates()
+          )
         } catch is CancellationError {
           throw PipelineFailure.cancelled(stage: .transport)
         } catch PermitPoolError.queueLimitExceeded {
@@ -83,10 +94,25 @@ final class FetchStage: Sendable {
             reasonCode: "fetch-queue-limit-exceeded"
           )
         }
+        let effectivePriority = await priorityControl.currentPriority()
         await diagnostics.record(
-          DiagnosticEvent(kind: .fetchStarted, keyDigest: executionKey.digestHex)
+          DiagnosticEvent(
+            kind: .fetchStarted,
+            keyDigest: executionKey.digestHex,
+            requestedPriority: request.priority,
+            effectivePriority: effectivePriority
+          )
         )
         let requestTime = await clock.now()
+        let transportPriority = TransportPriorityController(
+          priority: effectivePriority.transportPriority
+        )
+        let priorityPropagation = Task { @concurrent in
+          let updates = await priorityControl.updates()
+          for await priority in updates {
+            await transportPriority.update(priority.transportPriority)
+          }
+        }
         let transportResponse: TransportResponse
         do {
           transportResponse = try await transport.execute(
@@ -94,10 +120,14 @@ final class FetchStage: Sendable {
               request: authorizedRequest,
               maximumBytes: configuration.maximumTransportBytes,
               memoryThreshold: configuration.transportMemoryThreshold,
-              credentialHeaderNames: request.credentialHeaderNames
+              credentialHeaderNames: request.credentialHeaderNames,
+              priority: effectivePriority.transportPriority,
+              priorityController: transportPriority
             )
           )
           let responseTime = await clock.now()
+          priorityPropagation.cancel()
+          await transportPriority.finish()
           await permit.release()
           await diagnostics.record(
             DiagnosticEvent(
@@ -113,6 +143,8 @@ final class FetchStage: Sendable {
             transport: transportResponse
           )
         } catch {
+          priorityPropagation.cancel()
+          await transportPriority.finish()
           await permit.release()
           throw error
         }
@@ -130,7 +162,12 @@ final class FetchStage: Sendable {
 
     if subscription.wasJoined {
       await diagnostics.record(
-        DiagnosticEvent(kind: .fetchJoined, keyDigest: executionKey.digestHex)
+        DiagnosticEvent(
+          kind: .fetchJoined,
+          keyDigest: executionKey.digestHex,
+          requestedPriority: request.priority,
+          effectivePriority: await subscription.priorityControl.currentPriority()
+        )
       )
     }
 
@@ -158,5 +195,17 @@ final class FetchStage: Sendable {
     let etag = record.etag ?? ""
     let lastModified = record.lastModified ?? ""
     return Data("etag:\(etag)\u{0}last-modified:\(lastModified)".utf8).sha256Hex
+  }
+}
+
+extension ImageRequestPriority {
+  fileprivate var transportPriority: TransportPriority {
+    switch self {
+    case .background: .background
+    case .low: .low
+    case .normal: .normal
+    case .high: .high
+    case .userInitiated: .userInitiated
+    }
   }
 }

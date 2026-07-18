@@ -1,21 +1,108 @@
 import Foundation
 
+public enum TransportPriority: Int, CaseIterable, Codable, Hashable, Sendable, Comparable {
+  case background = 0
+  case low = 1
+  case normal = 2
+  case high = 3
+  case userInitiated = 4
+
+  public static func < (lhs: Self, rhs: Self) -> Bool {
+    lhs.rawValue < rhs.rawValue
+  }
+
+  package var urlSessionTaskValue: Float {
+    switch self {
+    case .background: URLSessionTask.lowPriority * 0.5
+    case .low: URLSessionTask.lowPriority
+    case .normal: URLSessionTask.defaultPriority
+    case .high: 0.75
+    case .userInitiated: URLSessionTask.highPriority
+    }
+  }
+}
+
+package actor TransportPriorityController {
+  private var priority: TransportPriority
+  private var continuations: [UUID: AsyncStream<TransportPriority>.Continuation] = [:]
+  private var isFinished = false
+
+  package init(priority: TransportPriority) {
+    self.priority = priority
+  }
+
+  package func updates() -> AsyncStream<TransportPriority> {
+    let identifier = UUID()
+    let stream = AsyncStream<TransportPriority>.makeStream(
+      bufferingPolicy: .bufferingNewest(1)
+    )
+    guard !isFinished else {
+      stream.continuation.finish()
+      return stream.stream
+    }
+    continuations[identifier] = stream.continuation
+    stream.continuation.yield(priority)
+    stream.continuation.onTermination = { [weak self] _ in
+      Task { await self?.removeContinuation(identifier) }
+    }
+    return stream.stream
+  }
+
+  package func update(_ newPriority: TransportPriority) {
+    guard !isFinished, newPriority != priority else { return }
+    priority = newPriority
+    for continuation in continuations.values { continuation.yield(newPriority) }
+  }
+
+  package func finish() {
+    guard !isFinished else { return }
+    isFinished = true
+    for continuation in continuations.values { continuation.finish() }
+    continuations.removeAll(keepingCapacity: false)
+  }
+
+  private func removeContinuation(_ identifier: UUID) {
+    continuations.removeValue(forKey: identifier)
+  }
+}
+
 public struct TransportRequest: Sendable {
   public let request: URLRequest
   public let maximumBytes: Int
   public let memoryThreshold: Int
   public let credentialHeaderNames: Set<String>
+  public let priority: TransportPriority
+  package let priorityController: TransportPriorityController?
 
   public init(
     request: URLRequest,
     maximumBytes: Int,
     memoryThreshold: Int = 512 * 1024,
-    credentialHeaderNames: Set<String> = []
+    credentialHeaderNames: Set<String> = [],
+    priority: TransportPriority = .normal
   ) {
     self.request = request
     self.maximumBytes = maximumBytes
     self.memoryThreshold = memoryThreshold
     self.credentialHeaderNames = credentialHeaderNames
+    self.priority = priority
+    self.priorityController = nil
+  }
+
+  package init(
+    request: URLRequest,
+    maximumBytes: Int,
+    memoryThreshold: Int,
+    credentialHeaderNames: Set<String>,
+    priority: TransportPriority,
+    priorityController: TransportPriorityController
+  ) {
+    self.request = request
+    self.maximumBytes = maximumBytes
+    self.memoryThreshold = memoryThreshold
+    self.credentialHeaderNames = credentialHeaderNames
+    self.priority = priority
+    self.priorityController = priorityController
   }
 }
 
