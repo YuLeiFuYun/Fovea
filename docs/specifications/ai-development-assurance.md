@@ -255,6 +255,12 @@ R2/R3 至少使用一类，R3 至少使用三类：
 
 新增关键不变量时同步新增 mutant。通过大量无关 mutant 获得高 mutation percentage 不能替代上述目录全部被杀死。
 
+### 8.1 Phase 0a curated mutant runner
+
+Phase 0a 的 required mutants `001/002/007/008/009/015` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定。
+
+该 runner 是 visible oracle，仍不能替代 protected CI、held-out evaluator 或 human attestation。
+
 ## 9. Human Comprehension Attestation
 
 R2/R3 的 accountable maintainer 在合并前签署：

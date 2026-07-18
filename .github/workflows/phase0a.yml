@@ -34,4 +34,5 @@ jobs:
       - name: Verify Phase 0a
         env:
           RUN_IOS_SIMULATOR: "1"
+          RUN_CRITICAL_MUTANTS: "1"
         run: scripts/verify-phase0a.sh

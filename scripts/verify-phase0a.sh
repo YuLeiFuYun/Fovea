@@ -30,6 +30,10 @@ if [ "${RUN_IOS_SIMULATOR:-1}" = "1" ]; then
         test
 fi
 
+if [ "${RUN_CRITICAL_MUTANTS:-0}" = "1" ]; then
+    python3 scripts/run-critical-mutants.py
+fi
+
 set -- evidence/*.json
 if [ -e "$1" ]; then
     python3 scripts/validate-evidence.py "$@"

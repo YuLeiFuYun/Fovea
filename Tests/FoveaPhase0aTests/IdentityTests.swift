@@ -86,6 +86,30 @@ final class IdentityTests: XCTestCase {
     XCTAssertEqual(request.fetchVariantKey.requestVariants, ["accept-language": "zh-CN"])
   }
 
+  func testImageRequestExecutionKeyIncludesCredentialAndRevalidation() throws {
+    let url = try XCTUnwrap(URL(string: "https://example.com/exact-fetch"))
+    let oldCredential = ImageRequest(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: SecurityNamespaceID("account-a"),
+      authorizationContext: AuthorizationContextID("principal-a"),
+      credentialGeneration: CredentialGeneration(1)
+    )
+    let newCredential = ImageRequest(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: SecurityNamespaceID("account-a"),
+      authorizationContext: AuthorizationContextID("principal-a"),
+      credentialGeneration: CredentialGeneration(2)
+    )
+
+    XCTAssertNotEqual(oldCredential.fetchExecutionKey, newCredential.fetchExecutionKey)
+    XCTAssertNotEqual(
+      oldCredential.fetchExecutionKey(revalidationFingerprint: "etag-v1"),
+      oldCredential.fetchExecutionKey(revalidationFingerprint: "etag-v2")
+    )
+  }
+
   func testRevalidationStateChangesFetchExecutionKey() {
     let variant = FetchVariantKey(
       source: LogicalSourceID("https://example.com/revalidate"),
