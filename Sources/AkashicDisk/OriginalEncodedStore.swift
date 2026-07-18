@@ -110,7 +110,8 @@ public actor OriginalEncodedStore {
         existingData.count == existing.byteCount,
         contentIDMatches(data: existingData, contentID: contentID)
       {
-        return StoredBlob(physicalID: existing.physicalID, byteCount: existing.byteCount)
+        return StoredBlob(
+          physicalID: existing.physicalID, byteCount: existing.byteCount, wasCreated: false)
       }
     }
 
@@ -140,7 +141,7 @@ public actor OriginalEncodedStore {
     }
     // 回收失败不得回滚已经原子发布的 blob；下次写入或 GC 会继续收敛。
     try? trimIfNeeded()
-    return StoredBlob(physicalID: physicalID, byteCount: data.count)
+    return StoredBlob(physicalID: physicalID, byteCount: data.count, wasCreated: true)
   }
 
   public func physicalID(contentID: String, namespace: String) -> PhysicalBlobID? {

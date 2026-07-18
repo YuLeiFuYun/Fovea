@@ -42,20 +42,10 @@ final class StagingAndStorageTests: XCTestCase {
     let recordsRoot = root.appendingPathComponent("records")
     let store = try await RepresentationRecordStore.open(root: recordsRoot)
     try FileManager.default.removeItem(at: recordsRoot)
-    let record = RepresentationRecord(
-      securityNamespace: "public:tests",
-      namespaceGeneration: 0,
-      variantKeyDigest: "record-write-failure",
-      statusCode: 200,
-      requestTime: Date(),
-      responseTime: Date(),
-      expiresAt: nil,
-      etag: nil,
-      lastModified: nil,
-      disposition: .reusable,
-      contentID: "sha256:00:0",
-      payloadLength: 0,
-      contentType: "image/png"
+    let record = makeRepresentationRecord(
+      namespace: "public:tests",
+      baseKeyDigest: "record-write-base",
+      variantKeyDigest: "record-write-failure"
     )
 
     do {
@@ -70,57 +60,41 @@ final class StagingAndStorageTests: XCTestCase {
 
   func testRecordLookupRejectsPreviousNamespaceGeneration() async throws {
     let store = try await RepresentationRecordStore.open(root: makeTemporaryDirectory())
-    let record = RepresentationRecord(
-      securityNamespace: "account-generation",
-      namespaceGeneration: 0,
+    let record = makeRepresentationRecord(
+      namespace: "account-generation",
+      baseKeyDigest: "generation-bound-base",
       variantKeyDigest: "generation-bound-record",
-      statusCode: 200,
-      requestTime: Date(),
-      responseTime: Date(),
       expiresAt: Date().addingTimeInterval(3600),
-      etag: nil,
-      lastModified: nil,
-      disposition: .privateNamespace,
-      contentID: "sha256:00:0",
-      payloadLength: 0,
-      contentType: "image/png"
+      disposition: .privateNamespace
     )
     try await store.put(record)
 
-    let current = await store.record(
-      for: record.variantKeyDigest,
+    let current = await store.records(
+      for: record.baseKeyDigest,
       namespace: "account-generation",
       namespaceGeneration: 0
-    )
-    let revoked = await store.record(
-      for: record.variantKeyDigest,
+    ).first
+    let revoked = await store.records(
+      for: record.baseKeyDigest,
       namespace: "account-generation",
       namespaceGeneration: 1
-    )
+    ).first
     XCTAssertNotNil(current)
     XCTAssertNil(revoked)
   }
 
   func testUnknownRecordSchemaFailsWithoutRewritingFile() async throws {
     let root = try makeTemporaryDirectory()
-    let record = RepresentationRecord(
+    let record = makeRepresentationRecord(
       recordSchemaVersion: 999,
-      securityNamespace: "public:tests",
-      namespaceGeneration: 0,
-      variantKeyDigest: "future-record",
-      statusCode: 200,
-      requestTime: Date(),
-      responseTime: Date(),
-      expiresAt: nil,
-      etag: nil,
-      lastModified: nil,
-      disposition: .reusable,
-      contentID: "sha256:00:0",
-      payloadLength: 0,
-      contentType: "image/png"
+      namespace: "public:tests",
+      baseKeyDigest: "future-base",
+      variantKeyDigest: "future-record"
     )
     let fileURL = root.appendingPathComponent("representation-records.json")
-    let original = try JSONEncoder().encode([record.variantKeyDigest: record])
+    let original = try JSONEncoder().encode(
+      FutureRecordManifest(schemaVersion: 999, records: [record.variantKeyDigest: record])
+    )
     try original.write(to: fileURL, options: [.atomic])
 
     do {
@@ -163,20 +137,13 @@ final class StagingAndStorageTests: XCTestCase {
     let contentID = ContentID(data: data).description
     _ = try await encoded.commit(data: data, contentID: contentID, namespace: namespace)
     try await records.put(
-      RepresentationRecord(
-        securityNamespace: namespace,
-        namespaceGeneration: 0,
+      makeRepresentationRecord(
+        namespace: namespace,
+        baseKeyDigest: "private-base",
         variantKeyDigest: "private-variant",
-        statusCode: 200,
-        requestTime: Date(),
-        responseTime: Date(),
-        expiresAt: nil,
-        etag: nil,
-        lastModified: nil,
         disposition: .privateNamespace,
         contentID: contentID,
-        payloadLength: data.count,
-        contentType: "image/png"
+        payloadLength: data.count
       )
     )
 
@@ -325,20 +292,32 @@ private actor FailingEncodedStore: OriginalEncodedStoring {
 private actor InMemoryRecordStore: RepresentationRecordStoring {
   private var records: [String: RepresentationRecord] = [:]
 
-  func record(
-    for variantDigest: String,
+  func records(
+    for baseKeyDigest: String,
     namespace: String,
     namespaceGeneration: UInt64
-  ) async -> RepresentationRecord? {
-    guard let record = records[variantDigest],
-      record.securityNamespaceFingerprint == StorageNamespaceFingerprint(namespace: namespace)
-    else {
-      return nil
+  ) async -> [RepresentationRecord] {
+    let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    return records.values.filter { record in
+      record.baseKeyDigest == baseKeyDigest
+        && record.securityNamespaceFingerprint == fingerprint
+        && record.namespaceGeneration == namespaceGeneration
     }
-    return record
   }
   func put(_ record: RepresentationRecord) async throws {
     records[record.variantKeyDigest] = record
+  }
+  func containsReference(
+    to contentID: String,
+    namespace: String,
+    excludingVariantDigest: String?
+  ) async -> Bool {
+    let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    return records.values.contains { record in
+      record.contentID == contentID
+        && record.securityNamespaceFingerprint == fingerprint
+        && record.variantKeyDigest != excludingVariantDigest
+    }
   }
   func remove(
     _ variantDigest: String,
@@ -356,4 +335,9 @@ private actor InMemoryRecordStore: RepresentationRecordStoring {
       $0.value.securityNamespaceFingerprint != StorageNamespaceFingerprint(namespace: namespace)
     }
   }
+}
+
+private struct FutureRecordManifest: Encodable {
+  let schemaVersion: UInt16
+  let records: [String: RepresentationRecord]
 }

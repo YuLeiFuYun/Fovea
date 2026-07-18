@@ -52,20 +52,16 @@ final class PipelineTests: XCTestCase {
       namespace: request.namespace.value
     )
     try await records.put(
-      RepresentationRecord(
-        securityNamespace: request.namespace.value,
-        namespaceGeneration: 0,
+      makeRepresentationRecord(
+        namespace: request.namespace.value,
+        baseKeyDigest: request.fetchBaseKey.digestHex,
         variantKeyDigest: request.fetchVariantKey.digestHex,
-        statusCode: 200,
         requestTime: now,
         responseTime: now,
+        responseDate: now,
         expiresAt: now.addingTimeInterval(10),
-        etag: nil,
-        lastModified: nil,
-        disposition: .reusable,
         contentID: contentID.description,
-        payloadLength: body.count,
-        contentType: "image/png"
+        payloadLength: body.count
       )
     )
     let pipeline = FoveaPipeline(
@@ -105,20 +101,13 @@ final class PipelineTests: XCTestCase {
       contentID: contentID.description,
       namespace: request.namespace.value
     )
-    let record = RepresentationRecord(
-      securityNamespace: request.namespace.value,
-      namespaceGeneration: 0,
+    let record = makeRepresentationRecord(
+      namespace: request.namespace.value,
+      baseKeyDigest: request.fetchBaseKey.digestHex,
       variantKeyDigest: request.fetchVariantKey.digestHex,
-      statusCode: 200,
-      requestTime: Date(),
-      responseTime: Date(),
       expiresAt: Date().addingTimeInterval(3600),
-      etag: nil,
-      lastModified: nil,
-      disposition: .reusable,
       contentID: contentID.description,
-      payloadLength: body.count,
-      contentType: "image/png"
+      payloadLength: body.count
     )
     try await records.put(record)
     let pipeline = FoveaPipeline(
@@ -131,11 +120,11 @@ final class PipelineTests: XCTestCase {
     await assertThrowsErrorAsync { try await pipeline.image(for: request) }
 
     let capturedRequestCount = await transport.capturedRequests().count
-    let preservedRecord = await records.record(
-      for: request.fetchVariantKey.digestHex,
+    let preservedRecord = await records.records(
+      for: request.fetchBaseKey.digestHex,
       namespace: request.namespace.value,
       namespaceGeneration: 0
-    )
+    ).first
     XCTAssertEqual(capturedRequestCount, 0)
     XCTAssertNotNil(preservedRecord)
   }
@@ -177,11 +166,11 @@ final class PipelineTests: XCTestCase {
       XCTAssertTrue([.decode, .pipeline].contains(failure.stage))
     }
 
-    let record = await records.record(
-      for: request.fetchVariantKey.digestHex,
+    let record = await records.records(
+      for: request.fetchBaseKey.digestHex,
       namespace: request.namespace.value,
       namespaceGeneration: 0
-    )
+    ).first
     XCTAssertNil(record)
     let physicalID = await encoded.physicalID(
       contentID: ContentID(data: body).description,

@@ -57,7 +57,9 @@ final class FetchStage: Sendable {
       }
     }
 
+    let selectedVariant = conditionalRecord.map { request.fetchVariantKey(for: $0.vary) }
     let executionKey = request.fetchExecutionKey(
+      selectedVariant: selectedVariant,
       revalidationFingerprint: Self.revalidationFingerprint(for: conditionalRecord)
     )
     let scopedKey = ScopedFetchExecutionKey(

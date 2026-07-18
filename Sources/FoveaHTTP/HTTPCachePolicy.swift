@@ -1,16 +1,17 @@
 import Foundation
 
 package enum HTTPCachePolicy {
-  package static func disposition(headers: [String: String], isPrivateNamespace: Bool)
-    -> CacheDisposition
-  {
+  package static func disposition(
+    headers: [String: String],
+    isPrivateNamespace: Bool,
+    varySelectionAvailable: Bool = true
+  ) -> CacheDisposition {
     let directives = cacheControlDirectives(in: headers)
-    let vary =
-      header("Vary", in: headers)?
-      .split(separator: ",")
-      .map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
-      ?? []
-    if directives.contains(where: { $0.name == "no-store" }) || vary.contains("*") {
+    let vary = varyFieldNames(in: headers)
+    if directives.contains(where: { $0.name == "no-store" })
+      || vary == .wildcard
+      || !varySelectionAvailable
+    {
       return .noStore
     }
     return isPrivateNamespace ? .privateNamespace : .reusable
@@ -26,7 +27,7 @@ package enum HTTPCachePolicy {
       return responseTime
     }
 
-    let dateValue = header("Date", in: headers).flatMap(HTTPDateParser.date)
+    let dateValue = responseDate(in: headers)
     let ageValue: TimeInterval
     if let rawAge = header("Age", in: headers) {
       guard let parsedAge = TimeInterval(rawAge), parsedAge.isFinite, parsedAge >= 0 else {
@@ -56,6 +57,10 @@ package enum HTTPCachePolicy {
     return responseTime.addingTimeInterval(min(remaining, representable))
   }
 
+  package static func responseDate(in headers: [String: String]) -> Date? {
+    header("Date", in: headers).flatMap(HTTPDateParser.date)
+  }
+
   package static func conditionalHeaders(for record: RepresentationRecord) -> [String: String] {
     var result: [String: String] = [:]
     if let etag = record.etag { result["If-None-Match"] = etag }
@@ -63,13 +68,92 @@ package enum HTTPCachePolicy {
     return result
   }
 
+  package static func selectRecord(
+    from candidates: [RepresentationRecord],
+    requestHeaders: [String: String],
+    additionalSensitiveNames: Set<String>,
+    sensitiveFingerprints: [String: HeaderVariantFingerprint]
+  ) -> RepresentationRecord? {
+    let matching = candidates.filter { record in
+      guard record.disposition != .noStore,
+        let current = varySelection(
+          fieldNames: record.vary.fieldNames,
+          requestHeaders: requestHeaders,
+          additionalSensitiveNames: additionalSensitiveNames,
+          sensitiveFingerprints: sensitiveFingerprints
+        )
+      else { return false }
+      return current == record.vary
+    }
+
+    guard !matching.isEmpty else { return nil }
+    let hasExplicitVary = matching.contains { !$0.vary.fieldNames.isEmpty }
+    return
+      matching
+      .filter { !hasExplicitVary || !$0.vary.fieldNames.isEmpty }
+      .max { lhs, rhs in lhs.recencyDate < rhs.recencyDate }
+  }
+
+  package static func varySelection(
+    fieldNames: [String],
+    requestHeaders: [String: String],
+    additionalSensitiveNames: Set<String>,
+    sensitiveFingerprints: [String: HeaderVariantFingerprint]
+  ) -> HTTPVarySelection? {
+    let fields = Array(Set(fieldNames.map { $0.lowercased() })).sorted()
+    let sensitive = CredentialHeaderPolicy.sensitiveHeaderNames.union(
+      additionalSensitiveNames.map { $0.lowercased() }
+    )
+    var values: [String: HTTPVaryValue] = [:]
+    for field in fields {
+      if sensitive.contains(field) {
+        guard let fingerprint = sensitiveFingerprints[field] else { return nil }
+        values[field] = .fingerprint(fingerprint.sha256Hex)
+      } else if let value = requestHeaders[field] {
+        values[field] = .field(normalizedFieldValue(value, named: field))
+      } else {
+        values[field] = .absent
+      }
+    }
+    return HTTPVarySelection(fieldNames: fields, values: values)
+  }
+
+  package static func varyFieldNames(in headers: [String: String]) -> VaryFieldNames {
+    guard let value = header("Vary", in: headers) else { return .fields([]) }
+    let fields = value.split(separator: ",", omittingEmptySubsequences: false).compactMap { raw in
+      let field = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+      return field.isEmpty ? nil : field
+    }
+    if fields.contains("*") { return .wildcard }
+    return .fields(Array(Set(fields)).sorted())
+  }
+
   package static func header(_ name: String, in headers: [String: String]) -> String? {
     headers.first { $0.key.caseInsensitiveCompare(name) == .orderedSame }?.value
+  }
+
+  package enum VaryFieldNames: Equatable, Sendable {
+    case wildcard
+    case fields([String])
   }
 
   private struct CacheControlDirective {
     let name: String
     let value: String?
+  }
+
+  private static func normalizedFieldValue(_ value: String, named fieldName: String) -> String {
+    let commaNormalized =
+      value
+      .split(separator: ",", omittingEmptySubsequences: false)
+      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+      .joined(separator: ",")
+    switch fieldName {
+    case "accept-encoding", "accept-language":
+      return commaNormalized.lowercased()
+    default:
+      return commaNormalized
+    }
   }
 
   private static func cacheControlDirectives(in headers: [String: String])

@@ -498,12 +498,17 @@ private actor TrackingCleanupEncodedStore: OriginalEncodedStoring {
 private actor FailingCleanupRecordStore: RepresentationRecordStoring {
   private(set) var removeAllCount = 0
 
-  func record(
-    for variantDigest: String,
+  func records(
+    for baseKeyDigest: String,
     namespace: String,
     namespaceGeneration: UInt64
-  ) async -> RepresentationRecord? { nil }
+  ) async -> [RepresentationRecord] { [] }
   func put(_ record: RepresentationRecord) async throws {}
+  func containsReference(
+    to contentID: String,
+    namespace: String,
+    excludingVariantDigest: String?
+  ) async -> Bool { false }
   func remove(
     _ variantDigest: String,
     namespace: String,
@@ -527,13 +532,13 @@ private actor RefreshBarrierRecordStore: RepresentationRecordStoring {
     self.base = base
   }
 
-  func record(
-    for variantDigest: String,
+  func records(
+    for baseKeyDigest: String,
     namespace: String,
     namespaceGeneration: UInt64
-  ) async -> RepresentationRecord? {
-    await base.record(
-      for: variantDigest,
+  ) async -> [RepresentationRecord] {
+    await base.records(
+      for: baseKeyDigest,
       namespace: namespace,
       namespaceGeneration: namespaceGeneration
     )
@@ -547,6 +552,18 @@ private actor RefreshBarrierRecordStore: RepresentationRecordStoring {
       await withCheckedContinuation { releaseContinuation = $0 }
     }
     try await base.put(record)
+  }
+
+  func containsReference(
+    to contentID: String,
+    namespace: String,
+    excludingVariantDigest: String?
+  ) async -> Bool {
+    await base.containsReference(
+      to: contentID,
+      namespace: namespace,
+      excludingVariantDigest: excludingVariantDigest
+    )
   }
 
   func remove(

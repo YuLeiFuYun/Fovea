@@ -29,25 +29,25 @@ public struct CredentialGeneration: Hashable, Sendable, Codable {
   public init(_ value: UInt64) { self.value = value }
 }
 
-public struct FetchVariantKey: Hashable, Sendable, Codable {
+public struct FetchBaseKey: Hashable, Sendable, Codable {
   public let schemaVersion: UInt16
   public let source: LogicalSourceID
   public let namespace: SecurityNamespaceID
   public let authorizationContext: AuthorizationContextID
-  public let requestVariants: [String: String]
+  public let method: String
 
   public init(
     schemaVersion: UInt16 = 1,
     source: LogicalSourceID,
     namespace: SecurityNamespaceID,
     authorizationContext: AuthorizationContextID = .public,
-    requestVariants: [String: String] = [:]
+    method: String = "GET"
   ) {
     self.schemaVersion = schemaVersion
     self.source = source
     self.namespace = namespace
     self.authorizationContext = authorizationContext
-    self.requestVariants = requestVariants
+    self.method = method.uppercased()
   }
 
   public var canonicalBytes: Data {
@@ -56,9 +56,37 @@ public struct FetchVariantKey: Hashable, Sendable, Codable {
     encoder.append(source.value)
     encoder.append(namespace.value)
     encoder.append(authorizationContext.value)
+    encoder.append(method)
+    return encoder.data
+  }
+
+  public var digestHex: String { canonicalBytes.sha256Hex }
+}
+
+public struct FetchVariantKey: Hashable, Sendable, Codable {
+  public let schemaVersion: UInt16
+  public let baseDigest: String
+  public let requestVariants: [String: String]
+
+  public init(
+    schemaVersion: UInt16 = 2,
+    base: FetchBaseKey,
+    requestVariants: [String: String] = [:]
+  ) {
+    self.schemaVersion = schemaVersion
+    self.baseDigest = base.digestHex
+    self.requestVariants = Dictionary(
+      uniqueKeysWithValues: requestVariants.map { ($0.key.lowercased(), $0.value) }
+    )
+  }
+
+  public var canonicalBytes: Data {
+    var encoder = CanonicalEncoder()
+    encoder.append(schemaVersion)
+    encoder.append(baseDigest)
     encoder.append(UInt32(requestVariants.count))
     for (key, value) in requestVariants.sorted(by: { $0.key < $1.key }) {
-      encoder.append(key.lowercased())
+      encoder.append(key)
       encoder.append(value)
     }
     return encoder.data
@@ -69,23 +97,29 @@ public struct FetchVariantKey: Hashable, Sendable, Codable {
 
 public struct FetchExecutionKey: Hashable, Sendable, Codable {
   public let schemaVersion: UInt16
-  public let variantDigest: String
+  public let baseDigest: String
+  public let selectedVariantDigest: String?
   public let resolvedLocator: String
+  public let requestHeaderFingerprint: String
   public let credentialGeneration: CredentialGeneration?
   public let revalidationFingerprint: String
   public let transportPolicyFingerprint: String
 
   public init(
-    schemaVersion: UInt16 = 1,
-    variant: FetchVariantKey,
+    schemaVersion: UInt16 = 2,
+    base: FetchBaseKey,
+    selectedVariant: FetchVariantKey? = nil,
     resolvedLocator: String,
+    requestHeaderFingerprint: String,
     credentialGeneration: CredentialGeneration? = nil,
     revalidationFingerprint: String = "unconditional",
-    transportPolicyFingerprint: String = "phase0a-default"
+    transportPolicyFingerprint: String = "phase0b-default"
   ) {
     self.schemaVersion = schemaVersion
-    self.variantDigest = variant.digestHex
+    self.baseDigest = base.digestHex
+    self.selectedVariantDigest = selectedVariant?.digestHex
     self.resolvedLocator = resolvedLocator
+    self.requestHeaderFingerprint = requestHeaderFingerprint
     self.credentialGeneration = credentialGeneration
     self.revalidationFingerprint = revalidationFingerprint
     self.transportPolicyFingerprint = transportPolicyFingerprint
@@ -94,8 +128,10 @@ public struct FetchExecutionKey: Hashable, Sendable, Codable {
   public var canonicalBytes: Data {
     var encoder = CanonicalEncoder()
     encoder.append(schemaVersion)
-    encoder.append(variantDigest)
+    encoder.append(baseDigest)
+    encoder.appendOptional(selectedVariantDigest)
     encoder.append(resolvedLocator)
+    encoder.append(requestHeaderFingerprint)
     encoder.appendOptional(credentialGeneration?.value)
     encoder.append(revalidationFingerprint)
     encoder.append(transportPolicyFingerprint)
@@ -191,6 +227,15 @@ private struct CanonicalEncoder {
     let bytes = Data(value.utf8)
     append(UInt32(bytes.count))
     data.append(bytes)
+  }
+
+  mutating func appendOptional(_ value: String?) {
+    if let value {
+      data.append(1)
+      append(value)
+    } else {
+      data.append(0)
+    }
   }
 
   mutating func appendOptional(_ value: UInt64?) {

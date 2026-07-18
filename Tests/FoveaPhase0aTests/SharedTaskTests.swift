@@ -88,11 +88,16 @@ final class SharedTaskTests: XCTestCase {
   }
 
   private func makeKey(_ locator: String) -> FetchExecutionKey {
-    let variant = FetchVariantKey(
+    let base = FetchBaseKey(
       source: LogicalSourceID(locator),
       namespace: SecurityNamespaceID.publicNamespace(appID: "tests")
     )
-    return FetchExecutionKey(variant: variant, resolvedLocator: locator)
+    return FetchExecutionKey(
+      base: base,
+      selectedVariant: FetchVariantKey(base: base),
+      resolvedLocator: locator,
+      requestHeaderFingerprint: "headers"
+    )
   }
 }
 

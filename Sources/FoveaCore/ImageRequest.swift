@@ -10,6 +10,7 @@ public enum ImageRequestError: Error, Equatable, Sendable {
   case missingURLHost
   case embeddedURLCredentials
   case invalidURL
+  case fingerprintForNonCredentialHeader(String)
 }
 
 public struct ImageRequest: Sendable {
@@ -21,6 +22,7 @@ public struct ImageRequest: Sendable {
   public let credentialGeneration: CredentialGeneration?
   public let headers: [String: String]
   public let credentialHeaderNames: Set<String>
+  public let headerVariantFingerprints: [String: HeaderVariantFingerprint]
 
   public init(
     url: URL,
@@ -30,17 +32,28 @@ public struct ImageRequest: Sendable {
     authorizationContext: AuthorizationContextID = .public,
     credentialGeneration: CredentialGeneration? = nil,
     headers: [String: String] = [:],
-    credentialHeaderNames: Set<String> = []
+    credentialHeaderNames: Set<String> = [],
+    headerVariantFingerprints: [String: HeaderVariantFingerprint] = [:]
   ) throws {
     let normalizedURL = try Self.normalizedHTTPURL(url)
+    let normalizedHeaders = try Self.normalizedHeaders(headers)
+    let normalizedCredentialNames = try Self.normalizedHeaderNames(credentialHeaderNames)
+    let normalizedFingerprints = try Self.normalizedFingerprints(headerVariantFingerprints)
+    let sensitiveNames = CredentialHeaderPolicy.sensitiveHeaderNames.union(
+      normalizedCredentialNames)
+    for name in normalizedFingerprints.keys where !sensitiveNames.contains(name) {
+      throw ImageRequestError.fingerprintForNonCredentialHeader(name)
+    }
+
     self.url = normalizedURL
     self.logicalSource = logicalSource ?? LogicalSourceID(normalizedHTTPURL: normalizedURL)
     self.target = target
     self.namespace = namespace
     self.authorizationContext = authorizationContext
     self.credentialGeneration = credentialGeneration
-    self.headers = try Self.normalizedHeaders(headers)
-    self.credentialHeaderNames = try Self.normalizedHeaderNames(credentialHeaderNames)
+    self.headers = normalizedHeaders
+    self.credentialHeaderNames = normalizedCredentialNames
+    self.headerVariantFingerprints = normalizedFingerprints
   }
 
   public static func publicImage(
@@ -57,23 +70,38 @@ public struct ImageRequest: Sendable {
     )
   }
 
-  public var fetchVariantKey: FetchVariantKey {
-    FetchVariantKey(
+  public var fetchBaseKey: FetchBaseKey {
+    FetchBaseKey(
       source: logicalSource,
       namespace: namespace,
-      authorizationContext: authorizationContext,
-      requestVariants: stableRequestVariants
+      authorizationContext: authorizationContext
+    )
+  }
+
+  public var fetchVariantKey: FetchVariantKey {
+    FetchVariantKey(base: fetchBaseKey)
+  }
+
+  package func fetchVariantKey(for selection: HTTPVarySelection) -> FetchVariantKey {
+    FetchVariantKey(
+      base: fetchBaseKey,
+      requestVariants: selection.canonicalRequestVariants
     )
   }
 
   public var fetchExecutionKey: FetchExecutionKey {
-    fetchExecutionKey(revalidationFingerprint: "unconditional")
+    fetchExecutionKey(selectedVariant: nil, revalidationFingerprint: "unconditional")
   }
 
-  public func fetchExecutionKey(revalidationFingerprint: String) -> FetchExecutionKey {
+  package func fetchExecutionKey(
+    selectedVariant: FetchVariantKey?,
+    revalidationFingerprint: String
+  ) -> FetchExecutionKey {
     FetchExecutionKey(
-      variant: fetchVariantKey,
+      base: fetchBaseKey,
+      selectedVariant: selectedVariant,
       resolvedLocator: url.absoluteString,
+      requestHeaderFingerprint: exactRequestHeaderFingerprint,
       credentialGeneration: credentialGeneration,
       revalidationFingerprint: revalidationFingerprint,
       transportPolicyFingerprint: credentialExecutionFingerprint
@@ -91,24 +119,46 @@ public struct ImageRequest: Sendable {
     )
   }
 
-  private var credentialExecutionFingerprint: String {
-    let names = CredentialHeaderPolicy.sensitiveNamesPresent(
+  package func varySelection(fieldNames: [String]) -> HTTPVarySelection? {
+    HTTPCachePolicy.varySelection(
+      fieldNames: fieldNames,
+      requestHeaders: headers,
+      additionalSensitiveNames: credentialHeaderNames,
+      sensitiveFingerprints: headerVariantFingerprints
+    )
+  }
+
+  private var exactRequestHeaderFingerprint: String {
+    let sensitiveNames = CredentialHeaderPolicy.sensitiveNamesPresent(
       in: headers,
       additionalSensitiveNames: credentialHeaderNames
-    ).sorted()
-    var material = Data("fovea-credential-header-set-v1\u{0}".utf8)
-    for name in names {
+    )
+    var material = Data("fovea-exact-request-headers-v1\u{0}".utf8)
+    for (name, value) in headers.sorted(by: { $0.key < $1.key }) {
       material.append(contentsOf: name.utf8)
+      material.append(0)
+      if sensitiveNames.contains(name) {
+        let fingerprint = headerVariantFingerprints[name]?.sha256Hex ?? "credential-generation"
+        material.append(contentsOf: fingerprint.utf8)
+      } else {
+        material.append(contentsOf: value.utf8)
+      }
       material.append(0)
     }
     return material.sha256Hex
   }
 
-  private var stableRequestVariants: [String: String] {
-    CredentialHeaderPolicy.removingSensitiveHeaders(
-      from: headers,
+  private var credentialExecutionFingerprint: String {
+    let names = CredentialHeaderPolicy.sensitiveNamesPresent(
+      in: headers,
       additionalSensitiveNames: credentialHeaderNames
-    )
+    ).sorted()
+    var material = Data("fovea-credential-header-set-v2\u{0}".utf8)
+    for name in names {
+      material.append(contentsOf: name.utf8)
+      material.append(0)
+    }
+    return material.sha256Hex
   }
 
   private static func normalizedHTTPURL(_ url: URL) throws -> URL {
@@ -137,6 +187,23 @@ public struct ImageRequest: Sendable {
     if components.percentEncodedPath.isEmpty { components.percentEncodedPath = "/" }
     guard let normalized = components.url else { throw ImageRequestError.invalidURL }
     return normalized
+  }
+
+  private static func normalizedFingerprints(
+    _ fingerprints: [String: HeaderVariantFingerprint]
+  ) throws -> [String: HeaderVariantFingerprint] {
+    var result: [String: HeaderVariantFingerprint] = [:]
+    for (name, fingerprint) in fingerprints {
+      let normalized = name.lowercased()
+      guard isValidHeaderName(normalized) else {
+        throw ImageRequestError.invalidHeaderName(name)
+      }
+      guard result[normalized] == nil else {
+        throw ImageRequestError.duplicateHeaderName(normalized)
+      }
+      result[normalized] = fingerprint
+    }
+    return result
   }
 
   private static func normalizedHeaderNames(_ names: Set<String>) throws -> Set<String> {

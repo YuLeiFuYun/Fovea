@@ -23,10 +23,12 @@ public struct StorageNamespaceFingerprint: Hashable, Sendable, Codable, CustomSt
 public struct StoredBlob: Hashable, Sendable, Codable {
   public let physicalID: PhysicalBlobID
   public let byteCount: Int
+  public let wasCreated: Bool
 
-  public init(physicalID: PhysicalBlobID, byteCount: Int) {
+  public init(physicalID: PhysicalBlobID, byteCount: Int, wasCreated: Bool) {
     self.physicalID = physicalID
     self.byteCount = byteCount
+    self.wasCreated = wasCreated
   }
 }
 

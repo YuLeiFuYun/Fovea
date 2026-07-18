@@ -1,50 +1,67 @@
 import AkashicDisk
 import FoveaCore
+import FoveaHTTP
 import ImageCraftCore
 import XCTest
 
 final class IdentityTests: XCTestCase {
-  func testCanonicalVariantOrderIsStable_KEY_GV_001() throws {
-    let source = LogicalSourceID("https://example.com/a.png")
-    let namespace = SecurityNamespaceID.publicNamespace(appID: "tests")
+  func testCanonicalVariantOrderIsStable_KEY_GV_001() {
+    let base = makeBase(source: "https://example.com/a.png")
     let first = FetchVariantKey(
-      source: source,
-      namespace: namespace,
-      requestVariants: ["Accept-Language": "zh-CN", "Accept": "image/png"]
+      base: base,
+      requestVariants: ["Accept-Language": "v:zh-CN", "Accept": "v:image/png"]
     )
     let second = FetchVariantKey(
-      source: source,
-      namespace: namespace,
-      requestVariants: ["Accept": "image/png", "Accept-Language": "zh-CN"]
+      base: base,
+      requestVariants: ["Accept": "v:image/png", "Accept-Language": "v:zh-CN"]
     )
+
     XCTAssertEqual(first.canonicalBytes, second.canonicalBytes)
     XCTAssertEqual(first.digestHex, second.digestHex)
   }
 
-  func testNamespaceChangesVariantIdentity_CACHE_PT_003() {
+  func testNamespaceChangesBaseAndVariantIdentity_CACHE_PT_003() {
     let source = LogicalSourceID("https://example.com/avatar")
-    let a = FetchVariantKey(source: source, namespace: SecurityNamespaceID("account-a"))
-    let b = FetchVariantKey(source: source, namespace: SecurityNamespaceID("account-b"))
-    XCTAssertNotEqual(a.digestHex, b.digestHex)
+    let firstBase = FetchBaseKey(
+      source: source,
+      namespace: SecurityNamespaceID("account-a")
+    )
+    let secondBase = FetchBaseKey(
+      source: source,
+      namespace: SecurityNamespaceID("account-b")
+    )
+
+    XCTAssertNotEqual(firstBase.digestHex, secondBase.digestHex)
+    XCTAssertNotEqual(
+      FetchVariantKey(base: firstBase).digestHex,
+      FetchVariantKey(base: secondBase).digestHex
+    )
   }
 
-  func testCredentialRefreshChangesExecutionButNotVariant_AUTH_PT_001() {
-    let variant = FetchVariantKey(
+  func testCredentialRefreshChangesExecutionButNotBaseOrVariant_AUTH_PT_001() {
+    let base = FetchBaseKey(
       source: LogicalSourceID("https://example.com/private"),
       namespace: SecurityNamespaceID("account-a"),
       authorizationContext: AuthorizationContextID("principal:v1")
     )
+    let variant = FetchVariantKey(base: base)
     let old = FetchExecutionKey(
-      variant: variant,
+      base: base,
+      selectedVariant: variant,
       resolvedLocator: "https://example.com/private",
+      requestHeaderFingerprint: "headers-v1",
       credentialGeneration: CredentialGeneration(1)
     )
     let new = FetchExecutionKey(
-      variant: variant,
+      base: base,
+      selectedVariant: variant,
       resolvedLocator: "https://example.com/private",
+      requestHeaderFingerprint: "headers-v1",
       credentialGeneration: CredentialGeneration(2)
     )
-    XCTAssertEqual(old.variantDigest, new.variantDigest)
+
+    XCTAssertEqual(old.baseDigest, new.baseDigest)
+    XCTAssertEqual(old.selectedVariantDigest, new.selectedVariantDigest)
     XCTAssertNotEqual(old.digestHex, new.digestHex)
   }
 
@@ -54,6 +71,7 @@ final class IdentityTests: XCTestCase {
       target: try TargetPixels(width: 20, height: 20),
       appID: "tests"
     )
+
     XCTAssertEqual(request.authorizationContext, .public)
     XCTAssertNil(request.credentialGeneration)
   }
@@ -64,12 +82,36 @@ final class IdentityTests: XCTestCase {
     let data = Data("known-content".utf8)
     let contentID = ContentID(data: data)
     let stored = try await store.commit(
-      data: data, contentID: contentID.description, namespace: "public:tests")
+      data: data,
+      contentID: contentID.description,
+      namespace: "public:tests"
+    )
+
     XCTAssertFalse(stored.physicalID.description.contains(contentID.digestHex))
     XCTAssertNotEqual(stored.physicalID.description, contentID.digestHex)
   }
 
-  func testSensitiveHeadersDoNotEnterStableVariant_AUTH_PT_006() throws {
+  func testHeadersOnlyEnterPersistentVariantWhenSelectedByVary_CACHE_PT_004() throws {
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.com/language.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let localized = try ImageRequest(
+      url: request.url,
+      target: request.target,
+      namespace: request.namespace,
+      headers: ["Accept-Language": "zh-CN"]
+    )
+
+    XCTAssertEqual(request.fetchVariantKey, localized.fetchVariantKey)
+    let selection = try XCTUnwrap(localized.varySelection(fieldNames: ["Accept-Language"]))
+    let variant = localized.fetchVariantKey(for: selection)
+    XCTAssertEqual(variant.requestVariants, ["accept-language": "v:zh-cn"])
+    XCTAssertNotEqual(variant, localized.fetchVariantKey)
+  }
+
+  func testSensitiveHeadersDoNotEnterPersistentVariant_AUTH_PT_006() throws {
     let secret = "Bearer top-secret-token"
     let request = try ImageRequest(
       url: try XCTUnwrap(URL(string: "https://example.com/private.png")),
@@ -82,8 +124,52 @@ final class IdentityTests: XCTestCase {
         "Accept-Language": "zh-CN",
       ]
     )
+
     XCTAssertNil(request.fetchVariantKey.canonicalBytes.range(of: Data(secret.utf8)))
-    XCTAssertEqual(request.fetchVariantKey.requestVariants, ["accept-language": "zh-CN"])
+    XCTAssertTrue(request.fetchVariantKey.requestVariants.isEmpty)
+    XCTAssertNil(request.varySelection(fieldNames: ["Authorization"]))
+  }
+
+  func testSensitiveVaryUsesExplicitFingerprintInsteadOfRawCredential_AUTH_PT_005() throws {
+    let secret = "session=top-secret"
+    let fingerprint = try HeaderVariantFingerprint(
+      sha256Hex: String(repeating: "a", count: 64)
+    )
+    let request = try ImageRequest(
+      url: try XCTUnwrap(URL(string: "https://example.com/cookie.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: SecurityNamespaceID("account-a"),
+      authorizationContext: AuthorizationContextID("principal-a"),
+      credentialGeneration: CredentialGeneration(7),
+      headers: ["Cookie": secret],
+      headerVariantFingerprints: ["Cookie": fingerprint]
+    )
+    let selection = try XCTUnwrap(request.varySelection(fieldNames: ["Cookie"]))
+    let variant = request.fetchVariantKey(for: selection)
+
+    XCTAssertEqual(variant.requestVariants, ["cookie": "f:\(fingerprint.sha256Hex)"])
+    XCTAssertNil(variant.canonicalBytes.range(of: Data(secret.utf8)))
+  }
+
+  func testFingerprintIsRejectedForNonCredentialHeader() throws {
+    let fingerprint = try HeaderVariantFingerprint(
+      sha256Hex: String(repeating: "b", count: 64)
+    )
+
+    XCTAssertThrowsError(
+      try ImageRequest(
+        url: XCTUnwrap(URL(string: "https://example.com/public.png")),
+        target: TargetPixels(width: 20, height: 20),
+        namespace: .publicNamespace(appID: "tests"),
+        headers: ["Accept-Language": "zh-CN"],
+        headerVariantFingerprints: ["Accept-Language": fingerprint]
+      )
+    ) { error in
+      XCTAssertEqual(
+        error as? ImageRequestError,
+        .fingerprintForNonCredentialHeader("accept-language")
+      )
+    }
   }
 
   func testImageRequestRejectsCaseInsensitiveDuplicateHeaders() throws {
@@ -127,6 +213,7 @@ final class IdentityTests: XCTestCase {
       appID: "tests"
     )
 
+    XCTAssertEqual(first.fetchBaseKey, refreshed.fetchBaseKey)
     XCTAssertEqual(first.fetchVariantKey, refreshed.fetchVariantKey)
     XCTAssertNotEqual(first.fetchExecutionKey, refreshed.fetchExecutionKey)
   }
@@ -148,9 +235,9 @@ final class IdentityTests: XCTestCase {
       appID: "tests"
     )
 
-    XCTAssertEqual(first.fetchVariantKey, second.fetchVariantKey)
+    XCTAssertEqual(first.fetchBaseKey, second.fetchBaseKey)
     XCTAssertEqual(first.url.absoluteString, "https://example.com/a%2Fb?x=1&x=2")
-    XCTAssertNotEqual(first.fetchVariantKey, reordered.fetchVariantKey)
+    XCTAssertNotEqual(first.fetchBaseKey, reordered.fetchBaseKey)
   }
 
   func testImageRequestRejectsUnsupportedSchemeAndEmbeddedCredentials() throws {
@@ -164,9 +251,7 @@ final class IdentityTests: XCTestCase {
       XCTAssertEqual(error as? ImageRequestError, .unsupportedURLScheme("file"))
     }
 
-    let user = "user"
-    let secret = "credential"
-    let locator = "https://" + user + ":" + secret + "@example.com/a.png"
+    let locator = "https://user:credential@example.com/a.png"
     XCTAssertThrowsError(
       try ImageRequest.publicImage(
         url: XCTUnwrap(URL(string: locator)),
@@ -178,7 +263,7 @@ final class IdentityTests: XCTestCase {
     }
   }
 
-  func testCustomCredentialHeaderIsExcludedFromStableIdentity_AUTH_PT_012() throws {
+  func testCustomCredentialHeaderIsExcludedFromPersistentIdentity_AUTH_PT_012() throws {
     let secret = "tenant-secret"
     let request = try ImageRequest(
       url: try XCTUnwrap(URL(string: "https://example.com/custom-credential.png")),
@@ -196,7 +281,7 @@ final class IdentityTests: XCTestCase {
     XCTAssertTrue(request.containsCredentialHeaders)
     XCTAssertEqual(request.credentialHeaderNames, ["x-tenant-credential"])
     XCTAssertNil(request.fetchVariantKey.canonicalBytes.range(of: Data(secret.utf8)))
-    XCTAssertEqual(request.fetchVariantKey.requestVariants, ["accept-language": "zh-CN"])
+    XCTAssertTrue(request.fetchVariantKey.requestVariants.isEmpty)
   }
 
   func testCredentialHeaderSetChangesExactExecutionIdentity_AUTH_PT_012() throws {
@@ -219,8 +304,28 @@ final class IdentityTests: XCTestCase {
       credentialHeaderNames: ["X-Tenant-Credential"]
     )
 
+    XCTAssertEqual(authorization.fetchBaseKey, custom.fetchBaseKey)
     XCTAssertEqual(authorization.fetchVariantKey, custom.fetchVariantKey)
     XCTAssertNotEqual(authorization.fetchExecutionKey, custom.fetchExecutionKey)
+  }
+
+  func testNonSensitiveHeaderValueChangesExactExecutionBeforeVaryIsKnown() throws {
+    let url = try XCTUnwrap(URL(string: "https://example.com/language.png"))
+    let chinese = try ImageRequest(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: .publicNamespace(appID: "tests"),
+      headers: ["Accept-Language": "zh-CN"]
+    )
+    let english = try ImageRequest(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: .publicNamespace(appID: "tests"),
+      headers: ["Accept-Language": "en-US"]
+    )
+
+    XCTAssertEqual(chinese.fetchVariantKey, english.fetchVariantKey)
+    XCTAssertNotEqual(chinese.fetchExecutionKey, english.fetchExecutionKey)
   }
 
   func testImageRequestExecutionKeyIncludesCredentialAndRevalidation() throws {
@@ -242,25 +347,34 @@ final class IdentityTests: XCTestCase {
 
     XCTAssertNotEqual(oldCredential.fetchExecutionKey, newCredential.fetchExecutionKey)
     XCTAssertNotEqual(
-      oldCredential.fetchExecutionKey(revalidationFingerprint: "etag-v1"),
-      oldCredential.fetchExecutionKey(revalidationFingerprint: "etag-v2")
+      oldCredential.fetchExecutionKey(
+        selectedVariant: nil,
+        revalidationFingerprint: "etag-v1"
+      ),
+      oldCredential.fetchExecutionKey(
+        selectedVariant: nil,
+        revalidationFingerprint: "etag-v2"
+      )
     )
   }
 
   func testRevalidationStateChangesFetchExecutionKey() {
-    let variant = FetchVariantKey(
-      source: LogicalSourceID("https://example.com/revalidate"),
-      namespace: SecurityNamespaceID.publicNamespace(appID: "tests")
-    )
+    let base = makeBase(source: "https://example.com/revalidate")
+    let variant = FetchVariantKey(base: base)
     let unconditional = FetchExecutionKey(
-      variant: variant,
-      resolvedLocator: "https://example.com/revalidate"
+      base: base,
+      selectedVariant: variant,
+      resolvedLocator: "https://example.com/revalidate",
+      requestHeaderFingerprint: "headers"
     )
     let conditional = FetchExecutionKey(
-      variant: variant,
+      base: base,
+      selectedVariant: variant,
       resolvedLocator: "https://example.com/revalidate",
+      requestHeaderFingerprint: "headers",
       revalidationFingerprint: "etag-v1"
     )
+
     XCTAssertNotEqual(unconditional.digestHex, conditional.digestHex)
   }
 
@@ -276,6 +390,7 @@ final class IdentityTests: XCTestCase {
       target: try TargetPixels(width: 80, height: 80),
       appID: "tests"
     )
+
     XCTAssertEqual(small.fetchExecutionKey, large.fetchExecutionKey)
     XCTAssertNotEqual(small.displayIdentity, large.displayIdentity)
   }
@@ -295,5 +410,12 @@ final class IdentityTests: XCTestCase {
   func testZeroTargetIsRejected_GEO_PT_002() {
     XCTAssertThrowsError(try TargetPixels(width: 0, height: 10))
     XCTAssertThrowsError(try TargetPixels(width: 10, height: 0))
+  }
+
+  private func makeBase(source: String) -> FetchBaseKey {
+    FetchBaseKey(
+      source: LogicalSourceID(source),
+      namespace: .publicNamespace(appID: "tests")
+    )
   }
 }

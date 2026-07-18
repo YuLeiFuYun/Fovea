@@ -90,3 +90,65 @@ func makePipeline(
 func variantKey(for request: ImageRequest) -> FetchVariantKey {
   request.fetchVariantKey
 }
+
+func makeRepresentationRecord(
+  recordSchemaVersion: UInt16 = RepresentationRecord.currentSchemaVersion,
+  namespace: String,
+  namespaceGeneration: UInt64 = 0,
+  baseKeyDigest: String,
+  variantKeyDigest: String,
+  vary: HTTPVarySelection = HTTPVarySelection(fieldNames: [], values: [:]),
+  statusCode: Int = 200,
+  requestTime: Date = Date(),
+  responseTime: Date = Date(),
+  responseDate: Date? = nil,
+  expiresAt: Date? = nil,
+  etag: String? = nil,
+  lastModified: String? = nil,
+  disposition: CacheDisposition = .reusable,
+  contentID: String = "sha256:00:0",
+  payloadLength: Int = 0,
+  contentType: String? = "image/png"
+) -> RepresentationRecord {
+  RepresentationRecord(
+    recordSchemaVersion: recordSchemaVersion,
+    securityNamespace: namespace,
+    namespaceGeneration: namespaceGeneration,
+    baseKeyDigest: baseKeyDigest,
+    variantKeyDigest: variantKeyDigest,
+    vary: vary,
+    statusCode: statusCode,
+    requestTime: requestTime,
+    responseTime: responseTime,
+    responseDate: responseDate,
+    expiresAt: expiresAt,
+    etag: etag,
+    lastModified: lastModified,
+    disposition: disposition,
+    contentID: contentID,
+    payloadLength: payloadLength,
+    contentType: contentType
+  )
+}
+
+func centerRedComponent(of image: CGImage) throws -> UInt8 {
+  var pixel = [UInt8](repeating: 0, count: 4)
+  let rendered = pixel.withUnsafeMutableBytes { bytes -> Bool in
+    guard let baseAddress = bytes.baseAddress,
+      let context = CGContext(
+        data: baseAddress,
+        width: 1,
+        height: 1,
+        bitsPerComponent: 8,
+        bytesPerRow: 4,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+      )
+    else { return false }
+    context.interpolationQuality = .none
+    context.draw(image, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+    return true
+  }
+  guard rendered else { throw NSError(domain: "FoveaTests", code: 4) }
+  return pixel[0]
+}

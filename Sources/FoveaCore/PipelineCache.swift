@@ -25,13 +25,13 @@ final class PipelineCache: Sendable {
     self.diagnostics = diagnostics
   }
 
-  func record(
-    for variantDigest: String,
+  func records(
+    for baseKeyDigest: String,
     namespace: SecurityNamespaceID,
     generation: NamespaceGeneration
-  ) async -> RepresentationRecord? {
-    await recordStore.record(
-      for: variantDigest,
+  ) async -> [RepresentationRecord] {
+    await recordStore.records(
+      for: baseKeyDigest,
       namespace: namespace.value,
       namespaceGeneration: generation.value
     )
@@ -54,18 +54,26 @@ final class PipelineCache: Sendable {
   }
 
   func refresh(
-    _ record: RepresentationRecord,
+    replacing oldRecord: RepresentationRecord,
+    with newRecord: RepresentationRecord,
     namespace: SecurityNamespaceID,
     generation: NamespaceGeneration
   ) async throws {
     try Task.checkCancellation()
-    try await recordStore.put(record)
+    try await recordStore.put(newRecord)
     do {
       try Task.checkCancellation()
       try await requireActive(generation, for: namespace)
+      if oldRecord.variantKeyDigest != newRecord.variantKeyDigest {
+        try await recordStore.remove(
+          oldRecord.variantKeyDigest,
+          namespace: namespace.value,
+          namespaceGeneration: generation.value
+        )
+      }
     } catch {
       try? await recordStore.remove(
-        record.variantKeyDigest,
+        newRecord.variantKeyDigest,
         namespace: namespace.value,
         namespaceGeneration: generation.value
       )
@@ -104,19 +112,25 @@ final class PipelineCache: Sendable {
 
   func discardReusableState(
     record: RepresentationRecord,
-    variantDigest: String,
     namespace: SecurityNamespaceID,
     generation: NamespaceGeneration
   ) async {
     await memory.removeAll {
       $0.namespace == namespace && $0.generation == generation
     }
-    try? await encodedStore.remove(contentID: record.contentID, namespace: namespace.value)
     try? await recordStore.remove(
-      variantDigest,
+      record.variantKeyDigest,
       namespace: namespace.value,
       namespaceGeneration: generation.value
     )
+    let stillReferenced = await recordStore.containsReference(
+      to: record.contentID,
+      namespace: namespace.value,
+      excludingVariantDigest: nil
+    )
+    if !stillReferenced {
+      try? await encodedStore.remove(contentID: record.contentID, namespace: namespace.value)
+    }
   }
 
   func commit(
@@ -128,18 +142,18 @@ final class PipelineCache: Sendable {
     namespace: SecurityNamespaceID,
     generation: NamespaceGeneration
   ) async throws {
-    var blobCommitted = false
+    var createdBlob = false
     var recordCommitted = false
     var renderedCommitted = false
 
     do {
       try Task.checkCancellation()
-      _ = try await encodedStore.commit(
+      let stored = try await encodedStore.commit(
         data: data,
         contentID: contentID.description,
         namespace: namespace.value
       )
-      blobCommitted = true
+      createdBlob = stored.wasCreated
       try Task.checkCancellation()
       try await requireActive(generation, for: namespace)
 
@@ -154,7 +168,7 @@ final class PipelineCache: Sendable {
       try await requireActive(generation, for: namespace)
     } catch let failure as PipelineFailure where failure.category == .namespaceRevoked {
       await rollback(
-        blobCommitted: blobCommitted,
+        createdBlob: createdBlob,
         recordCommitted: recordCommitted,
         renderedCommitted: renderedCommitted,
         contentID: contentID,
@@ -165,7 +179,7 @@ final class PipelineCache: Sendable {
       throw PipelineFailure.namespaceRevoked
     } catch is CancellationError {
       await rollback(
-        blobCommitted: blobCommitted,
+        createdBlob: createdBlob,
         recordCommitted: recordCommitted,
         renderedCommitted: renderedCommitted,
         contentID: contentID,
@@ -176,7 +190,7 @@ final class PipelineCache: Sendable {
       throw CancellationError()
     } catch {
       await rollback(
-        blobCommitted: blobCommitted,
+        createdBlob: createdBlob,
         recordCommitted: recordCommitted,
         renderedCommitted: renderedCommitted,
         contentID: contentID,
@@ -195,7 +209,7 @@ final class PipelineCache: Sendable {
   }
 
   private func rollback(
-    blobCommitted: Bool,
+    createdBlob: Bool,
     recordCommitted: Bool,
     renderedCommitted: Bool,
     contentID: ContentID,
@@ -211,11 +225,18 @@ final class PipelineCache: Sendable {
         namespaceGeneration: renderKey.generation.value
       )
     }
-    if blobCommitted {
-      try? await encodedStore.remove(
-        contentID: contentID.description,
-        namespace: namespace.value
+    if createdBlob {
+      let stillReferenced = await recordStore.containsReference(
+        to: contentID.description,
+        namespace: namespace.value,
+        excludingVariantDigest: nil
       )
+      if !stillReferenced {
+        try? await encodedStore.remove(
+          contentID: contentID.description,
+          namespace: namespace.value
+        )
+      }
     }
   }
 

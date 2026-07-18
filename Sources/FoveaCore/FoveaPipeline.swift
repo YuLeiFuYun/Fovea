@@ -82,7 +82,7 @@ public final class FoveaPipeline: Sendable {
     }
 
     do {
-      return try await load(request: request, variant: request.fetchVariantKey)
+      return try await load(request: request)
     } catch let failure as PipelineFailure {
       await record(failure)
       throw failure
@@ -110,13 +110,20 @@ public final class FoveaPipeline: Sendable {
     if cleanupFailed { throw PipelineFailure.namespaceCleanupFailed }
   }
 
-  private func load(request: ImageRequest, variant: FetchVariantKey) async throws -> DecodedImage {
+  private func load(request: ImageRequest) async throws -> DecodedImage {
     let generation = await namespaceRegistry.generation(for: request.namespace)
+    let baseKey = request.fetchBaseKey
     let now = await clock.now()
-    var existing = await cache.record(
-      for: variant.digestHex,
+    let candidates = await cache.records(
+      for: baseKey.digestHex,
       namespace: request.namespace,
       generation: generation
+    )
+    var existing = HTTPCachePolicy.selectRecord(
+      from: candidates,
+      requestHeaders: request.headers,
+      additionalSensitiveNames: request.credentialHeaderNames,
+      sensitiveFingerprints: request.headerVariantFingerprints
     )
 
     if let record = existing, record.isFresh(at: now), record.disposition != .noStore {
@@ -127,12 +134,12 @@ public final class FoveaPipeline: Sendable {
         await diagnostics.record(
           DiagnosticEvent(
             kind: .cacheReadFailed,
-            keyDigest: variant.digestHex,
+            keyDigest: record.variantKeyDigest,
             reason: "original-encoded-read"
           )
         )
         await cache.removeRecord(
-          variant.digestHex,
+          record.variantKeyDigest,
           namespace: request.namespace,
           generation: generation
         )
@@ -144,7 +151,7 @@ public final class FoveaPipeline: Sendable {
         await diagnostics.record(
           DiagnosticEvent(
             kind: .originalEncodedHit,
-            keyDigest: variant.digestHex,
+            keyDigest: record.variantKeyDigest,
             byteCount: cachedData.count
           )
         )
@@ -152,7 +159,7 @@ public final class FoveaPipeline: Sendable {
           data: cachedData,
           request: request,
           generation: generation,
-          keyDigest: variant.digestHex
+          keyDigest: record.variantKeyDigest
         )
       }
     }
@@ -166,7 +173,6 @@ public final class FoveaPipeline: Sendable {
       return try await process200(
         response,
         request: request,
-        variant: variant,
         generation: generation
       )
     }
@@ -175,7 +181,6 @@ public final class FoveaPipeline: Sendable {
       response,
       existing: existing,
       request: request,
-      variant: variant,
       generation: generation
     )
   }
@@ -184,7 +189,6 @@ public final class FoveaPipeline: Sendable {
     _ response: TimedTransportResponse,
     existing: RepresentationRecord?,
     request: ImageRequest,
-    variant: FetchVariantKey,
     generation: NamespaceGeneration
   ) async throws -> DecodedImage {
     guard let existing else { throw PipelineFailure.missingCachedBody }
@@ -195,12 +199,12 @@ public final class FoveaPipeline: Sendable {
       await diagnostics.record(
         DiagnosticEvent(
           kind: .cacheReadFailed,
-          keyDigest: variant.digestHex,
+          keyDigest: existing.variantKeyDigest,
           reason: "validated-body-read"
         )
       )
       await cache.removeRecord(
-        variant.digestHex,
+        existing.variantKeyDigest,
         namespace: request.namespace,
         generation: generation
       )
@@ -212,7 +216,6 @@ public final class FoveaPipeline: Sendable {
       return try await process200(
         retry,
         request: request,
-        variant: variant,
         generation: generation
       )
     }
@@ -220,47 +223,65 @@ public final class FoveaPipeline: Sendable {
     await diagnostics.record(
       DiagnosticEvent(
         kind: .originalEncodedHit,
-        keyDigest: variant.digestHex,
+        keyDigest: existing.variantKeyDigest,
         byteCount: cachedData.count
       )
     )
     try await requireActive(generation, for: request.namespace)
 
-    let responseOverridesDisposition =
+    let cacheControlPresent =
       HTTPCachePolicy.header("Cache-Control", in: response.head.headers) != nil
-      || HTTPCachePolicy.header("Vary", in: response.head.headers) != nil
+    let varyHeaderPresent = HTTPCachePolicy.header("Vary", in: response.head.headers) != nil
+    let responseOverridesDisposition = cacheControlPresent || varyHeaderPresent
+    let varySelection: HTTPVarySelection?
+    if varyHeaderPresent {
+      switch HTTPCachePolicy.varyFieldNames(in: response.head.headers) {
+      case .wildcard:
+        varySelection = nil
+      case .fields(let fields):
+        varySelection = request.varySelection(fieldNames: fields)
+      }
+    } else {
+      varySelection = existing.vary
+    }
     let refreshedDisposition =
       responseOverridesDisposition
       ? HTTPCachePolicy.disposition(
         headers: response.head.headers,
-        isPrivateNamespace: request.authorizationContext != .public
+        isPrivateNamespace: request.authorizationContext != .public,
+        varySelectionAvailable: varySelection != nil
       )
       : existing.disposition
 
     if refreshedDisposition == .noStore {
       await cache.discardReusableState(
         record: existing,
-        variantDigest: variant.digestHex,
         namespace: request.namespace,
         generation: generation
       )
       let image = try await decodeStage.image(
         from: cachedData,
         request: request,
-        keyDigest: variant.digestHex
+        keyDigest: existing.variantKeyDigest
       )
       try Task.checkCancellation()
       try await requireActive(generation, for: request.namespace)
       return image
     }
 
+    let selectedVary = varySelection ?? existing.vary
+    let refreshedVariant = request.fetchVariantKey(for: selectedVary)
     let refreshed = RepresentationRecord(
       securityNamespace: request.namespace.value,
       namespaceGeneration: generation.value,
-      variantKeyDigest: variant.digestHex,
+      baseKeyDigest: request.fetchBaseKey.digestHex,
+      variantKeyDigest: refreshedVariant.digestHex,
+      vary: selectedVary,
       statusCode: existing.statusCode,
       requestTime: response.requestTime,
       responseTime: response.responseTime,
+      responseDate: HTTPCachePolicy.responseDate(in: response.head.headers)
+        ?? existing.responseDate,
       expiresAt: HTTPCachePolicy.expiration(
         requestTime: response.requestTime,
         responseTime: response.responseTime,
@@ -275,7 +296,8 @@ public final class FoveaPipeline: Sendable {
       contentType: existing.contentType
     )
     try await refreshRecord(
-      refreshed,
+      replacing: existing,
+      with: refreshed,
       namespace: request.namespace,
       generation: generation
     )
@@ -284,14 +306,13 @@ public final class FoveaPipeline: Sendable {
       data: cachedData,
       request: request,
       generation: generation,
-      keyDigest: variant.digestHex
+      keyDigest: refreshed.variantKeyDigest
     )
   }
 
   private func process200(
     _ response: TimedTransportResponse,
     request: ImageRequest,
-    variant: FetchVariantKey,
     generation: NamespaceGeneration
   ) async throws -> DecodedImage {
     try Task.checkCancellation()
@@ -306,12 +327,22 @@ public final class FoveaPipeline: Sendable {
       await diagnostics.record(
         DiagnosticEvent(
           kind: .responseAnomaly,
-          keyDigest: variant.digestHex,
+          keyDigest: request.fetchBaseKey.digestHex,
           reason: "missing-content-type"
         )
       )
     }
 
+    let varySelection: HTTPVarySelection?
+    switch HTTPCachePolicy.varyFieldNames(in: response.head.headers) {
+    case .wildcard:
+      varySelection = nil
+    case .fields(let fields):
+      varySelection = request.varySelection(fieldNames: fields)
+    }
+    let variant = request.fetchVariantKey(
+      for: varySelection ?? HTTPVarySelection(fieldNames: [], values: [:])
+    )
     let image = try await decodeStage.image(
       from: response.transport.body,
       request: request,
@@ -329,7 +360,8 @@ public final class FoveaPipeline: Sendable {
     }
     let disposition = HTTPCachePolicy.disposition(
       headers: response.head.headers,
-      isPrivateNamespace: request.authorizationContext != .public
+      isPrivateNamespace: request.authorizationContext != .public,
+      varySelectionAvailable: varySelection != nil
     )
 
     try await requireActive(generation, for: request.namespace)
@@ -338,10 +370,13 @@ public final class FoveaPipeline: Sendable {
       let record = RepresentationRecord(
         securityNamespace: request.namespace.value,
         namespaceGeneration: generation.value,
+        baseKeyDigest: request.fetchBaseKey.digestHex,
         variantKeyDigest: variant.digestHex,
+        vary: varySelection ?? HTTPVarySelection(fieldNames: [], values: [:]),
         statusCode: 200,
         requestTime: response.requestTime,
         responseTime: response.responseTime,
+        responseDate: HTTPCachePolicy.responseDate(in: response.head.headers),
         expiresAt: HTTPCachePolicy.expiration(
           requestTime: response.requestTime,
           responseTime: response.responseTime,
@@ -415,12 +450,18 @@ public final class FoveaPipeline: Sendable {
   }
 
   private func refreshRecord(
-    _ record: RepresentationRecord,
+    replacing oldRecord: RepresentationRecord,
+    with newRecord: RepresentationRecord,
     namespace: SecurityNamespaceID,
     generation: NamespaceGeneration
   ) async throws {
     do {
-      try await cache.refresh(record, namespace: namespace, generation: generation)
+      try await cache.refresh(
+        replacing: oldRecord,
+        with: newRecord,
+        namespace: namespace,
+        generation: generation
+      )
     } catch let failure as PipelineFailure where failure.category == .namespaceRevoked {
       throw failure
     } catch is CancellationError {
@@ -429,7 +470,7 @@ public final class FoveaPipeline: Sendable {
       await diagnostics.record(
         DiagnosticEvent(
           kind: .cacheWriteFailed,
-          keyDigest: record.variantKeyDigest,
+          keyDigest: newRecord.variantKeyDigest,
           reason: "record-refresh-write"
         )
       )
