@@ -43,11 +43,20 @@ public struct ImageRequest: Sendable {
   }
 
   public var fetchExecutionKey: FetchExecutionKey {
+    fetchExecutionKey(revalidationFingerprint: "unconditional")
+  }
+
+  public func fetchExecutionKey(revalidationFingerprint: String) -> FetchExecutionKey {
     FetchExecutionKey(
       variant: fetchVariantKey,
       resolvedLocator: url.absoluteString,
-      credentialGeneration: credentialGeneration
+      credentialGeneration: credentialGeneration,
+      revalidationFingerprint: revalidationFingerprint
     )
+  }
+
+  public var displayIdentity: String {
+    "\(fetchExecutionKey.digestHex)|\(target.width)x\(target.height)"
   }
 
   public var containsCredentialHeaders: Bool {
@@ -99,13 +108,20 @@ private struct ScopedRenderKey: Hashable, Sendable {
 }
 
 public final class FoveaPipeline: Sendable {
+  private struct TimedTransportResponse: Sendable {
+    let requestTime: Date
+    let responseTime: Date
+    let transport: TransportResponse
+    var head: TransportResponseHead { transport.head }
+  }
+
   private let configuration: PipelineConfiguration
   private let transport: any HTTPTransporting
   private let encodedStore: any OriginalEncodedStoring
   private let recordStore: any RepresentationRecordStoring
   private let memoryCache: RenderedMemoryCache<ScopedRenderKey>
   private let namespaceRegistry: NamespaceRegistry
-  private let taskRegistry: SharedImageTaskRegistry
+  private let fetchTaskRegistry = SharedTaskRegistry<FetchExecutionKey, TimedTransportResponse>()
   private let decoder = ImageIOImageDecoder()
 
   public init(
@@ -114,8 +130,7 @@ public final class FoveaPipeline: Sendable {
     encodedStore: any OriginalEncodedStoring,
     recordStore: any RepresentationRecordStoring,
     memoryCacheCostLimit: Int = 64 * 1024 * 1024,
-    namespaceRegistry: NamespaceRegistry = NamespaceRegistry(),
-    taskRegistry: SharedImageTaskRegistry = SharedImageTaskRegistry()
+    namespaceRegistry: NamespaceRegistry = NamespaceRegistry()
   ) {
     self.configuration = configuration
     self.transport = transport
@@ -123,7 +138,6 @@ public final class FoveaPipeline: Sendable {
     self.recordStore = recordStore
     self.memoryCache = RenderedMemoryCache(costLimit: memoryCacheCostLimit)
     self.namespaceRegistry = namespaceRegistry
-    self.taskRegistry = taskRegistry
   }
 
   public func image(for request: ImageRequest) async throws -> DecodedImage {
@@ -133,24 +147,7 @@ public final class FoveaPipeline: Sendable {
       throw FoveaError.missingAuthorizationContext
     }
 
-    let variant = request.fetchVariantKey
-    let execution = request.fetchExecutionKey
-    let subscription = await taskRegistry.subscribe(key: execution) { [self] in
-      try await loadUnshared(request: request, variant: variant)
-    }
-
-    return try await withTaskCancellationHandler {
-      do {
-        let image = try await subscription.value()
-        await subscription.cancel()
-        return image
-      } catch {
-        await subscription.cancel()
-        throw error
-      }
-    } onCancel: {
-      Task { await subscription.cancel() }
-    }
+    return try await load(request: request, variant: request.fetchVariantKey)
   }
 
   public func revoke(namespace: SecurityNamespaceID) async {
@@ -159,9 +156,7 @@ public final class FoveaPipeline: Sendable {
     await memoryCache.removeAll()
   }
 
-  private func loadUnshared(request: ImageRequest, variant: FetchVariantKey) async throws
-    -> DecodedImage
-  {
+  private func load(request: ImageRequest, variant: FetchVariantKey) async throws -> DecodedImage {
     let generation = await namespaceRegistry.generation(for: request.namespace)
     let now = Date()
     var existing = await recordStore.record(for: variant.digestHex)
@@ -194,11 +189,10 @@ public final class FoveaPipeline: Sendable {
           responseTime: response.responseTime,
           expiresAt: HTTPCachePolicy.expiration(
             responseTime: response.responseTime,
-            headers: response.transport.head.headers
+            headers: response.head.headers
           ) ?? existing.expiresAt,
-          etag: HTTPCachePolicy.header("ETag", in: response.transport.head.headers)
-            ?? existing.etag,
-          lastModified: HTTPCachePolicy.header("Last-Modified", in: response.transport.head.headers)
+          etag: HTTPCachePolicy.header("ETag", in: response.head.headers) ?? existing.etag,
+          lastModified: HTTPCachePolicy.header("Last-Modified", in: response.head.headers)
             ?? existing.lastModified,
           disposition: existing.disposition,
           contentID: existing.contentID,
@@ -229,35 +223,54 @@ public final class FoveaPipeline: Sendable {
     )
   }
 
-  private struct TimedTransportResponse: Sendable {
-    let requestTime: Date
-    let responseTime: Date
-    let transport: TransportResponse
-    var head: TransportResponseHead { transport.head }
-  }
-
   private func performRequest(
     _ request: ImageRequest,
     conditionalRecord: RepresentationRecord?
   ) async throws -> TimedTransportResponse {
     var urlRequest = URLRequest(url: request.url)
     urlRequest.httpMethod = "GET"
-    for (name, value) in request.headers { urlRequest.setValue(value, forHTTPHeaderField: name) }
+    for (name, value) in request.headers {
+      urlRequest.setValue(value, forHTTPHeaderField: name)
+    }
     if let conditionalRecord {
       for (name, value) in HTTPCachePolicy.conditionalHeaders(for: conditionalRecord) {
         urlRequest.setValue(value, forHTTPHeaderField: name)
       }
     }
-    let requestTime = Date()
-    let transport = try await transport.execute(
-      TransportRequest(
-        request: urlRequest,
-        maximumBytes: configuration.maximumTransportBytes,
-        memoryThreshold: configuration.transportMemoryThreshold
-      )
+
+    let authorizedRequest = urlRequest
+    let executionKey = request.fetchExecutionKey(
+      revalidationFingerprint: Self.revalidationFingerprint(for: conditionalRecord)
     )
-    return TimedTransportResponse(
-      requestTime: requestTime, responseTime: Date(), transport: transport)
+    let subscription = await fetchTaskRegistry.subscribe(key: executionKey) { [self] in
+      let requestTime = Date()
+      let transport = try await transport.execute(
+        TransportRequest(
+          request: authorizedRequest,
+          maximumBytes: configuration.maximumTransportBytes,
+          memoryThreshold: configuration.transportMemoryThreshold
+        )
+      )
+      return TimedTransportResponse(
+        requestTime: requestTime,
+        responseTime: Date(),
+        transport: transport
+      )
+    }
+
+    return try await withTaskCancellationHandler {
+      do {
+        let response = try await subscription.value()
+        try Task.checkCancellation()
+        await subscription.cancel()
+        return response
+      } catch {
+        await subscription.cancel()
+        throw error
+      }
+    } onCancel: {
+      Task { await subscription.cancel() }
+    }
   }
 
   private func process200(
@@ -343,9 +356,19 @@ public final class FoveaPipeline: Sendable {
     let key = scopedRenderKey(contentID: contentID, request: request, generation: generation)
     if let cached = await memoryCache.image(for: key) { return cached }
     let image = try decoder.decode(
-      data: data, target: request.target, limits: configuration.decodeLimits)
+      data: data,
+      target: request.target,
+      limits: configuration.decodeLimits
+    )
     await memoryCache.insert(image, for: key)
     return image
+  }
+
+  private static func revalidationFingerprint(for record: RepresentationRecord?) -> String {
+    guard let record else { return "unconditional" }
+    let etag = record.etag ?? ""
+    let lastModified = record.lastModified ?? ""
+    return Data("etag:\(etag)\u{0}last-modified:\(lastModified)".utf8).sha256Hex
   }
 
   private func scopedRenderKey(

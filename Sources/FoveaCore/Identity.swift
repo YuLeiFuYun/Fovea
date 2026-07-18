@@ -72,6 +72,7 @@ public struct FetchExecutionKey: Hashable, Sendable, Codable {
   public let variantDigest: String
   public let resolvedLocator: String
   public let credentialGeneration: CredentialGeneration?
+  public let revalidationFingerprint: String
   public let transportPolicyFingerprint: String
 
   public init(
@@ -79,12 +80,14 @@ public struct FetchExecutionKey: Hashable, Sendable, Codable {
     variant: FetchVariantKey,
     resolvedLocator: String,
     credentialGeneration: CredentialGeneration? = nil,
+    revalidationFingerprint: String = "unconditional",
     transportPolicyFingerprint: String = "phase0a-default"
   ) {
     self.schemaVersion = schemaVersion
     self.variantDigest = variant.digestHex
     self.resolvedLocator = resolvedLocator
     self.credentialGeneration = credentialGeneration
+    self.revalidationFingerprint = revalidationFingerprint
     self.transportPolicyFingerprint = transportPolicyFingerprint
   }
 
@@ -94,6 +97,7 @@ public struct FetchExecutionKey: Hashable, Sendable, Codable {
     encoder.append(variantDigest)
     encoder.append(resolvedLocator)
     encoder.appendOptional(credentialGeneration?.value)
+    encoder.append(revalidationFingerprint)
     encoder.append(transportPolicyFingerprint)
     return encoder.data
   }
@@ -168,7 +172,7 @@ private struct CanonicalEncoder {
 }
 
 extension Data {
-  fileprivate var sha256Hex: String {
+  var sha256Hex: String {
     SHA256.hash(data: self).map { String(format: "%02x", $0) }.joined()
   }
 }

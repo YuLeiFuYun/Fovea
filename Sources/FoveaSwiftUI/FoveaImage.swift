@@ -81,7 +81,7 @@ public struct FoveaImage<Placeholder: View, Failure: View>: View {
   }
 
   private var requestIdentity: String {
-    request.fetchExecutionKey.digestHex
+    request.displayIdentity
   }
 }
 

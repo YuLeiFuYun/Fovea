@@ -86,6 +86,39 @@ final class IdentityTests: XCTestCase {
     XCTAssertEqual(request.fetchVariantKey.requestVariants, ["accept-language": "zh-CN"])
   }
 
+  func testRevalidationStateChangesFetchExecutionKey() {
+    let variant = FetchVariantKey(
+      source: LogicalSourceID("https://example.com/revalidate"),
+      namespace: SecurityNamespaceID.publicNamespace(appID: "tests")
+    )
+    let unconditional = FetchExecutionKey(
+      variant: variant,
+      resolvedLocator: "https://example.com/revalidate"
+    )
+    let conditional = FetchExecutionKey(
+      variant: variant,
+      resolvedLocator: "https://example.com/revalidate",
+      revalidationFingerprint: "etag-v1"
+    )
+    XCTAssertNotEqual(unconditional.digestHex, conditional.digestHex)
+  }
+
+  func testTargetChangesDisplayIdentityWithoutChangingFetchIdentity() throws {
+    let url = try XCTUnwrap(URL(string: "https://example.com/target.png"))
+    let small = ImageRequest.publicImage(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let large = ImageRequest.publicImage(
+      url: url,
+      target: try TargetPixels(width: 80, height: 80),
+      appID: "tests"
+    )
+    XCTAssertEqual(small.fetchExecutionKey, large.fetchExecutionKey)
+    XCTAssertNotEqual(small.displayIdentity, large.displayIdentity)
+  }
+
   func testZeroTargetIsRejected_GEO_PT_002() {
     XCTAssertThrowsError(try TargetPixels(width: 0, height: 10))
     XCTAssertThrowsError(try TargetPixels(width: 10, height: 0))

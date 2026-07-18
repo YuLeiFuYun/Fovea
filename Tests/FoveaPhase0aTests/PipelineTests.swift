@@ -108,6 +108,81 @@ final class PipelineTests: XCTestCase {
     XCTAssertNil(requests[2].value(forHTTPHeaderField: "If-None-Match"))
   }
 
+  func testCancellingOneSubscriberDoesNotCancelSharedFetch() async throws {
+    let body = try makePNG(width: 100, height: 50)
+    let (pipeline, transport, _, _) = try makePipeline(stubs: [
+      .init(
+        statusCode: 200,
+        headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+        body: body,
+        delayNanoseconds: 100_000_000
+      )
+    ])
+    let url = try XCTUnwrap(URL(string: "https://example.com/shared-cancel.png"))
+    let firstRequest = ImageRequest.publicImage(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let secondRequest = ImageRequest.publicImage(
+      url: url,
+      target: try TargetPixels(width: 80, height: 80),
+      appID: "tests"
+    )
+
+    let cancelled = Task { try await pipeline.image(for: firstRequest) }
+    let survivor = Task { try await pipeline.image(for: secondRequest) }
+    try await Task.sleep(for: .milliseconds(20))
+    cancelled.cancel()
+
+    do {
+      _ = try await cancelled.value
+      XCTFail("Cancelled subscriber must not receive a final image")
+    } catch is CancellationError {
+      // Expected.
+    }
+
+    let final = try await survivor.value
+    XCTAssertEqual(final.pixelWidth, 80)
+    XCTAssertEqual(final.pixelHeight, 40)
+    let requestCount = await transport.capturedRequests().count
+    XCTAssertEqual(requestCount, 1)
+  }
+
+  func testDifferentTargetsShareFetchButDecodeIndependently() async throws {
+    let body = try makePNG(width: 100, height: 50)
+    let (pipeline, transport, _, _) = try makePipeline(stubs: [
+      .init(
+        statusCode: 200,
+        headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+        body: body,
+        delayNanoseconds: 100_000_000
+      )
+    ])
+    let url = try XCTUnwrap(URL(string: "https://example.com/shared-fetch.png"))
+    let small = ImageRequest.publicImage(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let large = ImageRequest.publicImage(
+      url: url,
+      target: try TargetPixels(width: 80, height: 80),
+      appID: "tests"
+    )
+
+    async let smallImage = pipeline.image(for: small)
+    async let largeImage = pipeline.image(for: large)
+    let images = try await (smallImage, largeImage)
+
+    XCTAssertEqual(images.0.pixelWidth, 20)
+    XCTAssertEqual(images.0.pixelHeight, 10)
+    XCTAssertEqual(images.1.pixelWidth, 80)
+    XCTAssertEqual(images.1.pixelHeight, 40)
+    let requestCount = await transport.capturedRequests().count
+    XCTAssertEqual(requestCount, 1)
+  }
+
   func testFreshRecordAvoidsNetwork_CACHE_PT_006() async throws {
     let body = try makePNG()
     let (pipeline, transport, _, _) = try makePipeline(stubs: [
