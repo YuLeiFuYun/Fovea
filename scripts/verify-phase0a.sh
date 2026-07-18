@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+
+DEVELOPER_DIR=$($ROOT/scripts/select-xcode.sh)
+export DEVELOPER_DIR
+printf 'Using DEVELOPER_DIR=%s\n' "$DEVELOPER_DIR"
+xcodebuild -version
+xcrun swift --version
+
+python3 scripts/check-phase0a-surface.py
+xcrun swift-format lint --strict -r Sources Tests Package.swift
+xcrun swift test
+
+if [ "${RUN_IOS_SIMULATOR:-1}" = "1" ]; then
+    simulator_id=$(python3 scripts/select-ios-simulator.py)
+    printf 'Using iOS Simulator %s\n' "$simulator_id"
+    xcodebuild \
+        -scheme Fovea-Package \
+        -destination "platform=iOS Simulator,id=$simulator_id" \
+        test
+fi
+
+set -- evidence/*.json
+if [ -e "$1" ]; then
+    python3 scripts/validate-evidence.py "$@"
+fi

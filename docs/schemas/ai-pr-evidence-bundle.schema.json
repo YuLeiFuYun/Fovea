@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fovea.invalid/schemas/ai-pr-evidence-bundle.schema.json",
+  "title": "Fovea PR Evidence Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "changeID",
+    "baseCommit",
+    "headCommit",
+    "riskClass",
+    "accountableOwner",
+    "requirements",
+    "agent",
+    "permissions",
+    "changedFiles",
+    "verification",
+    "assumptions",
+    "rollback",
+    "assuranceStage",
+    "verifiedCommit",
+    "taskContextFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "changeID": {
+      "type": "string",
+      "minLength": 1
+    },
+    "baseCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{7,64}$"
+    },
+    "headCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{7,64}$"
+    },
+    "riskClass": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ]
+    },
+    "accountableOwner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "toolVersion",
+        "model",
+        "configurationFingerprint"
+      ],
+      "properties": {
+        "tool": {
+          "type": "string"
+        },
+        "toolVersion": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "modelVersion": {
+          "type": "string"
+        },
+        "configurationFingerprint": {
+          "type": "string"
+        },
+        "providerRequestID": {
+          "type": "string"
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "modelSnapshotPinned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tools",
+        "networkDomains",
+        "hadProductionSecrets",
+        "couldWriteProtectedBranch",
+        "couldReadHeldOutTests"
+      ],
+      "properties": {
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "networkDomains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "hadProductionSecrets": {
+          "const": false
+        },
+        "couldWriteProtectedBranch": {
+          "const": false
+        },
+        "couldReadHeldOutTests": {
+          "const": false
+        }
+      }
+    },
+    "changedFiles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "logicalChangedLines": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "evidenceLocator",
+          "producer",
+          "evidenceDigest"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "build",
+              "test",
+              "property",
+              "held-out",
+              "mutation",
+              "fuzz",
+              "sanitizer",
+              "static-analysis",
+              "benchmark",
+              "review",
+              "provenance"
+            ]
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "unproven",
+              "not-applicable",
+              "scaffolded"
+            ]
+          },
+          "evidenceLocator": {
+            "type": "string"
+          },
+          "producer": {
+            "enum": [
+              "agent-declared",
+              "trusted-ci",
+              "held-out-evaluator",
+              "human-reviewer",
+              "release-builder"
+            ]
+          },
+          "evidenceDigest": {
+            "type": "string",
+            "pattern": "^(sha256:)?[0-9a-fA-F]{64}$"
+          },
+          "verifiedCommit": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{7,64}$"
+          }
+        }
+      }
+    },
+    "dependencyChanges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "identity",
+          "version",
+          "license",
+          "approval"
+        ],
+        "properties": {
+          "identity": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          },
+          "approval": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unproven": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rollback": {
+      "type": "string",
+      "minLength": 1
+    },
+    "humanAttestation": {
+      "type": "object",
+      "properties": {
+        "reviewer": {
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "single-maintainer",
+            "two-party-human",
+            "external-audit"
+          ]
+        },
+        "signedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "assuranceStage": {
+      "enum": [
+        "0a-bootstrap",
+        "0a-complete",
+        "0b",
+        "release"
+      ]
+    },
+    "verifiedCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{7,64}$"
+    },
+    "taskContextFingerprint": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

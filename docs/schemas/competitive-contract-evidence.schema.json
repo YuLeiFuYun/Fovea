@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fovea.invalid/schemas/competitive-contract-evidence.schema.json",
+  "title": "Fovea Competitive Contract Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractID",
+    "claim",
+    "competitor",
+    "competitorVersion",
+    "adapterVersion",
+    "configuration",
+    "result",
+    "testIDs",
+    "reproductionLocator",
+    "evidenceDate",
+    "reviewer"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractID": { "type": "string", "pattern": "^COMP-CONTRACT-[A-Z0-9-]+$" },
+    "claim": { "type": "string", "minLength": 1 },
+    "competitor": { "enum": ["Nuke", "Kingfisher", "SDWebImage", "Other"] },
+    "competitorName": { "type": "string" },
+    "competitorVersion": { "type": "string", "minLength": 1 },
+    "adapterVersion": { "type": "string", "minLength": 1 },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": { "type": ["string", "number", "boolean", "null"] }
+    },
+    "result": {
+      "enum": ["supported", "unsupported", "failed", "app-composed", "incomparable", "unknown"]
+    },
+    "testIDs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "reproductionLocator": { "type": "string", "minLength": 1 },
+    "rawEvidenceDigest": { "type": "string", "pattern": "^(sha256:)?[0-9a-fA-F]{64}$" },
+    "evidenceDate": { "type": "string", "format": "date" },
+    "reviewer": { "type": "string", "minLength": 1 },
+    "notes": { "type": "array", "items": { "type": "string" } },
+    "coverageGaps": { "type": "array", "items": { "type": "string" } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "competitor": { "const": "Other" } } },
+      "then": { "required": ["competitorName"] }
+    },
+    {
+      "if": { "properties": { "result": { "enum": ["unsupported", "failed", "app-composed"] } } },
+      "then": { "required": ["rawEvidenceDigest"] }
+    }
+  ]
+}
