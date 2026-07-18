@@ -230,8 +230,8 @@ MUTANTS = [
     Mutant(
         "AIQA-MUT-008",
         "Allow commit after namespace generation revocation.",
-        "Sources/FoveaCore/FoveaPipeline.swift",
-        "PipelineTests/testRevokedGenerationCannotCommit_CACHE_PT_015_AIQA_MUT_008",
+        "Sources/FoveaCore/PipelineCache.swift",
+        "AuthGalleryTests/testRevokeDuringBlobCommitRemovesLateBlobAndRecord",
         mutant_008,
     ),
     Mutant(
