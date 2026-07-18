@@ -76,6 +76,7 @@ W1/W2 provisional 性能门以 `NET-LOCAL-V1` 为主，`NET-CONSTRAINED-V1` 作�
 - 最小切片可以在固定数据和 deterministic origin 上重复运行；
 - `TEST_CATALOG.md` 中 Phase 0a IDs 全部通过；
 - W1/W2 能输出原始 trace、target pixels、decoded megapixels、内存和取消事件；
+- W3 smoke 输出账户隔离、`no-store`、logout cleanup、跨 origin redirect 和 commit race 的机器可读零违规矩阵；
 - `no-store`、namespace/revoke 和迟到 UI 结果没有已知错误；
 - 不允许以未完成的 0b corpus 阻塞 0a 代码合并。
 

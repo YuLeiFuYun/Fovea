@@ -20,8 +20,7 @@ def require_nonnegative(summary: dict[str, Any], names: list[str]) -> None:
         require(summary[name] >= 0, f"summary {name} must be nonnegative")
 
 
-def validate(path: Path) -> str:
-    data = json.loads(path.read_text())
+def validate_common(data: dict[str, Any]) -> str:
     require(data.get("schemaVersion") == 1, "schemaVersion must be 1")
     for name in (
         "workloadID",
@@ -31,9 +30,13 @@ def validate(path: Path) -> str:
         "architecture",
         "operatingSystem",
         "verifiedCommit",
-        "cacheState",
     ):
         require(isinstance(data.get(name), str) and data[name], f"missing {name}")
+    return data["workloadID"]
+
+
+def validate_w1_w2(data: dict[str, Any], workload: str) -> None:
+    require(isinstance(data.get("cacheState"), str) and data["cacheState"], "missing cacheState")
     require(data.get("datasetLogicalItemCount", 0) > 0, "datasetLogicalItemCount must be positive")
     require(data.get("uniqueResourceCount", 0) > 0, "uniqueResourceCount must be positive")
     require(isinstance(data.get("sources"), list) and data["sources"], "sources must be non-empty")
@@ -73,7 +76,6 @@ def validate(path: Path) -> str:
     require(summary["failedLoads"] == 0, "smoke artifact contains failed loads")
     require(summary["droppedDiagnosticEventCount"] == 0, "diagnostics were dropped")
 
-    workload = data["workloadID"]
     if workload == "W1-Feed-Scroll-Smoke":
         require(data["datasetLogicalItemCount"] == 1000, "W1 must declare 1000 logical items")
         require(summary["cancelledLoads"] > 0, "W1 must exercise cancellation")
@@ -95,10 +97,43 @@ def validate(path: Path) -> str:
                 "W2 decoded pixels exceed target bounding box",
             )
     else:
-        raise ValueError(f"unexpected workloadID {workload}")
+        raise ValueError(f"unexpected performance workloadID {workload}")
 
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    return digest
+
+def validate_w3(data: dict[str, Any]) -> None:
+    cases = data.get("cases")
+    diagnostics = data.get("diagnostics")
+    summary = data.get("summary")
+    require(isinstance(cases, list) and cases, "W3 cases must be non-empty")
+    require(isinstance(diagnostics, list) and diagnostics, "W3 diagnostics must be non-empty")
+    require(isinstance(summary, dict), "W3 summary must be an object")
+    for case in cases:
+        require(isinstance(case, dict), "W3 case must be an object")
+        require(isinstance(case.get("identifier"), str) and case["identifier"], "W3 case missing identifier")
+        require(case.get("passed") is True, f"W3 case failed: {case.get('identifier')}")
+    violation_fields = [
+        "crossAccountPixelLeakCount",
+        "crossAccountMetadataCouplingCount",
+        "noStoreReusableWriteCount",
+        "logoutResidueCount",
+        "crossOriginAuthorizationLeakCount",
+        "revokedCommitResidueCount",
+        "sensitiveDiagnosticLeakCount",
+    ]
+    require_nonnegative(summary, violation_fields + ["networkRequestCount"])
+    for field in violation_fields:
+        require(summary[field] == 0, f"W3 violation {field}={summary[field]}")
+    require(summary["networkRequestCount"] >= 5, "W3 did not execute all network scenarios")
+
+
+def validate(path: Path) -> tuple[str, str]:
+    data = json.loads(path.read_text())
+    workload = validate_common(data)
+    if workload == "W3-Auth-Gallery-Smoke":
+        validate_w3(data)
+    else:
+        validate_w1_w2(data, workload)
+    return workload, hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def main() -> int:
@@ -112,14 +147,17 @@ def main() -> int:
     seen: set[str] = set()
     try:
         for path in paths:
-            digest = validate(path)
-            workload = json.loads(path.read_text())["workloadID"]
+            workload, digest = validate(path)
             require(workload not in seen, f"duplicate workload artifact {workload}")
             seen.add(workload)
             print(f"Benchmark artifact valid: {path} sha256:{digest}")
         require(
-            {"W1-Feed-Scroll-Smoke", "W2-Detail-Hero-Smoke"}.issubset(seen),
-            "both W1 and W2 artifacts are required",
+            {
+                "W1-Feed-Scroll-Smoke",
+                "W2-Detail-Hero-Smoke",
+                "W3-Auth-Gallery-Smoke",
+            }.issubset(seen),
+            "W1, W2, and W3 artifacts are required",
         )
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(f"Benchmark artifact validation failed: {error}", file=sys.stderr)

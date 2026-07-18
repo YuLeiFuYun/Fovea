@@ -49,6 +49,19 @@ final class BenchmarkSmokeTests: XCTestCase {
     }
   }
 
+  func testW3AuthGalleryProducesZeroViolationArtifact() async throws {
+    let output = try benchmarkOutputDirectory()
+    let artifact = try await AuthGallerySmokeHarness.run(outputDirectory: output)
+
+    XCTAssertEqual(artifact.workloadID, "W3-Auth-Gallery-Smoke")
+    XCTAssertEqual(artifact.profileID, "W3-AUTH-GALLERY-SMOKE-V1")
+    XCTAssertEqual(artifact.summary.totalViolationCount, 0)
+    XCTAssertGreaterThanOrEqual(artifact.summary.networkRequestCount, 5)
+    XCTAssertFalse(artifact.cases.isEmpty)
+    XCTAssertTrue(artifact.cases.allSatisfy(\.passed))
+    XCTAssertFalse(artifact.diagnostics.isEmpty)
+  }
+
   private func benchmarkOutputDirectory() throws -> URL {
     let environment = ProcessInfo.processInfo.environment
     let directory: URL
