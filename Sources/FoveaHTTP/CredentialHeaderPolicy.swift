@@ -1,12 +1,27 @@
 import Foundation
 
-public enum RedirectCredentialPolicy {
+public enum CredentialHeaderPolicy {
   public static let sensitiveHeaderNames: Set<String> = [
     "authorization",
     "proxy-authorization",
     "cookie",
+    "set-cookie",
     "x-api-key",
   ]
+
+  public static func containsSensitiveHeader(_ headers: [String: String]) -> Bool {
+    headers.keys.contains { sensitiveHeaderNames.contains($0.lowercased()) }
+  }
+
+  public static func removingSensitiveHeaders(from headers: [String: String]) -> [String: String] {
+    Dictionary(
+      uniqueKeysWithValues: headers.compactMap { name, value in
+        let normalized = name.lowercased()
+        guard !sensitiveHeaderNames.contains(normalized) else { return nil }
+        return (normalized, value)
+      }
+    )
+  }
 
   public static func sanitizedRedirectRequest(
     original: URLRequest?,
@@ -58,7 +73,7 @@ final class RedirectCredentialDelegate: NSObject, URLSessionTaskDelegate, @unche
     completionHandler: @escaping @Sendable (URLRequest?) -> Void
   ) {
     completionHandler(
-      RedirectCredentialPolicy.sanitizedRedirectRequest(
+      CredentialHeaderPolicy.sanitizedRedirectRequest(
         original: task.currentRequest ?? task.originalRequest,
         proposed: request
       )

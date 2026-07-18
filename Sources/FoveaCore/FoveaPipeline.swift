@@ -60,21 +60,12 @@ public struct ImageRequest: Sendable {
   }
 
   public var containsCredentialHeaders: Bool {
-    headers.keys.contains { Self.sensitiveHeaderNames.contains($0.lowercased()) }
+    CredentialHeaderPolicy.containsSensitiveHeader(headers)
   }
 
   private var stableRequestVariants: [String: String] {
-    Dictionary(
-      uniqueKeysWithValues: headers.compactMap { name, value in
-        let normalized = name.lowercased()
-        guard !Self.sensitiveHeaderNames.contains(normalized) else { return nil }
-        return (normalized, value)
-      })
+    CredentialHeaderPolicy.removingSensitiveHeaders(from: headers)
   }
-
-  private static let sensitiveHeaderNames: Set<String> = [
-    "authorization", "proxy-authorization", "cookie", "set-cookie", "x-api-key",
-  ]
 }
 
 public struct PipelineConfiguration: Sendable {
@@ -99,6 +90,7 @@ public enum FoveaError: Error, Equatable, Sendable {
   case namespaceRevoked
   case missingCachedBody
   case missingAuthorizationContext
+  case namespaceCleanupFailed
 }
 
 private struct ScopedRenderKey: Hashable, Sendable {
@@ -163,10 +155,26 @@ public final class FoveaPipeline: Sendable {
   public func revoke(namespace: SecurityNamespaceID) async throws {
     _ = await namespaceRegistry.revoke(namespace)
     _ = await fetchTaskRegistry.cancelAll { $0.namespace == namespace }
-    await memoryCache.removeAll()
-    try await recordStore.removeAll(namespace: namespace.value)
-    try await encodedStore.removeAll(namespace: namespace.value)
-    await diagnostics.record(DiagnosticEvent(kind: .namespaceRevoked))
+    await memoryCache.removeAll { $0.namespace == namespace }
+
+    var cleanupFailed = false
+    do {
+      try await recordStore.removeAll(namespace: namespace.value)
+    } catch {
+      cleanupFailed = true
+    }
+    do {
+      try await encodedStore.removeAll(namespace: namespace.value)
+    } catch {
+      cleanupFailed = true
+    }
+    await diagnostics.record(
+      DiagnosticEvent(
+        kind: .namespaceRevoked,
+        reason: cleanupFailed ? "persistent-cleanup-failed" : nil
+      )
+    )
+    if cleanupFailed { throw FoveaError.namespaceCleanupFailed }
   }
 
   private func load(request: ImageRequest, variant: FetchVariantKey) async throws -> DecodedImage {

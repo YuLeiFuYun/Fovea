@@ -40,6 +40,14 @@ public actor RenderedMemoryCache<Key: Hashable & Sendable> {
     totalCost -= removed.cost
   }
 
+  public func removeAll(where predicate: (Key) -> Bool) {
+    let victims = entries.keys.filter(predicate)
+    for key in victims {
+      guard let removed = entries.removeValue(forKey: key) else { continue }
+      totalCost -= removed.cost
+    }
+  }
+
   public func removeAll() {
     entries.removeAll(keepingCapacity: false)
     totalCost = 0

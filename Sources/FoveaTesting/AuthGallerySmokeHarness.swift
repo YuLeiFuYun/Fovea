@@ -361,11 +361,11 @@ public enum AuthGallerySmokeHarness {
     original.setValue("image/avif", forHTTPHeaderField: "Accept")
     var proposed = URLRequest(url: URL(string: "https://b.example.test/redirected")!)
     proposed.allHTTPHeaderFields = original.allHTTPHeaderFields
-    let sanitized = RedirectCredentialPolicy.sanitizedRedirectRequest(
+    let sanitized = CredentialHeaderPolicy.sanitizedRedirectRequest(
       original: original,
       proposed: proposed
     )
-    let leaks = RedirectCredentialPolicy.sensitiveHeaderNames.filter {
+    let leaks = CredentialHeaderPolicy.sensitiveHeaderNames.filter {
       sanitized.value(forHTTPHeaderField: $0) != nil
     }.count
     let acceptPreserved = sanitized.value(forHTTPHeaderField: "Accept") == "image/avif"

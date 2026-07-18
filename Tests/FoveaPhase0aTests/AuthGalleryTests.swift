@@ -1,3 +1,4 @@
+import AkashicCore
 import AkashicDisk
 import CoreGraphics
 import CryptoKit
@@ -230,6 +231,28 @@ final class AuthGalleryTests: XCTestCase {
     XCTAssertNil(physicalID)
   }
 
+  func testRevokeAttemptsAllPersistentCleanupWhenOneStoreFails() async throws {
+    let encoded = TrackingCleanupEncodedStore()
+    let records = FailingCleanupRecordStore()
+    let pipeline = FoveaPipeline(
+      transport: CredentialImageOrigin(responses: [:]),
+      encodedStore: encoded,
+      recordStore: records
+    )
+
+    do {
+      try await pipeline.revoke(namespace: SecurityNamespaceID("account-cleanup-failure"))
+      XCTFail("Expected a structured cleanup failure")
+    } catch let error as FoveaError {
+      XCTAssertEqual(error, .namespaceCleanupFailed)
+    }
+
+    let encodedAttempts = await encoded.removeAllCount
+    let recordAttempts = await records.removeAllCount
+    XCTAssertEqual(encodedAttempts, 1)
+    XCTAssertEqual(recordAttempts, 1)
+  }
+
   func testCrossOriginRedirectStripsCredentialsButSameOriginPreservesThem() throws {
     var original = URLRequest(
       url: try XCTUnwrap(URL(string: "https://a.example.test/private"))
@@ -243,7 +266,7 @@ final class AuthGalleryTests: XCTestCase {
       url: try XCTUnwrap(URL(string: "https://b.example.test/redirected"))
     )
     crossOrigin.allHTTPHeaderFields = original.allHTTPHeaderFields
-    let sanitized = RedirectCredentialPolicy.sanitizedRedirectRequest(
+    let sanitized = CredentialHeaderPolicy.sanitizedRedirectRequest(
       original: original,
       proposed: crossOrigin
     )
@@ -256,7 +279,7 @@ final class AuthGalleryTests: XCTestCase {
       url: try XCTUnwrap(URL(string: "https://a.example.test:443/redirected"))
     )
     sameOrigin.allHTTPHeaderFields = original.allHTTPHeaderFields
-    let preserved = RedirectCredentialPolicy.sanitizedRedirectRequest(
+    let preserved = CredentialHeaderPolicy.sanitizedRedirectRequest(
       original: original,
       proposed: sameOrigin
     )
@@ -351,4 +374,41 @@ private actor CredentialImageOrigin: HTTPTransporting {
   }
 
   func requestCounts() -> [String: Int] { counts }
+}
+
+private enum CleanupTestError: Error, Sendable {
+  case failed
+}
+
+private actor TrackingCleanupEncodedStore: OriginalEncodedStoring {
+  private(set) var removeAllCount = 0
+
+  func read(contentID: String, namespace: String) async throws -> Data {
+    throw CleanupTestError.failed
+  }
+
+  func commit(data: Data, contentID: String, namespace: String) async throws -> StoredBlob {
+    throw CleanupTestError.failed
+  }
+
+  func physicalID(contentID: String, namespace: String) async -> PhysicalBlobID? { nil }
+
+  func remove(contentID: String, namespace: String) async throws {}
+
+  func removeAll(namespace: String) async throws {
+    removeAllCount += 1
+  }
+}
+
+private actor FailingCleanupRecordStore: RepresentationRecordStoring {
+  private(set) var removeAllCount = 0
+
+  func record(for variantDigest: String) async -> RepresentationRecord? { nil }
+  func put(_ record: RepresentationRecord) async throws {}
+  func remove(_ variantDigest: String) async throws {}
+
+  func removeAll(namespace: String) async throws {
+    removeAllCount += 1
+    throw CleanupTestError.failed
+  }
 }
