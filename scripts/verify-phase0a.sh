@@ -32,6 +32,7 @@ fi
 
 if [ "${RUN_CRITICAL_MUTANTS:-0}" = "1" ]; then
     python3 scripts/run-critical-mutants.py
+    python3 scripts/validate-critical-mutation-report.py
 fi
 
 set -- evidence/*.json

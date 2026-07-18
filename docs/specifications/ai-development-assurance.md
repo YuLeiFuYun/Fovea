@@ -257,7 +257,7 @@ R2/R3 至少使用一类，R3 至少使用三类：
 
 ### 8.1 Phase 0a curated mutant runner
 
-Phase 0a 的 required mutants `001/002/007/008/009/015` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定。
+Phase 0a 的 required mutants `001/002/007/008/009/015` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定，并由零依赖的 `scripts/validate-critical-mutation-report.py` 复核 commit、结果集合、日志存在性和 SHA-256。
 
 该 runner 是 visible oracle，仍不能替代 protected CI、held-out evaluator 或 human attestation。
 
