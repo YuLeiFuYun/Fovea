@@ -63,8 +63,9 @@ def mutant_007(root: Path) -> None:
 
 
 def mutant_008(root: Path) -> None:
+    pipeline = root / "Sources/FoveaCore/FoveaPipeline.swift"
     replace_exact(
-        root / "Sources/FoveaCore/FoveaPipeline.swift",
+        pipeline,
         """    guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
       throw FoveaError.namespaceRevoked
     }
@@ -73,7 +74,17 @@ def mutant_008(root: Path) -> None:
       throw FoveaError.namespaceRevoked
     }
 """,
-        expected_count=2,
+    )
+    replace_exact(
+        pipeline,
+        """        guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
+          throw FoveaError.namespaceRevoked
+        }
+""",
+        """        guard await namespaceRegistry.isActive(generation, for: request.namespace) || true else {
+          throw FoveaError.namespaceRevoked
+        }
+""",
     )
 
 
