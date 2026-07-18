@@ -50,7 +50,10 @@ public actor URLSessionTransport: HTTPTransporting {
       stagingDirectory: stagingDirectory
     )
     let task = session.dataTask(with: request.request)
-    let events = await eventRouter.events(for: task.taskIdentifier)
+    let events = await eventRouter.events(
+      for: task.taskIdentifier,
+      credentialHeaderNames: request.credentialHeaderNames
+    )
 
     return try await withTaskCancellationHandler {
       task.resume()
@@ -85,9 +88,7 @@ public actor URLSessionTransport: HTTPTransporting {
         throw TransportError.incompleteBody
       }
 
-      let headers = response.allHeaderFields.reduce(into: [String: String]()) { result, pair in
-        result[String(describing: pair.key)] = String(describing: pair.value)
-      }
+      let headers = Self.headers(from: response)
       return TransportResponse(
         head: TransportResponseHead(
           statusCode: response.statusCode,
@@ -103,4 +104,48 @@ public actor URLSessionTransport: HTTPTransporting {
       eventRouter.unregister(taskID: task.taskIdentifier)
     }
   }
+  private static func headers(from response: HTTPURLResponse) -> [String: String] {
+    var pairs: [(name: String, value: String)] = []
+    pairs.reserveCapacity(response.allHeaderFields.count)
+    for pair in response.allHeaderFields {
+      guard let name = pair.key as? String else { continue }
+      let value: String
+      if let string = pair.value as? String {
+        value = string
+      } else if let number = pair.value as? NSNumber {
+        value = number.stringValue
+      } else {
+        continue
+      }
+      pairs.append((name.lowercased(), value))
+    }
+    pairs.sort {
+      if $0.name != $1.name { return $0.name < $1.name }
+      return $0.value < $1.value
+    }
+
+    var result = pairs.reduce(into: [String: String]()) { result, pair in
+      if result[pair.name] == nil { result[pair.name] = pair.value }
+    }
+    for name in semanticHeaderNames {
+      if let value = response.value(forHTTPHeaderField: name) {
+        result[name.lowercased()] = value
+      }
+    }
+    return result
+  }
+
+  private static let semanticHeaderNames = [
+    "Age",
+    "Cache-Control",
+    "Content-Encoding",
+    "Content-Length",
+    "Content-Type",
+    "Date",
+    "ETag",
+    "Expires",
+    "Last-Modified",
+    "Vary",
+  ]
+
 }

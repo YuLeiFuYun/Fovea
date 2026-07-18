@@ -4,11 +4,18 @@ public struct TransportRequest: Sendable {
   public let request: URLRequest
   public let maximumBytes: Int
   public let memoryThreshold: Int
+  public let credentialHeaderNames: Set<String>
 
-  public init(request: URLRequest, maximumBytes: Int, memoryThreshold: Int = 512 * 1024) {
+  public init(
+    request: URLRequest,
+    maximumBytes: Int,
+    memoryThreshold: Int = 512 * 1024,
+    credentialHeaderNames: Set<String> = []
+  ) {
     self.request = request
     self.maximumBytes = maximumBytes
     self.memoryThreshold = memoryThreshold
+    self.credentialHeaderNames = credentialHeaderNames
   }
 }
 
@@ -19,12 +26,22 @@ public struct TransportResponseHead: Sendable {
 
   public init(statusCode: Int, headers: [String: String], url: URL?) {
     self.statusCode = statusCode
-    self.headers = headers
+    self.headers =
+      headers
+      .map { (name: $0.key.lowercased(), originalName: $0.key, value: $0.value) }
+      .sorted {
+        if $0.name != $1.name { return $0.name < $1.name }
+        if $0.originalName != $1.originalName { return $0.originalName < $1.originalName }
+        return $0.value < $1.value
+      }
+      .reduce(into: [:]) { result, pair in
+        if result[pair.name] == nil { result[pair.name] = pair.value }
+      }
     self.url = url
   }
 
   public func value(forHeader name: String) -> String? {
-    headers.first { $0.key.caseInsensitiveCompare(name) == .orderedSame }?.value
+    headers[name.lowercased()]
   }
 }
 

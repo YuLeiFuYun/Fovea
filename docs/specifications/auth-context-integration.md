@@ -94,6 +94,20 @@ public struct AuthorizedRequest /* transport-isolated */ {
 
 `AuthorizationContextID` 不应直接由原始 token 哈希得到；它由应用按授权语义生成，避免 token 轮换无界制造缓存变体。
 
+
+### 自定义凭证 header
+
+Phase 0a 的 `ImageRequest.credentialHeaderNames` 允许调用者显式标记非标准凭证字段。规则：
+
+- 名称规范化为小写，并必须是合法 HTTP token；
+- 被标记字段不进入 FetchVariantKey 或 diagnostics；
+- 实际凭证值不哈希，凭证变化仍由 CredentialGeneration 表达；
+- header 名集合进入 FetchExecutionKey 的版本化 policy fingerprint，避免不同凭证形态错误 single-flight；
+- URLSession task 注册该集合，跨 origin redirect 必须同时剥离内置与自定义凭证字段；
+- 自定义凭证存在但 authorization context / credential generation 缺失时，在发网前 fail-closed。
+
+内置敏感字段覆盖 Authorization、Proxy-Authorization、Cookie、API key 及常见 cloud/access-token 名称；不能识别的业务凭证必须由调用者显式分类。
+
 ## 5. Cookie 默认策略
 
 Apple 的默认和后台 `URLSessionConfiguration` 通常使用共享 Cookie storage；显式设为 `nil` 可以禁用 Cookie storage。Fovea 的默认 composition root 应：
@@ -146,7 +160,9 @@ Fail closed 不等于拒绝显示：请求仍可作为 task-local、不可复用
 - **AUTH-PT-007**：并发 401 只触发一次 refresh；
 - **AUTH-PT-008**：不透明 URLSession 缺上下文时进入 task-local fail-closed 模式；
 - **AUTH-PT-009**：refresh 递归/重入不会死锁或无限循环；
-- **AUTH-PT-010**：无鉴权 public URL 不要求 provider，FetchExecutionKey 不含 credential generation。
+- **AUTH-PT-010**：无鉴权 public URL 不要求 provider，FetchExecutionKey 不含 credential generation；
+- **AUTH-PT-011**：revoke 清理完成后，晚到 304 metadata refresh 被 generation fence 删除；
+- **AUTH-PT-012**：自定义 credential header 不进入稳定 identity，header 集合改变 exact execution identity，跨 origin redirect 会剥离，缺 auth context 时发网前失败。
 
 ## 9. 参考
 

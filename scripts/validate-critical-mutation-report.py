@@ -17,6 +17,8 @@ REQUIRED_MUTANTS = {
     "AIQA-MUT-008",
     "AIQA-MUT-009",
     "AIQA-MUT-015",
+    "AIQA-MUT-017",
+    "AIQA-MUT-018",
 }
 
 
@@ -103,7 +105,10 @@ def validate(report_path: Path, root: Path, expected_commit: str | None) -> str:
     require(summary.get("required") == len(REQUIRED_MUTANTS), "summary.required mismatch")
     for status, count in status_counts.items():
         require(summary.get(status) == count, f"summary.{status} mismatch")
-    require(status_counts == {"killed": 6, "survived": 0, "invalid": 0}, "critical mutation gate not fully killed")
+    require(
+        status_counts == {"killed": len(REQUIRED_MUTANTS), "survived": 0, "invalid": 0},
+        "critical mutation gate not fully killed",
+    )
 
     return sha256(report_path)
 

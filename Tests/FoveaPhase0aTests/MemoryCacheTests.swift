@@ -1,28 +1,31 @@
 import AkashicMemory
-import ImageCraftCore
-import ImageCraftImageIO
 import XCTest
 
 final class MemoryCacheTests: XCTestCase {
-  func testLRUHitPromotesEntryBeforeEviction() async throws {
-    let image = try ImageIOImageDecoder().decode(
-      data: makePNG(width: 10, height: 10),
-      target: TargetPixels(width: 10, height: 10)
-    )
-    let cache = RenderedMemoryCache<String>(costLimit: image.estimatedByteCost * 2)
-    await cache.insert(image, for: "a")
-    await cache.insert(image, for: "b")
-    let promoted = await cache.image(for: "a")
-    XCTAssertNotNil(promoted)
-    await cache.insert(image, for: "c")
+  func testLRUHitPromotesEntryBeforeEviction() async {
+    let cache = MemoryCache<String, String>(costLimit: 8)
+    await cache.insert("first", for: "a", cost: 4)
+    await cache.insert("second", for: "b", cost: 4)
+    let promoted = await cache.value(for: "a")
+    XCTAssertEqual(promoted, "first")
+    await cache.insert("third", for: "c", cost: 4)
 
-    let a = await cache.image(for: "a")
-    let b = await cache.image(for: "b")
-    let c = await cache.image(for: "c")
-    XCTAssertNotNil(a)
+    let a = await cache.value(for: "a")
+    let b = await cache.value(for: "b")
+    let c = await cache.value(for: "c")
+    XCTAssertEqual(a, "first")
     XCTAssertNil(b)
-    XCTAssertNotNil(c)
+    XCTAssertEqual(c, "third")
     let count = await cache.count
     XCTAssertEqual(count, 2)
+  }
+
+  func testOversizedValueDoesNotRemainResident() async {
+    let cache = MemoryCache<Int, String>(costLimit: 4)
+    await cache.insert("oversized", for: 1, cost: 8)
+    let value = await cache.value(for: 1)
+    let count = await cache.count
+    XCTAssertNil(value)
+    XCTAssertEqual(count, 0)
   }
 }

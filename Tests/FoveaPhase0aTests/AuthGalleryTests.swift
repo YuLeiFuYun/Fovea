@@ -181,8 +181,9 @@ final class AuthGalleryTests: XCTestCase {
     do {
       _ = try await task.value
       XCTFail("A revoked namespace must not receive a final image")
-    } catch let error as FoveaError {
-      XCTAssertEqual(error, .namespaceRevoked)
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .namespaceRevoked)
+      XCTAssertEqual(failure.disposition, .terminal)
     }
 
     let delayedRecord = await records.record(for: request.fetchVariantKey.digestHex)
@@ -230,8 +231,9 @@ final class AuthGalleryTests: XCTestCase {
     do {
       _ = try await task.value
       XCTFail("A revoked namespace must not survive a late blob commit")
-    } catch let error as FoveaError {
-      XCTAssertEqual(error, .namespaceRevoked)
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .namespaceRevoked)
+      XCTAssertEqual(failure.disposition, .terminal)
     }
 
     let record = await records.record(for: request.fetchVariantKey.digestHex)
@@ -241,6 +243,75 @@ final class AuthGalleryTests: XCTestCase {
     )
     XCTAssertNil(record)
     XCTAssertNil(physicalID)
+  }
+
+  func testRevokeDuring304RefreshRemovesLateMetadata_AUTH_PT_011() async throws {
+    let body = try makePNG(red: 140)
+    let root = try makeTemporaryDirectory()
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
+    let registry = NamespaceRegistry()
+    let request = try ImageRequest(
+      url: try XCTUnwrap(URL(string: "https://images.example.test/refresh-race")),
+      target: try TargetPixels(width: 40, height: 40),
+      namespace: SecurityNamespaceID("account-refresh-race"),
+      authorizationContext: AuthorizationContextID("principal-refresh-race"),
+      credentialGeneration: CredentialGeneration(1)
+    )
+    let seed = FoveaPipeline(
+      transport: FakeHTTPTransport(stubs: [
+        .init(
+          statusCode: 200,
+          headers: [
+            "Content-Type": "image/png",
+            "Cache-Control": "private, max-age=0",
+            "ETag": "refresh-race-v1",
+          ],
+          body: body
+        )
+      ]),
+      encodedStore: encoded,
+      recordStore: records,
+      namespaceRegistry: registry,
+      decoder: ImageIOImageDecoder()
+    )
+    _ = try await seed.image(for: request)
+
+    let barrierRecords = RefreshBarrierRecordStore(base: records)
+    let pipeline = FoveaPipeline(
+      transport: FakeHTTPTransport(stubs: [
+        .init(
+          statusCode: 304,
+          headers: ["Cache-Control": "private, max-age=3600", "ETag": "refresh-race-v1"]
+        )
+      ]),
+      encodedStore: encoded,
+      recordStore: barrierRecords,
+      namespaceRegistry: registry,
+      decoder: ImageIOImageDecoder()
+    )
+
+    let task = Task { try await pipeline.image(for: request) }
+    await barrierRecords.waitUntilRefreshStarts()
+    try await pipeline.revoke(namespace: request.namespace)
+    await barrierRecords.releaseRefresh()
+
+    do {
+      _ = try await task.value
+      XCTFail("A late 304 refresh must not survive namespace revoke")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .namespaceRevoked)
+      XCTAssertEqual(failure.disposition, .terminal)
+    }
+
+    let lateRecord = await records.record(for: request.fetchVariantKey.digestHex)
+    let lateBlob = await encoded.physicalID(
+      contentID: ContentID(data: body).description,
+      namespace: request.namespace.value
+    )
+    XCTAssertNil(lateRecord)
+    XCTAssertNil(lateBlob)
   }
 
   func testRevokeAttemptsAllPersistentCleanupWhenOneStoreFails() async throws {
@@ -256,8 +327,11 @@ final class AuthGalleryTests: XCTestCase {
     do {
       try await pipeline.revoke(namespace: SecurityNamespaceID("account-cleanup-failure"))
       XCTFail("Expected a structured cleanup failure")
-    } catch let error as FoveaError {
-      XCTAssertEqual(error, .namespaceCleanupFailed)
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .cacheWrite)
+      XCTAssertEqual(failure.stage, .revocation)
+      XCTAssertEqual(failure.disposition, .cacheDegraded)
+      XCTAssertEqual(failure.reasonCode, "namespace-cleanup-failed")
     }
 
     let encodedAttempts = await encoded.removeAllCount
@@ -287,6 +361,14 @@ final class AuthGalleryTests: XCTestCase {
     XCTAssertNil(sanitized.value(forHTTPHeaderField: "Cookie"))
     XCTAssertNil(sanitized.value(forHTTPHeaderField: "X-API-Key"))
     XCTAssertEqual(sanitized.value(forHTTPHeaderField: "Accept"), "image/avif")
+
+    crossOrigin.setValue("custom-secret", forHTTPHeaderField: "X-Tenant-Credential")
+    let customSanitized = CredentialHeaderPolicy.sanitizedRedirectRequest(
+      original: original,
+      proposed: crossOrigin,
+      additionalSensitiveNames: ["x-tenant-credential"]
+    )
+    XCTAssertNil(customSanitized.value(forHTTPHeaderField: "X-Tenant-Credential"))
 
     var sameOrigin = URLRequest(
       url: try XCTUnwrap(URL(string: "https://a.example.test:443/redirected"))
@@ -422,10 +504,75 @@ private actor FailingCleanupRecordStore: RepresentationRecordStoring {
     namespaceGeneration: UInt64
   ) async -> RepresentationRecord? { nil }
   func put(_ record: RepresentationRecord) async throws {}
-  func remove(_ variantDigest: String) async throws {}
+  func remove(
+    _ variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async throws {}
 
   func removeAll(namespace: String) async throws {
     removeAllCount += 1
     throw CleanupTestError.failed
+  }
+}
+
+private actor RefreshBarrierRecordStore: RepresentationRecordStoring {
+  private let base: RepresentationRecordStore
+  private var startedContinuation: CheckedContinuation<Void, Never>?
+  private var releaseContinuation: CheckedContinuation<Void, Never>?
+  private var started = false
+  private var released = false
+
+  init(base: RepresentationRecordStore) {
+    self.base = base
+  }
+
+  func record(
+    for variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async -> RepresentationRecord? {
+    await base.record(
+      for: variantDigest,
+      namespace: namespace,
+      namespaceGeneration: namespaceGeneration
+    )
+  }
+
+  func put(_ record: RepresentationRecord) async throws {
+    started = true
+    startedContinuation?.resume()
+    startedContinuation = nil
+    if !released {
+      await withCheckedContinuation { releaseContinuation = $0 }
+    }
+    try await base.put(record)
+  }
+
+  func remove(
+    _ variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async throws {
+    try await base.remove(
+      variantDigest,
+      namespace: namespace,
+      namespaceGeneration: namespaceGeneration
+    )
+  }
+
+  func removeAll(namespace: String) async throws {
+    try await base.removeAll(namespace: namespace)
+  }
+
+  func waitUntilRefreshStarts() async {
+    guard !started else { return }
+    await withCheckedContinuation { startedContinuation = $0 }
+  }
+
+  func releaseRefresh() {
+    released = true
+    releaseContinuation?.resume()
+    releaseContinuation = nil
   }
 }

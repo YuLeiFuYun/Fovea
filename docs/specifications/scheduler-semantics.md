@@ -35,6 +35,8 @@ DecodeKey  → target decode
 RenderKey  → final transform
 ```
 
+Phase 0a 仅实现 FetchExecutionKey single-flight。相同 ContentID/DecodeKey 的并发请求可能重复 probe/decode；该限制有意保留到 0b 调度器，不得在 benchmark 或文档中宣称 Decode/Render stage sharing 已完成。
+
 ## 3. Subscriber
 
 每个订阅者至少携带：

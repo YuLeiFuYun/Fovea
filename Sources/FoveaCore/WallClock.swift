@@ -1,13 +1,13 @@
 import Foundation
 
-public protocol WallClock: Sendable {
+package protocol WallClock: Sendable {
   func now() async -> Date
 }
 
-public struct SystemWallClock: WallClock {
-  public init() {}
+package struct SystemWallClock: WallClock {
+  package init() {}
 
-  public func now() -> Date {
+  package func now() -> Date {
     Date()
   }
 }

@@ -21,8 +21,11 @@ final class PipelineTests: XCTestCase {
     do {
       _ = try await pipeline.image(for: request)
       XCTFail("Expected fail-closed authorization error")
-    } catch let error as FoveaError {
-      XCTAssertEqual(error, .missingAuthorizationContext)
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .authorization)
+      XCTAssertEqual(failure.stage, .requestValidation)
+      XCTAssertEqual(failure.disposition, .terminal)
+      XCTAssertEqual(failure.reasonCode, "missing-authorization-context")
     }
     let requestCount = await transport.capturedRequests().count
     XCTAssertEqual(requestCount, 0)
@@ -51,6 +54,7 @@ final class PipelineTests: XCTestCase {
     try await records.put(
       RepresentationRecord(
         securityNamespace: request.namespace.value,
+        namespaceGeneration: 0,
         variantKeyDigest: request.fetchVariantKey.digestHex,
         statusCode: 200,
         requestTime: now,
@@ -68,6 +72,7 @@ final class PipelineTests: XCTestCase {
       transport: transport,
       encodedStore: encoded,
       recordStore: records,
+      namespaceRegistry: NamespaceRegistry(),
       decoder: ImageIOImageDecoder(),
       clock: clock
     )
@@ -102,6 +107,7 @@ final class PipelineTests: XCTestCase {
     )
     let record = RepresentationRecord(
       securityNamespace: request.namespace.value,
+      namespaceGeneration: 0,
       variantKeyDigest: request.fetchVariantKey.digestHex,
       statusCode: 200,
       requestTime: Date(),
@@ -165,8 +171,10 @@ final class PipelineTests: XCTestCase {
     do {
       _ = try await task.value
       XCTFail("Cancelled decode must not deliver or commit")
-    } catch is CancellationError {
-      // Expected.
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .cancelled)
+      XCTAssertEqual(failure.disposition, .cancelled)
+      XCTAssertTrue([.decode, .pipeline].contains(failure.stage))
     }
 
     let record = await records.record(
@@ -346,8 +354,10 @@ final class PipelineTests: XCTestCase {
     do {
       _ = try await cancelled.value
       XCTFail("Cancelled subscriber must not receive a final image")
-    } catch is CancellationError {
-      // Expected.
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .cancelled)
+      XCTAssertEqual(failure.stage, .transport)
+      XCTAssertEqual(failure.disposition, .cancelled)
     }
 
     let final = try await survivor.value
@@ -355,6 +365,27 @@ final class PipelineTests: XCTestCase {
     XCTAssertEqual(final.pixelHeight, 40)
     let requestCount = await transport.capturedRequests().count
     XCTAssertEqual(requestCount, 1)
+  }
+
+  func testCustomCredentialHeaderWithoutContextFailsBeforeNetwork_AUTH_PT_012() async throws {
+    let (pipeline, transport, _, _) = try await makePipeline(stubs: [])
+    let request = try ImageRequest(
+      url: try XCTUnwrap(URL(string: "https://example.com/custom-private.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: .publicNamespace(appID: "tests"),
+      headers: ["X-Tenant-Credential": "secret"],
+      credentialHeaderNames: ["X-Tenant-Credential"]
+    )
+
+    do {
+      _ = try await pipeline.image(for: request)
+      XCTFail("Custom credential-bearing request must fail closed")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .authorization)
+      XCTAssertEqual(failure.stage, .requestValidation)
+    }
+    let requests = await transport.capturedRequests()
+    XCTAssertTrue(requests.isEmpty)
   }
 
   func testDifferentTargetsShareFetchButDecodeIndependently() async throws {
@@ -561,11 +592,61 @@ final class PipelineTests: XCTestCase {
     do {
       _ = try await task.value
       XCTFail("Expected namespace revocation")
-    } catch let error as FoveaError {
-      XCTAssertEqual(error, .namespaceRevoked)
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .namespaceRevoked)
+      XCTAssertEqual(failure.disposition, .terminal)
     }
     let storedRecord = await records.record(for: variantKey(for: request).digestHex)
     XCTAssertNil(storedRecord)
+  }
+
+  func testRevokeThenNewResponsePersistsCurrentGenerationAndHitsDisk_CACHE_PT_038() async throws {
+    let body = try makePNG()
+    let registry = NamespaceRegistry()
+    let root = try makeTemporaryDirectory()
+    let transport = FakeHTTPTransport(stubs: [
+      .init(
+        statusCode: 200,
+        headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+        body: body
+      )
+    ])
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
+    let namespace = SecurityNamespaceID("account-relogin")
+    let request = try ImageRequest(
+      url: try XCTUnwrap(URL(string: "https://example.com/relogin.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: namespace,
+      authorizationContext: AuthorizationContextID("principal-relogin")
+    )
+    let firstPipeline = FoveaPipeline(
+      transport: transport,
+      encodedStore: encoded,
+      recordStore: records,
+      namespaceRegistry: registry,
+      decoder: ImageIOImageDecoder()
+    )
+
+    try await firstPipeline.revoke(namespace: namespace)
+    _ = try await firstPipeline.image(for: request)
+
+    let storedValue = await records.record(for: request.fetchVariantKey.digestHex)
+    let stored = try XCTUnwrap(storedValue)
+    XCTAssertEqual(stored.namespaceGeneration, 1)
+
+    let coldMemoryPipeline = FoveaPipeline(
+      transport: transport,
+      encodedStore: encoded,
+      recordStore: records,
+      namespaceRegistry: registry,
+      decoder: ImageIOImageDecoder()
+    )
+    _ = try await coldMemoryPipeline.image(for: request)
+
+    let requestCount = await transport.capturedRequests().count
+    XCTAssertEqual(requestCount, 1)
   }
 
   func testProbeFailureDoesNotPublishRecord_CACHE_PT_029_AIQA_MUT_015() async throws {

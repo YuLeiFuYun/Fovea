@@ -1,7 +1,7 @@
 import Foundation
 
-public enum HTTPCachePolicy {
-  public static func disposition(headers: [String: String], isPrivateNamespace: Bool)
+package enum HTTPCachePolicy {
+  package static func disposition(headers: [String: String], isPrivateNamespace: Bool)
     -> CacheDisposition
   {
     let directives = cacheControlDirectives(in: headers)
@@ -16,7 +16,7 @@ public enum HTTPCachePolicy {
     return isPrivateNamespace ? .privateNamespace : .reusable
   }
 
-  public static func expiration(
+  package static func expiration(
     requestTime: Date,
     responseTime: Date,
     headers: [String: String]
@@ -56,14 +56,14 @@ public enum HTTPCachePolicy {
     return responseTime.addingTimeInterval(min(remaining, representable))
   }
 
-  public static func conditionalHeaders(for record: RepresentationRecord) -> [String: String] {
+  package static func conditionalHeaders(for record: RepresentationRecord) -> [String: String] {
     var result: [String: String] = [:]
     if let etag = record.etag { result["If-None-Match"] = etag }
     if let lastModified = record.lastModified { result["If-Modified-Since"] = lastModified }
     return result
   }
 
-  public static func header(_ name: String, in headers: [String: String]) -> String? {
+  package static func header(_ name: String, in headers: [String: String]) -> String? {
     headers.first { $0.key.caseInsensitiveCompare(name) == .orderedSame }?.value
   }
 

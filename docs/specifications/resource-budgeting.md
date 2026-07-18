@@ -6,7 +6,28 @@
 
 Network、DiskIO、Decode 和 Process 不是四个独立的并发整数，而是一组受平台压力、任务优先级和估算成本约束的有界许可。实现不得通过创建大量等待中的 Swift Task 绕过预算。
 
-## 2. Permit 模型
+
+## 2. Phase 0a 已实现子集
+
+Phase 0a 只承诺两个静态、可取消的 hard cap：
+
+```text
+maximumConcurrentFetches = 6（默认，可配置）
+maximumConcurrentDecodes = 2（默认，可配置）
+maximumQueuedFetches / maximumQueuedDecodes = 512（默认，可配置）
+```
+
+- permit 只包围唯一网络 fetch 或一次 probe/decode；
+- FetchExecutionKey single-flight 在 permit 内执行，重复订阅不重复占用网络 permit；
+- 等待 permit 的请求可立即取消，取消后不得实际启动网络/解码，也不得泄漏 permit；
+- fetch/decode 等待队列默认各 512，超限返回结构化 `resourceLimit`，不启动对应阶段；
+- 队列不为等待者创建轮询任务；
+- 同步 probe/decode 在受 permit 约束的专用 Dispatch executor 上运行，不阻塞 Swift cooperative executor；
+- 0a 不承诺 subscriber priority、namespace fairness、pressure 自适应或 decoded-byte reservation。
+
+后续章节描述 Core v1/0b 完整模型；不得把它们误读为当前已实现能力。
+
+## 3. 完整 Permit 模型
 
 每个昂贵阶段在开始前获取 permit：
 
@@ -23,7 +44,7 @@ ProcessPermit(estimatedWorkingSet)
 - 无法可靠估算时使用保守上界；
 - 实测成本反馈给后续调度，但不在一次请求中无界追加资源。
 
-## 3. 排队与公平
+## 4. 排队与公平
 
 队列排序使用：
 
@@ -42,7 +63,7 @@ effective subscriber priority
 - namespace 和 pipeline 具有公平权重，单一调用者不能占满所有 permit；
 - prefetch 使用独立较低上限，不借满交互保留容量。
 
-## 4. 内存准入
+## 5. 内存准入
 
 开始 decode/process 前至少检查：
 
@@ -60,7 +81,7 @@ single-entry hard cap
 - 实际分配超过估算时更新 reservation，并在无法扩容时有序失败，不能继续透支；
 - memory cache cost 与临时 working set 分开核算。
 
-## 5. 压力状态
+## 6. 压力状态
 
 ```text
 normal
@@ -78,7 +99,7 @@ critical
 
 压力恢复采用 hysteresis，避免频繁扩缩振荡。
 
-## 6. 网络限制
+## 7. 网络限制
 
 `interactive`、`balanced`、`prefetch` 映射到明确网络约束：
 
@@ -88,14 +109,14 @@ critical
 - subscriber policy 不兼容时不得错误合并同一 FetchExecutionKey；
 - 网络环境变化后，等待任务重新评估，不静默扩大权限。
 
-## 7. 后台与生命周期
+## 8. 后台与生命周期
 
 - v1 不默认使用 background URLSession 延续普通图片请求；
 - App 进入后台后，可见订阅按 UI 生命周期取消，prefetch/Derived/Analysis 默认暂停或取消；
 - 已批准 encoded-only 近完成任务仍受后台执行时间和 namespace generation 限制；
 - App Extension 使用独立更保守 profile，不依赖 UIApplication 生命周期。
 
-## 8. 可观测性
+## 9. 可观测性
 
 至少记录：
 
@@ -111,7 +132,7 @@ network constrained/expensive decision
 
 不得记录原始资源身份。
 
-## 9. Property tests
+## 10. Property tests
 
 - **RES-PT-001**: 并发任务数和 reserved bytes 永不超过 hard limit；
 - **RES-PT-002**: 取消等待 permit 的任务不会泄漏 permit；

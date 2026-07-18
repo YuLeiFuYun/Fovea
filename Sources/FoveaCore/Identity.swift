@@ -105,6 +105,11 @@ public struct FetchExecutionKey: Hashable, Sendable, Codable {
   public var digestHex: String { canonicalBytes.sha256Hex }
 }
 
+public enum ContentIDError: Error, Equatable, Sendable {
+  case invalidDigest
+  case invalidByteCount
+}
+
 public struct ContentID: Hashable, Sendable, Codable, CustomStringConvertible {
   public let digestHex: String
   public let byteCount: Int
@@ -114,12 +119,39 @@ public struct ContentID: Hashable, Sendable, Codable, CustomStringConvertible {
     self.byteCount = data.count
   }
 
-  public init(digestHex: String, byteCount: Int) {
+  public init(digestHex: String, byteCount: Int) throws {
+    guard byteCount >= 0 else { throw ContentIDError.invalidByteCount }
+    guard digestHex.utf8.count == 64,
+      digestHex.utf8.allSatisfy({ byte in
+        (48...57).contains(byte) || (97...102).contains(byte)
+      })
+    else {
+      throw ContentIDError.invalidDigest
+    }
     self.digestHex = digestHex
     self.byteCount = byteCount
   }
 
   public var description: String { "sha256:\(digestHex):\(byteCount)" }
+
+  private enum CodingKeys: String, CodingKey {
+    case digestHex
+    case byteCount
+  }
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    try self.init(
+      digestHex: container.decode(String.self, forKey: .digestHex),
+      byteCount: container.decode(Int.self, forKey: .byteCount)
+    )
+  }
+
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(digestHex, forKey: .digestHex)
+    try container.encode(byteCount, forKey: .byteCount)
+  }
 }
 
 public struct DecodeKey: Hashable, Sendable, Codable {

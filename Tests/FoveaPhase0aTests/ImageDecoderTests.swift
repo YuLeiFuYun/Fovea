@@ -67,6 +67,21 @@ extension ImageDecoderTests {
     XCTAssertEqual(decoded.pixelHeight, 60)
   }
 
+  func testDecodeRejectsProbeFromDifferentBitstream() throws {
+    let data = try makePNG(width: 100, height: 50)
+    let forged = ImageProbe(pixelWidth: 10, pixelHeight: 10, frameCount: 1)
+    XCTAssertThrowsError(
+      try ImageIOImageDecoder().decode(
+        data: data,
+        probe: forged,
+        target: try TargetPixels(width: 20, height: 20),
+        limits: .phase0a
+      )
+    ) { error in
+      XCTAssertEqual(error as? ImageCraftError, .probeMismatch)
+    }
+  }
+
   func testTargetPixelCountSaturatesOnOverflow() throws {
     let target = try TargetPixels(width: Int.max, height: Int.max)
     XCTAssertEqual(target.pixelCount, Int.max)

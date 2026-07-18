@@ -1,9 +1,9 @@
 import Foundation
-import ImageCraftCore
 
-public actor RenderedMemoryCache<Key: Hashable & Sendable> {
+/// A process-local, cost-bounded LRU cache with no knowledge of the stored value's domain.
+public actor MemoryCache<Key: Hashable & Sendable, Value: Sendable> {
   private struct Entry {
-    var image: DecodedImage
+    var value: Value
     var cost: Int
     var previous: Key?
     var next: Key?
@@ -15,27 +15,27 @@ public actor RenderedMemoryCache<Key: Hashable & Sendable> {
   private var leastRecent: Key?
   private var mostRecent: Key?
 
-  public init(costLimit: Int = 64 * 1024 * 1024) {
+  public init(costLimit: Int) {
     self.costLimit = max(1, costLimit)
   }
 
-  public func image(for key: Key) -> DecodedImage? {
-    guard let image = entries[key]?.image else { return nil }
+  public func value(for key: Key) -> Value? {
+    guard let value = entries[key]?.value else { return nil }
     moveToMostRecent(key)
-    return image
+    return value
   }
 
-  public func insert(_ image: DecodedImage, for key: Key) {
-    let cost = max(1, image.estimatedByteCost)
+  public func insert(_ value: Value, for key: Key, cost: Int) {
+    let cost = max(1, cost)
     if let existing = entries[key] {
       totalCost -= existing.cost
-      entries[key]?.image = image
+      entries[key]?.value = value
       entries[key]?.cost = cost
       totalCost += cost
       moveToMostRecent(key)
     } else {
       entries[key] = Entry(
-        image: image,
+        value: value,
         cost: cost,
         previous: mostRecent,
         next: nil
@@ -53,7 +53,7 @@ public actor RenderedMemoryCache<Key: Hashable & Sendable> {
     totalCost -= entry.cost
   }
 
-  public func removeAll(where predicate: (Key) -> Bool) {
+  public func removeAll(where predicate: @Sendable (Key) -> Bool) {
     let victims = entries.keys.filter(predicate)
     for key in victims { remove(key) }
   }

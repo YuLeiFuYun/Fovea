@@ -252,12 +252,14 @@ R2/R3 至少使用一类，R3 至少使用三类：
 | **AIQA-MUT-014** | 过度规范化 signed/query URL 导致错误共享 |
 | **AIQA-MUT-015** | Probe/security reject 后仍发布 OriginalEncoded record |
 | **AIQA-MUT-016** | cache write/diagnostics 失败覆盖成功 final |
+| **AIQA-MUT-017** | revoke 后的新 200 record 错写为旧 NamespaceGeneration |
+| **AIQA-MUT-018** | revoke 清理后晚到的 304 metadata refresh 重新写回旧 record |
 
 新增关键不变量时同步新增 mutant。通过大量无关 mutant 获得高 mutation percentage 不能替代上述目录全部被杀死。
 
 ### 8.1 Phase 0a curated mutant runner
 
-Phase 0a 的 required mutants `001/002/007/008/009/015` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定，并由零依赖的 `scripts/validate-critical-mutation-report.py` 复核 commit、结果集合、日志存在性和 SHA-256。
+Phase 0a 的 required mutants `001/002/007/008/009/015/017/018` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定，并由零依赖的 `scripts/validate-critical-mutation-report.py` 复核 commit、结果集合、日志存在性和 SHA-256。
 
 该 runner 是 visible oracle，仍不能替代 protected CI、held-out evaluator 或 human attestation。
 

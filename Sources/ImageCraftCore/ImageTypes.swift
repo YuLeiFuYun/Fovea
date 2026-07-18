@@ -57,6 +57,7 @@ public enum ImageCraftError: Error, Equatable, Sendable {
   case dimensionLimitExceeded
   case pixelLimitExceeded
   case frameLimitExceeded
+  case probeMismatch
   case decodeFailed
 }
 
@@ -79,6 +80,8 @@ public struct ImageProbe: Hashable, Sendable {
   }
 }
 
+/// Immutable decoded pixels. CoreGraphics imports `CGImage` as `Sendable` in the supported SDKs;
+/// Fovea never exposes mutable backing storage or mutates the image after construction.
 public struct DecodedImage: Sendable {
   public let cgImage: CGImage
   public let pixelWidth: Int

@@ -1,74 +1,40 @@
-# ADR-0001：现有 ImageCraft / Akashic 与目标架构的现实差距
+# ADR-0001：Phase 0a 模块边界与原型兼容策略
 
-- **状态：Accepted as assessment**
+- **状态：Accepted**
 - **日期：2026-07-18**
-- **范围：审查时当前可访问源码树的结构审查**
+- **范围：ImageCraft、Akashic 与 Fovea 的 Phase 0a 产品边界**
 
 ## 背景
 
-Fovea 架构将 ImageCraft 定义为纯图像引擎，将 Akashic 定义为不知道图片、URL、HTTP 和 UI 的通用缓存。审查时可访问的现有原型尚未实现这一边界，因此不能在设计文档中用“已有仓库”暗示目标模块已经可直接组合。
-
-## 已验证现状
-
-### Akashic
-
-当前源码中存在：
-
-- `ElysiumImageSerializer.swift` 直接 `import UIKit` 并序列化 `UIImage`；
-- `Mnemosyne.swift` 直接 `import UIKit`，为 `UIImage` 实现成本计算；
-- `AkashicWrapper.swift` 为 `UIImage`、`UIImageView` 提供 wrapper；
-- `Elysium.swift` 依赖 `UIKit.UIApplication`；
-- 内存和磁盘缓存、图片适配与平台生命周期位于同一 product；
-- 当前仓库根目录未发现 `Package.swift`，产品边界尚未通过 SwiftPM manifest 表达。
-
-结论：Akashic 是有用的缓存原型，但当前不是目标架构所说的“平台中立、图片无关的通用缓存核心”。
-
-### ImageCraft
-
-当前源码主要包括：
-
-- `UIImage` 圆角、resize 和 downsample 扩展；
-- `UIImageView` 动画和显示扩展；
-- 基于 UIKit 的动画模型；
-- ImageIO 目标尺寸缩略解码方法；
-- SVG 代码中存在对未公开 selector/符号的动态调用与 `unsafeBitCast`；
-- 编解码、处理、UI 和实验 SVG 路径位于同一 product；
-- 当前仓库根目录未发现 `Package.swift`。
-
-结论：ImageCraft 已具备有价值的 downsample 与处理原型，但还不是目标中的 codec registry、DecodePlan、TransformPlan、增量解码和多平台核心。
+Fovea 的早期原型曾把 UIKit 图片类型、缓存、显示适配和平台生命周期混在一起。该形态不作为当前实现的兼容约束，也不再保留旧架构副本。当前仓库以 SwiftPM manifest、源码依赖和自动化边界检查作为唯一事实来源。
 
 ## 决策
 
-1. 现有代码不作为 Fovea 公共协议的兼容约束。
-2. Phase 0a 可以复用经过测试的局部算法，但目标边界优先于源码兼容。
-3. Akashic 需先把 UIKit 图片适配迁出 Core，再讨论缓存策略升级。
-4. ImageCraft 需先拆出 Core/ImageIO/Processing/UI 边界，并移除依赖私有 API 的 SVG 主路径。
-5. Fovea 在边界稳定前使用 workspace/path dependency 联调，不立即形成三仓库独立发布矩阵。
-6. 每次决定“复用还是重写”必须有测试、基准或维护性依据，不因已有代码量产生沉没成本偏见。
+1. **ImageCraft** 只负责图像探测、解码及图像值模型；平台 ImageIO 实现位于独立 product。
+2. **Akashic** 是图片无关的缓存基础设施：
+   - `AkashicMemory` 提供 `MemoryCache<Key, Value>`；
+   - 值成本由调用者显式传入；
+   - 不依赖 `ImageCraftCore`、`DecodedImage`、URL、HTTP 或 UI。
+3. **FoveaCore** 只通过 `ImageDecoding`、`HTTPTransporting`、`OriginalEncodedStoring` 与 `RepresentationRecordStoring` 协议组合具体实现。
+4. Phase 0a 使用固定职责 stage：
+   - `FetchStage`：精确 fetch identity、single-flight、传输与 fetch permit；
+   - `DecodeStage`：安全 probe、目标尺寸 decode 与 decode permit；
+   - `PipelineCache`：record/blob/RenderedMemory 事务与撤销回滚；
+   - `FoveaPipeline`：状态机编排，不提供动态 DAG 或 interceptor graph。
+5. 旧原型 API、旧磁盘格式和旧架构文件不提供兼容承诺；Git 历史承担追溯责任，活动树只保留当前事实。
 
-## Phase 0a 迁移清单
+## 已验证结果
 
-### Akashic
-
-- [ ] 建立 SwiftPM manifest 和最小平台矩阵；
-- [ ] Core 不 import UIKit/AppKit；
-- [ ] UIImage/NSImage serializer 迁为独立 adapter；
-- [ ] 平台内存压力监听放入条件模块；
-- [ ] cost 改为插入参数或 `CostEstimator`；
-- [ ] 建立线程安全与崩溃恢复测试；
-- [ ] 输出访问 trace，支持策略离线回放。
-
-### ImageCraft
-
-- [ ] 建立 SwiftPM manifest；
-- [ ] `DecodedImage`/`DecodePlan`/`TransformPlan` 值模型；
-- [ ] ImageIO target-size 解码进入独立 product；
-- [ ] UIKit/AppKit 显示适配与图像核心分离；
-- [ ] SVG 私有 API 路径移除或隔离为明确实验插件；
-- [ ] DecodeLimits 与恶意输入 corpus；
-- [ ] downsample 的颜色、orientation、scale 和 HDR 正确性测试；
-- [ ] 动画帧调度与静态解码分离。
+- SwiftPM product 边界已建立；
+- `AkashicMemory` 不依赖图像模块；
+- `FoveaCore` 不依赖具体 ImageIO decoder；
+- UIKit/AppKit 类型未进入 ImageCraftCore/AkashicCore；
+- 生产代码无未经审计的 `@unchecked Sendable`；
+- `scripts/check-phase0a-surface.py` 对允许模块和关键边界执行机器检查；
+- macOS/iOS 测试、sanitizer、mutation 与 rollback gate 对这些边界提供回归证据。
 
 ## 后果
 
-短期会增加重构量，但避免 Fovea 被现有原型的 UIKit 耦合和 API 形态绑死。AI 加速可降低迁移实现成本，因此更应选择正确边界，而不是为保留少量原型代码妥协架构。
+- Phase 0a 不为旧原型保留适配层或弃用别名；
+- 新能力必须进入正确 product，不能为了减少文件数跨越职责边界；
+- DecodeKey 级共享、完整资源 governor、平台压力监听和多进程 store 属于后续阶段，不通过预建空抽象进入 0a。

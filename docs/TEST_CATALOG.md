@@ -57,8 +57,16 @@ AUTH-PT-001     token refresh 的 variant/execution key 分离
 AUTH-PT-003     账户切换隔离
 AUTH-PT-006     凭证不进入 key/log/trace
 ERR-PT-001      cache write 失败不覆盖 final
+ERR-PT-009      公开 PipelineFailure/diagnostics 不泄漏底层 URL、秘密或稳定摘要
+DIAG-PT-002...004  correlation ID 不跨 pipeline 稳定，sink 阻塞/队列满不影响 final
+IMG-PT-011      supplied probe 与 bitstream 不一致时拒绝
+RES-PT-001      fetch/decode 实际并发不超过 0a 静态 hard cap
+RES-PT-002      取消等待 permit 不启动阶段且不泄漏 permit
 AUTH-PT-010     public URL 不需要 auth provider/credential generation
+AUTH-PT-011     revoke 清理后晚到 304 refresh 不得恢复旧 metadata
+AUTH-PT-012     自定义 credential header 的 identity、fail-closed 与 redirect 剥离
 CACHE-PT-031    ContentID 不得作为物理文件名
+CACHE-PT-038    revoke 后新 200 写入当前 generation，冷内存后仍可 fresh hit
 GC-PT-005       PhysicalBlobID 不泄漏 ContentID
 GC-PT-011       0a soft cap 触发保守清理且不阻塞 final
 SEC-CASE-001    delegate 分块流受 hard limit 与逐块背压约束
@@ -70,6 +78,7 @@ SEC-CASE-017    跨 origin redirect 剥离 Authorization/Cookie/API key
 SEC-CASE-018    diagnostics 不含 token、Cookie 或稳定账户标识
 SEC-CASE-029    持久 metadata 不含明文 namespace
 HTTP-CONF-LOCAL-AGE-001...003  Date/Age corrected age 与畸形 Age 保守处理
+HTTP-CONF-LOCAL-AGE-004  fetch permit 排队时间不计入 HTTP response delay
 HTTP-CONF-LOCAL-NOCACHE-001  no-cache 覆盖正 max-age
 ```
 
@@ -92,6 +101,8 @@ AI 主导实现分两级：
   AIQA-MUT-008       revoke 后不得 Commit
   AIQA-MUT-009       unknown target 不得原尺寸 decode
   AIQA-MUT-015       Probe reject 后不得发布 OriginalEncoded
+  AIQA-MUT-017       post-revoke 200 不得写入旧 namespace generation
+  AIQA-MUT-018       late 304 refresh 不得跨 revoke 恢复 metadata
 ```
 
 只有 `0a-complete` 才算 Phase 0a 通过。定义与执行规则见 `specifications/ai-development-assurance.md`。
@@ -112,13 +123,16 @@ CACHE-PT-017...019
 CACHE-PT-021
 CACHE-PT-023
 CACHE-PT-025...031
+CACHE-PT-038
 AUTH-PT-001...010
 SCHED-PT-001...010
+RES-PT-001...002
 GEO-PT-001...008
 UI-PT-001...014
 ERR-PT-001...014
 PIPE-PT-001...008
 IMG-PT-001...003
+IMG-PT-011
 IMG-PT-006...008
 ```
 
@@ -127,7 +141,7 @@ IMG-PT-006...008
 - Private Image Cache Profile 中分类为 `required` 的 `HTTP-CONF-*` 全部通过；
 - 安全矩阵中 Gate 为 `0a` 或 `0b` 的 `SEC-CASE-*` 全部通过；
 - W1/W2/W3 对应的 benchmark/assertion 全部通过；
-- `AIQA-GATE-001...010`、`AIQA-MUT-001...016` 全部通过，并有 R3 独立 oracle/evidence。
+- `AIQA-GATE-001...010`、`AIQA-MUT-001...018` 全部通过，并有 R3 独立 oracle/evidence。
 
 ### 不阻塞 0b
 
@@ -141,7 +155,7 @@ CACHE-PT-022      non-identity Content-Encoding Range
 CACHE-PT-024      multi-process writer fail-closed
 CACHE-PT-032...035 quota/lease/atime/GC degradation
 SCHED-PT-011...012 permit/fairness
-RES-PT-*          完整资源治理
+RES-PT-003...010  优先级、公平性、pressure 与网络/后台动态治理
 GC-PT-*           完整 quota/GC
 DIAG-PT-*         完整 diagnostics contract
 IMG-PT-004...005  HDR tone-map / gain-map

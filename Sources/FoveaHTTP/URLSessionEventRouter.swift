@@ -1,46 +1,64 @@
 import Foundation
 
-enum URLSessionStreamEvent: Sendable {
+package enum URLSessionStreamEvent: Sendable {
   case response(URLResponse)
   case data(Data)
 }
 
-final class URLSessionEventRouter: Sendable {
+package final class URLSessionEventRouter: Sendable {
   private enum Command: Sendable {
     case register(
       Int,
       AsyncThrowingStream<URLSessionStreamEvent, any Error>.Continuation,
+      Set<String>,
       CheckedContinuation<Void, Never>
     )
     case event(Int, URLSessionStreamEvent)
     case complete(Int, (any Error)?)
     case unregister(Int)
+    case credentialHeaders(Int, CheckedContinuation<Set<String>, Never>)
   }
 
   private let commandContinuation: AsyncStream<Command>.Continuation
   private let processor: Task<Void, Never>
 
-  init() {
+  package init() {
     let commands = AsyncStream<Command>.makeStream()
     commandContinuation = commands.continuation
     processor = Task { @concurrent in
-      var routes: [Int: AsyncThrowingStream<URLSessionStreamEvent, any Error>.Continuation] = [:]
+      struct Route {
+        let continuation: AsyncThrowingStream<URLSessionStreamEvent, any Error>.Continuation
+        let credentialHeaderNames: Set<String>
+      }
+      var routes: [Int: Route] = [:]
       for await command in commands.stream {
         switch command {
-        case .register(let taskID, let continuation, let acknowledgement):
-          routes[taskID] = continuation
+        case .register(
+          let taskID,
+          let continuation,
+          let credentialHeaderNames,
+          let acknowledgement
+        ):
+          routes[taskID] = Route(
+            continuation: continuation,
+            credentialHeaderNames: credentialHeaderNames
+          )
           acknowledgement.resume()
         case .event(let taskID, let event):
-          routes[taskID]?.yield(event)
+          routes[taskID]?.continuation.yield(event)
         case .complete(let taskID, let error):
           let route = routes.removeValue(forKey: taskID)
           if let error {
-            route?.finish(throwing: error)
+            route?.continuation.finish(throwing: error)
           } else {
-            route?.finish()
+            route?.continuation.finish()
           }
         case .unregister(let taskID):
-          routes.removeValue(forKey: taskID)?.finish(throwing: CancellationError())
+          routes.removeValue(forKey: taskID)?.continuation.finish(
+            throwing: CancellationError()
+          )
+        case .credentialHeaders(let taskID, let continuation):
+          continuation.resume(returning: routes[taskID]?.credentialHeaderNames ?? [])
         }
       }
     }
@@ -51,20 +69,33 @@ final class URLSessionEventRouter: Sendable {
     processor.cancel()
   }
 
-  func events(
-    for taskID: Int
+  package func events(
+    for taskID: Int,
+    credentialHeaderNames: Set<String>
   ) async -> AsyncThrowingStream<URLSessionStreamEvent, any Error> {
     let events = AsyncThrowingStream<URLSessionStreamEvent, any Error>.makeStream()
     events.continuation.onTermination = { [commandContinuation] _ in
       commandContinuation.yield(.unregister(taskID))
     }
     await withCheckedContinuation { acknowledgement in
-      commandContinuation.yield(.register(taskID, events.continuation, acknowledgement))
+      commandContinuation.yield(
+        .register(
+          taskID,
+          events.continuation,
+          credentialHeaderNames,
+          acknowledgement
+        ))
     }
     return events.stream
   }
 
-  func emit(_ event: URLSessionStreamEvent, for taskID: Int) {
+  package func credentialHeaderNames(for taskID: Int) async -> Set<String> {
+    await withCheckedContinuation { continuation in
+      commandContinuation.yield(.credentialHeaders(taskID, continuation))
+    }
+  }
+
+  package func emit(_ event: URLSessionStreamEvent, for taskID: Int) {
     commandContinuation.yield(.event(taskID, event))
   }
 
@@ -72,7 +103,7 @@ final class URLSessionEventRouter: Sendable {
     commandContinuation.yield(.complete(taskID, error))
   }
 
-  func unregister(taskID: Int) {
+  package func unregister(taskID: Int) {
     commandContinuation.yield(.unregister(taskID))
   }
 }
@@ -116,12 +147,18 @@ final class StreamingURLSessionDelegate: NSObject, URLSessionDataDelegate, Senda
     newRequest request: URLRequest,
     completionHandler: @escaping @Sendable (URLRequest?) -> Void
   ) {
-    completionHandler(
-      CredentialHeaderPolicy.sanitizedRedirectRequest(
-        original: task.currentRequest ?? task.originalRequest,
-        proposed: request
+    Task { @concurrent [router] in
+      let customCredentialHeaders = await router.credentialHeaderNames(
+        for: task.taskIdentifier
       )
-    )
+      completionHandler(
+        CredentialHeaderPolicy.sanitizedRedirectRequest(
+          original: task.currentRequest ?? task.originalRequest,
+          proposed: request,
+          additionalSensitiveNames: customCredentialHeaders
+        )
+      )
+    }
   }
 }
 

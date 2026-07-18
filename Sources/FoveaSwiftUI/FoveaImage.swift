@@ -6,7 +6,7 @@ public enum FoveaImagePhase {
   case empty
   case loading
   case success(DecodedImage)
-  case failure(any Error)
+  case failure(PipelineFailure)
   case cancelled
 }
 
@@ -16,13 +16,13 @@ public enum FoveaImageAccessibility {
 }
 
 @MainActor
-public final class FoveaImageModel: ObservableObject {
-  @Published public private(set) var phase: FoveaImagePhase = .empty
+package final class FoveaImageModel: ObservableObject {
+  @Published package private(set) var phase: FoveaImagePhase = .empty
   private var token = UUID()
 
-  public init() {}
+  package init() {}
 
-  public func load(request: ImageRequest, pipeline: FoveaPipeline) async {
+  package func load(request: ImageRequest, pipeline: FoveaPipeline) async {
     let current = UUID()
     token = current
     phase = .loading
@@ -30,16 +30,23 @@ public final class FoveaImageModel: ObservableObject {
       let image = try await pipeline.image(for: request)
       guard token == current else { return }
       phase = .success(image)
-    } catch is CancellationError {
+    } catch let failure as PipelineFailure {
       guard token == current else { return }
-      phase = .cancelled
+      phase = failure.disposition == .cancelled ? .cancelled : .failure(failure)
     } catch {
       guard token == current else { return }
-      phase = .failure(error)
+      phase = .failure(
+        PipelineFailure(
+          category: .internalFailure,
+          stage: .pipeline,
+          disposition: .terminal,
+          reasonCode: "unexpected-ui-error"
+        )
+      )
     }
   }
 
-  public func invalidate() {
+  package func invalidate() {
     token = UUID()
     phase = .empty
   }
@@ -50,7 +57,7 @@ public struct FoveaImage<Placeholder: View, Failure: View>: View {
   private let pipeline: FoveaPipeline
   private let accessibility: FoveaImageAccessibility
   private let placeholder: () -> Placeholder
-  private let failure: (any Error) -> Failure
+  private let failure: (PipelineFailure) -> Failure
   @StateObject private var model = FoveaImageModel()
 
   public init(
@@ -58,7 +65,7 @@ public struct FoveaImage<Placeholder: View, Failure: View>: View {
     pipeline: FoveaPipeline,
     accessibility: FoveaImageAccessibility,
     @ViewBuilder placeholder: @escaping () -> Placeholder,
-    @ViewBuilder failure: @escaping (any Error) -> Failure
+    @ViewBuilder failure: @escaping (PipelineFailure) -> Failure
   ) {
     self.request = request
     self.pipeline = pipeline

@@ -11,6 +11,7 @@ xcodebuild -version
 xcrun swift --version
 
 python3 scripts/check-phase0a-surface.py
+python3 scripts/check-docs.py
 xcrun swift-format lint --strict -r Sources Tests Package.swift
 
 rm -rf .artifacts/benchmarks

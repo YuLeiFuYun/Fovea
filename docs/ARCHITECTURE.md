@@ -1,11 +1,11 @@
 # Fovea 图片加载系统架构
 
-> **状态：Proposed（唯一工作架构文档）**  
+> **状态：Proposed（唯一工作架构文档）**
 > 本文是当前唯一的架构入口。只有经过可运行原型、自动化正确性测试和真机基准验证的局部决策，才可在对应 ADR 中标记为 `Accepted`。整份蓝图在 Phase 0b 完成前不称“定稿”。
 >
 > **规范优先级：** Accepted ADR 决定其范围内的决策；`specifications/` 决定可执行语义；本文决定系统边界、产品范围和阶段门禁。发现直接冲突时必须停止实现并修正文档，不能由实现者静默择一。
 >
-> **平台基线：** iOS/iPadOS 15、macOS 12、watchOS 8、tvOS 15、visionOS 1。  
+> **当前平台基线：** iOS/iPadOS 15、macOS 12；其他平台尚未声明支持。
 > **语言：** Swift 6 严格并发；Phase 0a 同时启用 Swift 6.2 `NonisolatedNonsendingByDefault` 与 `InferIsolatedConformances`。
 > **执行模型：** UI adapter 为 `@MainActor`；加载入口与共享 operation 显式 `@concurrent`；阻塞磁盘 I/O 使用专用串行 executor；核心通过 `ImageDecoding`/`WallClock` 等协议注入平台实现与可控时间。
 > **产品边界：** Apple 平台静态图、动图及其按需辅助平面；不扩张为视频播放器、生成式图片平台或通用网络框架。
@@ -35,7 +35,6 @@ Fovea 必须通过 Phase 0b 的存在性门禁后才能扩大公共 API。门禁
 ### 2.1 单一权威来源
 
 - `docs/ARCHITECTURE.md`：唯一工作架构。
-- `docs/archive/`：历史版本，只用于追溯，不指导实现。
 - `docs/adr/`：局部决策及其证据。
 - `docs/specifications/`：可执行规范，包括缓存/身份语义、HTTP 一致性、调度、并发所有权、资源预算、错误恢复、诊断、表示正确性、基准、安全默认、UI 状态机和平台配置。
 - `docs/TECHNOLOGY_RADAR.md`：前沿技术跟踪，不构成产品承诺。
@@ -119,8 +118,9 @@ URL
 → FetchVariantKey record lookup / FetchExecutionKey single-flight
 → bounded Transport + spill/hash
 → OriginalEncoded 单进程原子提交
+→ bounded FetchStage / DecodeStage
 → ImageIO target-size decode
-→ RenderedMemory
+→ generic MemoryCache + scoped RenderKey
 → 一个 UI surface
 ```
 
@@ -130,7 +130,8 @@ URL
 - `fresh`、304、`no-store`、namespace 基本隔离；
 - 最关键的 request token、取消和 revoked-generation Commit 测试；
 - 一个可运行的 W1/W2 harness 骨架，但不要求达到性能门限；
-- 最小诊断事件和 deterministic clock；
+- 最小诊断事件、结构化 `PipelineFailure` 和 deterministic clock；
+- 图片无关的 generic Akashic memory cache，以及 fetch/decode 静态并发 hard cap；
 - AIQA bootstrap：前 1–3 个 PR 建立隔离 agent、基础 Evidence Bundle、clean trusted CI、protected gates、依赖默认拒绝和 accountable owner；
 - AIQA complete：宣布 0a 完成前，`AIQA-GATE-001...010` 与指定关键 mutants 全部真实执行通过。
 
@@ -288,11 +289,20 @@ Fovea
 
 格式解码插件属于 ImageCraft，不以 `FoveaAVIF` 等名称倒置职责。
 
-现实代码与目标边界的差距见 `docs/adr/0001-reality-gap.md`。
+Phase 0a 已落实该边界：`AkashicMemory` 提供图片无关的 `MemoryCache<Key, Value>`，值成本由 Fovea 插入时显式传入；当前决策见 ADR-0001。
 
-### 4.4 Pipeline 配置与注册
+### 4.4 Pipeline 配置与固定职责 stage
 
-Pipeline 在构造后持有不可变配置快照。codec、processor、source loader、transport、store、clock、安全策略和 diagnostics 只在 composition root 注入并冻结。`Fovea.shared` 是默认 pipeline 的只读 façade，不提供运行时全局注册或修改默认 decoder 的 API。配置变化创建新的 pipeline/configuration generation，进行中的任务继续使用启动时快照。详见 `docs/specifications/pipeline-configuration.md` 与 ADR-0006。
+Pipeline 在构造后持有不可变配置快照。codec、transport、store、安全策略和 diagnostics 只在 composition root 注入并冻结。Phase 0a 的实现按真实职责拆为：
+
+```text
+FetchStage     exact request + fetch single-flight + network permit
+DecodeStage    probe + target decode + decode permit
+PipelineCache  record/blob/memory transaction + rollback
+FoveaPipeline  state-machine orchestration
+```
+
+这些 stage 使用 Swift `package` 访问级别，不是公共插件点；不提供动态 DAG、interceptor chain 或运行时全局注册。外部调用者只看到请求、配置、pipeline、结构化失败与必要协议。配置变化创建新的 pipeline，进行中的任务继续使用启动时快照。详见 `docs/specifications/pipeline-configuration.md` 与 ADR-0006。
 
 ---
 
@@ -389,7 +399,7 @@ FetchVariantKey
 + transport-affecting policy fingerprint
 ```
 
-它不持久化、不记录原始 token/Cookie/签名 query。签名 URL 或凭证刷新可以继续命中旧 record，但不会错误加入使用过期凭证的在途任务。
+它不持久化、不记录原始 token/Cookie/签名 query。签名 URL 或凭证刷新可以继续命中旧 record，但不会错误加入使用过期凭证的在途任务。自定义 credential header 必须显式分类；header 名集合进入 exact execution policy fingerprint，并随 task 传给跨 origin redirect 剥离策略。
 
 ### 6.3 RepresentationRecord：响应后建立
 
@@ -573,12 +583,16 @@ Observer 只能观察。任何影响 locator、字节或像素的扩展必须在
 
 ### 8.1 Stage-level single-flight
 
+目标模型：
+
 - 相同 FetchExecutionKey 且执行约束兼容时共享网络获取；
 - 相同 ContentID 可以共享探测；
 - 相同 DecodeKey 共享解码；
 - 相同 RenderKey 共享最终处理；
 - 不同目标像素在解码阶段分叉；
 - 相同解码、不同圆角在处理阶段分叉。
+
+**当前 Phase 0a 只实现 FetchExecutionKey single-flight。** DecodeKey/RenderKey 级共享尚未实现，相同 target 的并发请求仍可能重复 probe/decode；benchmark、README 和 diagnostics 不得把目标模型冒充为当前能力。
 
 ### 8.2 交付事件
 
@@ -637,7 +651,7 @@ URLSessionTask.priority   网络栈提示
 
 ### 9.4 错误、重试与回退
 
-错误必须区分终止失败、可重试失败、允许回退、缓存降级和取消。cache write、GC、Derived/Analysis 或 diagnostics 失败默认不能覆盖已经成功生成的 final。自动重试只服务幂等 GET 的明确瞬态错误，并受次数、deadline、额外字节、网络限制和 FetchExecutionKey 约束；stale、替代 decoder 和 representation fallback 必须按 subscriber policy 独立裁决。详见 `docs/specifications/error-recovery.md`。
+Phase 0a 已用 `PipelineFailure(category, stage, disposition, reasonCode, statusCode)` 统一公开错误，并将同一结构写入脱敏 diagnostics；底层 URL、NSError、磁盘路径和 decoder 文本不直接暴露。cache write、GC 或 diagnostics 失败默认不能覆盖已经成功生成的 final。0a 只标记 retryable，不自动重试；retry budget、stale、替代 decoder 和 representation fallback 属于后续阶段。详见 `docs/specifications/error-recovery.md`。
 
 ---
 
@@ -789,6 +803,8 @@ ContentID 是逻辑摘要，不直接作为日志值或物理文件名。store �
 ---
 
 ## 12. 资源治理：先简单、可测
+
+Phase 0a 已实现两个静态、可取消 hard cap：默认最多 6 个唯一 fetch 和 2 个 probe/decode，两个等待队列各最多 512 个请求。permit 位于 single-flight operation 内部；等待者取消不会启动对应阶段或泄漏 permit。该实现只解决基础自 DoS，不宣称具备优先级、公平性、pressure 自适应或 working-set reservation。
 
 v1 实现：
 
@@ -960,13 +976,14 @@ budget changes
 namespace/store generation
 schema migration outcome
 final delivery stage
+PipelineFailure category/stage/disposition/reasonCode
 ```
 
 支持：
 
 - `OSSignposter`；
 - 结构化事件流；
-- DeterministicClock；
+- TestWallClock；
 - trace record/replay；
 - 固定 cache/network state；
 - advisor 关闭模式；
@@ -978,19 +995,20 @@ final delivery stage
 
 ## 18. 实施顺序
 
-### Phase 0a：Runnable Slice（立即开工）
+### Phase 0a：Runnable Slice（当前状态）
 
-0. 以 `docs/specifications/phase-0a-surface.md` 建立 Implementation Contract，拒绝超出 surface 的空抽象。
-1. 建立 workspace 与 Fovea/ImageCraft/Akashic SwiftPM 壳，使用 path dependency；同步建立 0a-bootstrap 的最小可信合并轨道。
-2. 实现 FetchVariantKey/FetchExecutionKey canonical encoding 和 0a golden vectors。
-3. 完成有界 Transport、spill-to-disk 和 streaming hash。
-4. 完成单进程 OriginalEncoded 原子提交与基本 corruption recovery。
-5. 完成 ImageIO target-size decode。
-6. 完成唯一 0a UI surface：iOS 15+ SwiftUI `FoveaImage`，以及 request token 防迟到覆盖。
-7. 实现 `fresh`、304、`no-store`、namespace/revoke 的最小 HTTP/安全路径。
-8. 把 `TEST_CATALOG.md` 的 Phase 0a 产品 ID 与 0a-bootstrap AIQA 转成自动化/可审计门禁。
-9. 让 W1/W2 harness 跑通并输出 trace，不要求先达到 0b 门限。
-10. 在宣布 Phase 0a 完成前，通过全部 `AIQA-GATE-001...010` 与指定 critical mutants。
+当前本地实现已具备：
+
+- SwiftPM product 边界与 generic Akashic memory cache；
+- stable variant / exact execution / content / render identity；
+- bounded delegate transport、spill、hash 与逐块背压；
+- OriginalEncoded、record schema、namespace fingerprint/generation 与撤销事务；
+- 固定 `FetchStage`、`DecodeStage`、`PipelineCache` 和 orchestration；
+- target-size ImageIO decode、显式 SwiftUI accessibility 与 request token；
+- `PipelineFailure`、有界 diagnostics、W1/W2/W3、critical mutants、rollback 和 sanitizer 门禁；
+- 静态 fetch/decode active + queued hard cap。
+
+当前仍是 `0a-bootstrap`，因为缺少远程 protected required check、可信 CI run locator、human comprehension attestation 与独立 held-out evaluator。功能代码和本地验证通过不能冒充这些外部信任锚。
 
 ### Phase 0b：Existence Gate
 

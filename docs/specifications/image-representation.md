@@ -103,4 +103,5 @@ Display preparation 只在需要时发生。已经 fully decoded 的结果不重
 - **IMG-PT-007**: alpha/pixel format 转换结果与参考一致；
 - **IMG-PT-008**: fully decoded 结果不重复 display preparation；
 - **IMG-PT-009**: unsupported HDR/attachment 按 policy fallback 或拒绝；
-- **IMG-PT-010**: 颜色与动态范围测试覆盖最低系统和当前设备。
+- **IMG-PT-010**: 颜色与动态范围测试覆盖最低系统和当前设备；
+- **IMG-PT-011**: 外部传入的 ImageProbe 必须与实际 bitstream 的尺寸、帧数和 orientation 一致；不一致时解码前拒绝。

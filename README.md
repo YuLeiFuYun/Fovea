@@ -11,14 +11,16 @@ public / authenticated URL
 → FetchVariantKey / FetchExecutionKey
 → bounded staging + spill + streaming SHA-256
 → namespace-scoped OriginalEncoded + opaque PhysicalBlobID
+→ bounded FetchStage / DecodeStage
 → ImageIO target-pixel decode
-→ namespace-scoped RenderedMemory
-→ SwiftUI FoveaImage
+→ generic Akashic MemoryCache + namespace-scoped render identity
+→ SwiftUI FoveaImage + structured PipelineFailure
 ```
 
 本地质量门已包含：
 
-- Swift 6 strict concurrency 与 Swift 6.2 isolation semantics；
+- Swift 6 strict concurrency、Swift 6.2 isolation semantics 与 package-only implementation API；
+- 固定 fetch/decode 并发 hard cap，等待取消不泄漏 permit；
 - macOS 与 iOS Simulator 全量测试；
 - W1 Feed Scroll、W2 Detail Hero、W3 Auth Gallery smoke artifact；
 - curated critical mutants；

@@ -178,6 +178,51 @@ final class IdentityTests: XCTestCase {
     }
   }
 
+  func testCustomCredentialHeaderIsExcludedFromStableIdentity_AUTH_PT_012() throws {
+    let secret = "tenant-secret"
+    let request = try ImageRequest(
+      url: try XCTUnwrap(URL(string: "https://example.com/custom-credential.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: SecurityNamespaceID("account-custom"),
+      authorizationContext: AuthorizationContextID("principal-custom"),
+      credentialGeneration: CredentialGeneration(1),
+      headers: [
+        "X-Tenant-Credential": secret,
+        "Accept-Language": "zh-CN",
+      ],
+      credentialHeaderNames: ["X-Tenant-Credential"]
+    )
+
+    XCTAssertTrue(request.containsCredentialHeaders)
+    XCTAssertEqual(request.credentialHeaderNames, ["x-tenant-credential"])
+    XCTAssertNil(request.fetchVariantKey.canonicalBytes.range(of: Data(secret.utf8)))
+    XCTAssertEqual(request.fetchVariantKey.requestVariants, ["accept-language": "zh-CN"])
+  }
+
+  func testCredentialHeaderSetChangesExactExecutionIdentity_AUTH_PT_012() throws {
+    let url = try XCTUnwrap(URL(string: "https://example.com/credential-shape.png"))
+    let authorization = try ImageRequest(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: SecurityNamespaceID("account-shape"),
+      authorizationContext: AuthorizationContextID("principal-shape"),
+      credentialGeneration: CredentialGeneration(1),
+      headers: ["Authorization": "Bearer secret"]
+    )
+    let custom = try ImageRequest(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: SecurityNamespaceID("account-shape"),
+      authorizationContext: AuthorizationContextID("principal-shape"),
+      credentialGeneration: CredentialGeneration(1),
+      headers: ["X-Tenant-Credential": "secret"],
+      credentialHeaderNames: ["X-Tenant-Credential"]
+    )
+
+    XCTAssertEqual(authorization.fetchVariantKey, custom.fetchVariantKey)
+    XCTAssertNotEqual(authorization.fetchExecutionKey, custom.fetchExecutionKey)
+  }
+
   func testImageRequestExecutionKeyIncludesCredentialAndRevalidation() throws {
     let url = try XCTUnwrap(URL(string: "https://example.com/exact-fetch"))
     let oldCredential = try ImageRequest(
@@ -233,6 +278,18 @@ final class IdentityTests: XCTestCase {
     )
     XCTAssertEqual(small.fetchExecutionKey, large.fetchExecutionKey)
     XCTAssertNotEqual(small.displayIdentity, large.displayIdentity)
+  }
+
+  func testContentIDRejectsNonCanonicalDigestAndNegativeLength() throws {
+    XCTAssertThrowsError(try ContentID(digestHex: "abc", byteCount: 3))
+    XCTAssertThrowsError(
+      try ContentID(digestHex: String(repeating: "A", count: 64), byteCount: 3)
+    )
+    XCTAssertThrowsError(
+      try ContentID(digestHex: String(repeating: "a", count: 64), byteCount: -1)
+    )
+    let valid = try ContentID(digestHex: String(repeating: "a", count: 64), byteCount: 0)
+    XCTAssertEqual(valid.description, "sha256:\(String(repeating: "a", count: 64)):0")
   }
 
   func testZeroTargetIsRejected_GEO_PT_002() {

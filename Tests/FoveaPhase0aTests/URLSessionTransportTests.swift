@@ -27,6 +27,24 @@ final class URLSessionTransportTests: XCTestCase {
     XCTAssertEqual(response.body, expected)
     XCTAssertEqual(response.digestHex, ContentID(data: expected).digestHex)
     XCTAssertTrue(response.metrics.spilledToDisk)
+    XCTAssertEqual(response.head.headers["content-type"], "application/octet-stream")
+    XCTAssertNil(response.head.headers["Content-Type"])
+  }
+
+  func testEventRouterScopesCustomCredentialHeadersToTask() async {
+    let router = URLSessionEventRouter()
+    let events = await router.events(
+      for: 42,
+      credentialHeaderNames: ["x-tenant-credential"]
+    )
+    _ = events
+    let registered = await router.credentialHeaderNames(for: 42)
+    XCTAssertEqual(registered, ["x-tenant-credential"])
+
+    router.unregister(taskID: 42)
+    try? await Task.sleep(for: .milliseconds(10))
+    let removed = await router.credentialHeaderNames(for: 42)
+    XCTAssertTrue(removed.isEmpty)
   }
 
   func testDelegateTransportEnforcesHardLimit() async throws {

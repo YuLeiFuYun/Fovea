@@ -1,6 +1,6 @@
 import Foundation
 
-public actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
+package actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
   private struct Entry {
     let taskID: UUID
     let task: Task<Value, Error>
@@ -10,9 +10,9 @@ public actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
   private var entries: [Key: Entry] = [:]
   private var cancellationCounts: [Key: Int] = [:]
 
-  public init() {}
+  package init() {}
 
-  public func subscribe(
+  package func subscribe(
     key: Key,
     operation: @escaping @Sendable () async throws -> Value
   ) -> SharedTaskSubscription<Key, Value> {
@@ -43,7 +43,7 @@ public actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
     )
   }
 
-  public func release(key: Key, subscriberID: UUID) {
+  package func release(key: Key, subscriberID: UUID) {
     guard var entry = entries[key], entry.subscribers.remove(subscriberID) != nil else {
       return
     }
@@ -56,16 +56,16 @@ public actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
     }
   }
 
-  public func subscriberCount(for key: Key) -> Int {
+  package func subscriberCount(for key: Key) -> Int {
     entries[key]?.subscribers.count ?? 0
   }
 
-  public func cancellationCount(for key: Key) -> Int {
+  package func cancellationCount(for key: Key) -> Int {
     cancellationCounts[key, default: 0]
   }
 
   @discardableResult
-  public func cancelAll(where predicate: @Sendable (Key) -> Bool) -> Int {
+  package func cancelAll(where predicate: @Sendable (Key) -> Bool) -> Int {
     let keys = entries.keys.filter(predicate)
     for key in keys {
       guard let entry = entries.removeValue(forKey: key) else { continue }
@@ -75,21 +75,21 @@ public actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
     return keys.count
   }
 
-  public func completed(key: Key, taskID: UUID) {
+  package func completed(key: Key, taskID: UUID) {
     guard entries[key]?.taskID == taskID else { return }
     entries.removeValue(forKey: key)
   }
 }
 
-public struct SharedTaskSubscription<Key: Hashable & Sendable, Value: Sendable>: Sendable {
+package struct SharedTaskSubscription<Key: Hashable & Sendable, Value: Sendable>: Sendable {
   fileprivate let key: Key
   fileprivate let taskID: UUID
   fileprivate let subscriberID: UUID
   fileprivate let task: Task<Value, Error>
   fileprivate let registry: SharedTaskRegistry<Key, Value>
-  public let wasJoined: Bool
+  package let wasJoined: Bool
 
-  public func value() async throws -> Value {
+  package func value() async throws -> Value {
     let relay = SubscriptionResultRelay<Value>()
     let waiter = Task { @concurrent in
       let result = await task.result
@@ -107,7 +107,7 @@ public struct SharedTaskSubscription<Key: Hashable & Sendable, Value: Sendable>:
     }
   }
 
-  public func cancel() async {
+  package func cancel() async {
     await registry.release(key: key, subscriberID: subscriberID)
   }
 }

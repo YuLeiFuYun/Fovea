@@ -20,6 +20,7 @@ public struct ImageRequest: Sendable {
   public let authorizationContext: AuthorizationContextID
   public let credentialGeneration: CredentialGeneration?
   public let headers: [String: String]
+  public let credentialHeaderNames: Set<String>
 
   public init(
     url: URL,
@@ -28,7 +29,8 @@ public struct ImageRequest: Sendable {
     namespace: SecurityNamespaceID,
     authorizationContext: AuthorizationContextID = .public,
     credentialGeneration: CredentialGeneration? = nil,
-    headers: [String: String] = [:]
+    headers: [String: String] = [:],
+    credentialHeaderNames: Set<String> = []
   ) throws {
     let normalizedURL = try Self.normalizedHTTPURL(url)
     self.url = normalizedURL
@@ -38,6 +40,7 @@ public struct ImageRequest: Sendable {
     self.authorizationContext = authorizationContext
     self.credentialGeneration = credentialGeneration
     self.headers = try Self.normalizedHeaders(headers)
+    self.credentialHeaderNames = try Self.normalizedHeaderNames(credentialHeaderNames)
   }
 
   public static func publicImage(
@@ -72,7 +75,8 @@ public struct ImageRequest: Sendable {
       variant: fetchVariantKey,
       resolvedLocator: url.absoluteString,
       credentialGeneration: credentialGeneration,
-      revalidationFingerprint: revalidationFingerprint
+      revalidationFingerprint: revalidationFingerprint,
+      transportPolicyFingerprint: credentialExecutionFingerprint
     )
   }
 
@@ -81,11 +85,30 @@ public struct ImageRequest: Sendable {
   }
 
   public var containsCredentialHeaders: Bool {
-    CredentialHeaderPolicy.containsSensitiveHeader(headers)
+    CredentialHeaderPolicy.containsSensitiveHeader(
+      headers,
+      additionalSensitiveNames: credentialHeaderNames
+    )
+  }
+
+  private var credentialExecutionFingerprint: String {
+    let names = CredentialHeaderPolicy.sensitiveNamesPresent(
+      in: headers,
+      additionalSensitiveNames: credentialHeaderNames
+    ).sorted()
+    var material = Data("fovea-credential-header-set-v1\u{0}".utf8)
+    for name in names {
+      material.append(contentsOf: name.utf8)
+      material.append(0)
+    }
+    return material.sha256Hex
   }
 
   private var stableRequestVariants: [String: String] {
-    CredentialHeaderPolicy.removingSensitiveHeaders(from: headers)
+    CredentialHeaderPolicy.removingSensitiveHeaders(
+      from: headers,
+      additionalSensitiveNames: credentialHeaderNames
+    )
   }
 
   private static func normalizedHTTPURL(_ url: URL) throws -> URL {
@@ -114,6 +137,18 @@ public struct ImageRequest: Sendable {
     if components.percentEncodedPath.isEmpty { components.percentEncodedPath = "/" }
     guard let normalized = components.url else { throw ImageRequestError.invalidURL }
     return normalized
+  }
+
+  private static func normalizedHeaderNames(_ names: Set<String>) throws -> Set<String> {
+    var result: Set<String> = []
+    for name in names {
+      let normalized = name.lowercased()
+      guard isValidHeaderName(normalized) else {
+        throw ImageRequestError.invalidHeaderName(name)
+      }
+      result.insert(normalized)
+    }
+    return result
   }
 
   private static func normalizedHeaders(_ headers: [String: String]) throws -> [String: String] {

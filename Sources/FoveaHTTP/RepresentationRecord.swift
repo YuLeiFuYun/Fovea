@@ -28,7 +28,7 @@ public struct RepresentationRecord: Codable, Hashable, Sendable {
   public init(
     recordSchemaVersion: UInt16 = RepresentationRecord.currentSchemaVersion,
     securityNamespace: String,
-    namespaceGeneration: UInt64 = 0,
+    namespaceGeneration: UInt64,
     variantKeyDigest: String,
     statusCode: Int,
     requestTime: Date,
@@ -70,7 +70,11 @@ public protocol RepresentationRecordStoring: Sendable {
     namespaceGeneration: UInt64
   ) async -> RepresentationRecord?
   func put(_ record: RepresentationRecord) async throws
-  func remove(_ variantDigest: String) async throws
+  func remove(
+    _ variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async throws
   func removeAll(namespace: String) async throws
 }
 
@@ -127,7 +131,7 @@ public actor RepresentationRecordStore: RepresentationRecordStoring {
   }
 
   /// 仅用于测试和诊断；产品路径必须同时提供 namespace。
-  public func record(for variantDigest: String) -> RepresentationRecord? {
+  package func record(for variantDigest: String) -> RepresentationRecord? {
     records[variantDigest]
   }
 
@@ -141,8 +145,16 @@ public actor RepresentationRecordStore: RepresentationRecordStoring {
     records = next
   }
 
-  public func remove(_ variantDigest: String) throws {
-    guard records[variantDigest] != nil else { return }
+  public func remove(
+    _ variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) throws {
+    let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    guard let record = records[variantDigest],
+      record.securityNamespaceFingerprint == fingerprint,
+      record.namespaceGeneration == namespaceGeneration
+    else { return }
     var next = records
     next.removeValue(forKey: variantDigest)
     try persist(next)

@@ -1,31 +1,55 @@
 import Foundation
 
-public enum CredentialHeaderPolicy {
-  public static let sensitiveHeaderNames: Set<String> = [
+package enum CredentialHeaderPolicy {
+  package static let sensitiveHeaderNames: Set<String> = [
     "authorization",
     "proxy-authorization",
+    "api-key",
     "cookie",
     "set-cookie",
+    "x-access-token",
+    "x-amz-security-token",
     "x-api-key",
+    "x-auth-token",
+    "x-goog-api-key",
   ]
 
-  public static func containsSensitiveHeader(_ headers: [String: String]) -> Bool {
-    headers.keys.contains { sensitiveHeaderNames.contains($0.lowercased()) }
+  package static func sensitiveNamesPresent(
+    in headers: [String: String],
+    additionalSensitiveNames: Set<String> = []
+  ) -> Set<String> {
+    let sensitive = sensitiveHeaderNames.union(additionalSensitiveNames.map { $0.lowercased() })
+    return Set(headers.keys.map { $0.lowercased() }.filter(sensitive.contains))
   }
 
-  public static func removingSensitiveHeaders(from headers: [String: String]) -> [String: String] {
+  package static func containsSensitiveHeader(
+    _ headers: [String: String],
+    additionalSensitiveNames: Set<String> = []
+  ) -> Bool {
+    !sensitiveNamesPresent(
+      in: headers,
+      additionalSensitiveNames: additionalSensitiveNames
+    ).isEmpty
+  }
+
+  package static func removingSensitiveHeaders(
+    from headers: [String: String],
+    additionalSensitiveNames: Set<String> = []
+  ) -> [String: String] {
+    let sensitive = sensitiveHeaderNames.union(additionalSensitiveNames.map { $0.lowercased() })
     var result: [String: String] = [:]
     for (name, value) in headers.sorted(by: { $0.key < $1.key }) {
       let normalized = name.lowercased()
-      guard !sensitiveHeaderNames.contains(normalized), result[normalized] == nil else { continue }
+      guard !sensitive.contains(normalized), result[normalized] == nil else { continue }
       result[normalized] = value
     }
     return result
   }
 
-  public static func sanitizedRedirectRequest(
+  package static func sanitizedRedirectRequest(
     original: URLRequest?,
-    proposed: URLRequest
+    proposed: URLRequest,
+    additionalSensitiveNames: Set<String> = []
   ) -> URLRequest {
     guard let originalURL = original?.url,
       let proposedURL = proposed.url,
@@ -35,13 +59,14 @@ public enum CredentialHeaderPolicy {
     }
 
     var sanitized = proposed
-    for header in sensitiveHeaderNames {
+    let sensitive = sensitiveHeaderNames.union(additionalSensitiveNames.map { $0.lowercased() })
+    for header in sensitive {
       sanitized.setValue(nil, forHTTPHeaderField: header)
     }
     return sanitized
   }
 
-  public static func sameOrigin(_ lhs: URL, _ rhs: URL) -> Bool {
+  package static func sameOrigin(_ lhs: URL, _ rhs: URL) -> Bool {
     guard let lhsScheme = lhs.scheme?.lowercased(),
       let rhsScheme = rhs.scheme?.lowercased(),
       let lhsHost = lhs.host?.lowercased(),

@@ -1,6 +1,6 @@
 # 错误、重试与回退规范
 
-> **状态：Proposed，Phase 0a 子集 / Core v1 Candidate 规格。**
+> **状态：Active Phase 0a 子集 / Core v1 Candidate 规格。**
 
 ## 1. 目标
 
@@ -49,7 +49,23 @@ cancelled
 
 同一失败可以同时具备结构化属性，例如 `cacheWrite + cacheDegraded`，但必须只有一个面向调用者的最终结果。
 
-## 3. 非终止性失败
+## 3. Phase 0a 已实现子集
+
+公开加载 API 统一抛出 `PipelineFailure`，当前稳定字段为：
+
+```text
+category
+stage
+disposition
+reasonCode
+statusCode（HTTP 时可选）
+```
+
+Phase 0a 已实现 transport、HTTP、authorization、security limit、namespace revoke、cache degradation、probe、decode 与 cancellation 的脱敏映射。SwiftUI failure surface 接收 `PipelineFailure`，取消 disposition 映射为 `.cancelled`。底层 `URLError`、`TransportError`、`ImageCraftError` 和磁盘路径不直接暴露。
+
+Phase 0a 只标记 `retryable`，不自动执行 retry；retry budget、fallback candidate 和 stale delivery 仍属于后续阶段。
+
+## 4. 非终止性失败
 
 以下默认不能把已成功生成的图片变成失败：
 
@@ -61,7 +77,7 @@ cancelled
 
 这些情况记录 degradation event。只有 `.onlyIfCached`、`requirePersistence` 等显式策略才可把对应失败提升为终止结果。
 
-## 4. 重试
+## 5. 重试
 
 v1 只自动重试幂等 GET 的明确瞬态失败：
 
@@ -78,7 +94,7 @@ v1 只自动重试幂等 GET 的明确瞬态失败：
 - retry 若改变 exact locator、credential generation、range state 或 transport policy，必须生成新的 FetchExecutionKey；
 - retry 不得绕过 Low Data Mode、expensive network 或 namespace revoke。
 
-## 5. 回退顺序
+## 6. 回退顺序
 
 允许的回退必须显式、有限且保持身份语义：
 
@@ -96,7 +112,7 @@ fresh reusable result
 - representation fallback 必须来自同一 logical asset 的声明候选，不能把任意 URL 当作备用图而沿用原 key；
 - placeholder/error image 是 UI 展示，不是成功结果或可缓存的资源替代。
 
-## 6. 共享任务与订阅者差异
+## 7. 共享任务与订阅者差异
 
 底层 fetch/decode 可以共享，但订阅者的交付策略可能不同：
 
@@ -105,7 +121,7 @@ fresh reusable result
 - 一个 subscriber 接受 stale 不能迫使另一个要求 fresh 的 subscriber 接受 stale；
 - 共享任务的 underlying failure 只产生一次，按各 subscriber policy 映射为 final/stale/failure。
 
-## 7. 错误暴露与隐私
+## 8. 错误暴露与隐私
 
 公开错误不得包含：
 
@@ -116,7 +132,7 @@ fresh reusable result
 
 公开 API 返回稳定 category/reason code；底层 NSError/decoder 信息仅在脱敏诊断中保留。错误描述文本不作为程序逻辑依据。
 
-## 8. UI 恢复矩阵
+## 9. UI 恢复矩阵
 
 | 结果/错误 | 默认 UI 行为 | 自动重试 | 旧图/placeholder |
 |---|---|---|---|
@@ -132,7 +148,7 @@ fresh reusable result
 
 UIKit/AppKit/SwiftUI 必须共享同一 disposition 到 UI action 的映射；UI adapter 不自行发明 retry。
 
-## 9. Property tests
+## 10. Property tests
 
 - **ERR-PT-001**: cache write 失败不覆盖成功 final；
 - **ERR-PT-002**: `.onlyIfCached` miss 返回明确结果且不访问网络；

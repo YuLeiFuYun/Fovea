@@ -1,6 +1,6 @@
 # Pipeline 配置、注册与依赖注入规范
 
-> **状态：Proposed，Phase 0a/Core v1 Candidate 规格。**
+> **状态：Active Phase 0a 子集 / Core v1 Candidate 规格。**
 
 ## 1. 目标
 
@@ -31,7 +31,23 @@ PipelineConfiguration
 - 配置中影响字节或像素的部分必须通过对应 fingerprint 进入 key；
 - 纯诊断采样率等不影响结果的配置不得污染缓存身份。
 
-## 3. `Fovea.shared`
+## 3. Phase 0a 已实现配置
+
+当前公开 `PipelineConfiguration` 只包含已生效且可测试的静态值：
+
+```text
+DecodeLimits
+maximumTransportBytes
+transportMemoryThreshold
+maximumConcurrentFetches / maximumQueuedFetches
+maximumConcurrentDecodes / maximumQueuedDecodes
+```
+
+具体 transport、encoded store、record store、decoder 与 diagnostics 在 `FoveaPipeline` composition root 注入。时钟、namespace registry、stage registry 与 executor 是 `package` 实现细节，不进入外部 API。同步 ImageIO probe/decode 由专用 Dispatch work executor 执行，不占用 Swift cooperative executor。
+
+完整 codec/processor/source/advisor registry 仍是后续候选，不得把下文目标模型描述为当前实现。
+
+## 4. `Fovea.shared`
 
 `Fovea.shared` 是默认 pipeline 的只读 façade：
 
@@ -40,7 +56,7 @@ PipelineConfiguration
 - 更换账户不能只修改 shared pipeline 内的 token，必须通过 AuthorizationContextID/NamespaceGeneration 形成新的请求上下文；
 - 默认 pipeline 的替换只允许发生在应用 composition root，且已有请求不迁移到新实例。
 
-## 4. Registry
+## 5. Registry
 
 codec、processor、source loader 和 advisor 注册采用构造期 builder，完成后冻结：
 
@@ -57,7 +73,7 @@ RegistryBuilder
 - fallback decoder 只能处理同一已探测格式，不能绕过 DecodeLimits 或 MIME/magic 安全结论；
 - 导入一个模块不得自动改变全局 pipeline 行为。
 
-## 5. 依赖共享
+## 6. 依赖共享
 
 多个 pipeline 可以显式共享：
 
@@ -75,12 +91,12 @@ RegistryBuilder
 
 共享 store 时必须使用相同 StoreGeneration、key schema、payload layer 和安全策略；否则构造失败或使用独立 store。
 
-## 6. 测试可替换性
+## 7. 测试可替换性
 
 测试必须可以注入：
 
 ```text
-DeterministicClock
+package-only TestWallClock
 FakeTransport
 InMemoryStore
 DeterministicScheduler
@@ -90,7 +106,7 @@ RecordingDiagnosticsSink
 
 不得依赖 method swizzling、全局单例重置或真实 sleep 才能测试核心状态机。
 
-## 7. Property tests
+## 8. Property tests
 
 - **PIPE-PT-001**: pipeline 构造后 registry 不可变；
 - **PIPE-PT-002**: 相同配置产生相同语义 fingerprint；

@@ -50,7 +50,7 @@ MonotonicClock   测量当前进程内 request/response resident duration
 - current age 使用 RFC 9111 对应公式和饱和算术；
 - delta-seconds 溢出时饱和，不允许变成负数；
 - wall clock 明显回拨、Date 无法解析或时间关系不可信时，record 保守视为 stale；
-- 测试使用 DeterministicClock，禁止依赖真实 sleep；
+- 测试使用 TestWallClock，禁止依赖真实 sleep；
 - RepresentationRecord 持久化计算所需的 requestTime、responseTime、Date/Age 派生值，而不是只存一个模糊 TTL。
 
 ## 3. Header 持久化策略

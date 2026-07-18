@@ -155,7 +155,7 @@ public actor OriginalEncodedStore {
     let namespaceFingerprint = StorageNamespaceFingerprint(namespace: namespace)
     let key = manifestKey(contentID: contentID, namespaceFingerprint: namespaceFingerprint)
     guard let entry = manifest.entries[key] else { return }
-    try? FileManager.default.removeItem(at: blobURL(entry.physicalID))
+    try removeFileIfPresent(blobURL(entry.physicalID))
     var next = manifest
     next.entries.removeValue(forKey: key)
     try persistManifest(next)
@@ -168,21 +168,30 @@ public actor OriginalEncodedStore {
       $0.value.namespaceFingerprint == namespaceFingerprint
     }
     guard !victims.isEmpty else { return }
-    for entry in victims.values {
-      try? FileManager.default.removeItem(at: blobURL(entry.physicalID))
-    }
+
     var next = manifest
-    for key in victims.keys { next.entries.removeValue(forKey: key) }
-    try persistManifest(next)
-    manifest = next
+    var firstFailure: (any Error)?
+    for (key, entry) in victims {
+      do {
+        try removeFileIfPresent(blobURL(entry.physicalID))
+        next.entries.removeValue(forKey: key)
+      } catch {
+        if firstFailure == nil { firstFailure = error }
+      }
+    }
+    if next.entries.count != manifest.entries.count {
+      try persistManifest(next)
+      manifest = next
+    }
+    if let firstFailure { throw firstFailure }
   }
 
-  public func removeAll() throws {
-    let next = Manifest()
-    try persistManifest(next)
-    manifest = next
-    try? FileManager.default.removeItem(at: blobs)
-    try FileManager.default.createDirectory(at: blobs, withIntermediateDirectories: true)
+  private func removeFileIfPresent(_ url: URL) throws {
+    do {
+      try FileManager.default.removeItem(at: url)
+    } catch let error as CocoaError where error.code == .fileNoSuchFile {
+      return
+    }
   }
 
   private func trimIfNeeded() throws {

@@ -11,8 +11,6 @@ let package = Package(
   platforms: [
     .iOS(.v15),
     .macOS(.v12),
-    .tvOS(.v15),
-    .watchOS(.v8),
   ],
   products: [
     .library(name: "ImageCraftCore", targets: ["ImageCraftCore"]),
@@ -33,11 +31,7 @@ let package = Package(
       swiftSettings: concurrencySettings
     ),
     .target(name: "AkashicCore", swiftSettings: concurrencySettings),
-    .target(
-      name: "AkashicMemory",
-      dependencies: ["ImageCraftCore"],
-      swiftSettings: concurrencySettings
-    ),
+    .target(name: "AkashicMemory", swiftSettings: concurrencySettings),
     .target(
       name: "AkashicDisk",
       dependencies: ["AkashicCore"],
@@ -51,7 +45,7 @@ let package = Package(
     .target(
       name: "FoveaCore",
       dependencies: [
-        "ImageCraftCore", "AkashicMemory", "AkashicDisk", "FoveaHTTP",
+        "ImageCraftCore", "AkashicCore", "AkashicMemory", "FoveaHTTP",
       ],
       swiftSettings: concurrencySettings
     ),

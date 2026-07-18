@@ -1,6 +1,6 @@
 # Phase 0a 实现面与符号预算
 
-> **状态：Proposed，Phase 0a 的规范性范围表。**  
+> **状态：Active，Phase 0a 的规范性范围表。**
 > 本文只回答“第一条可运行垂直切片允许实现什么、明确不实现什么”。它不替代架构和各领域规格；冲突时按 `docs/README.md` 的权威顺序处理。
 
 ## 1. 目标
@@ -74,7 +74,8 @@ RenderKey
 
 ```text
 recordSchemaVersion
-FetchVariantKey
+namespace fingerprint / NamespaceGeneration
+FetchVariantKey digest
 statusCode
 responseDate / requestTime / responseTime
 freshness data required by max-age / Expires / Age
@@ -105,13 +106,14 @@ TransportMetrics
 OriginalEncodedStore.open
 RepresentationRecordStore.open
 PhysicalBlobID
-NamespaceGeneration commit fence
-RenderedMemoryCache
+NamespaceGeneration read/commit fence
+MemoryCache<Key, Value>
 ```
 
 从第一天起必须使用 namespace-local 随机不透明 `PhysicalBlobID`；禁止临时使用 ContentID/SHA-256 作为文件名后再迁移。0a 只实现：
 
 - 单进程 writer；
+- `AkashicMemory` 不依赖 ImageCraft、URL、HTTP 或 UI，值成本由调用者显式传入；
 - blob + record 原子可见；
 - 持久 metadata 只保存 namespace fingerprint，不保存稳定主体标识明文；
 - 简单 store soft cap；
@@ -139,11 +141,13 @@ unknown/zero target 不得触发原尺寸 decode；原尺寸 API 不进入 0a。
 ```text
 PipelineConfiguration
 FoveaPipeline
-WallClock / SystemWallClock（测试注入可控时钟）
+FetchStage / DecodeStage / PipelineCache（package-only 固定职责）
+PipelineFailure
+WallClock / SystemWallClock（package-only 测试注入）
 DiagnosticsSink / BoundedDiagnosticsSink
 ```
 
-配置构造后不可变。0a 不提供运行时全局注册、interceptor chain 或动态 DAG。
+配置构造后不可变。公开 API 不暴露 stage registry、clock、namespace registry 或 staging accumulator；这些实现原语使用 Swift `package` 访问级别。0a 不提供运行时全局注册、interceptor chain 或动态 DAG。
 
 Phase 0a 的并发与组合约束：
 
@@ -151,6 +155,8 @@ Phase 0a 的并发与组合约束：
 - 公开加载入口和共享 operation 使用显式 `@concurrent`，不依赖调用者 actor 的偶然继承；
 - 阻塞文件系统操作只在 Akashic/FoveaHTTP 的专用串行 executor 上运行；store 使用异步 `open`，禁止在 UI actor 同步扫描 manifest；
 - `FoveaCore` 只依赖 `ImageDecoding` 协议，具体 ImageIO decoder 由 composition root 注入；
+- 唯一 FetchExecutionKey 任务执行 fetch single-flight；DecodeKey single-flight 明确后移，不得把当前实现描述为完整 stage sharing；
+- fetch/decode 在进入昂贵阶段前获取静态 hard-cap permit；等待取消必须释放资格且不得实际启动该阶段；
 - 生产代码不得使用未经逐项审计的 `@unchecked Sendable`。
 
 ## 5. Public path 是默认路径

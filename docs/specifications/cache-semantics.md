@@ -430,3 +430,4 @@ v1 不让 App 与 Widget 并发写同一个 Akashic generation。需要 Widget �
 - **CACHE-PT-035**: GC/ENOSPC/diagnostics degradation 不覆盖成功 final。
 - **CACHE-PT-036**: progressive preview 未通过最小 Probe/Security gate 时不向 UI 交付像素；
 - **CACHE-PT-037**: Widget 导出目录不包含 auth OriginalEncoded、ContentID 或敏感 metadata，Widget 不能写主 store；
+- **CACHE-PT-038**: namespace revoke 后的新 200 必须写入当前 NamespaceGeneration；重建内存 pipeline 后仍可选择该 fresh record，不永久退化为网络 miss；

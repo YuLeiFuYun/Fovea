@@ -64,14 +64,20 @@ def mutant_007(root: Path) -> None:
 
 def mutant_008(root: Path) -> None:
     pipeline = root / "Sources/FoveaCore/FoveaPipeline.swift"
+    cache = root / "Sources/FoveaCore/PipelineCache.swift"
     replace_exact(
         pipeline,
         "guard await namespaceRegistry.isActive(generation, for: request.namespace) else {",
         "guard await namespaceRegistry.isActive(generation, for: request.namespace) || true else {",
-        expected_count=3,
+        expected_count=2,
     )
     replace_exact(
         pipeline,
+        "guard await namespaceRegistry.isActive(generation, for: namespace) else {",
+        "guard await namespaceRegistry.isActive(generation, for: namespace) || true else {",
+    )
+    replace_exact(
+        cache,
         "guard await namespaceRegistry.isActive(generation, for: namespace) else {",
         "guard await namespaceRegistry.isActive(generation, for: namespace) || true else {",
     )
@@ -86,37 +92,113 @@ def mutant_009(root: Path) -> None:
 
 
 def mutant_015(root: Path) -> None:
+    cache = root / "Sources/FoveaCore/PipelineCache.swift"
+    pipeline = root / "Sources/FoveaCore/FoveaPipeline.swift"
     replace_exact(
-        root / "Sources/FoveaCore/FoveaPipeline.swift",
-        "    let probe = try decoder.probe(data: data, limits: configuration.decodeLimits)\n",
-        """    let probe: ImageProbe
-    do {
-      probe = try decoder.probe(data: data, limits: configuration.decodeLimits)
-    } catch {
-      let contentID = ContentID(data: data)
-      _ = try? await encodedStore.commit(
-        data: data,
+        cache,
+        "  func commit(\n",
+        """  func publishUnsafeOriginal(
+    data: Data,
+    contentID: ContentID,
+    variantDigest: String,
+    namespace: SecurityNamespaceID,
+    generation: NamespaceGeneration
+  ) async {
+    _ = try? await encodedStore.commit(
+      data: data,
+      contentID: contentID.description,
+      namespace: namespace.value
+    )
+    try? await recordStore.put(
+      RepresentationRecord(
+        securityNamespace: namespace.value,
+        namespaceGeneration: generation.value,
+        variantKeyDigest: variantDigest,
+        statusCode: 200,
+        requestTime: Date(),
+        responseTime: Date(),
+        expiresAt: nil,
+        etag: nil,
+        lastModified: nil,
+        disposition: .reusable,
         contentID: contentID.description,
-        namespace: request.namespace.value
+        payloadLength: data.count,
+        contentType: nil
       )
-      try? await recordStore.put(
-        RepresentationRecord(
-          securityNamespace: request.namespace.value,
-          variantKeyDigest: keyDigest,
-          statusCode: 200,
-          requestTime: Date(),
-          responseTime: Date(),
-          expiresAt: nil,
-          etag: nil,
-          lastModified: nil,
-          disposition: .reusable,
-          contentID: contentID.description,
-          payloadLength: data.count,
-          contentType: nil
-        )
+    )
+  }
+
+  func commit(
+""",
+    )
+    replace_exact(
+        pipeline,
+        """    let image = try await decodeStage.image(
+      from: response.transport.body,
+      request: request,
+      keyDigest: variant.digestHex
+    )
+""",
+        """    let image: DecodedImage
+    do {
+      image = try await decodeStage.image(
+        from: response.transport.body,
+        request: request,
+        keyDigest: variant.digestHex
+      )
+    } catch {
+      let unsafeContentID = try ContentID(
+        digestHex: response.transport.digestHex,
+        byteCount: response.transport.body.count
+      )
+      await cache.publishUnsafeOriginal(
+        data: response.transport.body,
+        contentID: unsafeContentID,
+        variantDigest: variant.digestHex,
+        namespace: request.namespace,
+        generation: generation
       )
       throw error
     }
+""",
+    )
+
+
+def mutant_017(root: Path) -> None:
+    replace_exact(
+        root / "Sources/FoveaCore/FoveaPipeline.swift",
+        """      let record = RepresentationRecord(
+        securityNamespace: request.namespace.value,
+        namespaceGeneration: generation.value,
+        variantKeyDigest: variant.digestHex,
+        statusCode: 200,
+""",
+        """      let record = RepresentationRecord(
+        securityNamespace: request.namespace.value,
+        namespaceGeneration: 0,
+        variantKeyDigest: variant.digestHex,
+        statusCode: 200,
+""",
+    )
+
+
+def mutant_018(root: Path) -> None:
+    replace_exact(
+        root / "Sources/FoveaCore/PipelineCache.swift",
+        """    try await recordStore.put(record)
+    do {
+      try Task.checkCancellation()
+      try await requireActive(generation, for: namespace)
+    } catch {
+      try? await recordStore.remove(
+        record.variantKeyDigest,
+        namespace: namespace.value,
+        namespaceGeneration: generation.value
+      )
+      throw error
+    }
+""",
+        """    try await recordStore.put(record)
 """,
     )
 
@@ -163,6 +245,20 @@ MUTANTS = [
         "Sources/FoveaCore/FoveaPipeline.swift",
         "PipelineTests/testProbeFailureDoesNotPublishRecord_CACHE_PT_029_AIQA_MUT_015",
         mutant_015,
+    ),
+    Mutant(
+        "AIQA-MUT-017",
+        "Write a post-revoke 200 record with namespace generation zero.",
+        "Sources/FoveaCore/FoveaPipeline.swift",
+        "PipelineTests/testRevokeThenNewResponsePersistsCurrentGenerationAndHitsDisk_CACHE_PT_038",
+        mutant_017,
+    ),
+    Mutant(
+        "AIQA-MUT-018",
+        "Allow a late 304 metadata refresh to survive namespace revocation.",
+        "Sources/FoveaCore/PipelineCache.swift",
+        "AuthGalleryTests/testRevokeDuring304RefreshRemovesLateMetadata_AUTH_PT_011",
+        mutant_018,
     ),
 ]
 

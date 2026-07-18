@@ -84,6 +84,13 @@ public enum BenchmarkSmokeHarness {
               decodedPixelCount: image.pixelWidth * image.pixelHeight,
               physicalFootprintBytes: ProcessMemorySampler.physicalFootprintBytes()
             )
+          } catch let failure as PipelineFailure where failure.disposition == .cancelled {
+            return LoadObservation(
+              outcome: "cancelled",
+              latencyNanoseconds: elapsed(since: started),
+              decodedPixelCount: nil,
+              physicalFootprintBytes: ProcessMemorySampler.physicalFootprintBytes()
+            )
           } catch is CancellationError {
             return LoadObservation(
               outcome: "cancelled",

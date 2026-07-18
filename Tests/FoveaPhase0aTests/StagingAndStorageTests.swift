@@ -44,6 +44,7 @@ final class StagingAndStorageTests: XCTestCase {
     try FileManager.default.removeItem(at: recordsRoot)
     let record = RepresentationRecord(
       securityNamespace: "public:tests",
+      namespaceGeneration: 0,
       variantKeyDigest: "record-write-failure",
       statusCode: 200,
       requestTime: Date(),
@@ -105,6 +106,7 @@ final class StagingAndStorageTests: XCTestCase {
     let record = RepresentationRecord(
       recordSchemaVersion: 999,
       securityNamespace: "public:tests",
+      namespaceGeneration: 0,
       variantKeyDigest: "future-record",
       statusCode: 200,
       requestTime: Date(),
@@ -163,6 +165,7 @@ final class StagingAndStorageTests: XCTestCase {
     try await records.put(
       RepresentationRecord(
         securityNamespace: namespace,
+        namespaceGeneration: 0,
         variantKeyDigest: "private-variant",
         statusCode: 200,
         requestTime: Date(),
@@ -337,7 +340,17 @@ private actor InMemoryRecordStore: RepresentationRecordStoring {
   func put(_ record: RepresentationRecord) async throws {
     records[record.variantKeyDigest] = record
   }
-  func remove(_ variantDigest: String) async throws { records.removeValue(forKey: variantDigest) }
+  func remove(
+    _ variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async throws {
+    guard let record = records[variantDigest],
+      record.securityNamespaceFingerprint == StorageNamespaceFingerprint(namespace: namespace),
+      record.namespaceGeneration == namespaceGeneration
+    else { return }
+    records.removeValue(forKey: variantDigest)
+  }
   func removeAll(namespace: String) async throws {
     records = records.filter {
       $0.value.securityNamespaceFingerprint != StorageNamespaceFingerprint(namespace: namespace)

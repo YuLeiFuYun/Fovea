@@ -1,5 +1,9 @@
+import AkashicDisk
 import FoveaCore
+import FoveaHTTP
+import FoveaTesting
 import ImageCraftCore
+import ImageCraftImageIO
 import XCTest
 
 final class DiagnosticsTests: XCTestCase {
@@ -13,6 +17,97 @@ final class DiagnosticsTests: XCTestCase {
     let dropped = await sink.droppedEventCount
     XCTAssertEqual(events.map(\.event.keyDigest), ["second", "third"])
     XCTAssertEqual(dropped, 1)
+  }
+
+  func testPipelineDiagnosticsUseEphemeralCorrelationIDs_DIAG_PT_002() async throws {
+    let body = try makePNG()
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/private-correlation.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let firstSink = BoundedDiagnosticsSink()
+    let secondSink = BoundedDiagnosticsSink()
+    let first = try await makePipeline(
+      stubs: [
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+          body: body
+        )
+      ],
+      diagnostics: firstSink
+    ).0
+    let second = try await makePipeline(
+      stubs: [
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+          body: body
+        )
+      ],
+      diagnostics: secondSink
+    ).0
+
+    _ = try await first.image(for: request)
+    _ = try await second.image(for: request)
+
+    let firstIDs = await firstSink.snapshot().compactMap(\.event.keyDigest)
+    let secondIDs = await secondSink.snapshot().compactMap(\.event.keyDigest)
+    XCTAssertFalse(firstIDs.isEmpty)
+    XCTAssertFalse(secondIDs.isEmpty)
+    XCTAssertFalse(firstIDs.contains(request.fetchVariantKey.digestHex))
+    XCTAssertFalse(firstIDs.contains(request.fetchExecutionKey.digestHex))
+    XCTAssertNotEqual(Set(firstIDs), Set(secondIDs))
+  }
+
+  func testSlowExternalSinkCannotDelayImageDelivery_DIAG_PT_003() async throws {
+    let body = try makePNG()
+    let root = try makeTemporaryDirectory()
+    let pipeline = FoveaPipeline(
+      transport: FakeHTTPTransport(stubs: [
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+          body: body
+        )
+      ]),
+      encodedStore: try await OriginalEncodedStore.open(
+        root: root.appendingPathComponent("encoded")),
+      recordStore: try await RepresentationRecordStore.open(
+        root: root.appendingPathComponent("records")),
+      diagnostics: SlowDiagnosticsSink(),
+      decoder: ImageIOImageDecoder()
+    )
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/slow-diagnostics.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+
+    let clock = ContinuousClock()
+    let started = clock.now
+    _ = try await pipeline.image(for: request)
+    let elapsed = started.duration(to: clock.now)
+    XCTAssertLessThan(elapsed, .milliseconds(350))
+  }
+
+  func testExternalRelayReportsBoundedDrops_DIAG_PT_004() async throws {
+    let downstream = CapturingSlowDiagnosticsSink(delay: .milliseconds(50))
+    let relay = BufferedDiagnosticsRelay(downstream: downstream, capacity: 1)
+    for index in 0..<20 {
+      await relay.record(DiagnosticEvent(kind: .fetchQueued, byteCount: index))
+    }
+    let dropped = await relay.droppedEventCount
+    XCTAssertGreaterThan(dropped, 0)
+
+    try await Task.sleep(for: .milliseconds(120))
+    await relay.record(DiagnosticEvent(kind: .fetchCompleted))
+    try await Task.sleep(for: .milliseconds(180))
+
+    let events = await downstream.events
+    let summary = try XCTUnwrap(events.first { $0.kind == .diagnosticsDropped })
+    XCTAssertGreaterThan(summary.byteCount ?? 0, 0)
   }
 
   func testPipelineDiagnosticsDistinguishFetchDecodeAndMemoryHit() async throws {
@@ -49,5 +144,25 @@ final class DiagnosticsTests: XCTestCase {
     XCTAssertEqual(decode.outputPixelCount, 7_500)
     XCTAssertEqual(decode.targetWidth, 100)
     XCTAssertEqual(decode.targetHeight, 75)
+  }
+}
+
+private actor SlowDiagnosticsSink: DiagnosticsSink {
+  func record(_ event: DiagnosticEvent) async {
+    try? await Task.sleep(for: .milliseconds(500))
+  }
+}
+
+private actor CapturingSlowDiagnosticsSink: DiagnosticsSink {
+  private let delay: Duration
+  private(set) var events: [DiagnosticEvent] = []
+
+  init(delay: Duration) {
+    self.delay = delay
+  }
+
+  func record(_ event: DiagnosticEvent) async {
+    try? await Task.sleep(for: delay)
+    events.append(event)
   }
 }

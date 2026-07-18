@@ -1,19 +1,19 @@
 import CryptoKit
 import Foundation
 
-public struct StagedBody: Sendable {
-  public let data: Data
-  public let digestHex: String
-  public let metrics: TransportMetrics
+package struct StagedBody: Sendable {
+  package let data: Data
+  package let digestHex: String
+  package let metrics: TransportMetrics
 
-  public init(data: Data, digestHex: String, metrics: TransportMetrics) {
+  package init(data: Data, digestHex: String, metrics: TransportMetrics) {
     self.data = data
     self.digestHex = digestHex
     self.metrics = metrics
   }
 }
 
-public final class BoundedStagingAccumulator {
+package final class BoundedStagingAccumulator {
   private let maximumBytes: Int
   private let memoryThreshold: Int
   private let stagingDirectory: URL
@@ -24,7 +24,7 @@ public final class BoundedStagingAccumulator {
   private var count = 0
   private var finalized = false
 
-  public init(maximumBytes: Int, memoryThreshold: Int, stagingDirectory: URL) throws {
+  package init(maximumBytes: Int, memoryThreshold: Int, stagingDirectory: URL) throws {
     self.maximumBytes = max(0, maximumBytes)
     self.memoryThreshold = max(0, memoryThreshold)
     self.stagingDirectory = stagingDirectory
@@ -36,7 +36,7 @@ public final class BoundedStagingAccumulator {
     if let fileURL { try? FileManager.default.removeItem(at: fileURL) }
   }
 
-  public func append(_ data: Data) throws {
+  package func append(_ data: Data) throws {
     guard !finalized else { throw TransportError.incompleteBody }
     let (nextCount, overflow) = count.addingReportingOverflow(data.count)
     guard !overflow, nextCount <= maximumBytes else { throw TransportError.bodyTooLarge }
@@ -64,7 +64,7 @@ public final class BoundedStagingAccumulator {
     try handle?.write(contentsOf: data)
   }
 
-  public func finalize() throws -> StagedBody {
+  package func finalize() throws -> StagedBody {
     guard !finalized else { throw TransportError.incompleteBody }
     finalized = true
     try handle?.synchronize()
