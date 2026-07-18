@@ -20,6 +20,7 @@ if [ "${RUN_IOS_SIMULATOR:-1}" = "1" ]; then
     xcodebuild \
         -scheme Fovea-Package \
         -destination "platform=iOS Simulator,id=$simulator_id" \
+        APPINTENTS_METADATA_PROCESSING_ENABLED=NO \
         test
 fi
 
