@@ -107,6 +107,11 @@ private struct ScopedRenderKey: Hashable, Sendable {
   let renderKey: RenderKey
 }
 
+private struct ScopedFetchExecutionKey: Hashable, Sendable {
+  let namespace: SecurityNamespaceID
+  let execution: FetchExecutionKey
+}
+
 public final class FoveaPipeline: Sendable {
   private struct TimedTransportResponse: Sendable {
     let requestTime: Date
@@ -122,7 +127,9 @@ public final class FoveaPipeline: Sendable {
   private let memoryCache: RenderedMemoryCache<ScopedRenderKey>
   private let namespaceRegistry: NamespaceRegistry
   private let diagnostics: any DiagnosticsSink
-  private let fetchTaskRegistry = SharedTaskRegistry<FetchExecutionKey, TimedTransportResponse>()
+  private let fetchTaskRegistry = SharedTaskRegistry<
+    ScopedFetchExecutionKey, TimedTransportResponse
+  >()
   private let decoder = ImageIOImageDecoder()
 
   public init(
@@ -153,11 +160,13 @@ public final class FoveaPipeline: Sendable {
     return try await load(request: request, variant: request.fetchVariantKey)
   }
 
-  public func revoke(namespace: SecurityNamespaceID) async {
+  public func revoke(namespace: SecurityNamespaceID) async throws {
     _ = await namespaceRegistry.revoke(namespace)
-    await diagnostics.record(DiagnosticEvent(kind: .namespaceRevoked))
-    // Phase 0a uses a conservative full flush. Namespace-local removal is a later optimization.
+    _ = await fetchTaskRegistry.cancelAll { $0.namespace == namespace }
     await memoryCache.removeAll()
+    try await recordStore.removeAll(namespace: namespace.value)
+    try await encodedStore.removeAll(namespace: namespace.value)
+    await diagnostics.record(DiagnosticEvent(kind: .namespaceRevoked))
   }
 
   private func load(request: ImageRequest, variant: FetchVariantKey) async throws -> DecodedImage {
@@ -190,7 +199,8 @@ public final class FoveaPipeline: Sendable {
       }
     }
 
-    let response = try await performRequest(request, conditionalRecord: existing)
+    let response = try await performRequest(
+      request, conditionalRecord: existing, generation: generation)
     if response.head.statusCode == 304 {
       guard let existing else { throw FoveaError.missingCachedBody }
       do {
@@ -206,6 +216,7 @@ public final class FoveaPipeline: Sendable {
           )
         )
         let refreshed = RepresentationRecord(
+          securityNamespace: request.namespace.value,
           variantKeyDigest: variant.digestHex,
           statusCode: existing.statusCode,
           requestTime: response.requestTime,
@@ -233,7 +244,8 @@ public final class FoveaPipeline: Sendable {
         )
       } catch {
         try? await recordStore.remove(variant.digestHex)
-        let retry = try await performRequest(request, conditionalRecord: nil)
+        let retry = try await performRequest(
+          request, conditionalRecord: nil, generation: generation)
         return try await process200(
           retry,
           request: request,
@@ -253,7 +265,8 @@ public final class FoveaPipeline: Sendable {
 
   private func performRequest(
     _ request: ImageRequest,
-    conditionalRecord: RepresentationRecord?
+    conditionalRecord: RepresentationRecord?,
+    generation: NamespaceGeneration
   ) async throws -> TimedTransportResponse {
     var urlRequest = URLRequest(url: request.url)
     urlRequest.httpMethod = "GET"
@@ -270,7 +283,11 @@ public final class FoveaPipeline: Sendable {
     let executionKey = request.fetchExecutionKey(
       revalidationFingerprint: Self.revalidationFingerprint(for: conditionalRecord)
     )
-    let subscription = await fetchTaskRegistry.subscribe(key: executionKey) { [self] in
+    let scopedExecutionKey = ScopedFetchExecutionKey(
+      namespace: request.namespace,
+      execution: executionKey
+    )
+    let subscription = await fetchTaskRegistry.subscribe(key: scopedExecutionKey) { [self] in
       await diagnostics.record(
         DiagnosticEvent(kind: .fetchStarted, keyDigest: executionKey.digestHex)
       )
@@ -319,6 +336,9 @@ public final class FoveaPipeline: Sendable {
         return response
       } catch {
         await subscription.cancel()
+        if error is CancellationError {
+          try await requireActive(generation, for: request.namespace)
+        }
         throw error
       }
     } onCancel: {
@@ -355,21 +375,22 @@ public final class FoveaPipeline: Sendable {
       isPrivateNamespace: request.authorizationContext != .public
     )
 
-    guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
-      throw FoveaError.namespaceRevoked
-    }
+    try await requireActive(generation, for: request.namespace)
 
     if disposition != .noStore {
+      var blobCommitted = false
+      var recordCommitted = false
       do {
         _ = try await encodedStore.commit(
           data: response.transport.body,
           contentID: contentID.description,
           namespace: request.namespace.value
         )
-        guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
-          throw FoveaError.namespaceRevoked
-        }
+        blobCommitted = true
+        try await requireActive(generation, for: request.namespace)
+
         let record = RepresentationRecord(
+          securityNamespace: request.namespace.value,
           variantKeyDigest: variant.digestHex,
           statusCode: 200,
           requestTime: response.requestTime,
@@ -386,13 +407,36 @@ public final class FoveaPipeline: Sendable {
           contentType: response.head.value(forHeader: "Content-Type")
         )
         try await recordStore.put(record)
-        await memoryCache.insert(
-          image,
-          for: scopedRenderKey(contentID: contentID, request: request, generation: generation)
+        recordCommitted = true
+        try await requireActive(generation, for: request.namespace)
+
+        let renderKey = scopedRenderKey(
+          contentID: contentID,
+          request: request,
+          generation: generation
         )
+        await memoryCache.insert(image, for: renderKey)
+        guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
+          await memoryCache.remove(renderKey)
+          throw FoveaError.namespaceRevoked
+        }
       } catch FoveaError.namespaceRevoked {
+        if recordCommitted { try? await recordStore.remove(variant.digestHex) }
+        if blobCommitted {
+          try? await encodedStore.remove(
+            contentID: contentID.description,
+            namespace: request.namespace.value
+          )
+        }
         throw FoveaError.namespaceRevoked
       } catch {
+        if recordCommitted { try? await recordStore.remove(variant.digestHex) }
+        if blobCommitted {
+          try? await encodedStore.remove(
+            contentID: contentID.description,
+            namespace: request.namespace.value
+          )
+        }
         await diagnostics.record(
           DiagnosticEvent(
             kind: .cacheWriteFailed,
@@ -400,10 +444,10 @@ public final class FoveaPipeline: Sendable {
             reason: "encoded-or-record-write"
           )
         )
-        // Cache degradation is non-terminal: the decoded final remains deliverable.
       }
     }
 
+    try await requireActive(generation, for: request.namespace)
     return image
   }
 
@@ -413,9 +457,14 @@ public final class FoveaPipeline: Sendable {
     generation: NamespaceGeneration,
     keyDigest: String
   ) async throws -> DecodedImage {
+    try await requireActive(generation, for: request.namespace)
     let contentID = ContentID(data: data)
     let key = scopedRenderKey(contentID: contentID, request: request, generation: generation)
     if let cached = await memoryCache.image(for: key) {
+      guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
+        await memoryCache.remove(key)
+        throw FoveaError.namespaceRevoked
+      }
       await diagnostics.record(
         DiagnosticEvent(
           kind: .renderedMemoryHit,
@@ -428,8 +477,22 @@ public final class FoveaPipeline: Sendable {
       return cached
     }
     let image = try await decode(data: data, request: request, keyDigest: keyDigest)
+    try await requireActive(generation, for: request.namespace)
     await memoryCache.insert(image, for: key)
+    guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
+      await memoryCache.remove(key)
+      throw FoveaError.namespaceRevoked
+    }
     return image
+  }
+
+  private func requireActive(
+    _ generation: NamespaceGeneration,
+    for namespace: SecurityNamespaceID
+  ) async throws {
+    guard await namespaceRegistry.isActive(generation, for: namespace) else {
+      throw FoveaError.namespaceRevoked
+    }
   }
 
   private func decode(

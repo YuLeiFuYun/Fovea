@@ -1,26 +1,36 @@
 import Foundation
 
 public actor URLSessionTransport: HTTPTransporting {
+  private let redirectDelegate: RedirectCredentialDelegate
   private let session: URLSession
   private let stagingDirectory: URL
 
-  public init(session: URLSession? = nil, stagingDirectory: URL? = nil) {
-    if let session {
-      self.session = session
-    } else {
-      let configuration = URLSessionConfiguration.ephemeral
-      configuration.urlCache = nil
-      configuration.httpCookieStorage = nil
-      configuration.httpShouldSetCookies = false
-      configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-      self.session = URLSession(configuration: configuration)
-    }
+  public init(
+    configuration: URLSessionConfiguration? = nil,
+    stagingDirectory: URL? = nil
+  ) {
+    let secureConfiguration =
+      (configuration?.copy() as? URLSessionConfiguration) ?? URLSessionConfiguration.ephemeral
+    secureConfiguration.urlCache = nil
+    secureConfiguration.httpCookieStorage = nil
+    secureConfiguration.httpShouldSetCookies = false
+    secureConfiguration.requestCachePolicy = .reloadIgnoringLocalCacheData
+
+    let redirectDelegate = RedirectCredentialDelegate()
+    self.redirectDelegate = redirectDelegate
+    self.session = URLSession(
+      configuration: secureConfiguration,
+      delegate: redirectDelegate,
+      delegateQueue: nil
+    )
     self.stagingDirectory =
       stagingDirectory
       ?? FileManager.default.temporaryDirectory
       .appendingPathComponent("FoveaTransport", isDirectory: true)
     try? FileManager.default.createDirectory(
-      at: self.stagingDirectory, withIntermediateDirectories: true)
+      at: self.stagingDirectory,
+      withIntermediateDirectories: true
+    )
   }
 
   public func execute(_ request: TransportRequest) async throws -> TransportResponse {

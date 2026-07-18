@@ -83,11 +83,5 @@ func makePipeline(
 }
 
 func variantKey(for request: ImageRequest) -> FetchVariantKey {
-  FetchVariantKey(
-    source: LogicalSourceID(url: request.url),
-    namespace: request.namespace,
-    authorizationContext: request.authorizationContext,
-    requestVariants: Dictionary(
-      uniqueKeysWithValues: request.headers.map { ($0.key.lowercased(), $0.value) })
-  )
+  request.fetchVariantKey
 }

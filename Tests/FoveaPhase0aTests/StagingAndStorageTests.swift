@@ -155,6 +155,8 @@ private actor FailingEncodedStore: OriginalEncodedStoring {
   }
 
   func physicalID(contentID: String, namespace: String) async -> PhysicalBlobID? { nil }
+  func remove(contentID: String, namespace: String) async throws {}
+  func removeAll(namespace: String) async throws {}
 }
 
 private actor InMemoryRecordStore: RepresentationRecordStoring {
@@ -165,4 +167,7 @@ private actor InMemoryRecordStore: RepresentationRecordStoring {
     records[record.variantKeyDigest] = record
   }
   func remove(_ variantDigest: String) async throws { records.removeValue(forKey: variantDigest) }
+  func removeAll(namespace: String) async throws {
+    records = records.filter { $0.value.securityNamespace != namespace }
+  }
 }

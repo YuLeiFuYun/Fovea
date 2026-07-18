@@ -35,6 +35,11 @@ public actor RenderedMemoryCache<Key: Hashable & Sendable> {
     trimIfNeeded()
   }
 
+  public func remove(_ key: Key) {
+    guard let removed = entries.removeValue(forKey: key) else { return }
+    totalCost -= removed.cost
+  }
+
   public func removeAll() {
     entries.removeAll(keepingCapacity: false)
     totalCost = 0

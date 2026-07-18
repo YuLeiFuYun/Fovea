@@ -64,6 +64,17 @@ public actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
     cancellationCounts[key, default: 0]
   }
 
+  @discardableResult
+  public func cancelAll(where predicate: @Sendable (Key) -> Bool) -> Int {
+    let keys = entries.keys.filter(predicate)
+    for key in keys {
+      guard let entry = entries.removeValue(forKey: key) else { continue }
+      entry.task.cancel()
+      cancellationCounts[key, default: 0] += 1
+    }
+    return keys.count
+  }
+
   public func completed(key: Key, taskID: UUID) {
     guard entries[key]?.taskID == taskID else { return }
     entries.removeValue(forKey: key)

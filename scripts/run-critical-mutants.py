@@ -66,25 +66,14 @@ def mutant_008(root: Path) -> None:
     pipeline = root / "Sources/FoveaCore/FoveaPipeline.swift"
     replace_exact(
         pipeline,
-        """    guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
-      throw FoveaError.namespaceRevoked
-    }
-""",
-        """    guard await namespaceRegistry.isActive(generation, for: request.namespace) || true else {
-      throw FoveaError.namespaceRevoked
-    }
-""",
+        "guard await namespaceRegistry.isActive(generation, for: request.namespace) else {",
+        "guard await namespaceRegistry.isActive(generation, for: request.namespace) || true else {",
+        expected_count=3,
     )
     replace_exact(
         pipeline,
-        """        guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
-          throw FoveaError.namespaceRevoked
-        }
-""",
-        """        guard await namespaceRegistry.isActive(generation, for: request.namespace) || true else {
-          throw FoveaError.namespaceRevoked
-        }
-""",
+        "guard await namespaceRegistry.isActive(generation, for: namespace) else {",
+        "guard await namespaceRegistry.isActive(generation, for: namespace) || true else {",
     )
 
 
@@ -112,6 +101,7 @@ def mutant_015(root: Path) -> None:
       )
       try? await recordStore.put(
         RepresentationRecord(
+          securityNamespace: request.namespace.value,
           variantKeyDigest: keyDigest,
           statusCode: 200,
           requestTime: Date(),

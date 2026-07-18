@@ -52,6 +52,11 @@ AUTH-PT-010     public URL 不需要 auth provider/credential generation
 CACHE-PT-031    ContentID 不得作为物理文件名
 GC-PT-005       PhysicalBlobID 不泄漏 ContentID
 GC-PT-011       0a soft cap 触发保守清理且不阻塞 final
+SEC-CASE-014    认证响应只写入专属 namespace
+SEC-CASE-015    相同 ContentID 跨 namespace 不共享物理 blob
+SEC-CASE-016    登出撤销任务并清除 record/blob，晚到 commit 不复活
+SEC-CASE-017    跨 origin redirect 剥离 Authorization/Cookie/API key
+SEC-CASE-018    diagnostics 不含 token、Cookie 或稳定账户标识
 ```
 
 0a-bootstrap 报告列出当时已执行项；0a-complete 报告必须列出全部产品 ID、结果、实现测试路径和 verified commit。

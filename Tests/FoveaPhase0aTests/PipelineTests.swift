@@ -281,7 +281,7 @@ final class PipelineTests: XCTestCase {
     )
     let task = Task { try await pipeline.image(for: request) }
     try await Task.sleep(for: .milliseconds(20))
-    await pipeline.revoke(namespace: namespace)
+    try await pipeline.revoke(namespace: namespace)
     do {
       _ = try await task.value
       XCTFail("Expected namespace revocation")

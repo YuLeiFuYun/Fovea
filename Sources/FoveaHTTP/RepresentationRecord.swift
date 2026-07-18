@@ -8,6 +8,7 @@ public enum CacheDisposition: String, Codable, Hashable, Sendable {
 
 public struct RepresentationRecord: Codable, Hashable, Sendable {
   public let recordSchemaVersion: UInt16
+  public let securityNamespace: String
   public let variantKeyDigest: String
   public let statusCode: Int
   public let requestTime: Date
@@ -21,7 +22,8 @@ public struct RepresentationRecord: Codable, Hashable, Sendable {
   public let contentType: String?
 
   public init(
-    recordSchemaVersion: UInt16 = 1,
+    recordSchemaVersion: UInt16 = 2,
+    securityNamespace: String,
     variantKeyDigest: String,
     statusCode: Int,
     requestTime: Date,
@@ -35,6 +37,7 @@ public struct RepresentationRecord: Codable, Hashable, Sendable {
     contentType: String?
   ) {
     self.recordSchemaVersion = recordSchemaVersion
+    self.securityNamespace = securityNamespace
     self.variantKeyDigest = variantKeyDigest
     self.statusCode = statusCode
     self.requestTime = requestTime
@@ -58,6 +61,7 @@ public protocol RepresentationRecordStoring: Sendable {
   func record(for variantDigest: String) async -> RepresentationRecord?
   func put(_ record: RepresentationRecord) async throws
   func remove(_ variantDigest: String) async throws
+  func removeAll(namespace: String) async throws
 }
 
 public actor RepresentationRecordStore: RepresentationRecordStoring {
@@ -67,11 +71,13 @@ public actor RepresentationRecordStore: RepresentationRecordStoring {
   public init(root: URL) throws {
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     self.fileURL = root.appendingPathComponent("representation-records.json")
-    if let data = try? Data(contentsOf: fileURL) {
-      self.records =
-        (try? JSONDecoder().decode([String: RepresentationRecord].self, from: data)) ?? [:]
+    if let data = try? Data(contentsOf: fileURL),
+      let decoded = try? JSONDecoder().decode([String: RepresentationRecord].self, from: data)
+    {
+      self.records = decoded
     } else {
       self.records = [:]
+      try? FileManager.default.removeItem(at: fileURL)
     }
   }
 
@@ -86,6 +92,15 @@ public actor RepresentationRecordStore: RepresentationRecordStoring {
 
   public func remove(_ variantDigest: String) throws {
     records.removeValue(forKey: variantDigest)
+    try persist()
+  }
+
+  public func removeAll(namespace: String) throws {
+    let keys = records.compactMap { key, record in
+      record.securityNamespace == namespace ? key : nil
+    }
+    guard !keys.isEmpty else { return }
+    for key in keys { records.removeValue(forKey: key) }
     try persist()
   }
 
