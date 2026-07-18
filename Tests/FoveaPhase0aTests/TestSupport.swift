@@ -64,7 +64,8 @@ func makePipeline(
   stubs: [FakeHTTPTransport.Stub],
   root: URL? = nil,
   namespaceRegistry: NamespaceRegistry = NamespaceRegistry(),
-  softLimitBytes: Int = 8 * 1024 * 1024
+  softLimitBytes: Int = 8 * 1024 * 1024,
+  diagnostics: any DiagnosticsSink = NullDiagnosticsSink()
 ) throws -> (FoveaPipeline, FakeHTTPTransport, OriginalEncodedStore, RepresentationRecordStore) {
   let root = try root ?? makeTemporaryDirectory()
   let transport = FakeHTTPTransport(stubs: stubs)
@@ -75,7 +76,8 @@ func makePipeline(
     transport: transport,
     encodedStore: encoded,
     recordStore: records,
-    namespaceRegistry: namespaceRegistry
+    namespaceRegistry: namespaceRegistry,
+    diagnostics: diagnostics
   )
   return (pipeline, transport, encoded, records)
 }

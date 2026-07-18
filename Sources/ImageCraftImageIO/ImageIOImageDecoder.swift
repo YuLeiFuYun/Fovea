@@ -29,6 +29,15 @@ public struct ImageIOImageDecoder: Sendable {
     limits: DecodeLimits = .phase0a
   ) throws -> DecodedImage {
     let probe = try probe(data: data, limits: limits)
+    return try decode(data: data, probe: probe, target: target, limits: limits)
+  }
+
+  public func decode(
+    data: Data,
+    probe: ImageProbe,
+    target: TargetPixels,
+    limits: DecodeLimits = .phase0a
+  ) throws -> DecodedImage {
     let widthScale = Double(target.width) / Double(probe.pixelWidth)
     let heightScale = Double(target.height) / Double(probe.pixelHeight)
     let scale = min(1, widthScale, heightScale)
@@ -36,7 +45,7 @@ public struct ImageIOImageDecoder: Sendable {
       1,
       min(
         limits.maximumDimension,
-        Int(ceil(Double(max(probe.pixelWidth, probe.pixelHeight)) * scale))
+        Int(floor(Double(max(probe.pixelWidth, probe.pixelHeight)) * scale))
       )
     )
 

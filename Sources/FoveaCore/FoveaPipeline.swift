@@ -121,6 +121,7 @@ public final class FoveaPipeline: Sendable {
   private let recordStore: any RepresentationRecordStoring
   private let memoryCache: RenderedMemoryCache<ScopedRenderKey>
   private let namespaceRegistry: NamespaceRegistry
+  private let diagnostics: any DiagnosticsSink
   private let fetchTaskRegistry = SharedTaskRegistry<FetchExecutionKey, TimedTransportResponse>()
   private let decoder = ImageIOImageDecoder()
 
@@ -130,7 +131,8 @@ public final class FoveaPipeline: Sendable {
     encodedStore: any OriginalEncodedStoring,
     recordStore: any RepresentationRecordStoring,
     memoryCacheCostLimit: Int = 64 * 1024 * 1024,
-    namespaceRegistry: NamespaceRegistry = NamespaceRegistry()
+    namespaceRegistry: NamespaceRegistry = NamespaceRegistry(),
+    diagnostics: any DiagnosticsSink = NullDiagnosticsSink()
   ) {
     self.configuration = configuration
     self.transport = transport
@@ -138,6 +140,7 @@ public final class FoveaPipeline: Sendable {
     self.recordStore = recordStore
     self.memoryCache = RenderedMemoryCache(costLimit: memoryCacheCostLimit)
     self.namespaceRegistry = namespaceRegistry
+    self.diagnostics = diagnostics
   }
 
   public func image(for request: ImageRequest) async throws -> DecodedImage {
@@ -152,6 +155,7 @@ public final class FoveaPipeline: Sendable {
 
   public func revoke(namespace: SecurityNamespaceID) async {
     _ = await namespaceRegistry.revoke(namespace)
+    await diagnostics.record(DiagnosticEvent(kind: .namespaceRevoked))
     // Phase 0a uses a conservative full flush. Namespace-local removal is a later optimization.
     await memoryCache.removeAll()
   }
@@ -167,7 +171,19 @@ public final class FoveaPipeline: Sendable {
           contentID: record.contentID,
           namespace: request.namespace.value
         )
-        return try await decodeAndCache(data: data, request: request, generation: generation)
+        await diagnostics.record(
+          DiagnosticEvent(
+            kind: .originalEncodedHit,
+            keyDigest: variant.digestHex,
+            byteCount: data.count
+          )
+        )
+        return try await decodeAndCache(
+          data: data,
+          request: request,
+          generation: generation,
+          keyDigest: variant.digestHex
+        )
       } catch {
         try? await recordStore.remove(variant.digestHex)
         existing = nil
@@ -181,6 +197,13 @@ public final class FoveaPipeline: Sendable {
         let data = try await encodedStore.read(
           contentID: existing.contentID,
           namespace: request.namespace.value
+        )
+        await diagnostics.record(
+          DiagnosticEvent(
+            kind: .originalEncodedHit,
+            keyDigest: variant.digestHex,
+            byteCount: data.count
+          )
         )
         let refreshed = RepresentationRecord(
           variantKeyDigest: variant.digestHex,
@@ -202,7 +225,12 @@ public final class FoveaPipeline: Sendable {
         if await namespaceRegistry.isActive(generation, for: request.namespace) {
           try await recordStore.put(refreshed)
         }
-        return try await decodeAndCache(data: data, request: request, generation: generation)
+        return try await decodeAndCache(
+          data: data,
+          request: request,
+          generation: generation,
+          keyDigest: variant.digestHex
+        )
       } catch {
         try? await recordStore.remove(variant.digestHex)
         let retry = try await performRequest(request, conditionalRecord: nil)
@@ -243,18 +271,43 @@ public final class FoveaPipeline: Sendable {
       revalidationFingerprint: Self.revalidationFingerprint(for: conditionalRecord)
     )
     let subscription = await fetchTaskRegistry.subscribe(key: executionKey) { [self] in
-      let requestTime = Date()
-      let transport = try await transport.execute(
-        TransportRequest(
-          request: authorizedRequest,
-          maximumBytes: configuration.maximumTransportBytes,
-          memoryThreshold: configuration.transportMemoryThreshold
-        )
+      await diagnostics.record(
+        DiagnosticEvent(kind: .fetchStarted, keyDigest: executionKey.digestHex)
       )
-      return TimedTransportResponse(
-        requestTime: requestTime,
-        responseTime: Date(),
-        transport: transport
+      let requestTime = Date()
+      do {
+        let transport = try await transport.execute(
+          TransportRequest(
+            request: authorizedRequest,
+            maximumBytes: configuration.maximumTransportBytes,
+            memoryThreshold: configuration.transportMemoryThreshold
+          )
+        )
+        await diagnostics.record(
+          DiagnosticEvent(
+            kind: .fetchCompleted,
+            keyDigest: executionKey.digestHex,
+            statusCode: transport.head.statusCode,
+            byteCount: transport.metrics.receivedBytes
+          )
+        )
+        return TimedTransportResponse(
+          requestTime: requestTime,
+          responseTime: Date(),
+          transport: transport
+        )
+      } catch {
+        if error is CancellationError {
+          await diagnostics.record(
+            DiagnosticEvent(kind: .fetchCancelled, keyDigest: executionKey.digestHex)
+          )
+        }
+        throw error
+      }
+    }
+    if subscription.wasJoined {
+      await diagnostics.record(
+        DiagnosticEvent(kind: .fetchJoined, keyDigest: executionKey.digestHex)
       )
     }
 
@@ -288,10 +341,10 @@ public final class FoveaPipeline: Sendable {
       throw FoveaError.nonImageResponse
     }
 
-    let image = try decoder.decode(
+    let image = try await decode(
       data: response.transport.body,
-      target: request.target,
-      limits: configuration.decodeLimits
+      request: request,
+      keyDigest: variant.digestHex
     )
     let contentID = ContentID(
       digestHex: response.transport.digestHex,
@@ -340,6 +393,13 @@ public final class FoveaPipeline: Sendable {
       } catch FoveaError.namespaceRevoked {
         throw FoveaError.namespaceRevoked
       } catch {
+        await diagnostics.record(
+          DiagnosticEvent(
+            kind: .cacheWriteFailed,
+            keyDigest: variant.digestHex,
+            reason: "encoded-or-record-write"
+          )
+        )
         // Cache degradation is non-terminal: the decoded final remains deliverable.
       }
     }
@@ -350,17 +410,50 @@ public final class FoveaPipeline: Sendable {
   private func decodeAndCache(
     data: Data,
     request: ImageRequest,
-    generation: NamespaceGeneration
+    generation: NamespaceGeneration,
+    keyDigest: String
   ) async throws -> DecodedImage {
     let contentID = ContentID(data: data)
     let key = scopedRenderKey(contentID: contentID, request: request, generation: generation)
-    if let cached = await memoryCache.image(for: key) { return cached }
+    if let cached = await memoryCache.image(for: key) {
+      await diagnostics.record(
+        DiagnosticEvent(
+          kind: .renderedMemoryHit,
+          keyDigest: keyDigest,
+          outputPixelCount: cached.pixelWidth * cached.pixelHeight,
+          targetWidth: request.target.width,
+          targetHeight: request.target.height
+        )
+      )
+      return cached
+    }
+    let image = try await decode(data: data, request: request, keyDigest: keyDigest)
+    await memoryCache.insert(image, for: key)
+    return image
+  }
+
+  private func decode(
+    data: Data,
+    request: ImageRequest,
+    keyDigest: String
+  ) async throws -> DecodedImage {
+    let probe = try decoder.probe(data: data, limits: configuration.decodeLimits)
     let image = try decoder.decode(
       data: data,
+      probe: probe,
       target: request.target,
       limits: configuration.decodeLimits
     )
-    await memoryCache.insert(image, for: key)
+    await diagnostics.record(
+      DiagnosticEvent(
+        kind: .decodeCompleted,
+        keyDigest: keyDigest,
+        sourcePixelCount: probe.pixelWidth * probe.pixelHeight,
+        outputPixelCount: image.pixelWidth * image.pixelHeight,
+        targetWidth: request.target.width,
+        targetHeight: request.target.height
+      )
+    )
     return image
   }
 

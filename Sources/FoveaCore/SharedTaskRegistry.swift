@@ -25,7 +25,8 @@ public actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
         taskID: entry.taskID,
         subscriberID: subscriberID,
         task: entry.task,
-        registry: self
+        registry: self,
+        wasJoined: true
       )
     }
 
@@ -37,7 +38,8 @@ public actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
       taskID: taskID,
       subscriberID: subscriberID,
       task: task,
-      registry: self
+      registry: self,
+      wasJoined: false
     )
   }
 
@@ -74,6 +76,7 @@ public struct SharedTaskSubscription<Key: Hashable & Sendable, Value: Sendable>:
   fileprivate let subscriberID: UUID
   fileprivate let task: Task<Value, Error>
   fileprivate let registry: SharedTaskRegistry<Key, Value>
+  public let wasJoined: Bool
 
   public func value() async throws -> Value {
     let result = await task.result
