@@ -18,7 +18,7 @@ final class DiagnosticsTests: XCTestCase {
   func testPipelineDiagnosticsDistinguishFetchDecodeAndMemoryHit() async throws {
     let sink = BoundedDiagnosticsSink(capacity: 64)
     let body = try makePNG(width: 400, height: 300)
-    let (pipeline, _, _, _) = try makePipeline(
+    let (pipeline, _, _, _) = try await makePipeline(
       stubs: [
         .init(
           statusCode: 200,
@@ -28,7 +28,7 @@ final class DiagnosticsTests: XCTestCase {
       ],
       diagnostics: sink
     )
-    let request = ImageRequest.publicImage(
+    let request = try ImageRequest.publicImage(
       url: try XCTUnwrap(URL(string: "https://example.com/diagnostics.png")),
       target: try TargetPixels(width: 100, height: 75),
       appID: "tests"

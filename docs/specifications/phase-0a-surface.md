@@ -91,29 +91,29 @@ payload length / content type
 ```text
 TransportRequest
 TransportResponseHead
-BoundedByteStream
-StagingBlob
-StreamingDigest
+BoundedStagingAccumulator
+StagedBody
+streaming SHA-256
 TransportMetrics
 ```
 
-必须有 encoded byte hard limit、内存阈值后 spill、取消和 incomplete body 清理。0a 不做跨请求 Range resume。
+必须有 encoded byte hard limit、内存阈值后 spill、逐块背压、取消和 incomplete body 清理。URLSession 实现不得按单字节消费大响应，也不得用无界事件缓冲绕过 hard limit。0a 不做跨请求 Range resume。
 
 ### 4.4 Storage
 
 ```text
-OriginalEncodedStore
-RepresentationRecordStore
+OriginalEncodedStore.open
+RepresentationRecordStore.open
 PhysicalBlobID
-StoreGenerationID
-CommitContext(namespaceGeneration)
-RenderedMemory
+NamespaceGeneration commit fence
+RenderedMemoryCache
 ```
 
 从第一天起必须使用 namespace-local 随机不透明 `PhysicalBlobID`；禁止临时使用 ContentID/SHA-256 作为文件名后再迁移。0a 只实现：
 
 - 单进程 writer；
 - blob + record 原子可见；
+- 持久 metadata 只保存 namespace fingerprint，不保存稳定主体标识明文；
 - 简单 store soft cap；
 - 超限时按过期/最旧记录做保守 FIFO 或近似 LRU 清理；
 - corruption/ENOSPC 退化为 miss，不覆盖成功 final。
@@ -126,11 +126,10 @@ namespace/category quota、lease、精确 atime、mark-and-sweep crash matrix �
 ImageProbe
 DecodeLimits
 TargetPixels
-ImageIODecodePlan
+ImageDecoding
+ImageIOImageDecoder
 DecodedImage
-ImageLoader
-ImageRequestToken
-FoveaImage / FoveaImagePhase
+FoveaImage / FoveaImagePhase / FoveaImageAccessibility
 ```
 
 unknown/zero target 不得触发原尺寸 decode；原尺寸 API 不进入 0a。只实现静态 JPEG/PNG/系统 ImageIO 可安全探测格式的基础路径，不实现动画、SVG、第三方 codec、HDR/gain-map 或 Analysis。
@@ -140,11 +139,19 @@ unknown/zero target 不得触发原尺寸 decode；原尺寸 API 不进入 0a。
 ```text
 PipelineConfiguration
 FoveaPipeline
-DeterministicClock
-DiagnosticsSink (minimal bounded implementation)
+WallClock / SystemWallClock（测试注入可控时钟）
+DiagnosticsSink / BoundedDiagnosticsSink
 ```
 
 配置构造后不可变。0a 不提供运行时全局注册、interceptor chain 或动态 DAG。
+
+Phase 0a 的并发与组合约束：
+
+- package 使用 Swift 6 严格并发，并启用 Swift 6.2 `NonisolatedNonsendingByDefault` 与 `InferIsolatedConformances`；
+- 公开加载入口和共享 operation 使用显式 `@concurrent`，不依赖调用者 actor 的偶然继承；
+- 阻塞文件系统操作只在 Akashic/FoveaHTTP 的专用串行 executor 上运行；store 使用异步 `open`，禁止在 UI actor 同步扫描 manifest；
+- `FoveaCore` 只依赖 `ImageDecoding` 协议，具体 ImageIO decoder 由 composition root 注入；
+- 生产代码不得使用未经逐项审计的 `@unchecked Sendable`。
 
 ## 5. Public path 是默认路径
 

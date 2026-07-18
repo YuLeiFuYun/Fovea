@@ -10,6 +10,11 @@ public enum FoveaImagePhase {
   case cancelled
 }
 
+public enum FoveaImageAccessibility {
+  case decorative
+  case label(Text)
+}
+
 @MainActor
 public final class FoveaImageModel: ObservableObject {
   @Published public private(set) var phase: FoveaImagePhase = .empty
@@ -43,6 +48,7 @@ public final class FoveaImageModel: ObservableObject {
 public struct FoveaImage<Placeholder: View, Failure: View>: View {
   private let request: ImageRequest
   private let pipeline: FoveaPipeline
+  private let accessibility: FoveaImageAccessibility
   private let placeholder: () -> Placeholder
   private let failure: (any Error) -> Failure
   @StateObject private var model = FoveaImageModel()
@@ -50,11 +56,13 @@ public struct FoveaImage<Placeholder: View, Failure: View>: View {
   public init(
     request: ImageRequest,
     pipeline: FoveaPipeline,
+    accessibility: FoveaImageAccessibility,
     @ViewBuilder placeholder: @escaping () -> Placeholder,
     @ViewBuilder failure: @escaping (any Error) -> Failure
   ) {
     self.request = request
     self.pipeline = pipeline
+    self.accessibility = accessibility
     self.placeholder = placeholder
     self.failure = failure
   }
@@ -73,21 +81,32 @@ public struct FoveaImage<Placeholder: View, Failure: View>: View {
     case .empty, .loading, .cancelled:
       placeholder()
     case .success(let decoded):
-      Image(decorative: decoded.cgImage, scale: 1)
-        .resizable()
+      renderedImage(decoded)
     case .failure(let error):
       failure(error)
     }
   }
 
-  private var requestIdentity: String {
-    request.displayIdentity
+  @ViewBuilder
+  private func renderedImage(_ decoded: DecodedImage) -> some View {
+    switch accessibility {
+    case .decorative:
+      Image(decorative: decoded.cgImage, scale: 1).resizable()
+    case .label(let label):
+      Image(decoded.cgImage, scale: 1, label: label).resizable()
+    }
   }
+
+  private var requestIdentity: String { request.displayIdentity }
 }
 
 extension FoveaImage where Placeholder == ProgressView<EmptyView, EmptyView>, Failure == EmptyView {
-  public init(request: ImageRequest, pipeline: FoveaPipeline) {
-    self.init(request: request, pipeline: pipeline) {
+  public init(
+    request: ImageRequest,
+    pipeline: FoveaPipeline,
+    accessibility: FoveaImageAccessibility
+  ) {
+    self.init(request: request, pipeline: pipeline, accessibility: accessibility) {
       ProgressView()
     } failure: { _ in
       EmptyView()

@@ -49,7 +49,7 @@ final class IdentityTests: XCTestCase {
   }
 
   func testPublicRequestNeedsNoCredentialGeneration_AUTH_PT_010() throws {
-    let request = ImageRequest.publicImage(
+    let request = try ImageRequest.publicImage(
       url: try XCTUnwrap(URL(string: "https://example.com/public.png")),
       target: try TargetPixels(width: 20, height: 20),
       appID: "tests"
@@ -60,7 +60,7 @@ final class IdentityTests: XCTestCase {
 
   func testPhysicalBlobIDDoesNotExposeContentDigest_CACHE_PT_031_GC_PT_005() async throws {
     let root = try makeTemporaryDirectory()
-    let store = try OriginalEncodedStore(root: root, softLimitBytes: 1024)
+    let store = try await OriginalEncodedStore.open(root: root, softLimitBytes: 1024)
     let data = Data("known-content".utf8)
     let contentID = ContentID(data: data)
     let stored = try await store.commit(
@@ -71,7 +71,7 @@ final class IdentityTests: XCTestCase {
 
   func testSensitiveHeadersDoNotEnterStableVariant_AUTH_PT_006() throws {
     let secret = "Bearer top-secret-token"
-    let request = ImageRequest(
+    let request = try ImageRequest(
       url: try XCTUnwrap(URL(string: "https://example.com/private.png")),
       target: try TargetPixels(width: 20, height: 20),
       namespace: SecurityNamespaceID("account-a"),
@@ -86,16 +86,108 @@ final class IdentityTests: XCTestCase {
     XCTAssertEqual(request.fetchVariantKey.requestVariants, ["accept-language": "zh-CN"])
   }
 
+  func testImageRequestRejectsCaseInsensitiveDuplicateHeaders() throws {
+    XCTAssertThrowsError(
+      try ImageRequest(
+        url: XCTUnwrap(URL(string: "https://example.com/headers")),
+        target: TargetPixels(width: 20, height: 20),
+        namespace: .publicNamespace(appID: "tests"),
+        headers: ["Accept": "image/png", "accept": "image/jpeg"]
+      )
+    ) { error in
+      XCTAssertEqual(error as? ImageRequestError, .duplicateHeaderName("accept"))
+    }
+  }
+
+  func testImageRequestRejectsHeaderInjection() throws {
+    XCTAssertThrowsError(
+      try ImageRequest(
+        url: XCTUnwrap(URL(string: "https://example.com/headers")),
+        target: TargetPixels(width: 20, height: 20),
+        namespace: .publicNamespace(appID: "tests"),
+        headers: ["X-Test": "safe\r\nAuthorization: injected"]
+      )
+    ) { error in
+      XCTAssertEqual(error as? ImageRequestError, .invalidHeaderValue("X-Test"))
+    }
+  }
+
+  func testSignedLocatorRefreshKeepsVariantButChangesExecution_CACHE_PT_014() throws {
+    let logicalSource = LogicalSourceID("asset:avatar:42")
+    let first = try ImageRequest.publicImage(
+      url: XCTUnwrap(URL(string: "https://cdn.example.com/avatar.png?sig=old&exp=1")),
+      logicalSource: logicalSource,
+      target: TargetPixels(width: 40, height: 40),
+      appID: "tests"
+    )
+    let refreshed = try ImageRequest.publicImage(
+      url: XCTUnwrap(URL(string: "https://cdn.example.com/avatar.png?sig=new&exp=2")),
+      logicalSource: logicalSource,
+      target: TargetPixels(width: 40, height: 40),
+      appID: "tests"
+    )
+
+    XCTAssertEqual(first.fetchVariantKey, refreshed.fetchVariantKey)
+    XCTAssertNotEqual(first.fetchExecutionKey, refreshed.fetchExecutionKey)
+  }
+
+  func testURLNormalizationIsConservativeAndFragmentFree_CACHE_PT_027() throws {
+    let first = try ImageRequest.publicImage(
+      url: XCTUnwrap(URL(string: "HTTPS://EXAMPLE.COM:443/a%2Fb?x=1&x=2#first")),
+      target: TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let second = try ImageRequest.publicImage(
+      url: XCTUnwrap(URL(string: "https://example.com/a%2Fb?x=1&x=2#second")),
+      target: TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let reordered = try ImageRequest.publicImage(
+      url: XCTUnwrap(URL(string: "https://example.com/a%2Fb?x=2&x=1")),
+      target: TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+
+    XCTAssertEqual(first.fetchVariantKey, second.fetchVariantKey)
+    XCTAssertEqual(first.url.absoluteString, "https://example.com/a%2Fb?x=1&x=2")
+    XCTAssertNotEqual(first.fetchVariantKey, reordered.fetchVariantKey)
+  }
+
+  func testImageRequestRejectsUnsupportedSchemeAndEmbeddedCredentials() throws {
+    XCTAssertThrowsError(
+      try ImageRequest.publicImage(
+        url: XCTUnwrap(URL(string: "file:///tmp/a.png")),
+        target: TargetPixels(width: 20, height: 20),
+        appID: "tests"
+      )
+    ) { error in
+      XCTAssertEqual(error as? ImageRequestError, .unsupportedURLScheme("file"))
+    }
+
+    let user = "user"
+    let secret = "credential"
+    let locator = "https://" + user + ":" + secret + "@example.com/a.png"
+    XCTAssertThrowsError(
+      try ImageRequest.publicImage(
+        url: XCTUnwrap(URL(string: locator)),
+        target: TargetPixels(width: 20, height: 20),
+        appID: "tests"
+      )
+    ) { error in
+      XCTAssertEqual(error as? ImageRequestError, .embeddedURLCredentials)
+    }
+  }
+
   func testImageRequestExecutionKeyIncludesCredentialAndRevalidation() throws {
     let url = try XCTUnwrap(URL(string: "https://example.com/exact-fetch"))
-    let oldCredential = ImageRequest(
+    let oldCredential = try ImageRequest(
       url: url,
       target: try TargetPixels(width: 20, height: 20),
       namespace: SecurityNamespaceID("account-a"),
       authorizationContext: AuthorizationContextID("principal-a"),
       credentialGeneration: CredentialGeneration(1)
     )
-    let newCredential = ImageRequest(
+    let newCredential = try ImageRequest(
       url: url,
       target: try TargetPixels(width: 20, height: 20),
       namespace: SecurityNamespaceID("account-a"),
@@ -129,12 +221,12 @@ final class IdentityTests: XCTestCase {
 
   func testTargetChangesDisplayIdentityWithoutChangingFetchIdentity() throws {
     let url = try XCTUnwrap(URL(string: "https://example.com/target.png"))
-    let small = ImageRequest.publicImage(
+    let small = try ImageRequest.publicImage(
       url: url,
       target: try TargetPixels(width: 20, height: 20),
       appID: "tests"
     )
-    let large = ImageRequest.publicImage(
+    let large = try ImageRequest.publicImage(
       url: url,
       target: try TargetPixels(width: 80, height: 80),
       appID: "tests"

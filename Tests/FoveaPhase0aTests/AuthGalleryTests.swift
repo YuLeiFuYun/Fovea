@@ -7,6 +7,7 @@ import FoveaCore
 import FoveaHTTP
 import FoveaTesting
 import ImageCraftCore
+import ImageCraftImageIO
 import XCTest
 
 final class AuthGalleryTests: XCTestCase {
@@ -24,23 +25,25 @@ final class AuthGalleryTests: XCTestCase {
       ),
     ])
     let root = try makeTemporaryDirectory()
-    let encoded = try OriginalEncodedStore(root: root.appendingPathComponent("encoded"))
-    let records = try RepresentationRecordStore(root: root.appendingPathComponent("records"))
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
     let pipeline = FoveaPipeline(
       transport: origin,
       encodedStore: encoded,
-      recordStore: records
+      recordStore: records,
+      decoder: ImageIOImageDecoder()
     )
     let url = try XCTUnwrap(URL(string: "https://images.example.test/avatar"))
     let target = try TargetPixels(width: 40, height: 40)
-    let accountA = authenticatedRequest(
+    let accountA = try authenticatedRequest(
       url: url,
       target: target,
       namespace: "account-a",
       principal: "principal-a",
       token: "Bearer account-a"
     )
-    let accountB = authenticatedRequest(
+    let accountB = try authenticatedRequest(
       url: url,
       target: target,
       namespace: "account-b",
@@ -65,8 +68,10 @@ final class AuthGalleryTests: XCTestCase {
     let recordBValue = await records.record(for: accountB.fetchVariantKey.digestHex)
     let recordA = try XCTUnwrap(recordAValue)
     let recordB = try XCTUnwrap(recordBValue)
-    XCTAssertEqual(recordA.securityNamespace, "account-a")
-    XCTAssertEqual(recordB.securityNamespace, "account-b")
+    XCTAssertEqual(
+      recordA.securityNamespaceFingerprint, StorageNamespaceFingerprint(namespace: "account-a"))
+    XCTAssertEqual(
+      recordB.securityNamespaceFingerprint, StorageNamespaceFingerprint(namespace: "account-b"))
     let physicalAValue = await encoded.physicalID(
       contentID: recordA.contentID,
       namespace: "account-a"
@@ -110,14 +115,16 @@ final class AuthGalleryTests: XCTestCase {
       )
     ])
     let root = try makeTemporaryDirectory()
-    let encoded = try OriginalEncodedStore(root: root.appendingPathComponent("encoded"))
-    let records = try RepresentationRecordStore(root: root.appendingPathComponent("records"))
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
     let pipeline = FoveaPipeline(
       transport: origin,
       encodedStore: encoded,
-      recordStore: records
+      recordStore: records,
+      decoder: ImageIOImageDecoder()
     )
-    let request = authenticatedRequest(
+    let request = try authenticatedRequest(
       url: try XCTUnwrap(URL(string: "https://images.example.test/no-store")),
       target: try TargetPixels(width: 40, height: 40),
       namespace: "account-no-store",
@@ -150,14 +157,16 @@ final class AuthGalleryTests: XCTestCase {
       )
     ])
     let root = try makeTemporaryDirectory()
-    let encoded = try OriginalEncodedStore(root: root.appendingPathComponent("encoded"))
-    let records = try RepresentationRecordStore(root: root.appendingPathComponent("records"))
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
     let pipeline = FoveaPipeline(
       transport: origin,
       encodedStore: encoded,
-      recordStore: records
+      recordStore: records,
+      decoder: ImageIOImageDecoder()
     )
-    let request = authenticatedRequest(
+    let request = try authenticatedRequest(
       url: try XCTUnwrap(URL(string: "https://images.example.test/delayed")),
       target: try TargetPixels(width: 40, height: 40),
       namespace: "account-delayed",
@@ -194,15 +203,18 @@ final class AuthGalleryTests: XCTestCase {
       )
     ])
     let root = try makeTemporaryDirectory()
-    let baseStore = try OriginalEncodedStore(root: root.appendingPathComponent("encoded"))
+    let baseStore = try await OriginalEncodedStore.open(
+      root: root.appendingPathComponent("encoded"))
     let barrierStore = CommitBarrierEncodedStore(base: baseStore)
-    let records = try RepresentationRecordStore(root: root.appendingPathComponent("records"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
     let pipeline = FoveaPipeline(
       transport: origin,
       encodedStore: barrierStore,
-      recordStore: records
+      recordStore: records,
+      decoder: ImageIOImageDecoder()
     )
-    let request = authenticatedRequest(
+    let request = try authenticatedRequest(
       url: try XCTUnwrap(URL(string: "https://images.example.test/commit-race")),
       target: try TargetPixels(width: 40, height: 40),
       namespace: "account-commit-race",
@@ -237,7 +249,8 @@ final class AuthGalleryTests: XCTestCase {
     let pipeline = FoveaPipeline(
       transport: CredentialImageOrigin(responses: [:]),
       encodedStore: encoded,
-      recordStore: records
+      recordStore: records,
+      decoder: ImageIOImageDecoder()
     )
 
     do {
@@ -294,8 +307,8 @@ private func authenticatedRequest(
   namespace: String,
   principal: String,
   token: String
-) -> ImageRequest {
-  ImageRequest(
+) throws -> ImageRequest {
+  try ImageRequest(
     url: url,
     target: target,
     namespace: SecurityNamespaceID(namespace),
@@ -403,7 +416,11 @@ private actor TrackingCleanupEncodedStore: OriginalEncodedStoring {
 private actor FailingCleanupRecordStore: RepresentationRecordStoring {
   private(set) var removeAllCount = 0
 
-  func record(for variantDigest: String) async -> RepresentationRecord? { nil }
+  func record(
+    for variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async -> RepresentationRecord? { nil }
   func put(_ record: RepresentationRecord) async throws {}
   func remove(_ variantDigest: String) async throws {}
 

@@ -8,7 +8,7 @@ import XCTest
 final class SwiftUIStateTests: XCTestCase {
   func testLateResultCannotOverwriteNewIdentity_UI_PT_001() async throws {
     let body = try makePNG(width: 100, height: 50)
-    let (pipeline, _, _, _) = try makePipeline(stubs: [
+    let (pipeline, _, _, _) = try await makePipeline(stubs: [
       .init(
         statusCode: 200, headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
         body: body, delayNanoseconds: 100_000_000),
@@ -17,12 +17,12 @@ final class SwiftUIStateTests: XCTestCase {
         body: body),
     ])
     let model = FoveaImageModel()
-    let first = ImageRequest.publicImage(
+    let first = try ImageRequest.publicImage(
       url: try XCTUnwrap(URL(string: "https://example.com/first.png")),
       target: try TargetPixels(width: 10, height: 10),
       appID: "tests"
     )
-    let second = ImageRequest.publicImage(
+    let second = try ImageRequest.publicImage(
       url: try XCTUnwrap(URL(string: "https://example.com/second.png")),
       target: try TargetPixels(width: 20, height: 20),
       appID: "tests"

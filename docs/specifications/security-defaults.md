@@ -7,7 +7,7 @@
 |---|---|---|---|---|
 | SEC-CASE-001 | 0a | encoded bytes 超过上限 | 在继续累计前终止 | 防止响应体耗尽内存/磁盘 |
 | SEC-CASE-002 | 0a | width、height 或 pixel count 超限 | 解码前拒绝 | 防止解压炸弹 |
-| SEC-CASE-003 | Phase 2 | 动画 frame count 超限 | 拒绝或按显式策略静态化 | 防止帧缓存和 CPU 爆炸 |
+| SEC-CASE-003 | 0a | 静态路径遇到多帧图像或 frame count 超限 | 0a 拒绝；动画能力启用后再按显式策略处理 | 防止静态解码路径隐式接受动画与帧放大 |
 | SEC-CASE-004 | 0b | metadata/ICC/EXIF/XMP 超限 | 拒绝异常 metadata，必要时拒绝资源 | 防止解析器和内存攻击 |
 | SEC-CASE-005 | 0a | MIME 为 `text/html` 等非图像 | 拒绝 | 防止错误页被当作图片缓存 |
 | SEC-CASE-006 | 0a | MIME、UTType 与 magic 不一致 | 以安全探测结果为准并记录异常；无法确认则拒绝 | 避免扩展名欺骗 |
@@ -33,6 +33,7 @@
 | SEC-CASE-026 | Experimental | Analysis/模型结果 | 继承 source namespace/no-store/TTL，模型 fingerprint 变化失效 | 防止语义泄漏和陈旧结果 |
 | SEC-CASE-027 | Experimental | 重建型增强 | 默认关闭、显式 opt-in，并标记 reconstructed | 防止内容语义混淆 |
 | SEC-CASE-028 | Experimental | Trust 验证不可用 | 默认 `.unavailable`，不伪造可信状态 | 防止错误安全承诺 |
+| SEC-CASE-029 | 0a | 持久化 namespace metadata | 仅保存带域分离的 namespace fingerprint，不保存调用者账户/租户标识明文 | 防止 manifest/record 泄露稳定主体标识 |
 
 ## DecodeLimits 最小字段
 

@@ -31,7 +31,7 @@ public actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
     }
 
     let taskID = UUID()
-    let task = Task { try await operation() }
+    let task = Task { @concurrent in try await operation() }
     entries[key] = Entry(taskID: taskID, task: task, subscribers: [subscriberID])
     return SharedTaskSubscription(
       key: key,
@@ -90,12 +90,59 @@ public struct SharedTaskSubscription<Key: Hashable & Sendable, Value: Sendable>:
   public let wasJoined: Bool
 
   public func value() async throws -> Value {
-    let result = await task.result
-    await registry.completed(key: key, taskID: taskID)
-    return try result.get()
+    let relay = SubscriptionResultRelay<Value>()
+    let waiter = Task { @concurrent in
+      let result = await task.result
+      await registry.completed(key: key, taskID: taskID)
+      await relay.resolve(result)
+    }
+    defer { waiter.cancel() }
+
+    return try await withTaskCancellationHandler {
+      try await withCheckedThrowingContinuation { continuation in
+        Task { await relay.install(continuation) }
+      }
+    } onCancel: {
+      Task { await relay.resolve(.failure(CancellationError())) }
+    }
   }
 
   public func cancel() async {
     await registry.release(key: key, subscriberID: subscriberID)
+  }
+}
+
+private actor SubscriptionResultRelay<Value: Sendable> {
+  private enum State {
+    case empty
+    case waiting(CheckedContinuation<Value, any Error>)
+    case resolved(Result<Value, any Error>)
+    case finished
+  }
+
+  private var state: State = .empty
+
+  func install(_ continuation: CheckedContinuation<Value, any Error>) {
+    switch state {
+    case .empty:
+      state = .waiting(continuation)
+    case .resolved(let result):
+      state = .finished
+      continuation.resume(with: result)
+    case .waiting, .finished:
+      continuation.resume(throwing: CancellationError())
+    }
+  }
+
+  func resolve(_ result: Result<Value, any Error>) {
+    switch state {
+    case .empty:
+      state = .resolved(result)
+    case .waiting(let continuation):
+      state = .finished
+      continuation.resume(with: result)
+    case .resolved, .finished:
+      break
+    }
   }
 }

@@ -14,13 +14,13 @@ public enum CredentialHeaderPolicy {
   }
 
   public static func removingSensitiveHeaders(from headers: [String: String]) -> [String: String] {
-    Dictionary(
-      uniqueKeysWithValues: headers.compactMap { name, value in
-        let normalized = name.lowercased()
-        guard !sensitiveHeaderNames.contains(normalized) else { return nil }
-        return (normalized, value)
-      }
-    )
+    var result: [String: String] = [:]
+    for (name, value) in headers.sorted(by: { $0.key < $1.key }) {
+      let normalized = name.lowercased()
+      guard !sensitiveHeaderNames.contains(normalized), result[normalized] == nil else { continue }
+      result[normalized] = value
+    }
+    return result
   }
 
   public static func sanitizedRedirectRequest(
@@ -61,22 +61,5 @@ public enum CredentialHeaderPolicy {
     case "https": return 443
     default: return nil
     }
-  }
-}
-
-final class RedirectCredentialDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
-  func urlSession(
-    _ session: URLSession,
-    task: URLSessionTask,
-    willPerformHTTPRedirection response: HTTPURLResponse,
-    newRequest request: URLRequest,
-    completionHandler: @escaping @Sendable (URLRequest?) -> Void
-  ) {
-    completionHandler(
-      CredentialHeaderPolicy.sanitizedRedirectRequest(
-        original: task.currentRequest ?? task.originalRequest,
-        proposed: request
-      )
-    )
   }
 }

@@ -400,14 +400,14 @@ v1 不让 App 与 Widget 并发写同一个 Akashic generation。需要 Widget �
 - **CACHE-PT-005**: `Vary: *` 不复用；
 - **CACHE-PT-006**: fresh record 不访问网络；
 - **CACHE-PT-007**: stale + validator 发条件请求；
-- **CACHE-PT-008**: 304 复用 ContentID 并更新 metadata；
+- **CACHE-PT-008**: 304 复用 ContentID 并更新 metadata；若 304 将策略改为 `no-store`/`Vary: *`，当前请求仅瞬态使用字节并撤销 reusable memory/record/blob；
 - **CACHE-PT-009**: `no-store` 不产生持久文件、Derived 或 Analysis；
 - **CACHE-PT-010**: incomplete 200 不生成 ContentID；
 - **CACHE-PT-011**: 206 ranges 只有完整覆盖、payload layer 和 validator 一致时才能提交；
 - **CACHE-PT-012**: progressive preview 不能成为最终缓存命中；
 - **CACHE-PT-013**: crash 位于 blob rename 与 record commit 任一点都能恢复一致状态；
 - **CACHE-PT-014**: signed URL refresh 可命中稳定 record，但不与旧 locator 在途 task 错误合并；
-- **CACHE-PT-015**: logout/revoke 与 Commit 竞态下旧 generation 写入始终为零；
+- **CACHE-PT-015**: logout/revoke 与 Commit 竞态下旧 generation 写入始终为零；旧 generation record 即使物理残留也不能被新 generation 查询命中；
 - **CACHE-PT-016**: Analysis model/revision 变化必然 miss；
 - **CACHE-PT-017**: 持久 key golden vectors 跨进程/架构一致；
 - **CACHE-PT-018**: 旧 schema 兼容读或稳定 miss，不 crash；

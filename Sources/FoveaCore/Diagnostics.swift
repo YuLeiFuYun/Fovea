@@ -71,13 +71,16 @@ public actor BoundedDiagnosticsSink: DiagnosticsSink {
   private let capacity: Int
   private let startedAtNanoseconds: UInt64
   private var nextSequence: UInt64 = 0
-  private var buffered: [RecordedDiagnosticEvent] = []
+  private var storage: [RecordedDiagnosticEvent?]
+  private var head = 0
+  private var count = 0
   private var dropped = 0
 
   public init(capacity: Int = 4_096) {
-    self.capacity = max(1, capacity)
+    let capacity = max(1, capacity)
+    self.capacity = capacity
     self.startedAtNanoseconds = DispatchTime.now().uptimeNanoseconds
-    self.buffered.reserveCapacity(min(capacity, 4_096))
+    self.storage = Array(repeating: nil, count: capacity)
   }
 
   public func record(_ event: DiagnosticEvent) {
@@ -88,13 +91,20 @@ public actor BoundedDiagnosticsSink: DiagnosticsSink {
       elapsedNanoseconds: now &- startedAtNanoseconds,
       event: event
     )
-    if buffered.count == capacity {
-      buffered.removeFirst()
+
+    if count < capacity {
+      storage[(head + count) % capacity] = recorded
+      count += 1
+    } else {
+      storage[head] = recorded
+      head = (head + 1) % capacity
       dropped += 1
     }
-    buffered.append(recorded)
   }
 
-  public func snapshot() -> [RecordedDiagnosticEvent] { buffered }
+  public func snapshot() -> [RecordedDiagnosticEvent] {
+    (0..<count).compactMap { storage[(head + $0) % capacity] }
+  }
+
   public var droppedEventCount: Int { dropped }
 }

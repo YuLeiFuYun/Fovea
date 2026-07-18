@@ -1,3 +1,4 @@
+import AkashicCore
 import Foundation
 
 public enum CacheDisposition: String, Codable, Hashable, Sendable {
@@ -7,8 +8,11 @@ public enum CacheDisposition: String, Codable, Hashable, Sendable {
 }
 
 public struct RepresentationRecord: Codable, Hashable, Sendable {
+  public static let currentSchemaVersion: UInt16 = 4
+
   public let recordSchemaVersion: UInt16
-  public let securityNamespace: String
+  public let securityNamespaceFingerprint: StorageNamespaceFingerprint
+  public let namespaceGeneration: UInt64
   public let variantKeyDigest: String
   public let statusCode: Int
   public let requestTime: Date
@@ -22,8 +26,9 @@ public struct RepresentationRecord: Codable, Hashable, Sendable {
   public let contentType: String?
 
   public init(
-    recordSchemaVersion: UInt16 = 2,
+    recordSchemaVersion: UInt16 = RepresentationRecord.currentSchemaVersion,
     securityNamespace: String,
+    namespaceGeneration: UInt64 = 0,
     variantKeyDigest: String,
     statusCode: Int,
     requestTime: Date,
@@ -37,7 +42,8 @@ public struct RepresentationRecord: Codable, Hashable, Sendable {
     contentType: String?
   ) {
     self.recordSchemaVersion = recordSchemaVersion
-    self.securityNamespace = securityNamespace
+    self.securityNamespaceFingerprint = StorageNamespaceFingerprint(namespace: securityNamespace)
+    self.namespaceGeneration = namespaceGeneration
     self.variantKeyDigest = variantKeyDigest
     self.statusCode = statusCode
     self.requestTime = requestTime
@@ -58,53 +64,100 @@ public struct RepresentationRecord: Codable, Hashable, Sendable {
 }
 
 public protocol RepresentationRecordStoring: Sendable {
-  func record(for variantDigest: String) async -> RepresentationRecord?
+  func record(
+    for variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async -> RepresentationRecord?
   func put(_ record: RepresentationRecord) async throws
   func remove(_ variantDigest: String) async throws
   func removeAll(namespace: String) async throws
 }
 
 public actor RepresentationRecordStore: RepresentationRecordStoring {
+  private nonisolated let ioExecutor = BlockingIOExecutor(
+    label: "dev.fovea.http.representation-records"
+  )
+
+  public nonisolated var unownedExecutor: UnownedSerialExecutor {
+    ioExecutor.asUnownedSerialExecutor()
+  }
+
   private let fileURL: URL
   private var records: [String: RepresentationRecord]
 
-  public init(root: URL) throws {
-    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+  private init(root: URL) {
     self.fileURL = root.appendingPathComponent("representation-records.json")
-    if let data = try? Data(contentsOf: fileURL),
-      let decoded = try? JSONDecoder().decode([String: RepresentationRecord].self, from: data)
-    {
-      self.records = decoded
-    } else {
-      self.records = [:]
-      try? FileManager.default.removeItem(at: fileURL)
-    }
+    self.records = [:]
   }
 
+  public static func open(root: URL) async throws -> RepresentationRecordStore {
+    let store = RepresentationRecordStore(root: root)
+    try await store.bootstrap(root: root)
+    return store
+  }
+
+  private func bootstrap(root: URL) throws {
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
+
+    let data = try Data(contentsOf: fileURL)
+    let decoded = try JSONDecoder().decode([String: RepresentationRecord].self, from: data)
+    guard
+      decoded.values.allSatisfy({
+        $0.recordSchemaVersion == RepresentationRecord.currentSchemaVersion
+      })
+    else {
+      throw AkashicError.invalidManifest
+    }
+    records = decoded
+  }
+
+  public func record(
+    for variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) -> RepresentationRecord? {
+    let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    guard let record = records[variantDigest],
+      record.securityNamespaceFingerprint == fingerprint,
+      record.namespaceGeneration == namespaceGeneration
+    else { return nil }
+    return record
+  }
+
+  /// 仅用于测试和诊断；产品路径必须同时提供 namespace。
   public func record(for variantDigest: String) -> RepresentationRecord? {
     records[variantDigest]
   }
 
   public func put(_ record: RepresentationRecord) throws {
-    records[record.variantKeyDigest] = record
-    try persist()
+    guard record.recordSchemaVersion == RepresentationRecord.currentSchemaVersion else {
+      throw AkashicError.invalidManifest
+    }
+    var next = records
+    next[record.variantKeyDigest] = record
+    try persist(next)
+    records = next
   }
 
   public func remove(_ variantDigest: String) throws {
-    records.removeValue(forKey: variantDigest)
-    try persist()
+    guard records[variantDigest] != nil else { return }
+    var next = records
+    next.removeValue(forKey: variantDigest)
+    try persist(next)
+    records = next
   }
 
   public func removeAll(namespace: String) throws {
-    let keys = records.compactMap { key, record in
-      record.securityNamespace == namespace ? key : nil
-    }
-    guard !keys.isEmpty else { return }
-    for key in keys { records.removeValue(forKey: key) }
-    try persist()
+    let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    let next = records.filter { $0.value.securityNamespaceFingerprint != fingerprint }
+    guard next.count != records.count else { return }
+    try persist(next)
+    records = next
   }
 
-  private func persist() throws {
+  private func persist(_ records: [String: RepresentationRecord]) throws {
     let data = try JSONEncoder().encode(records)
     try data.write(to: fileURL, options: [.atomic])
   }

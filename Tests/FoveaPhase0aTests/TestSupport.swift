@@ -4,6 +4,7 @@ import Foundation
 import FoveaCore
 import FoveaHTTP
 import FoveaTesting
+import ImageCraftImageIO
 import ImageIO
 import UniformTypeIdentifiers
 
@@ -66,18 +67,22 @@ func makePipeline(
   namespaceRegistry: NamespaceRegistry = NamespaceRegistry(),
   softLimitBytes: Int = 8 * 1024 * 1024,
   diagnostics: any DiagnosticsSink = NullDiagnosticsSink()
-) throws -> (FoveaPipeline, FakeHTTPTransport, OriginalEncodedStore, RepresentationRecordStore) {
+) async throws -> (
+  FoveaPipeline, FakeHTTPTransport, OriginalEncodedStore, RepresentationRecordStore
+) {
   let root = try root ?? makeTemporaryDirectory()
   let transport = FakeHTTPTransport(stubs: stubs)
-  let encoded = try OriginalEncodedStore(
+  let encoded = try await OriginalEncodedStore.open(
     root: root.appendingPathComponent("encoded"), softLimitBytes: softLimitBytes)
-  let records = try RepresentationRecordStore(root: root.appendingPathComponent("records"))
+  let records = try await RepresentationRecordStore.open(
+    root: root.appendingPathComponent("records"))
   let pipeline = FoveaPipeline(
     transport: transport,
     encodedStore: encoded,
     recordStore: records,
     namespaceRegistry: namespaceRegistry,
-    diagnostics: diagnostics
+    diagnostics: diagnostics,
+    decoder: ImageIOImageDecoder()
   )
   return (pipeline, transport, encoded, records)
 }

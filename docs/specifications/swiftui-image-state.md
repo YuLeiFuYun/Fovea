@@ -115,4 +115,5 @@ Reduce Motion 开启时禁用非必要 transition。
 - **UI-PT-011**: 0×0 初始布局不触发 decode，稳定尺寸后只启动一次；
 - **UI-PT-012**: 连续 resize 不产生无界 request token/RenderKey。
 - **UI-PT-013**: no-store final 仅当前 view token 可继续显示，新 request 不命中；
-- **UI-PT-014**: namespaceRevoked/securityLimit 使用统一错误恢复矩阵。
+- **UI-PT-014**: namespaceRevoked/securityLimit 使用统一错误恢复矩阵；
+- **UI-PT-015**: 每个成功图像必须显式选择 decorative 或提供 accessibility label，不存在静默 decorative 默认值。

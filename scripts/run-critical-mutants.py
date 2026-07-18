@@ -44,7 +44,7 @@ def mutant_001(root: Path) -> None:
 
 def mutant_002(root: Path) -> None:
     replace_exact(
-        root / "Sources/FoveaCore/FoveaPipeline.swift",
+        root / "Sources/FoveaCore/ImageRequest.swift",
         """      credentialGeneration: credentialGeneration,
       revalidationFingerprint: revalidationFingerprint
 """,
@@ -132,7 +132,7 @@ MUTANTS = [
     Mutant(
         "AIQA-MUT-002",
         "Collapse exact fetch execution identity to variant-only dimensions.",
-        "Sources/FoveaCore/FoveaPipeline.swift",
+        "Sources/FoveaCore/ImageRequest.swift",
         "IdentityTests/testImageRequestExecutionKeyIncludesCredentialAndRevalidation",
         mutant_002,
     ),

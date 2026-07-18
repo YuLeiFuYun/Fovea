@@ -4,7 +4,7 @@ import Foundation
 public struct LogicalSourceID: Hashable, Sendable, Codable {
   public let value: String
   public init(_ value: String) { self.value = value }
-  public init(url: URL) { self.value = url.absoluteString }
+  init(normalizedHTTPURL: URL) { self.value = normalizedHTTPURL.absoluteString }
 }
 
 public struct SecurityNamespaceID: Hashable, Sendable, Codable {

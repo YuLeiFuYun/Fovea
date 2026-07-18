@@ -73,7 +73,7 @@ public final class BoundedStagingAccumulator {
 
     let body: Data
     if let fileURL {
-      body = try Data(contentsOf: fileURL)
+      body = try Data(contentsOf: fileURL, options: .mappedIfSafe)
     } else {
       body = memory
     }

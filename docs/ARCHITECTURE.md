@@ -6,7 +6,8 @@
 > **规范优先级：** Accepted ADR 决定其范围内的决策；`specifications/` 决定可执行语义；本文决定系统边界、产品范围和阶段门禁。发现直接冲突时必须停止实现并修正文档，不能由实现者静默择一。
 >
 > **平台基线：** iOS/iPadOS 15、macOS 12、watchOS 8、tvOS 15、visionOS 1。  
-> **语言：** Swift 6 严格并发。  
+> **语言：** Swift 6 严格并发；Phase 0a 同时启用 Swift 6.2 `NonisolatedNonsendingByDefault` 与 `InferIsolatedConformances`。
+> **执行模型：** UI adapter 为 `@MainActor`；加载入口与共享 operation 显式 `@concurrent`；阻塞磁盘 I/O 使用专用串行 executor；核心通过 `ImageDecoding`/`WallClock` 等协议注入平台实现与可控时间。
 > **产品边界：** Apple 平台静态图、动图及其按需辅助平面；不扩张为视频播放器、生成式图片平台或通用网络框架。
 
 ---
@@ -300,8 +301,13 @@ Pipeline 在构造后持有不可变配置快照。codec、processor、source lo
 架构复杂度不能转嫁给普通使用者。首先保证：
 
 ```swift
-FoveaImage(url: url)
+FoveaImage(
+    url: url,
+    accessibility: .label(Text("用户头像"))
+)
 ```
+
+SwiftUI façade 从稳定布局推导 target pixels；装饰图必须显式使用 `.decorative`，非 UI API 仍必须传入 target。
 
 ```swift
 imageView.fovea.setImage(from: url)

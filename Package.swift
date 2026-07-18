@@ -1,6 +1,11 @@
 // swift-tools-version: 6.2
 import PackageDescription
 
+let concurrencySettings: [SwiftSetting] = [
+  .enableUpcomingFeature("InferIsolatedConformances"),
+  .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+]
+
 let package = Package(
   name: "Fovea",
   platforms: [
@@ -21,28 +26,48 @@ let package = Package(
     .library(name: "FoveaTesting", targets: ["FoveaTesting"]),
   ],
   targets: [
-    .target(name: "ImageCraftCore"),
-    .target(name: "ImageCraftImageIO", dependencies: ["ImageCraftCore"]),
-    .target(name: "AkashicCore"),
-    .target(name: "AkashicMemory", dependencies: ["AkashicCore", "ImageCraftCore"]),
-    .target(name: "AkashicDisk", dependencies: ["AkashicCore"]),
-    .target(name: "FoveaHTTP", dependencies: ["AkashicCore", "AkashicDisk"]),
+    .target(name: "ImageCraftCore", swiftSettings: concurrencySettings),
+    .target(
+      name: "ImageCraftImageIO",
+      dependencies: ["ImageCraftCore"],
+      swiftSettings: concurrencySettings
+    ),
+    .target(name: "AkashicCore", swiftSettings: concurrencySettings),
+    .target(
+      name: "AkashicMemory",
+      dependencies: ["ImageCraftCore"],
+      swiftSettings: concurrencySettings
+    ),
+    .target(
+      name: "AkashicDisk",
+      dependencies: ["AkashicCore"],
+      swiftSettings: concurrencySettings
+    ),
+    .target(
+      name: "FoveaHTTP",
+      dependencies: ["AkashicCore"],
+      swiftSettings: concurrencySettings
+    ),
     .target(
       name: "FoveaCore",
       dependencies: [
-        "ImageCraftCore", "ImageCraftImageIO",
-        "AkashicCore", "AkashicMemory", "AkashicDisk",
-        "FoveaHTTP",
-      ]
+        "ImageCraftCore", "AkashicMemory", "AkashicDisk", "FoveaHTTP",
+      ],
+      swiftSettings: concurrencySettings
     ),
-    .target(name: "FoveaSwiftUI", dependencies: ["FoveaCore", "ImageCraftCore"]),
+    .target(
+      name: "FoveaSwiftUI",
+      dependencies: ["FoveaCore", "ImageCraftCore"],
+      swiftSettings: concurrencySettings
+    ),
     .target(
       name: "FoveaTesting",
       dependencies: [
-        "ImageCraftCore", "AkashicCore", "AkashicMemory", "AkashicDisk",
+        "ImageCraftCore", "ImageCraftImageIO", "AkashicCore", "AkashicMemory", "AkashicDisk",
         "FoveaHTTP", "FoveaCore",
       ],
-      resources: [.process("Fixtures")]
+      resources: [.process("Fixtures")],
+      swiftSettings: concurrencySettings
     ),
     .testTarget(
       name: "FoveaPhase0aTests",
@@ -50,7 +75,8 @@ let package = Package(
         "ImageCraftCore", "ImageCraftImageIO",
         "AkashicCore", "AkashicMemory", "AkashicDisk",
         "FoveaHTTP", "FoveaCore", "FoveaSwiftUI", "FoveaTesting",
-      ]
+      ],
+      swiftSettings: concurrencySettings
     ),
   ],
   swiftLanguageModes: [.v6]

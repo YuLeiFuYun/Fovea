@@ -2,6 +2,33 @@ import FoveaCore
 import XCTest
 
 final class SharedTaskTests: XCTestCase {
+  func testCancelledSubscriberReturnsBeforeSharedTaskCompletes() async throws {
+    let registry = SharedTaskRegistry<String, Int>()
+    let first = await registry.subscribe(key: "prompt-cancel") {
+      try await Task.sleep(for: .milliseconds(250))
+      return 42
+    }
+    let survivor = await registry.subscribe(key: "prompt-cancel") { 0 }
+
+    let started = ContinuousClock.now
+    let cancelled = Task { try await first.value() }
+    try await Task.sleep(for: .milliseconds(20))
+    cancelled.cancel()
+    await first.cancel()
+
+    do {
+      _ = try await cancelled.value
+      XCTFail("Expected cancellation")
+    } catch is CancellationError {
+      // Expected.
+    }
+    let elapsed = started.duration(to: .now)
+    XCTAssertLessThan(elapsed, .milliseconds(150))
+    let survivorValue = try await survivor.value()
+    XCTAssertEqual(survivorValue, 42)
+    await survivor.cancel()
+  }
+
   func testLastSubscriberCancelsUnderlyingTaskOnce_SCHED_PT_004() async throws {
     let registry = SharedTaskRegistry<FetchExecutionKey, Int>()
     let key = makeKey("https://example.com/a")

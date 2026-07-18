@@ -34,16 +34,25 @@
 KEY-GV-001      FetchVariantKey canonical bytes 稳定
 CACHE-PT-003    账户 namespace 不串号
 CACHE-PT-006    fresh record 不访问网络
-CACHE-PT-008    304 复用 ContentID
+CACHE-PT-005    Vary: * 不复用
+CACHE-PT-008    304 复用 ContentID；策略转 no-store 时撤销 reusable state
 CACHE-PT-010    incomplete 200 不生成 ContentID
-CACHE-PT-015    revoked generation 不提交
+CACHE-PT-014    signed locator refresh 复用稳定 record、改变执行身份
+CACHE-PT-015    revoked generation 不提交且旧代 record 不可见
 CACHE-PT-017    持久 key golden vector
+CACHE-PT-018/021  旧/未知 schema 稳定失败且不被重写
+CACHE-PT-025    已存在 blob 仍验证长度与摘要
 CACHE-PT-026    no-store 只允许 in-flight task cohort
+CACHE-PT-027    query 顺序与重复参数保留语义
+CACHE-PT-028    持久写失败不产生内存/磁盘半提交
 CACHE-PT-029    Probe 失败时 OriginalEncoded 不可见
 SCHED-PT-004    最后订阅者只取消一次
 SCHED-PT-010    完成/取消/错误不 double-complete
+SCHED-PT-013    取消 subscriber 立即结束等待，不阻塞其他 subscriber
 GEO-PT-002      0x0 不触发原尺寸 decode
+IMG-PT-001      EXIF orientation 参与 target geometry
 UI-PT-001       迟到结果不覆盖新 identity
+UI-PT-015       图片无障碍语义必须显式声明
 AUTH-PT-001     token refresh 的 variant/execution key 分离
 AUTH-PT-003     账户切换隔离
 AUTH-PT-006     凭证不进入 key/log/trace
@@ -52,11 +61,16 @@ AUTH-PT-010     public URL 不需要 auth provider/credential generation
 CACHE-PT-031    ContentID 不得作为物理文件名
 GC-PT-005       PhysicalBlobID 不泄漏 ContentID
 GC-PT-011       0a soft cap 触发保守清理且不阻塞 final
+SEC-CASE-001    delegate 分块流受 hard limit 与逐块背压约束
+SEC-CASE-003    0a 静态路径拒绝多帧输入
 SEC-CASE-014    认证响应只写入专属 namespace
 SEC-CASE-015    相同 ContentID 跨 namespace 不共享物理 blob
 SEC-CASE-016    登出撤销任务并清除 record/blob，晚到 commit 不复活
 SEC-CASE-017    跨 origin redirect 剥离 Authorization/Cookie/API key
 SEC-CASE-018    diagnostics 不含 token、Cookie 或稳定账户标识
+SEC-CASE-029    持久 metadata 不含明文 namespace
+HTTP-CONF-LOCAL-AGE-001...003  Date/Age corrected age 与畸形 Age 保守处理
+HTTP-CONF-LOCAL-NOCACHE-001  no-cache 覆盖正 max-age
 ```
 
 0a-bootstrap 报告列出当时已执行项；0a-complete 报告必须列出全部产品 ID、结果、实现测试路径和 verified commit。

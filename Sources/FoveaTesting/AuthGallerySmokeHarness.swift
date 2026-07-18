@@ -1,3 +1,4 @@
+import AkashicCore
 import AkashicDisk
 import CoreGraphics
 import CryptoKit
@@ -5,6 +6,7 @@ import Foundation
 import FoveaCore
 import FoveaHTTP
 import ImageCraftCore
+import ImageCraftImageIO
 import ImageIO
 import UniformTypeIdentifiers
 
@@ -143,24 +145,26 @@ public enum AuthGallerySmokeHarness {
     ])
     let diagnostics = BoundedDiagnosticsSink(capacity: 256)
     let root = try temporaryDirectory("w3-isolation")
-    let encoded = try OriginalEncodedStore(root: root.appendingPathComponent("encoded"))
-    let records = try RepresentationRecordStore(root: root.appendingPathComponent("records"))
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
     let pipeline = FoveaPipeline(
       transport: origin,
       encodedStore: encoded,
       recordStore: records,
-      diagnostics: diagnostics
+      diagnostics: diagnostics,
+      decoder: ImageIOImageDecoder()
     )
     let url = URL(string: "https://images.example.test/avatar")!
     let target = try TargetPixels(width: 40, height: 40)
-    let accountA = request(
+    let accountA = try request(
       url: url,
       target: target,
       namespace: "account-a",
       principal: "principal-a",
       token: "Bearer account-a"
     )
-    let accountB = request(
+    let accountB = try request(
       url: url,
       target: target,
       namespace: "account-b",
@@ -187,8 +191,14 @@ public enum AuthGallerySmokeHarness {
       await encoded.physicalID(contentID: record.contentID, namespace: "account-b")
     }
     var metadataCoupling = 0
-    if recordA?.securityNamespace != "account-a" { metadataCoupling += 1 }
-    if recordB?.securityNamespace != "account-b" { metadataCoupling += 1 }
+    if recordA?.securityNamespaceFingerprint != StorageNamespaceFingerprint(namespace: "account-a")
+    {
+      metadataCoupling += 1
+    }
+    if recordB?.securityNamespaceFingerprint != StorageNamespaceFingerprint(namespace: "account-b")
+    {
+      metadataCoupling += 1
+    }
     if physicalA == nil || physicalB == nil || physicalA == physicalB { metadataCoupling += 1 }
 
     try await pipeline.revoke(namespace: accountA.namespace)
@@ -247,15 +257,17 @@ public enum AuthGallerySmokeHarness {
     ])
     let diagnostics = BoundedDiagnosticsSink(capacity: 128)
     let root = try temporaryDirectory("w3-no-store")
-    let encoded = try OriginalEncodedStore(root: root.appendingPathComponent("encoded"))
-    let records = try RepresentationRecordStore(root: root.appendingPathComponent("records"))
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
     let pipeline = FoveaPipeline(
       transport: origin,
       encodedStore: encoded,
       recordStore: records,
-      diagnostics: diagnostics
+      diagnostics: diagnostics,
+      decoder: ImageIOImageDecoder()
     )
-    let imageRequest = request(
+    let imageRequest = try request(
       url: URL(string: "https://images.example.test/no-store")!,
       target: try TargetPixels(width: 40, height: 40),
       namespace: "account-no-store",
@@ -300,16 +312,18 @@ public enum AuthGallerySmokeHarness {
     ])
     let diagnostics = BoundedDiagnosticsSink(capacity: 128)
     let root = try temporaryDirectory("w3-revoke-race")
-    let encoded = try OriginalEncodedStore(root: root.appendingPathComponent("encoded"))
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
     let barrierStore = CommitBarrierEncodedStore(base: encoded)
-    let records = try RepresentationRecordStore(root: root.appendingPathComponent("records"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
     let pipeline = FoveaPipeline(
       transport: origin,
       encodedStore: barrierStore,
       recordStore: records,
-      diagnostics: diagnostics
+      diagnostics: diagnostics,
+      decoder: ImageIOImageDecoder()
     )
-    let imageRequest = request(
+    let imageRequest = try request(
       url: URL(string: "https://images.example.test/delayed")!,
       target: try TargetPixels(width: 40, height: 40),
       namespace: "account-delayed",
@@ -388,8 +402,8 @@ public enum AuthGallerySmokeHarness {
     namespace: String,
     principal: String,
     token: String
-  ) -> ImageRequest {
-    ImageRequest(
+  ) throws -> ImageRequest {
+    try ImageRequest(
       url: url,
       target: target,
       namespace: SecurityNamespaceID(namespace),

@@ -3,6 +3,7 @@ import Foundation
 import FoveaCore
 import FoveaHTTP
 import ImageCraftCore
+import ImageCraftImageIO
 
 public enum BenchmarkHarnessError: Error, Equatable, Sendable {
   case invalidFixtureURL
@@ -28,7 +29,7 @@ public enum BenchmarkSmokeHarness {
     let diagnostics = BoundedDiagnosticsSink(capacity: 20_000)
     let root = try temporaryRoot(workload: "W1")
     defer { try? FileManager.default.removeItem(at: root) }
-    let pipeline = try makePipeline(root: root, origin: origin, diagnostics: diagnostics)
+    let pipeline = try await makePipeline(root: root, origin: origin, diagnostics: diagnostics)
 
     let baselineMemory = ProcessMemorySampler.physicalFootprintBytes()
     var peakMemory = baselineMemory
@@ -68,7 +69,7 @@ public enum BenchmarkSmokeHarness {
         let sharedSlot = slot >= 6 ? slot - 6 : slot
         let resourceIndex = ((firstVisible + sharedSlot) * 17) % resources.count
         let target = targets[logicalIndex % targets.count]
-        let request = ImageRequest.publicImage(
+        let request = try ImageRequest.publicImage(
           url: resources[resourceIndex].url,
           target: target,
           appID: "benchmark-w1"
@@ -193,7 +194,7 @@ public enum BenchmarkSmokeHarness {
     let diagnostics = BoundedDiagnosticsSink(capacity: 4_096)
     let root = try temporaryRoot(workload: "W2")
     defer { try? FileManager.default.removeItem(at: root) }
-    let pipeline = try makePipeline(
+    let pipeline = try await makePipeline(
       root: root,
       origin: origin,
       diagnostics: diagnostics,
@@ -215,7 +216,7 @@ public enum BenchmarkSmokeHarness {
 
     for (sourceIndex, resource) in resources.enumerated() {
       for target in targets {
-        let request = ImageRequest.publicImage(
+        let request = try ImageRequest.publicImage(
           url: resource.url,
           target: target,
           appID: "benchmark-w2"
@@ -299,12 +300,12 @@ public enum BenchmarkSmokeHarness {
     origin: DeterministicImageOrigin,
     diagnostics: BoundedDiagnosticsSink,
     memoryCacheCostLimit: Int = 64 * 1024 * 1024
-  ) throws -> FoveaPipeline {
-    let encoded = try OriginalEncodedStore(
+  ) async throws -> FoveaPipeline {
+    let encoded = try await OriginalEncodedStore.open(
       root: root.appendingPathComponent("encoded", isDirectory: true),
       softLimitBytes: 64 * 1024 * 1024
     )
-    let records = try RepresentationRecordStore(
+    let records = try await RepresentationRecordStore.open(
       root: root.appendingPathComponent("records", isDirectory: true)
     )
     return FoveaPipeline(
@@ -312,7 +313,8 @@ public enum BenchmarkSmokeHarness {
       encodedStore: encoded,
       recordStore: records,
       memoryCacheCostLimit: memoryCacheCostLimit,
-      diagnostics: diagnostics
+      diagnostics: diagnostics,
+      decoder: ImageIOImageDecoder()
     )
   }
 

@@ -6,6 +6,7 @@ import FoveaCore
 import FoveaHTTP
 import FoveaTesting
 import ImageCraftCore
+import ImageCraftImageIO
 import XCTest
 
 final class StagingAndStorageTests: XCTestCase {
@@ -36,8 +37,162 @@ final class StagingAndStorageTests: XCTestCase {
     }
   }
 
+  func testRecordWriteFailureDoesNotMutateInMemoryIndex() async throws {
+    let root = try makeTemporaryDirectory()
+    let recordsRoot = root.appendingPathComponent("records")
+    let store = try await RepresentationRecordStore.open(root: recordsRoot)
+    try FileManager.default.removeItem(at: recordsRoot)
+    let record = RepresentationRecord(
+      securityNamespace: "public:tests",
+      variantKeyDigest: "record-write-failure",
+      statusCode: 200,
+      requestTime: Date(),
+      responseTime: Date(),
+      expiresAt: nil,
+      etag: nil,
+      lastModified: nil,
+      disposition: .reusable,
+      contentID: "sha256:00:0",
+      payloadLength: 0,
+      contentType: "image/png"
+    )
+
+    do {
+      try await store.put(record)
+      XCTFail("Expected metadata persistence failure")
+    } catch {
+      // Expected.
+    }
+    let retainedRecord = await store.record(for: record.variantKeyDigest)
+    XCTAssertNil(retainedRecord)
+  }
+
+  func testRecordLookupRejectsPreviousNamespaceGeneration() async throws {
+    let store = try await RepresentationRecordStore.open(root: makeTemporaryDirectory())
+    let record = RepresentationRecord(
+      securityNamespace: "account-generation",
+      namespaceGeneration: 0,
+      variantKeyDigest: "generation-bound-record",
+      statusCode: 200,
+      requestTime: Date(),
+      responseTime: Date(),
+      expiresAt: Date().addingTimeInterval(3600),
+      etag: nil,
+      lastModified: nil,
+      disposition: .privateNamespace,
+      contentID: "sha256:00:0",
+      payloadLength: 0,
+      contentType: "image/png"
+    )
+    try await store.put(record)
+
+    let current = await store.record(
+      for: record.variantKeyDigest,
+      namespace: "account-generation",
+      namespaceGeneration: 0
+    )
+    let revoked = await store.record(
+      for: record.variantKeyDigest,
+      namespace: "account-generation",
+      namespaceGeneration: 1
+    )
+    XCTAssertNotNil(current)
+    XCTAssertNil(revoked)
+  }
+
+  func testUnknownRecordSchemaFailsWithoutRewritingFile() async throws {
+    let root = try makeTemporaryDirectory()
+    let record = RepresentationRecord(
+      recordSchemaVersion: 999,
+      securityNamespace: "public:tests",
+      variantKeyDigest: "future-record",
+      statusCode: 200,
+      requestTime: Date(),
+      responseTime: Date(),
+      expiresAt: nil,
+      etag: nil,
+      lastModified: nil,
+      disposition: .reusable,
+      contentID: "sha256:00:0",
+      payloadLength: 0,
+      contentType: "image/png"
+    )
+    let fileURL = root.appendingPathComponent("representation-records.json")
+    let original = try JSONEncoder().encode([record.variantKeyDigest: record])
+    try original.write(to: fileURL, options: [.atomic])
+
+    do {
+      _ = try await RepresentationRecordStore.open(root: root)
+      XCTFail("Expected unknown schema rejection")
+    } catch let error as AkashicError {
+      XCTAssertEqual(error, .invalidManifest)
+    }
+    XCTAssertEqual(try Data(contentsOf: fileURL), original)
+  }
+
+  func testCommitRepairsCorruptExistingBlobInsteadOfTrustingFileExistence() async throws {
+    let root = try makeTemporaryDirectory()
+    let store = try await OriginalEncodedStore.open(root: root, softLimitBytes: 1024 * 1024)
+    let data = Data("expected-content".utf8)
+    let contentID = ContentID(data: data).description
+    let first = try await store.commit(data: data, contentID: contentID, namespace: "public:tests")
+    let firstURL = root.appendingPathComponent("blobs/\(first.physicalID.description)")
+    try Data("corrupt".utf8).write(to: firstURL, options: [.atomic])
+
+    let repaired = try await store.commit(
+      data: data,
+      contentID: contentID,
+      namespace: "public:tests"
+    )
+    XCTAssertNotEqual(first.physicalID, repaired.physicalID)
+    let repairedData = try await store.read(contentID: contentID, namespace: "public:tests")
+    XCTAssertEqual(repairedData, data)
+    XCTAssertFalse(FileManager.default.fileExists(atPath: firstURL.path))
+  }
+
+  func testPersistentMetadataDoesNotContainPlaintextNamespace() async throws {
+    let root = try makeTemporaryDirectory()
+    let namespace = "account-sensitive-stable-id"
+    let encodedRoot = root.appendingPathComponent("encoded")
+    let recordsRoot = root.appendingPathComponent("records")
+    let encoded = try await OriginalEncodedStore.open(root: encodedRoot)
+    let records = try await RepresentationRecordStore.open(root: recordsRoot)
+    let data = Data("private-image".utf8)
+    let contentID = ContentID(data: data).description
+    _ = try await encoded.commit(data: data, contentID: contentID, namespace: namespace)
+    try await records.put(
+      RepresentationRecord(
+        securityNamespace: namespace,
+        variantKeyDigest: "private-variant",
+        statusCode: 200,
+        requestTime: Date(),
+        responseTime: Date(),
+        expiresAt: nil,
+        etag: nil,
+        lastModified: nil,
+        disposition: .privateNamespace,
+        contentID: contentID,
+        payloadLength: data.count,
+        contentType: "image/png"
+      )
+    )
+
+    let manifest = try String(
+      contentsOf: encodedRoot.appendingPathComponent("manifest.json"),
+      encoding: .utf8
+    )
+    let recordFile = try String(
+      contentsOf: recordsRoot.appendingPathComponent("representation-records.json"),
+      encoding: .utf8
+    )
+    XCTAssertFalse(manifest.contains(namespace))
+    XCTAssertFalse(recordFile.contains(namespace))
+    XCTAssertTrue(manifest.contains(StorageNamespaceFingerprint(namespace: namespace).value))
+    XCTAssertTrue(recordFile.contains(StorageNamespaceFingerprint(namespace: namespace).value))
+  }
+
   func testStoreRejectsMismatchedContentID() async throws {
-    let store = try OriginalEncodedStore(root: try makeTemporaryDirectory())
+    let store = try await OriginalEncodedStore.open(root: try makeTemporaryDirectory())
     let data = Data("actual".utf8)
     do {
       _ = try await store.commit(
@@ -52,7 +207,8 @@ final class StagingAndStorageTests: XCTestCase {
   }
 
   func testSoftCapEvictsOldestWithoutBlockingNewBlob_GC_PT_011() async throws {
-    let store = try OriginalEncodedStore(root: try makeTemporaryDirectory(), softLimitBytes: 8)
+    let store = try await OriginalEncodedStore.open(
+      root: try makeTemporaryDirectory(), softLimitBytes: 8)
     let first = Data("123456".utf8)
     let second = Data("abcdef".utf8)
     let firstID = ContentID(data: first).description
@@ -72,7 +228,7 @@ final class StagingAndStorageTests: XCTestCase {
   }
 
   func testBlobLargerThanSoftCapIsNotPublished() async throws {
-    let store = try OriginalEncodedStore(
+    let store = try await OriginalEncodedStore.open(
       root: try makeTemporaryDirectory(),
       softLimitBytes: 4
     )
@@ -99,13 +255,16 @@ final class StagingAndStorageTests: XCTestCase {
 
   func testIncompleteTransportDoesNotCreateRecord_CACHE_PT_010() async throws {
     let root = try makeTemporaryDirectory()
-    let records = try RepresentationRecordStore(root: root.appendingPathComponent("records"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records"))
     let pipeline = FoveaPipeline(
       transport: ThrowingTransport(error: TransportError.incompleteBody),
-      encodedStore: try OriginalEncodedStore(root: root.appendingPathComponent("encoded")),
-      recordStore: records
+      encodedStore: try await OriginalEncodedStore.open(
+        root: root.appendingPathComponent("encoded")),
+      recordStore: records,
+      decoder: ImageIOImageDecoder()
     )
-    let request = ImageRequest.publicImage(
+    let request = try ImageRequest.publicImage(
       url: try XCTUnwrap(URL(string: "https://example.com/incomplete.png")),
       target: try TargetPixels(width: 20, height: 20),
       appID: "tests"
@@ -127,9 +286,10 @@ final class StagingAndStorageTests: XCTestCase {
     let pipeline = FoveaPipeline(
       transport: transport,
       encodedStore: FailingEncodedStore(),
-      recordStore: InMemoryRecordStore()
+      recordStore: InMemoryRecordStore(),
+      decoder: ImageIOImageDecoder()
     )
-    let request = ImageRequest.publicImage(
+    let request = try ImageRequest.publicImage(
       url: try XCTUnwrap(URL(string: "https://example.com/cache-failure.png")),
       target: try TargetPixels(width: 20, height: 20),
       appID: "tests"
@@ -162,12 +322,25 @@ private actor FailingEncodedStore: OriginalEncodedStoring {
 private actor InMemoryRecordStore: RepresentationRecordStoring {
   private var records: [String: RepresentationRecord] = [:]
 
-  func record(for variantDigest: String) async -> RepresentationRecord? { records[variantDigest] }
+  func record(
+    for variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async -> RepresentationRecord? {
+    guard let record = records[variantDigest],
+      record.securityNamespaceFingerprint == StorageNamespaceFingerprint(namespace: namespace)
+    else {
+      return nil
+    }
+    return record
+  }
   func put(_ record: RepresentationRecord) async throws {
     records[record.variantKeyDigest] = record
   }
   func remove(_ variantDigest: String) async throws { records.removeValue(forKey: variantDigest) }
   func removeAll(namespace: String) async throws {
-    records = records.filter { $0.value.securityNamespace != namespace }
+    records = records.filter {
+      $0.value.securityNamespaceFingerprint != StorageNamespaceFingerprint(namespace: namespace)
+    }
   }
 }

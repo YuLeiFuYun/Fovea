@@ -3,7 +3,13 @@ import CryptoKit
 import Foundation
 
 public actor OriginalEncodedStore {
-  private static let manifestSchemaVersion: UInt16 = 2
+  private nonisolated let ioExecutor = BlockingIOExecutor(
+    label: "dev.fovea.akashic.original-encoded")
+
+  public nonisolated var unownedExecutor: UnownedSerialExecutor {
+    ioExecutor.asUnownedSerialExecutor()
+  }
+  private static let manifestSchemaVersion: UInt16 = 3
 
   private struct Manifest: Codable {
     let schemaVersion: UInt16
@@ -20,7 +26,7 @@ public actor OriginalEncodedStore {
 
   private struct Entry: Codable {
     let physicalID: PhysicalBlobID
-    let namespace: String
+    let namespaceFingerprint: StorageNamespaceFingerprint
     let byteCount: Int
     let lastAccess: Date
   }
@@ -30,54 +36,58 @@ public actor OriginalEncodedStore {
   private let softLimitBytes: Int
   private var manifest: Manifest
 
-  public init(root: URL, softLimitBytes: Int = 128 * 1024 * 1024) throws {
-    let blobs = root.appendingPathComponent("blobs", isDirectory: true)
-    let manifestURL = root.appendingPathComponent("manifest.json")
+  private init(root: URL, softLimitBytes: Int) {
+    self.blobs = root.appendingPathComponent("blobs", isDirectory: true)
+    self.manifestURL = root.appendingPathComponent("manifest.json")
+    self.softLimitBytes = max(1, softLimitBytes)
+    self.manifest = Manifest()
+  }
+
+  public static func open(
+    root: URL,
+    softLimitBytes: Int = 128 * 1024 * 1024
+  ) async throws -> OriginalEncodedStore {
+    let store = OriginalEncodedStore(root: root, softLimitBytes: softLimitBytes)
+    try await store.bootstrap(root: root)
+    return store
+  }
+
+  private func bootstrap(root: URL) throws {
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     try FileManager.default.createDirectory(at: blobs, withIntermediateDirectories: true)
+    guard FileManager.default.fileExists(atPath: manifestURL.path) else { return }
 
-    var loaded = Manifest()
-    var resetStore = false
-    if let data = try? Data(contentsOf: manifestURL),
-      let decoded = try? JSONDecoder().decode(Manifest.self, from: data),
-      decoded.schemaVersion == Self.manifestSchemaVersion
-    {
-      loaded = decoded
-    } else if FileManager.default.fileExists(atPath: manifestURL.path) {
-      resetStore = true
+    let data = try Data(contentsOf: manifestURL)
+    let decoded = try JSONDecoder().decode(Manifest.self, from: data)
+    guard decoded.schemaVersion == Self.manifestSchemaVersion else {
+      throw AkashicError.invalidManifest
     }
-
-    if resetStore {
-      try? FileManager.default.removeItem(at: blobs)
-      try FileManager.default.createDirectory(at: blobs, withIntermediateDirectories: true)
-      let data = try JSONEncoder().encode(loaded)
-      try data.write(to: manifestURL, options: [.atomic])
-    }
-
-    self.blobs = blobs
-    self.manifestURL = manifestURL
-    self.softLimitBytes = max(1, softLimitBytes)
-    self.manifest = loaded
+    manifest = decoded
   }
 
   public func read(contentID: String, namespace: String) throws -> Data {
-    let key = manifestKey(contentID: contentID, namespace: namespace)
-    guard var entry = manifest.entries[key], entry.namespace == namespace else {
+    let namespaceFingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    let key = manifestKey(contentID: contentID, namespaceFingerprint: namespaceFingerprint)
+    guard var entry = manifest.entries[key], entry.namespaceFingerprint == namespaceFingerprint
+    else {
       throw AkashicError.notFound
     }
     let url = blobURL(entry.physicalID)
-    guard let data = try? Data(contentsOf: url),
+    guard let data = try? Data(contentsOf: url, options: .mappedIfSafe),
       data.count == entry.byteCount,
       contentIDMatches(data: data, contentID: contentID)
     else {
-      manifest.entries.removeValue(forKey: key)
-      try? FileManager.default.removeItem(at: url)
-      try? persistManifest()
+      var next = manifest
+      next.entries.removeValue(forKey: key)
+      if (try? persistManifest(next)) != nil {
+        manifest = next
+        try? FileManager.default.removeItem(at: url)
+      }
       throw AkashicError.integrityMismatch
     }
     entry = Entry(
       physicalID: entry.physicalID,
-      namespace: entry.namespace,
+      namespaceFingerprint: entry.namespaceFingerprint,
       byteCount: entry.byteCount,
       lastAccess: Date()
     )
@@ -91,12 +101,17 @@ public actor OriginalEncodedStore {
     guard contentIDMatches(data: data, contentID: contentID) else {
       throw AkashicError.integrityMismatch
     }
-    let key = manifestKey(contentID: contentID, namespace: namespace)
-    if let existing = manifest.entries[key],
-      existing.namespace == namespace,
-      FileManager.default.fileExists(atPath: blobURL(existing.physicalID).path)
-    {
-      return StoredBlob(physicalID: existing.physicalID, byteCount: existing.byteCount)
+    let namespaceFingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    let key = manifestKey(contentID: contentID, namespaceFingerprint: namespaceFingerprint)
+    let existing = manifest.entries[key]
+    if let existing, existing.namespaceFingerprint == namespaceFingerprint {
+      let existingURL = blobURL(existing.physicalID)
+      if let existingData = try? Data(contentsOf: existingURL, options: .mappedIfSafe),
+        existingData.count == existing.byteCount,
+        contentIDMatches(data: existingData, contentID: contentID)
+      {
+        return StoredBlob(physicalID: existing.physicalID, byteCount: existing.byteCount)
+      }
     }
 
     let physicalID = PhysicalBlobID()
@@ -105,65 +120,91 @@ public actor OriginalEncodedStore {
     try data.write(to: temporary, options: [.atomic])
     do {
       try FileManager.default.moveItem(at: temporary, to: destination)
-      manifest.entries[key] = Entry(
+      var next = manifest
+      next.entries[key] = Entry(
         physicalID: physicalID,
-        namespace: namespace,
+        namespaceFingerprint: namespaceFingerprint,
         byteCount: data.count,
         lastAccess: Date()
       )
-      try persistManifest()
-      try trimIfNeeded()
-      return StoredBlob(physicalID: physicalID, byteCount: data.count)
+      try persistManifest(next)
+      manifest = next
     } catch {
       try? FileManager.default.removeItem(at: temporary)
       try? FileManager.default.removeItem(at: destination)
-      manifest.entries.removeValue(forKey: key)
       throw error
     }
+
+    if let existing, existing.physicalID != physicalID {
+      try? FileManager.default.removeItem(at: blobURL(existing.physicalID))
+    }
+    // 回收失败不得回滚已经原子发布的 blob；下次写入或 GC 会继续收敛。
+    try? trimIfNeeded()
+    return StoredBlob(physicalID: physicalID, byteCount: data.count)
   }
 
   public func physicalID(contentID: String, namespace: String) -> PhysicalBlobID? {
-    let entry = manifest.entries[manifestKey(contentID: contentID, namespace: namespace)]
-    return entry?.namespace == namespace ? entry?.physicalID : nil
+    let namespaceFingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    let entry = manifest.entries[
+      manifestKey(contentID: contentID, namespaceFingerprint: namespaceFingerprint)
+    ]
+    return entry?.namespaceFingerprint == namespaceFingerprint ? entry?.physicalID : nil
   }
 
   public func remove(contentID: String, namespace: String) throws {
-    let key = manifestKey(contentID: contentID, namespace: namespace)
-    guard let entry = manifest.entries.removeValue(forKey: key) else { return }
+    let namespaceFingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    let key = manifestKey(contentID: contentID, namespaceFingerprint: namespaceFingerprint)
+    guard let entry = manifest.entries[key] else { return }
     try? FileManager.default.removeItem(at: blobURL(entry.physicalID))
-    try persistManifest()
+    var next = manifest
+    next.entries.removeValue(forKey: key)
+    try persistManifest(next)
+    manifest = next
   }
 
   public func removeAll(namespace: String) throws {
-    let victims = manifest.entries.filter { $0.value.namespace == namespace }
-    guard !victims.isEmpty else { return }
-    for (key, entry) in victims {
-      try? FileManager.default.removeItem(at: blobURL(entry.physicalID))
-      manifest.entries.removeValue(forKey: key)
+    let namespaceFingerprint = StorageNamespaceFingerprint(namespace: namespace)
+    let victims = manifest.entries.filter {
+      $0.value.namespaceFingerprint == namespaceFingerprint
     }
-    try persistManifest()
+    guard !victims.isEmpty else { return }
+    for entry in victims.values {
+      try? FileManager.default.removeItem(at: blobURL(entry.physicalID))
+    }
+    var next = manifest
+    for key in victims.keys { next.entries.removeValue(forKey: key) }
+    try persistManifest(next)
+    manifest = next
   }
 
   public func removeAll() throws {
+    let next = Manifest()
+    try persistManifest(next)
+    manifest = next
     try? FileManager.default.removeItem(at: blobs)
     try FileManager.default.createDirectory(at: blobs, withIntermediateDirectories: true)
-    manifest = Manifest()
-    try persistManifest()
   }
 
   private func trimIfNeeded() throws {
     var total = manifest.entries.values.reduce(0) { $0 + $1.byteCount }
     guard total > softLimitBytes else { return }
+
+    var next = manifest
+    var victims: [Entry] = []
     for (key, entry) in manifest.entries.sorted(by: { $0.value.lastAccess < $1.value.lastAccess }) {
-      try? FileManager.default.removeItem(at: blobURL(entry.physicalID))
-      manifest.entries.removeValue(forKey: key)
+      next.entries.removeValue(forKey: key)
+      victims.append(entry)
       total -= entry.byteCount
       if total <= softLimitBytes { break }
     }
-    try persistManifest()
+    try persistManifest(next)
+    manifest = next
+    for entry in victims {
+      try? FileManager.default.removeItem(at: blobURL(entry.physicalID))
+    }
   }
 
-  private func persistManifest() throws {
+  private func persistManifest(_ manifest: Manifest) throws {
     let data = try JSONEncoder().encode(manifest)
     try data.write(to: manifestURL, options: [.atomic])
   }
@@ -183,8 +224,13 @@ public actor OriginalEncodedStore {
     return actual == parts[1]
   }
 
-  private func manifestKey(contentID: String, namespace: String) -> String {
-    let digest = SHA256.hash(data: Data("\(namespace)\u{0}\(contentID)".utf8))
+  private func manifestKey(
+    contentID: String,
+    namespaceFingerprint: StorageNamespaceFingerprint
+  ) -> String {
+    let digest = SHA256.hash(
+      data: Data("\(namespaceFingerprint.value)\u{0}\(contentID)".utf8)
+    )
     return digest.map { String(format: "%02x", $0) }.joined()
   }
 }
