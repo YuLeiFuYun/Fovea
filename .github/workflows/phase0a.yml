@@ -15,14 +15,16 @@ concurrency:
 jobs:
   verify:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
-      - name: Checkout exact verified commit
+      - name: Checkout exact verified and base commits
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           VERIFIED_COMMIT: ${{ github.sha }}
+          RAW_BASE_COMMIT: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
+          set -eu
           git init .
           git remote add origin "https://github.com/${REPOSITORY}.git"
           basic=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64)
@@ -31,8 +33,50 @@ jobs:
           git checkout --detach FETCH_HEAD
           test "$(git rev-parse HEAD)" = "$VERIFIED_COMMIT"
 
+          BASE_COMMIT=$RAW_BASE_COMMIT
+          case "$BASE_COMMIT" in
+            ""|0000000000000000000000000000000000000000)
+              BASE_COMMIT=$(git cat-file -p HEAD | awk '/^parent / { print $2; exit }')
+              ;;
+          esac
+          printf '%s' "$BASE_COMMIT" | grep -Eq '^[0-9a-fA-F]{40,64}$'
+          git -c http.extraHeader="AUTHORIZATION: basic $basic" \
+            fetch --no-tags --depth=1 origin "$BASE_COMMIT"
+          git cat-file -e "${BASE_COMMIT}^{commit}"
+          printf 'FOVEA_BASE_COMMIT=%s\n' "$BASE_COMMIT" >> "$GITHUB_ENV"
+
       - name: Verify Phase 0a
         env:
           RUN_IOS_SIMULATOR: "1"
           RUN_CRITICAL_MUTANTS: "1"
-        run: scripts/verify-phase0a.sh
+        run: |
+          set -o pipefail
+          mkdir -p .artifacts/logs
+          scripts/verify-phase0a.sh 2>&1 | tee .artifacts/logs/verify.log
+
+      - name: Verify rollback
+        run: |
+          scripts/verify-rollback.py \
+            --base "$FOVEA_BASE_COMMIT" \
+            --head "$GITHUB_SHA"
+
+      - name: Generate trusted CI evidence
+        run: |
+          scripts/generate-ci-evidence.py \
+            --base "$FOVEA_BASE_COMMIT" \
+            --head "$GITHUB_SHA" \
+            --verify-log .artifacts/logs/verify.log \
+            --trusted-ci
+          scripts/validate-evidence.py .artifacts/evidence/phase0a-ci-evidence.json
+
+          evidence=.artifacts/evidence/phase0a-ci-evidence.json
+          digest=$(shasum -a 256 "$evidence" | awk '{ print $1 }')
+          {
+            printf '## Phase 0a Evidence\n\n'
+            printf -- '- Verified commit: `%s`\n' "$GITHUB_SHA"
+            printf -- '- Base commit: `%s`\n' "$FOVEA_BASE_COMMIT"
+            printf -- '- Evidence SHA-256: `%s`\n\n' "$digest"
+            printf '<details><summary>Evidence Bundle</summary>\n\n```json\n'
+            cat "$evidence"
+            printf '```\n</details>\n'
+          } >> "$GITHUB_STEP_SUMMARY"

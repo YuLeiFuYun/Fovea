@@ -163,7 +163,8 @@
           "status",
           "evidenceLocator",
           "producer",
-          "evidenceDigest"
+          "evidenceDigest",
+          "verifiedCommit"
         ],
         "properties": {
           "id": {

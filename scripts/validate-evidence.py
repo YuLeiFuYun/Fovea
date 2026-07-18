@@ -6,6 +6,7 @@ import sys
 
 TRUSTED_PRODUCERS = {"trusted-ci", "held-out-evaluator", "human-reviewer", "release-builder"}
 COMMIT = re.compile(r"^[0-9a-fA-F]{7,64}$")
+TRUSTED_CI_LOCATOR = re.compile(r"^https://[^/]+/.+/actions/runs/[0-9]+(?:[#/].*)?$")
 
 
 def fail(message: str) -> None:
@@ -35,12 +36,24 @@ def validate(path: Path) -> None:
     for field in ("hadProductionSecrets", "couldWriteProtectedBranch", "couldReadHeldOutTests"):
         if permissions.get(field) is not False:
             fail(f"{path}: {field} must be false")
+    if data["headCommit"] != data["verifiedCommit"]:
+        fail(f"{path}: headCommit must equal verifiedCommit")
+    if data["assuranceStage"] == "0a-complete":
+        if "humanAttestation" not in data:
+            fail(f"{path}: 0a-complete requires humanAttestation")
+        if data["accountableOwner"].startswith("pending-"):
+            fail(f"{path}: 0a-complete requires a resolved accountableOwner")
     for result in data["verification"]:
         status = result.get("status")
         producer = result.get("producer")
         digest = result.get("evidenceDigest", "")
+        locator = result.get("evidenceLocator", "")
         if status == "pass" and producer not in TRUSTED_PRODUCERS:
             fail(f"{path}: pass result {result.get('id')} has untrusted producer {producer}")
+        if status == "pass" and producer == "trusted-ci" and not TRUSTED_CI_LOCATOR.fullmatch(locator):
+            fail(f"{path}: trusted-ci result {result.get('id')} lacks a durable CI run locator")
+        if result.get("verifiedCommit") != data["verifiedCommit"]:
+            fail(f"{path}: result {result.get('id')} is not bound to verifiedCommit")
         if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
             fail(f"{path}: invalid evidenceDigest for {result.get('id')}")
     print(f"Evidence valid: {path}")

@@ -82,7 +82,7 @@ AI 主导实现分两级：
 
 只有 `0a-complete` 才算 Phase 0a 通过。定义与执行规则见 `specifications/ai-development-assurance.md`。
 
-Phase 0a curated mutant 的可执行入口为 `scripts/run-critical-mutants.py`；报告 schema 为 `schemas/critical-mutation-report.schema.json`。
+Phase 0a curated mutant 的可执行入口为 `scripts/run-critical-mutants.py`；报告 schema 为 `schemas/critical-mutation-report.schema.json`。回滚门入口为 `scripts/verify-rollback.py`，CI Evidence Bundle 由 `scripts/generate-ci-evidence.py` 生成。
 
 ## 3. Phase 0b / G0
 
