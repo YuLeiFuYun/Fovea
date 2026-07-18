@@ -46,10 +46,12 @@ def mutant_002(root: Path) -> None:
     replace_exact(
         root / "Sources/FoveaCore/ImageRequest.swift",
         """      credentialGeneration: credentialGeneration,
-      revalidationFingerprint: revalidationFingerprint
+      revalidationFingerprint: revalidationFingerprint,
+      transportPolicyFingerprint: credentialExecutionFingerprint
 """,
         """      credentialGeneration: nil,
-      revalidationFingerprint: "variant-only"
+      revalidationFingerprint: "variant-only",
+      transportPolicyFingerprint: "variant-only"
 """,
     )
 
