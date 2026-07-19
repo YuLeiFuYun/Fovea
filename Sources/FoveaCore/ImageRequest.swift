@@ -321,3 +321,38 @@ public struct ImageRequest: Sendable {
     }
   }
 }
+
+extension ImageRequest {
+  package func replacingCredentials(
+    _ refreshed: CredentialRefreshResult
+  ) throws -> ImageRequest {
+    var mergedHeaders = CredentialHeaderPolicy.removingSensitiveHeaders(
+      from: headers,
+      additionalSensitiveNames: credentialHeaderNames
+    )
+    for (name, value) in refreshed.headers {
+      mergedHeaders[name] = value
+    }
+    let refreshedCredentialNames = refreshed.credentialHeaderNames
+      .union(refreshed.headers.keys.map { $0.lowercased() })
+    var fingerprints = headerVariantFingerprints
+    for (name, fingerprint) in refreshed.headerVariantFingerprints {
+      fingerprints[name.lowercased()] = fingerprint
+    }
+    return try ImageRequest(
+      url: url,
+      logicalSource: logicalSource,
+      target: target,
+      contentMode: contentMode,
+      geometryPolicyFingerprint: geometryPolicyFingerprint,
+      renderCacheAdmission: renderCacheAdmission,
+      namespace: namespace,
+      authorizationContext: authorizationContext,
+      credentialGeneration: refreshed.credentialGeneration,
+      priority: priority,
+      headers: mergedHeaders,
+      credentialHeaderNames: refreshedCredentialNames,
+      headerVariantFingerprints: fingerprints
+    )
+  }
+}

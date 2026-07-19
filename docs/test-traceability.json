@@ -334,9 +334,15 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+          "kind": "swiftTest",
+          "method": "testAuthorizationContextChangeChangesPersistentIdentityAuthPt002"
+        }
+      ],
       "id": "AUTH-PT-002",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
@@ -383,9 +389,15 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+          "kind": "swiftTest",
+          "method": "testConcurrentUnauthorizedRequestsShareOneRefreshAuthPt007"
+        }
+      ],
       "id": "AUTH-PT-007",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [],
@@ -393,9 +405,15 @@
       "status": "missing"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+          "kind": "swiftTest",
+          "method": "testRecursiveRefreshIsRejectedAuthPt009"
+        }
+      ],
       "id": "AUTH-PT-009",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
