@@ -7,25 +7,29 @@
 Network、DiskIO、Decode 和 Process 不是四个独立的并发整数，而是一组受平台压力、任务优先级和估算成本约束的有界许可。实现不得通过创建大量等待中的 Swift Task 绕过预算。
 
 
-## 2. Phase 0a 已实现子集
+## 2. 当前已实现子集
 
-Phase 0a 只承诺两个静态、可取消的 hard cap：
+当前实现具有三类静态、可取消的 hard cap：
 
 ```text
 maximumConcurrentFetches = 6（默认，可配置）
 maximumConcurrentDecodes = 2（默认，可配置）
+maximumDecodeWorkingSetBytes = 192 MiB（默认，可配置）
 maximumQueuedFetches / maximumQueuedDecodes = 512（默认，可配置）
 ```
 
-- permit 只包围唯一网络 fetch 或一次 probe/decode；
-- FetchExecutionKey single-flight 在 permit 内执行，重复订阅不重复占用网络 permit；
-- 等待 permit 的请求可立即取消，取消后不得实际启动网络/解码，也不得泄漏 permit；
-- fetch/decode 等待队列默认各 512，超限返回结构化 `resourceLimit`，不启动对应阶段；
-- 队列不为等待者创建轮询任务；
-- 同步 probe/decode 在受 permit 约束的专用 Dispatch executor 上运行，不阻塞 Swift cooperative executor；
-- 0a 不承诺 subscriber priority、namespace fairness、pressure 自适应或 decoded-byte reservation。
+- FetchExecutionKey/DecodeKey single-flight 在 permit 内执行，重复订阅不重复占用阶段 permit；
+- 等待 permit 的请求可立即取消，取消后不得启动对应阶段或泄漏 permit；
+- fetch/decode 数量队列具有动态 subscriber 优先级与有界防饥饿；
+- probe 完成后、像素分配前，按缩略表面、颜色转换表面和最终/crop 表面保守估算 working set；
+- 带权许可只向当前可容纳的 waiter 发放，单任务超过 hard cap 时结构化拒绝；
+- memory cache cost、encoded body、decode working set 分开核算；
+- 官方系统组合层在 warning/critical memory pressure 下清空 RenderedMemory；
+- 请求级 cellular/constrained/expensive 权限进入 exact execution identity，不进入持久缓存身份；
+- 官方 URLSession policy 明确 `waitsForConnectivity`、请求/资源超时和每主机连接上限；
+- 同步 probe/decode 在专用 Dispatch executor 上运行，不阻塞 Swift cooperative executor。
 
-后续章节描述 Core v1/0b 完整模型；不得把它们误读为当前已实现能力。
+仍未实现：按 CPU 时间的硬配额、thermal/pressure 驱动的动态并发、namespace 加权公平、独立 prefetch 配额、后台 URLSession 延续、跨进程全局资源预算与实际分配动态扩容。后续章节描述完整目标模型，不得误读为当前已交付能力。
 
 ## 3. 完整 Permit 模型
 
@@ -144,4 +148,7 @@ network constrained/expensive decision
 - **RES-PT-008**: 交互任务的显式网络权限不被低权限 subscriber 扩大或缩小；
 - **RES-PT-009**: background transition 不留下无主 decode/process；
 - **RES-PT-010**: permit/priority 事件可由 deterministic scheduler 重放；
-- **RES-PT-011**: 官方系统组合层在 warning/critical memory pressure 下清空 RenderedMemory；清理幂等，不删除 OriginalEncoded、不触发重复网络请求，也不改变在途任务身份。
+- **RES-PT-011**: 官方系统组合层在 warning/critical memory pressure 下清空 RenderedMemory；清理幂等，不删除 OriginalEncoded、不触发重复网络请求，也不改变在途任务身份；
+- **RES-PT-012**: 官方 URLSession policy 的连接等待、超时和每主机连接上限进入 transport context；自定义 configuration 不被默认策略静默覆盖；
+- **RES-PT-013**: 带权 decode working-set reservation 永不超过 hard cap，fill overscan 进入估算，超大任务在像素分配前失败；
+- **RES-PT-014**: probe 完成后立即释放 decode-count permit；等待 working-set 的大任务不得阻塞仍可容纳的小任务。

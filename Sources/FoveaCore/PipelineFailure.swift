@@ -8,6 +8,7 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
     case transport
     case http
     case securityLimit
+    case securityPolicy
     case resourceLimit
     case namespaceRevoked
     case cacheRead
@@ -67,6 +68,13 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
       reasonCode: reasonCode
     )
   }
+
+  static let profileAccessDenied = PipelineFailure(
+    category: .authorization,
+    stage: .requestValidation,
+    disposition: .terminal,
+    reasonCode: "profile-access-denied"
+  )
 
   static let missingAuthorizationContext = PipelineFailure(
     category: .authorization,
@@ -168,7 +176,7 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
     reasonCode: "invalid-content-digest"
   )
 
-  static func transport(_ error: any Error) -> PipelineFailure {
+  package static func transport(_ error: any Error) -> PipelineFailure {
     if let transportError = error as? TransportError {
       switch transportError {
       case .bodyTooLarge:
@@ -198,6 +206,13 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
           stage: .transport,
           disposition: .terminal,
           reasonCode: "non-http-response"
+        )
+      case .insecureRedirect:
+        return PipelineFailure(
+          category: .securityPolicy,
+          stage: .transport,
+          disposition: .terminal,
+          reasonCode: "insecure-redirect"
         )
       }
     }

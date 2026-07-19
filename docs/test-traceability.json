@@ -115,6 +115,16 @@
     {
       "evidence": [
         {
+          "file": "scripts/check-process-group-cleanup.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-GATE-011",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "scripts/run-critical-mutants.py",
           "kind": "script"
         }
@@ -445,6 +455,106 @@
     {
       "evidence": [
         {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-034",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-035",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-036",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-037",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-038",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-039",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-040",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-041",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-042",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-043",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Tests/FoveaTests/IdentityTests.swift",
           "kind": "swiftTest",
           "method": "testCredentialRefreshChangesExecutionButNotBaseOrVariant_AUTH_PT_001"
@@ -607,6 +717,48 @@
         }
       ],
       "id": "AUTH-PT-012",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+          "kind": "swiftTest",
+          "method": "testCredentialReplacementPreservesRequestSemantics_AUTH_PT_013"
+        }
+      ],
+      "id": "AUTH-PT-013",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ProfileAccessPolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testDeniedProfileFailsBeforeCacheOrNetwork_AUTH_PT_014"
+        },
+        {
+          "file": "Tests/FoveaTests/ProfileAccessPolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testAllowlistedProfileReachesTransport_AUTH_PT_014"
+        },
+        {
+          "file": "Tests/FoveaTests/ProfileAccessPolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testPublicOnlyPolicyRejectsPrivateProfileBeforeTransport_AUTH_PT_014"
+        },
+        {
+          "file": "Tests/FoveaTests/ProfileAccessPolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testPublicOnlyPolicyRejectsPrivateNamespaceWithPublicContext_AUTH_PT_014"
+        },
+        {
+          "file": "Tests/FoveaTests/FoveaSystemPipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testSystemCompositionDefaultsToPublicOnly_AUTH_PT_014"
+        }
+      ],
+      "id": "AUTH-PT-014",
       "status": "implemented"
     },
     {
@@ -957,6 +1109,47 @@
         }
       ],
       "id": "CACHE-PT-039",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-live-network-lab.py",
+          "kind": "script"
+        }
+      ],
+      "id": "DEMO-PT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/verify-demos.py",
+          "kind": "script"
+        }
+      ],
+      "id": "DEMO-PT-002",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-loopback-network-lab.py",
+          "kind": "script"
+        }
+      ],
+      "id": "DEMO-PT-003",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
+          "kind": "swiftTest",
+          "method": "testDelegateTransportCollectsSanitizedTaskMetrics_DIAG_PT_011"
+        }
+      ],
+      "id": "DIAG-PT-011",
       "status": "implemented"
     },
     {
@@ -1849,6 +2042,22 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/PipelineConfigurationTests.swift",
+          "kind": "swiftTest",
+          "method": "testLegacyConfigurationWithoutWorkingSetBudgetUsesSafeDefault_PIPE_PT_010"
+        },
+        {
+          "file": "Tests/FoveaTests/PipelineConfigurationTests.swift",
+          "kind": "swiftTest",
+          "method": "testWorkingSetBudgetIsOperationalAndChangesFullFingerprint_PIPE_PT_010"
+        }
+      ],
+      "id": "PIPE-PT-010",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Tests/FoveaTests/ResourceLimitTests.swift",
           "kind": "swiftTest",
           "method": "testFetchConcurrencyNeverExceedsStaticLimit_RES_PT_001"
@@ -1881,12 +2090,71 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/IdentityTests.swift",
+          "kind": "swiftTest",
+          "method": "testNetworkPolicyChangesExecutionButNotPersistentIdentity_RES_PT_008"
+        },
+        {
+          "file": "Tests/FoveaTests/PipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testRequestNetworkPolicyIsAppliedBeforeTransport_RES_PT_008"
+        }
+      ],
+      "id": "RES-PT-008",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Tests/FoveaTests/FoveaSystemPipelineTests.swift",
           "kind": "swiftTest",
           "method": "testMemoryPressurePurgesRenderedMemoryWithoutRefetch_RES_PT_011"
         }
       ],
       "id": "RES-PT-011",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
+          "kind": "swiftTest",
+          "method": "testBuiltInSessionPolicyChangesReusableTransportIdentity_RES_PT_012"
+        }
+      ],
+      "id": "RES-PT-012",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PrioritySchedulingTests.swift",
+          "kind": "swiftTest",
+          "method": "testWeightedPermitsNeverExceedCapacityAndRejectOversizedRequests_RES_PT_013"
+        },
+        {
+          "file": "Tests/FoveaTests/ResourceLimitTests.swift",
+          "kind": "swiftTest",
+          "method": "testDecodeWorkingSetIsRejectedBeforePixelAllocation_RES_PT_013"
+        },
+        {
+          "file": "Tests/FoveaTests/ResourceLimitTests.swift",
+          "kind": "swiftTest",
+          "method": "testDecodeWorkingSetEstimatorAccountsForFillOverscan_RES_PT_013"
+        }
+      ],
+      "id": "RES-PT-013",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ResourceLimitTests.swift",
+          "kind": "swiftTest",
+          "method": "testWorkingSetWaiterDoesNotHoldDecodeCountPermit_RES_PT_014"
+        }
+      ],
+      "id": "RES-PT-014",
       "status": "implemented"
     },
     {
@@ -2299,6 +2567,27 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/IdentityTests.swift",
+          "kind": "swiftTest",
+          "method": "testImageRequestRejectsRemoteCleartextButAllowsLoopback_SEC_CASE_033"
+        },
+        {
+          "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
+          "kind": "swiftTest",
+          "method": "testRedirectPolicyRejectsRemoteCleartextAndAllowsLoopback_SEC_CASE_033"
+        },
+        {
+          "file": "Tests/FoveaTests/PipelineFailureTests.swift",
+          "kind": "swiftTest",
+          "method": "testInsecureRedirectIsTerminalSecurityPolicyFailure_SEC_CASE_033"
+        }
+      ],
+      "id": "SEC-CASE-033",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
           "kind": "swiftTest",
           "method": "testLateResultCannotOverwriteNewIdentityUiPt001"
@@ -2522,6 +2811,16 @@
         }
       ],
       "id": "UI-PT-018",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-architecture-boundaries.py",
+          "kind": "script"
+        }
+      ],
+      "id": "UI-PT-019",
       "status": "implemented"
     },
     {

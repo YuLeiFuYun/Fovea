@@ -17,6 +17,28 @@ final class URLSessionTransportTests: XCTestCase {
     XCTAssertTrue(explicitlyScoped.reusePolicy.allowsCrossRequestReuse)
   }
 
+  func testBuiltInSessionPolicyChangesReusableTransportIdentity_RES_PT_012() {
+    let first = URLSessionTransport(
+      policy: URLSessionTransportPolicy(
+        waitsForConnectivity: true,
+        requestTimeoutSeconds: 10,
+        resourceTimeoutSeconds: 20,
+        maximumConnectionsPerHost: 2
+      )
+    )
+    let second = URLSessionTransport(
+      policy: URLSessionTransportPolicy(
+        waitsForConnectivity: false,
+        requestTimeoutSeconds: 10,
+        resourceTimeoutSeconds: 20,
+        maximumConnectionsPerHost: 2
+      )
+    )
+
+    XCTAssertNotEqual(
+      first.reusePolicy.executionFingerprint, second.reusePolicy.executionFingerprint)
+  }
+
   func testConfigurationIsSanitizedBeforeSessionCreation_AUTH_PT_008() async throws {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.protocolClasses = [ConfigurationProbeURLProtocol.self]
@@ -38,7 +60,13 @@ final class URLSessionTransportTests: XCTestCase {
 
     let response = try await URLSessionTransport(configuration: configuration).execute(
       TransportRequest(
-        request: URLRequest(url: url),
+        request: {
+          var request = URLRequest(url: url)
+          request.allowsCellularAccess = false
+          request.allowsConstrainedNetworkAccess = false
+          request.allowsExpensiveNetworkAccess = false
+          return request
+        }(),
         maximumBytes: 1024,
         memoryThreshold: 1024
       )
@@ -47,6 +75,9 @@ final class URLSessionTransportTests: XCTestCase {
 
     XCTAssertNil(probe.cookie)
     XCTAssertEqual(probe.cachePolicy, URLRequest.CachePolicy.reloadIgnoringLocalCacheData.rawValue)
+    XCTAssertFalse(probe.allowsCellularAccess)
+    XCTAssertFalse(probe.allowsConstrainedNetworkAccess)
+    XCTAssertFalse(probe.allowsExpensiveNetworkAccess)
   }
 
   func testMalformedOrConflictingContentLengthFailsClosed_HTTP_CONF_CONTENT_LENGTH_001()
@@ -96,6 +127,30 @@ final class URLSessionTransportTests: XCTestCase {
     XCTAssertEqual(response.body, ContentLengthURLProtocol.body)
   }
 
+  func testDelegateTransportCollectsSanitizedTaskMetrics_DIAG_PT_011() async throws {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [ChunkedURLProtocol.self]
+    let transport = URLSessionTransport(
+      configuration: configuration,
+      stagingDirectory: try makeTemporaryDirectory("url-session-metrics")
+    )
+    let url = try XCTUnwrap(URL(string: "https://transport.example.test/metrics"))
+
+    let response = try await transport.execute(
+      TransportRequest(
+        request: URLRequest(url: url),
+        maximumBytes: 256 * 1024,
+        memoryThreshold: 256 * 1024
+      )
+    )
+
+    let metrics = try XCTUnwrap(response.metrics.network)
+    XCTAssertGreaterThanOrEqual(metrics.transactionCount, 1)
+    XCTAssertGreaterThan(metrics.taskDurationNanoseconds, 0)
+    XCTAssertGreaterThanOrEqual(metrics.reusedConnectionCount, 0)
+    XCTAssertGreaterThanOrEqual(metrics.proxyConnectionCount, 0)
+  }
+
   func testDelegateTransportConsumesChunksWithoutPerByteIteration() async throws {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.protocolClasses = [ChunkedURLProtocol.self]
@@ -121,6 +176,38 @@ final class URLSessionTransportTests: XCTestCase {
     XCTAssertTrue(response.metrics.spilledToDisk)
     XCTAssertEqual(response.head.headers["content-type"], "application/octet-stream")
     XCTAssertNil(response.head.headers["Content-Type"])
+  }
+
+  func testRedirectPolicyRejectsRemoteCleartextAndAllowsLoopback_SEC_CASE_033() throws {
+    var original = URLRequest(
+      url: try XCTUnwrap(URL(string: "https://secure.example.test/image.png"))
+    )
+    original.setValue("Bearer secret", forHTTPHeaderField: "Authorization")
+    var downgrade = URLRequest(
+      url: try XCTUnwrap(URL(string: "http://remote.example.test/image.png"))
+    )
+    downgrade.allHTTPHeaderFields = original.allHTTPHeaderFields
+
+    XCTAssertThrowsError(
+      try HTTPRedirectPolicy.request(
+        original: original,
+        proposed: downgrade,
+        additionalSensitiveNames: []
+      )
+    ) { error in
+      XCTAssertEqual(error as? TransportError, .insecureRedirect)
+    }
+
+    var loopback = URLRequest(
+      url: try XCTUnwrap(URL(string: "http://127.0.0.1:8080/image.png"))
+    )
+    loopback.allHTTPHeaderFields = original.allHTTPHeaderFields
+    let accepted = try HTTPRedirectPolicy.request(
+      original: original,
+      proposed: loopback,
+      additionalSensitiveNames: []
+    )
+    XCTAssertNil(accepted.value(forHTTPHeaderField: "Authorization"))
   }
 
   func testEventRouterScopesCustomCredentialHeadersToTask() async {
@@ -203,6 +290,9 @@ private final class ChunkedURLProtocol: URLProtocol {
 private struct ConfigurationProbe: Codable {
   let cookie: String?
   let cachePolicy: UInt
+  let allowsCellularAccess: Bool
+  let allowsConstrainedNetworkAccess: Bool
+  let allowsExpensiveNetworkAccess: Bool
 }
 
 private final class ConfigurationProbeURLProtocol: URLProtocol {
@@ -222,7 +312,10 @@ private final class ConfigurationProbeURLProtocol: URLProtocol {
       body = try JSONEncoder().encode(
         ConfigurationProbe(
           cookie: request.value(forHTTPHeaderField: "Cookie"),
-          cachePolicy: request.cachePolicy.rawValue
+          cachePolicy: request.cachePolicy.rawValue,
+          allowsCellularAccess: request.allowsCellularAccess,
+          allowsConstrainedNetworkAccess: request.allowsConstrainedNetworkAccess,
+          allowsExpensiveNetworkAccess: request.allowsExpensiveNetworkAccess
         )
       )
     } catch {

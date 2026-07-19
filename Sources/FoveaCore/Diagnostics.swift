@@ -15,6 +15,8 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
   case decodeQueued
   case decodeJoined
   case decodeStarted
+  case decodeWorkingSetReserved
+  case decodeAdmissionRejected
   case decodeCompleted
   case cacheReadFailed
   case cacheWriteFailed
@@ -25,7 +27,7 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
 }
 
 public struct DiagnosticEvent: Codable, Hashable, Sendable {
-  public static let currentSchemaVersion: UInt16 = 2
+  public static let currentSchemaVersion: UInt16 = 3
 
   public let schemaVersion: UInt16
   public let kind: DiagnosticEventKind
@@ -39,6 +41,14 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
   public let reason: String?
   public let attempt: Int?
   public let retryDelayNanoseconds: UInt64?
+  public let durationNanoseconds: UInt64?
+  public let transactionCount: Int?
+  public let networkProtocolNames: [String]?
+  public let reusedConnectionCount: Int?
+  public let proxyConnectionCount: Int?
+  public let cellularTransactionCount: Int?
+  public let expensiveTransactionCount: Int?
+  public let constrainedTransactionCount: Int?
   public let requestedPriority: ImageRequestPriority?
   public let effectivePriority: ImageRequestPriority?
   public let failureCategory: PipelineFailure.Category?
@@ -58,6 +68,14 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
     reason: String? = nil,
     attempt: Int? = nil,
     retryDelayNanoseconds: UInt64? = nil,
+    durationNanoseconds: UInt64? = nil,
+    transactionCount: Int? = nil,
+    networkProtocolNames: [String]? = nil,
+    reusedConnectionCount: Int? = nil,
+    proxyConnectionCount: Int? = nil,
+    cellularTransactionCount: Int? = nil,
+    expensiveTransactionCount: Int? = nil,
+    constrainedTransactionCount: Int? = nil,
     requestedPriority: ImageRequestPriority? = nil,
     effectivePriority: ImageRequestPriority? = nil,
     failureCategory: PipelineFailure.Category? = nil,
@@ -76,6 +94,14 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
     self.reason = reason
     self.attempt = attempt
     self.retryDelayNanoseconds = retryDelayNanoseconds
+    self.durationNanoseconds = durationNanoseconds
+    self.transactionCount = transactionCount
+    self.networkProtocolNames = networkProtocolNames
+    self.reusedConnectionCount = reusedConnectionCount
+    self.proxyConnectionCount = proxyConnectionCount
+    self.cellularTransactionCount = cellularTransactionCount
+    self.expensiveTransactionCount = expensiveTransactionCount
+    self.constrainedTransactionCount = constrainedTransactionCount
     self.requestedPriority = requestedPriority
     self.effectivePriority = effectivePriority
     self.failureCategory = failureCategory
@@ -97,6 +123,14 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
       reason: reason,
       attempt: attempt,
       retryDelayNanoseconds: retryDelayNanoseconds,
+      durationNanoseconds: durationNanoseconds,
+      transactionCount: transactionCount,
+      networkProtocolNames: networkProtocolNames,
+      reusedConnectionCount: reusedConnectionCount,
+      proxyConnectionCount: proxyConnectionCount,
+      cellularTransactionCount: cellularTransactionCount,
+      expensiveTransactionCount: expensiveTransactionCount,
+      constrainedTransactionCount: constrainedTransactionCount,
       requestedPriority: requestedPriority,
       effectivePriority: effectivePriority,
       failureCategory: failureCategory,

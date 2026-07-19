@@ -19,7 +19,8 @@ guard arguments.count >= 2 else {
 switch arguments[1] {
 case "generation":
   guard arguments.count == 5, let delayMilliseconds = UInt32(arguments[4]) else {
-    fail("usage: FoveaStoreProbe generation <root> <compatibility-fingerprint> <delay-ms>", code: 64)
+    fail(
+      "usage: FoveaStoreProbe generation <root> <compatibility-fingerprint> <delay-ms>", code: 64)
   }
   let root = URL(fileURLWithPath: arguments[2], isDirectory: true)
   let fingerprint = arguments[3]

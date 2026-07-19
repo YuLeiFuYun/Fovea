@@ -127,10 +127,12 @@ def main() -> int:
         traceability = root / ".artifacts/traceability/test-traceability.json"
         store_contention = root / ".artifacts/store-generation/contention.json"
         coverage = root / ".artifacts/coverage/production-coverage.json"
+        live_network = root / ".artifacts/live-network/network-lab.json"
+        loopback_network = root / ".artifacts/loopback-network/network-lab.json"
         benchmark_paths = sorted((root / ".artifacts/benchmarks").glob("*.json"))
         required_files = [
             verify_log, rollback, mutation, conformance, traceability, store_contention, coverage,
-            *benchmark_paths,
+            loopback_network, *benchmark_paths,
         ]
         missing = [str(path.relative_to(root)) for path in required_files if not path.is_file()]
         if missing:
@@ -253,6 +255,28 @@ def main() -> int:
             if artifact.get("verifiedCommit") != head:
                 raise ValueError(f"benchmark artifact is not bound to the evidence head: {workload}")
 
+        loopback_network_data = json.loads(loopback_network.read_text())
+        loopback_invariants = loopback_network_data.get("invariants", {})
+        if (
+            loopback_network_data.get("verifiedCommit") != head
+            or loopback_network_data.get("status") != "passed"
+            or not loopback_invariants
+            or any(value is not True for value in loopback_invariants.values())
+        ):
+            raise ValueError("loopback network artifact is not a passing invariant report bound to the evidence head")
+
+        live_network_data = None
+        if live_network.is_file():
+            live_network_data = json.loads(live_network.read_text())
+            lab = live_network_data.get("lab", {})
+            if (
+                live_network_data.get("verifiedCommit") != head
+                or live_network_data.get("status") != "passed"
+                or lab.get("allSucceeded") is not True
+                or lab.get("allInvariantsSatisfied") is not True
+            ):
+                raise ValueError("live network artifact is not a passing invariant report bound to the evidence head")
+
         locator_prefix = run_locator if trusted else "local"
         verification = [
             verification_result(
@@ -262,6 +286,15 @@ def main() -> int:
                 producer,
                 status,
                 f"{locator_prefix}#verify",
+                head,
+            ),
+            verification_result(
+                "AIQA-GATE-011",
+                "test",
+                verify_log,
+                producer,
+                status,
+                f"{locator_prefix}#process-group-cleanup",
                 head,
             ),
             verification_result(
@@ -327,6 +360,15 @@ def main() -> int:
                 f"{locator_prefix}#production-coverage",
                 head,
             ),
+            verification_result(
+                "DEMO-PT-003",
+                "test",
+                loopback_network,
+                producer,
+                status,
+                f"{locator_prefix}#loopback-network-lab",
+                head,
+            ),
         ]
         for workload, path in sorted(workloads.items()):
             verification.append(
@@ -337,6 +379,18 @@ def main() -> int:
                     producer,
                     status,
                     f"{locator_prefix}#{workload.lower()}",
+                    head,
+                )
+            )
+        if live_network_data is not None:
+            verification.append(
+                verification_result(
+                    "DEMO-PT-001",
+                    "test",
+                    live_network,
+                    producer,
+                    status,
+                    f"{locator_prefix}#live-network-lab",
                     head,
                 )
             )
@@ -365,11 +419,14 @@ def main() -> int:
                 "AIQA-GATE-003",
                 "AIQA-GATE-007",
                 "AIQA-GATE-009",
+                "AIQA-GATE-011",
                 "HTTP-CONF-PRIVATE-IMAGE-PROFILE",
                 "TEST-TRACEABILITY-0B",
                 "CACHE-PT-019",
                 "CACHE-PT-024",
                 "AIQA-COV-001",
+                "DEMO-PT-002",
+                "DEMO-PT-003",
                 "W1-Feed-Scroll-Smoke",
                 "W2-Detail-Hero-Smoke",
                 "W3-Auth-Gallery-Smoke",
@@ -404,6 +461,9 @@ def main() -> int:
             "logicalChangedLines": logical_lines(root, base, head),
             "commands": [
                 "scripts/verify.sh",
+                "scripts/verify-demos.py",
+                "scripts/run-loopback-network-lab.py",
+                "scripts/run-live-network-lab.py --timeout 240 (optional external evidence)",
                 "scripts/run-store-generation-contention.py",
                 "scripts/run-production-coverage.py",
                 f"scripts/verify-rollback.py --base {base} --head {head}",

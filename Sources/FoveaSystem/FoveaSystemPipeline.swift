@@ -19,6 +19,8 @@ public struct FoveaSystemPipeline: Sendable {
     cacheRoot: URL,
     configuration: PipelineConfiguration = PipelineConfiguration(),
     diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
+    profileAccessPolicy: ProfileAccessPolicy = .publicOnly,
+    transportPolicy: URLSessionTransportPolicy = .secureDefault,
     encodedSoftLimitBytes: Int = 128 * 1024 * 1024,
     automaticallyPurgesMemoryOnPressure: Bool = true
   ) async throws -> FoveaSystemPipeline {
@@ -28,10 +30,11 @@ public struct FoveaSystemPipeline: Sendable {
     )
     let pipeline = FoveaPipeline(
       configuration: configuration,
-      transport: URLSessionTransport(),
+      transport: URLSessionTransport(policy: transportPolicy),
       encodedStore: stores.encoded,
       recordStore: stores.records,
       diagnostics: diagnostics,
+      profileAccessPolicy: profileAccessPolicy,
       decoder: ImageIOImageDecoder()
     )
     let monitor =

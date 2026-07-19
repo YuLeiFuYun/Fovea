@@ -54,6 +54,9 @@ final class FetchStage: Sendable {
   ) async throws -> TimedTransportResponse {
     var urlRequest = URLRequest(url: request.url)
     urlRequest.httpMethod = "GET"
+    urlRequest.allowsCellularAccess = request.networkPolicy.allowsCellularAccess
+    urlRequest.allowsConstrainedNetworkAccess = request.networkPolicy.allowsConstrainedNetworkAccess
+    urlRequest.allowsExpensiveNetworkAccess = request.networkPolicy.allowsExpensiveNetworkAccess
     for (name, value) in request.headers {
       urlRequest.setValue(value, forHTTPHeaderField: name)
     }
@@ -389,13 +392,22 @@ final class FetchStage: Sendable {
     executionKey: FetchExecutionKey,
     attempt: Int
   ) async {
+    let network = response.transport.metrics.network
     await diagnostics.record(
       DiagnosticEvent(
         kind: .fetchCompleted,
         keyDigest: executionKey.digestHex,
         statusCode: response.head.statusCode,
         byteCount: response.transport.metrics.receivedBytes,
-        attempt: attempt
+        attempt: attempt,
+        durationNanoseconds: network?.taskDurationNanoseconds,
+        transactionCount: network?.transactionCount,
+        networkProtocolNames: network?.negotiatedProtocolNames,
+        reusedConnectionCount: network?.reusedConnectionCount,
+        proxyConnectionCount: network?.proxyConnectionCount,
+        cellularTransactionCount: network?.cellularTransactionCount,
+        expensiveTransactionCount: network?.expensiveTransactionCount,
+        constrainedTransactionCount: network?.constrainedTransactionCount
       )
     )
   }

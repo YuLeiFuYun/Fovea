@@ -37,7 +37,7 @@ URL
 
 0a-complete
   TEST_CATALOG 的 0a 产品测试全部通过
-  AIQA-GATE-001...010 全部通过
+  AIQA-GATE-001...011 全部通过
   指定 critical mutants 被真实执行并杀死
 ```
 

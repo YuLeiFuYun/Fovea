@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import re
+import signal
 import shutil
 import subprocess
 import sys
@@ -448,6 +449,106 @@ def mutant_033(root: Path) -> None:
     )
 
 
+def mutant_034(root: Path) -> None:
+    replace_literal(
+        root / "Sources/FoveaCore/ImageRequest.swift",
+        '        "\\(credentialExecutionFingerprint)|\\(networkPolicy.executionFingerprint)|\\(transportPolicyFingerprint)"\n',
+        '        "\\(credentialExecutionFingerprint)|\\(transportPolicyFingerprint)"\n',
+    )
+
+
+def mutant_035(root: Path) -> None:
+    replace_in_section(
+        root / "Sources/FoveaCore/FoveaPipeline.swift",
+        "  private func validateAccess(",
+        "  private func validateAuthorization(",
+        "    guard profileAccessPolicy.permits(request) else {\n",
+        "    guard true else {\n",
+    )
+
+
+def mutant_036(root: Path) -> None:
+    replace_in_section(
+        root / "Sources/FoveaCore/ImageRequest.swift",
+        "  package func replacingCredentials(",
+        "  }\n}",
+        "      networkPolicy: networkPolicy,\n",
+        "      networkPolicy: .interactive,\n",
+    )
+
+
+def mutant_037(root: Path) -> None:
+    replace_in_section(
+        root / "Sources/FoveaCore/DecodeStage.swift",
+        "    let workingSetPermit: AsyncPermitPool.Permit",
+        "    let image: DecodedImage",
+        "        units: workingSetBytes,\n",
+        "        units: 1,\n",
+    )
+
+
+def mutant_038(root: Path) -> None:
+    replace_in_section(
+        root / "Sources/FoveaHTTP/URLSessionTransport.swift",
+        "      var response: HTTPURLResponse?",
+        "      guard let response else",
+        "        case .metrics(let metrics):\n          networkMetrics = metrics\n",
+        "        case .metrics:\n          networkMetrics = nil\n",
+    )
+
+
+def mutant_039(root: Path) -> None:
+    path = root / "Sources/FoveaCore/DecodeStage.swift"
+    replace_in_section(
+        path,
+        "    let probe: ImageProbe",
+        "    let workingSetBytes",
+        "      await probePermit.release()\n    } catch is CancellationError {",
+        "    } catch is CancellationError {",
+    )
+    replace_in_section(
+        path,
+        "    let decodePermit: AsyncPermitPool.Permit",
+        "    let image: DecodedImage",
+        "    let decodePermit: AsyncPermitPool.Permit\n    do {\n      decodePermit = try await acquireDecodePermit(priorityControl: priorityControl)\n    } catch {\n      await workingSetPermit.release()\n      throw error\n    }\n",
+        "    let decodePermit = probePermit\n",
+    )
+
+
+def mutant_040(root: Path) -> None:
+    replace_literal(
+        root / "Sources/FoveaHTTP/HTTPURLSecurityPolicy.swift",
+        '    return scheme == "http" && isLoopbackHost(host)\n',
+        '    return scheme == "http" && (isLoopbackHost(host) || host.count > 0)\n',
+    )
+
+
+def mutant_041(root: Path) -> None:
+    replace_in_section(
+        root / "Sources/FoveaHTTP/HTTPRedirectPolicy.swift",
+        "  package static func request(",
+        "  }\n}",
+        "    guard let url = proposed.url, HTTPURLSecurityPolicy.permits(url) else {\n",
+        "    guard proposed.url != nil else {\n",
+    )
+
+
+def mutant_042(root: Path) -> None:
+    replace_literal(
+        root / "Sources/FoveaCore/PipelineConfiguration.swift",
+        r'      "maximumDecodeWorkingSetBytes:\(maximumDecodeWorkingSetBytes)",' + "\n",
+        "",
+    )
+
+
+def mutant_043(root: Path) -> None:
+    replace_literal(
+        root / "Sources/FoveaSystem/FoveaSystemPipeline.swift",
+        "    profileAccessPolicy: ProfileAccessPolicy = .publicOnly,\n",
+        "    profileAccessPolicy: ProfileAccessPolicy = .unrestricted,\n",
+    )
+
+
 MUTANTS = [
     Mutant("AIQA-MUT-001", "Omit namespace from persistent base identity.", "Sources/FoveaCore/Identity.swift", "IdentityTests/testNamespaceChangesBaseAndVariantIdentity_CACHE_PT_003", mutant_001),
     Mutant("AIQA-MUT-002", "Collapse exact fetch execution identity to base-only dimensions.", "Sources/FoveaCore/ImageRequest.swift", "IdentityTests/testImageRequestExecutionKeyIncludesCredentialAndRevalidation", mutant_002),
@@ -482,20 +583,49 @@ MUTANTS = [
     Mutant("AIQA-MUT-031", "Accept symbolic links as managed directories.", "Sources/AkashicCore/StorageDirectorySecurity.swift", "FilesystemLinkDefenseTests/testManagedDirectoryRejectsSymbolicLink_SEC_CASE_031", mutant_031),
     Mutant("AIQA-MUT-032", "Allocate metadata files without enforcing the pre-read size bound.", "Sources/AkashicCore/BoundedFileReader.swift", "BoundedMetadataReadTests/testOversizedStoreManifestsFailBeforeUnboundedRead_SEC_CASE_032", mutant_032),
     Mutant("AIQA-MUT-033", "Reject finite records when the wall clock moves backward during a request.", "Sources/FoveaHTTP/RepresentationRecord.swift", "ManifestSemanticValidationTests/testRecordStoreAcceptsFiniteWallClockRollback_HTTP_CONF_AGE_005", mutant_033),
+    Mutant("AIQA-MUT-034", "Ignore request network permissions in exact fetch execution identity.", "Sources/FoveaCore/ImageRequest.swift", "IdentityTests/testNetworkPolicyChangesExecutionButNotPersistentIdentity_RES_PT_008", mutant_034),
+    Mutant("AIQA-MUT-035", "Bypass the profile access allowlist before cache and network access.", "Sources/FoveaCore/FoveaPipeline.swift", "ProfileAccessPolicyTests/testDeniedProfileFailsBeforeCacheOrNetwork_AUTH_PT_014", mutant_035),
+    Mutant("AIQA-MUT-036", "Reset request network policy while replacing credentials.", "Sources/FoveaCore/ImageRequest.swift", "AuthenticationRefreshTests/testCredentialReplacementPreservesRequestSemantics_AUTH_PT_013", mutant_036),
+    Mutant("AIQA-MUT-037", "Reserve one byte instead of the estimated decode working set.", "Sources/FoveaCore/DecodeStage.swift", "ResourceLimitTests/testDecodeWorkingSetIsRejectedBeforePixelAllocation_RES_PT_013", mutant_037),
+    Mutant("AIQA-MUT-038", "Drop URLSession transaction metrics before transport completion.", "Sources/FoveaHTTP/URLSessionTransport.swift", "URLSessionTransportTests/testDelegateTransportCollectsSanitizedTaskMetrics_DIAG_PT_011", mutant_038),
+    Mutant("AIQA-MUT-039", "Hold the decode-count permit while waiting for working-set capacity.", "Sources/FoveaCore/DecodeStage.swift", "ResourceLimitTests/testWorkingSetWaiterDoesNotHoldDecodeCountPermit_RES_PT_014", mutant_039),
+    Mutant("AIQA-MUT-040", "Accept remote cleartext HTTP image URLs.", "Sources/FoveaHTTP/HTTPURLSecurityPolicy.swift", "IdentityTests/testImageRequestRejectsRemoteCleartextButAllowsLoopback_SEC_CASE_033", mutant_040),
+    Mutant("AIQA-MUT-041", "Allow HTTPS redirects to downgrade to remote cleartext HTTP.", "Sources/FoveaHTTP/HTTPRedirectPolicy.swift", "URLSessionTransportTests/testRedirectPolicyRejectsRemoteCleartextAndAllowsLoopback_SEC_CASE_033", mutant_041),
+    Mutant("AIQA-MUT-042", "Omit decode working-set budget from the full configuration fingerprint.", "Sources/FoveaCore/PipelineConfiguration.swift", "PipelineConfigurationTests/testWorkingSetBudgetIsOperationalAndChangesFullFingerprint_PIPE_PT_010", mutant_042),
+    Mutant("AIQA-MUT-043", "Make the official system composition root unrestricted by default.", "Sources/FoveaSystem/FoveaSystemPipeline.swift", "FoveaSystemPipelineTests/testSystemCompositionDefaultsToPublicOnly_AUTH_PT_014", mutant_043),
 ]
 
 
 def run(command: list[str], cwd: Path, env: dict[str, str], timeout: int) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
+    process = subprocess.Popen(
         command,
         cwd=cwd,
         env=env,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        timeout=timeout,
-        check=False,
+        start_new_session=True,
     )
+    try:
+        stdout, _ = process.communicate(timeout=timeout)
+        return subprocess.CompletedProcess(command, process.returncode, stdout, None)
+    except subprocess.TimeoutExpired as error:
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        try:
+            tail, _ = process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            tail, _ = process.communicate()
+        prefix = error.stdout or ""
+        if isinstance(prefix, bytes):
+            prefix = prefix.decode(errors="replace")
+        raise subprocess.TimeoutExpired(command, timeout, output=prefix + (tail or ""))
 
 
 def classify(return_code: int, output: str) -> str:

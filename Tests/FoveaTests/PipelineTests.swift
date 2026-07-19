@@ -832,6 +832,42 @@ final class PipelineTests: XCTestCase {
     XCTAssertEqual(requestCount, 1)
   }
 
+  func testRequestNetworkPolicyIsAppliedBeforeTransport_RES_PT_008() async throws {
+    let body = try makePNG()
+    let transport = FakeHTTPTransport(stubs: [
+      .init(
+        statusCode: 200,
+        headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+        body: body
+      )
+    ])
+    let root = try makeTemporaryDirectory()
+    let pipeline = FoveaPipeline(
+      transport: transport,
+      encodedStore: try await OriginalEncodedStore.open(
+        root: root.appendingPathComponent("encoded")
+      ),
+      recordStore: try await RepresentationRecordStore.open(
+        root: root.appendingPathComponent("records")
+      ),
+      decoder: ImageIOImageDecoder()
+    )
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/network-policy.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests",
+      networkPolicy: .conservative
+    )
+
+    _ = try await pipeline.image(for: request)
+
+    let captured = await transport.capturedRequests()
+    let sent = try XCTUnwrap(captured.singleElement)
+    XCTAssertTrue(sent.allowsCellularAccess)
+    XCTAssertFalse(sent.allowsConstrainedNetworkAccess)
+    XCTAssertFalse(sent.allowsExpensiveNetworkAccess)
+  }
+
   func testProbeFailureDoesNotPublishRecord_CACHE_PT_029_AIQA_MUT_015() async throws {
     let (pipeline, _, _, records) = try await makePipeline(stubs: [
       .init(

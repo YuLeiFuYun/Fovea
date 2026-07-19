@@ -15,8 +15,11 @@ printf 'Verified commit: %s\n' "$VERIFIED_COMMIT"
 python3 scripts/check-architecture-boundaries.py
 python3 scripts/check-docs.py
 python3 scripts/check-test-traceability.py
+python3 scripts/check-process-group-cleanup.py
 xcrun swift-format lint --strict -r Sources Tests Package.swift
 python3 scripts/run-http-conformance.py
+python3 scripts/verify-demos.py
+python3 scripts/run-loopback-network-lab.py
 
 rm -rf .artifacts/benchmarks
 mkdir -p .artifacts/benchmarks

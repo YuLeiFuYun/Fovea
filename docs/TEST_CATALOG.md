@@ -25,6 +25,7 @@
 | `AIQA-GATE` | AI agent 权限、证据、独立验收和发布治理 |
 | `AIQA-MUT` | Fovea 关键不变量变异体 |
 | `COMP-EVIDENCE` | 竞品契约的机器可汇总证据记录 |
+| `DEMO-PT` | 示例产品、真实网络实验与副作用边界 |
 
 ## 2. Phase 0a 产品测试与 AIQA 分级
 
@@ -65,6 +66,8 @@ RES-PT-002      取消等待 permit 不启动阶段且不泄漏 permit
 AUTH-PT-010     public URL 不需要 auth provider/credential generation
 AUTH-PT-011     revoke 清理后晚到 304 refresh 不得恢复旧 metadata
 AUTH-PT-012     自定义 credential header 的 identity、fail-closed 与 redirect 剥离
+AUTH-PT-013     credential refresh 保留全部非凭证请求语义
+AUTH-PT-014     Profile ACL 在缓存/网络前精确拒绝
 CACHE-PT-031    ContentID 不得作为物理文件名
 CACHE-PT-038    revoke 后新 200 写入当前 generation，冷内存后仍可 fresh hit
 GC-PT-005       PhysicalBlobID 不泄漏 ContentID
@@ -94,7 +97,7 @@ AI 主导实现分两级：
   AIQA-GATE-007/009 可 scaffolded，不得伪报 pass
 
 0a-complete
-  AIQA-GATE-001...010
+  AIQA-GATE-001...011
   AIQA-MUT-001       namespace 不得从持久/请求身份消失
   AIQA-MUT-002       精确 fetch 不得错误按 FetchVariantKey 合并
   AIQA-MUT-007       no-store 不得进入 reusable cache
@@ -127,10 +130,12 @@ CACHE-PT-038
 AUTH-PT-001...010
 SCHED-PT-001...010
 RES-PT-001...002
+RES-PT-008
+RES-PT-011...014
 GEO-PT-001...008
-UI-PT-001...014
+UI-PT-001...019
 ERR-PT-001...014
-PIPE-PT-001...008
+PIPE-PT-001...010
 IMG-PT-001...003
 IMG-PT-011
 IMG-PT-006...008
@@ -141,7 +146,8 @@ IMG-PT-006...008
 - Private Image Cache Profile 中分类为 `required` 的 `HTTP-CONF-*` 全部通过；
 - 安全矩阵中 Gate 为 `0a` 或 `0b` 的 `SEC-CASE-*` 全部通过；
 - W1/W2/W3 对应的 benchmark/assertion 全部通过；
-- `AIQA-GATE-001...010`、`AIQA-MUT-001...018` 全部通过，并有 R3 独立 oracle/evidence。
+- `AIQA-GATE-001...011`、当前 curated `AIQA-MUT-001...039` 全部通过，并有 R3 独立 oracle/evidence；
+- `DEMO-PT-002` 的 Gallery/Network Lab 产品编译和默认拒绝联网门禁通过；`DEMO-PT-001` 的真实网络实验按需执行，不阻塞确定性合并。
 
 ### 不阻塞 0b
 
@@ -155,7 +161,7 @@ CACHE-PT-022      non-identity Content-Encoding Range
 CACHE-PT-024      multi-process writer fail-closed
 CACHE-PT-032...035 quota/lease/atime/GC degradation
 SCHED-PT-011...012 permit/fairness
-RES-PT-003...010  优先级、公平性、pressure 与网络/后台动态治理
+RES-PT-003...007/009...010  namespace 公平、动态 pressure 与后台治理
 GC-PT-*           完整 quota/GC
 DIAG-PT-*         完整 diagnostics contract
 IMG-PT-004...005  HDR tone-map / gain-map
@@ -201,3 +207,17 @@ AIQA-MUT-030    hard-linked managed files or lock inodes are accepted
 AIQA-MUT-031    symbolic links are accepted as managed directories
 AIQA-MUT-032    metadata files are allocated before enforcing the st_size bound
 AIQA-MUT-033    finite records are rejected when the wall clock moves backward
+AIQA-MUT-034    request network permissions disappear from exact execution identity
+AIQA-MUT-035    Profile ACL is bypassed before cache and network access
+AIQA-MUT-036    credential refresh resets non-credential request semantics
+AIQA-MUT-037    decode working-set reservation is replaced with a one-byte permit
+AIQA-MUT-038    URLSession transaction metrics are dropped before completion
+AIQA-MUT-039    decode-count permit is held while waiting for working-set capacity
+AIQA-MUT-040    remote cleartext HTTP is accepted as a normal image source
+AIQA-MUT-041    HTTPS redirect is allowed to downgrade to remote cleartext HTTP
+AIQA-MUT-042    decode working-set budget disappears from the full configuration fingerprint
+AIQA-MUT-043    official system composition defaults to unrestricted profile access
+
+DEMO-PT-001       opt-in public HTTPS lab emits commit-bound invariant report
+DEMO-PT-002       Gallery and Network Lab build; Network Lab refuses implicit networking
+DEMO-PT-003       loopback origin validates 304/no-store/redirect/slow single-flight without public network

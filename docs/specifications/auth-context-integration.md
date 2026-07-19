@@ -108,7 +108,17 @@ Phase 0a 的 `ImageRequest.credentialHeaderNames` 允许调用者显式标记非
 
 内置敏感字段覆盖 Authorization、Proxy-Authorization、Cookie、API key 及常见 cloud/access-token 名称；不能识别的业务凭证必须由调用者显式分类。
 
-## 5. Cookie 默认策略
+## 5. Profile ACL
+
+`ProfileAccessPolicy` 是 pipeline composition root 的防御性 allowlist，不是业务 RBAC/ABAC 引擎。宿主先完成角色、租户、entitlement 和资源归属裁决，再把允许的 `(SecurityNamespaceID, AuthorizationContextID)` 组合交给 Fovea。
+
+- 判定在任何缓存读取、single-flight 订阅和网络访问前同步完成；
+- 精确组合不匹配时返回 `profile-access-denied`；
+- policy 不读取 token、URL、header 或图片内容，也不自行推断角色继承；
+- 底层 `FoveaPipeline` 默认 unrestricted 以保持可组合性；官方 `FoveaSystemPipeline` 默认 public-only，私有 profile 必须显式提供 allowlist；
+- ACL 变化需要构造新 pipeline 或 revoke 相关 namespace，不能热改旧任务语义。
+
+## 6. Cookie 默认策略
 
 Apple 的默认和后台 `URLSessionConfiguration` 通常使用共享 Cookie storage；显式设为 `nil` 可以禁用 Cookie storage。Fovea 的默认 composition root 应：
 
@@ -127,7 +137,7 @@ httpShouldSetCookies = false
 - 无法提供这些元数据时，credential-bearing 请求 fail closed：不持久化、不跨请求合并；
 - 共享 Cookie store 的变更通知只用于触发 generation 更新，不能把原始 Cookie 记录到 diagnostics。
 
-## 6. Fail-closed 条件
+## 7. Fail-closed 条件
 
 以下任一成立时，默认禁止持久复用和网络 single-flight：
 
@@ -140,7 +150,7 @@ httpShouldSetCookies = false
 
 Fail closed 不等于拒绝显示：请求仍可作为 task-local、不可复用的加载执行。`HTTPTransporting` 必须显式声明 `TransportReusePolicy`；内建默认 `URLSessionTransport` 使用固定安全配置并可复用，任何调用者提供的 `URLSessionConfiguration` 默认都是 `.taskLocal`。只有调用者提供稳定、非敏感且能覆盖 proxy、protocol、client identity 与其他会改变响应语义的 context identifier 时，才可显式启用跨请求复用。Fovea 只把该 identifier 的摘要纳入精确执行身份，不记录原值。
 
-## 7. 并发与刷新
+## 8. 并发与刷新
 
 - 同一授权上下文的 refresh 应 single-flight，防止多个 401 同时刷新；调用者取消只终止自身等待，已启动刷新在短暂零订阅者交接窗口内继续运行，供同一旧代际的迟到 401 复用；
 - 每个 fetch 最多触发一次显式 refresh cycle；
@@ -149,7 +159,7 @@ Fail closed 不等于拒绝显示：请求仍可作为 task-local、不可复用
 - 新 subscriber 加入不得重置 refresh/retry budget；
 - auth provider 不得在持有 pipeline/task registry 锁时被调用。
 
-## 8. Property tests
+## 9. Property tests
 
 - **AUTH-PT-001**：token 刷新且权限不变时 FetchVariantKey 不变、FetchExecutionKey 改变；
 - **AUTH-PT-002**：scope/role 改变时 AuthorizationContextID 改变；
@@ -162,9 +172,11 @@ Fail closed 不等于拒绝显示：请求仍可作为 task-local、不可复用
 - **AUTH-PT-009**：refresh 递归/重入不会死锁或无限循环；
 - **AUTH-PT-010**：无鉴权 public URL 不要求 provider，FetchExecutionKey 不含 credential generation；
 - **AUTH-PT-011**：revoke 清理完成后，晚到 304 metadata refresh 被 generation fence 删除；
-- **AUTH-PT-012**：自定义 credential header 不进入稳定 identity，header 集合改变 exact execution identity，跨 origin redirect 会剥离，缺 auth context 时发网前失败。
+- **AUTH-PT-012**：自定义 credential header 不进入稳定 identity，header 集合改变 exact execution identity，跨 origin redirect 会剥离，缺 auth context 时发网前失败；
+- **AUTH-PT-013**：credential refresh 只替换敏感 header 与 generation，不重置 color、cache、stale、network、geometry、priority 或 render admission 语义；
+- **AUTH-PT-014**：Profile ACL 只允许精确 namespace/auth-context 组合，拒绝发生在缓存与网络访问前。
 
-## 9. 参考
+## 10. 参考
 
 - Apple `URLSessionConfiguration.httpCookieStorage`：默认/后台 session 使用共享 Cookie storage；设为 `nil` 可禁用。
 - RFC 9111：认证响应、`Vary`、`no-store` 和 private cache 语义。

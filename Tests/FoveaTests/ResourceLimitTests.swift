@@ -207,6 +207,130 @@ final class ResourceLimitTests: XCTestCase {
     XCTAssertGreaterThanOrEqual(elapsed, .milliseconds(210))
   }
 
+  func testWorkingSetWaiterDoesNotHoldDecodeCountPermit_RES_PT_014() async throws {
+    let workingSetPermits = AsyncPermitPool(limit: 2_000, queueLimit: 8)
+    let externalReservation = try await workingSetPermits.acquire(units: 1_000)
+    let stage = DecodeStage(
+      decoder: ImageIOImageDecoder(),
+      limits: DecodeLimits(),
+      diagnostics: NullDiagnosticsSink(),
+      maximumConcurrentDecodes: 1,
+      maximumDecodeWorkingSetBytes: 2_000,
+      maximumQueuedDecodes: 8,
+      workingSetPermits: workingSetPermits
+    )
+    let largeData = try makePNG(width: 10, height: 10)
+    let smallData = try makePNG(width: 5, height: 5)
+    let largeRequest = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/large.png")),
+      target: try TargetPixels(width: 10, height: 10),
+      appID: "working-set-order"
+    )
+    let smallRequest = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/small.png")),
+      target: try TargetPixels(width: 5, height: 5),
+      appID: "working-set-order"
+    )
+
+    let large = Task {
+      try await stage.image(
+        from: largeData,
+        contentID: ContentID(data: largeData),
+        request: largeRequest,
+        generation: NamespaceGeneration(0),
+        keyDigest: "large"
+      )
+    }
+    for _ in 0..<200 {
+      if await workingSetPermits.queuedCount() == 1 { break }
+      try await Task.sleep(for: .milliseconds(1))
+    }
+    let queued = await workingSetPermits.queuedCount()
+    XCTAssertEqual(queued, 1)
+
+    let completion = CompletionFlag()
+    let small = Task {
+      let image = try await stage.image(
+        from: smallData,
+        contentID: ContentID(data: smallData),
+        request: smallRequest,
+        generation: NamespaceGeneration(0),
+        keyDigest: "small"
+      )
+      await completion.markCompleted()
+      return image
+    }
+    for _ in 0..<200 {
+      if await completion.isCompleted { break }
+      try await Task.sleep(for: .milliseconds(1))
+    }
+    let smallCompletedBeforeRelease = await completion.isCompleted
+
+    await externalReservation.release()
+    _ = try await large.value
+    _ = try await small.value
+    XCTAssertTrue(
+      smallCompletedBeforeRelease,
+      "等待 working-set 的大任务不得继续占有 decode-count 许可"
+    )
+  }
+
+  func testDecodeWorkingSetIsRejectedBeforePixelAllocation_RES_PT_013() async throws {
+    let body = Data("probe-only".utf8)
+    let transport = TrackingTransport(body: body, delay: .zero)
+    let diagnostics = BoundedDiagnosticsSink(capacity: 32)
+    let root = try makeTemporaryDirectory()
+    let pipeline = FoveaPipeline(
+      configuration: PipelineConfiguration(
+        maximumConcurrentFetches: 1,
+        maximumConcurrentDecodes: 1,
+        maximumDecodeWorkingSetBytes: 1 * 1024 * 1024
+      ),
+      transport: transport,
+      encodedStore: try await OriginalEncodedStore.open(
+        root: root.appendingPathComponent("encoded")),
+      recordStore: try await RepresentationRecordStore.open(
+        root: root.appendingPathComponent("records")),
+      diagnostics: diagnostics,
+      decoder: OverBudgetDecoder()
+    )
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/working-set.png")),
+      target: try TargetPixels(width: 4_000, height: 4_000),
+      appID: "tests"
+    )
+
+    do {
+      _ = try await pipeline.image(for: request)
+      XCTFail("估算 working set 超过 hard cap 时不得进入像素分配")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .resourceLimit)
+      XCTAssertEqual(failure.stage, .decode)
+      XCTAssertEqual(failure.reasonCode, "decode-working-set-limit-exceeded")
+    }
+
+    let events = await diagnostics.snapshot().map(\.event)
+    let rejection = events.first { $0.kind == .decodeAdmissionRejected }
+    XCTAssertNotNil(rejection)
+    XCTAssertGreaterThan(rejection?.byteCount ?? 0, 1 * 1024 * 1024)
+  }
+
+  func testDecodeWorkingSetEstimatorAccountsForFillOverscan_RES_PT_013() throws {
+    let probe = ImageProbe(pixelWidth: 4_000, pixelHeight: 1_000, frameCount: 1)
+    let target = try TargetPixels(width: 1_000, height: 1_000)
+    let fit = ImageDecodeWorkingSetEstimator.estimatedBytes(
+      probe: probe,
+      request: ImageDecodeRequest(target: target, contentMode: .fit)
+    )
+    let fill = ImageDecodeWorkingSetEstimator.estimatedBytes(
+      probe: probe,
+      request: ImageDecodeRequest(target: target, contentMode: .fill)
+    )
+
+    XCTAssertGreaterThan(fill, fit)
+    XCTAssertEqual(fill, 36_000_000)
+  }
+
   private func makeRequest(path: String) throws -> ImageRequest {
     try ImageRequest.publicImage(
       url: XCTUnwrap(URL(string: "https://example.test/\(path).png")),
@@ -317,5 +441,28 @@ private struct DelayedDecoder: ImageDecoding {
       request: request,
       limits: limits
     )
+  }
+}
+
+private struct OverBudgetDecoder: ImageDecoding {
+  func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
+    ImageProbe(pixelWidth: 4_000, pixelHeight: 4_000, frameCount: 1)
+  }
+
+  func decode(
+    data: Data,
+    probe: ImageProbe,
+    request: ImageDecodeRequest,
+    limits: DecodeLimits
+  ) throws -> DecodedImage {
+    throw ImageCraftError.decodeFailed
+  }
+}
+
+private actor CompletionFlag {
+  private(set) var isCompleted = false
+
+  func markCompleted() {
+    isCompleted = true
   }
 }

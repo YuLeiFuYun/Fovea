@@ -269,6 +269,16 @@ R2/R3 至少使用一类，R3 至少使用三类：
 | **AIQA-MUT-031** | 将符号链接错误接受为受管目录 |
 | **AIQA-MUT-032** | 在校验 `st_size` 上限前分配 metadata 文件 |
 | **AIQA-MUT-033** | wall clock 回拨时拒绝有限且可保守处理的 record |
+| **AIQA-MUT-034** | 从 exact execution identity 删除请求网络权限 |
+| **AIQA-MUT-035** | 在缓存/网络访问前绕过 Profile ACL |
+| **AIQA-MUT-036** | credential refresh 重置非凭证请求语义 |
+| **AIQA-MUT-037** | 用一字节许可替代 decode working-set reservation |
+| **AIQA-MUT-038** | 在 transport 完成前丢弃 URLSession 事务摘要 |
+| **AIQA-MUT-039** | 等待 working-set 容量时继续占有 decode-count permit |
+| **AIQA-MUT-040** | 接受远程明文 HTTP 图片 URL |
+| **AIQA-MUT-041** | 允许 HTTPS redirect 降级到远程明文 HTTP |
+| **AIQA-MUT-042** | 从 full configuration fingerprint 删除 decode working-set 预算 |
+| **AIQA-MUT-043** | 官方系统组合根默认放开全部 profile |
 
 新增关键不变量时必须同步新增 mutant、活动规格 ID 和 traceability evidence。通过大量无关 mutant 获得高 mutation percentage 不能替代上述目录全部被杀死。
 
@@ -412,7 +422,8 @@ comprehensionAttestationFailure
 - **AIQA-GATE-005**：依赖新增默认拒绝且审批可审计；
 - **AIQA-GATE-006**：R2/R3 有 human accountable owner；
 - **AIQA-GATE-008**：agent/tool/model/base/verified commit 进入 evidence；
-- **AIQA-GATE-010**：输出不含 secret 或未脱敏敏感数据。
+- **AIQA-GATE-010**：输出不含 secret 或未脱敏敏感数据；
+- **AIQA-GATE-011**：工具超时会终止完整子进程组，不能留下孤立测试/编译进程。
 
 `AIQA-GATE-007` 的 mutation harness 与 `AIQA-GATE-009` 的 rollback harness 可以标记为 `scaffolded`，但不得标记 `pass`。若仓库尚无远程 CI，第一条基础设施提交可由人类在全新本地 checkout 中运行固定 bootstrap 脚本；在第一个产品实现 PR 合并前，必须建立远程 required check 和受保护 control path。bootstrap 不是 Phase 0a 完成，不允许发布、宣称质量门通过或扩大 surface。
 
@@ -422,7 +433,7 @@ comprehensionAttestationFailure
 
 - **AIQA-GATE-007**：mutation harness 真实执行指定 critical mutants 并输出可信证明；
 - **AIQA-GATE-009**：`scripts/verify-rollback.py` 在隔离 worktree 回滚到 base commit，surface、格式、测试与 Release build 全部恢复，并输出绑定 base/head/log digest 的报告；
-- `AIQA-GATE-001...010` 全部通过；
+- `AIQA-GATE-001...011` 全部通过；
 - `AIQA-MUT-001`、`002`、`007`、`008`、`009`、`015` 被真实执行并杀死；
 - required evidence 针对最终 `verifiedCommit`，由可信 producer 生成；`trusted-ci` 结果必须绑定持久化 CI run locator，Evidence Bundle 自身不能自证其可信来源；
 - rollback 到 base commit 后 clean build 恢复；

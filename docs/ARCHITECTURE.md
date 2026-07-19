@@ -28,6 +28,14 @@ Fovea 的存在价值必须由更小、可验证的契约证明：
 
 Fovea 必须通过 Phase 0b 的存在性门禁后才能扩大公共 API。门禁允许两条受约束路径：Performance Path 证明性能净收益；Correctness Path 证明关键 HTTP/安全/目标像素契约及性能 non-inferiority。后者不得宣传“性能领先”。具体规则见 `docs/specifications/benchmark-workloads.md` 与 `docs/COMPETITIVE_CONTRACTS.md`。
 
+### 1.1 当前实现快照（2026-07）
+
+当前代码已具备：固定职责 coordinator、Fetch/Decode single-flight、namespace revoke、持久 StoreGeneration 与单 writer fail-closed、请求级网络权限、Profile ACL、带权 decode working-set 准入、脱敏 URLSession 事务摘要、SwiftUI/UIKit/AppKit 生命周期适配，以及两个可编译示例。`FoveaNetworkLab` 真实联网必须显式 `--live`，不属于确定性合并门。
+
+当前没有：通用 middleware/interceptor DAG、自定义代理路由器、CPU 时间硬配额、后台 URLSession 延续、完整多进程多 writer、全格式生态、真机竞品 non-inferiority 证明或稳定 API 承诺。运行时不创建子进程；所谓“僵尸进程回收”只适用于测试工具，Network Lab runner 通过进程组超时终止处理。
+
+扩展原则是 typed seam 优先于任意 post-key mutation。任何未来 request preparer 必须在 identity 冻结前执行，或提供版本化且非敏感的 execution fingerprint。
+
 ---
 
 ## 2. 文档与决策治理
@@ -133,7 +141,7 @@ URL
 - 最小诊断事件、结构化 `PipelineFailure` 和 deterministic clock；
 - 图片无关的 generic Akashic memory cache，以及 fetch/decode 静态并发 hard cap；
 - AIQA bootstrap：前 1–3 个 PR 建立隔离 agent、基础 Evidence Bundle、clean trusted CI、protected gates、依赖默认拒绝和 accountable owner；
-- AIQA complete：宣布 0a 完成前，`AIQA-GATE-001...010` 与指定关键 mutants 全部真实执行通过。
+- AIQA complete：宣布 0a 完成前，`AIQA-GATE-001...011` 与指定关键 mutants 全部真实执行通过。
 
 0a-bootstrap 可以合并产品和治理脚手架，但不等于 Phase 0a 通过。0a 不要求完整外部 HTTP corpus、全量 StoreGeneration crash matrix、双设备复现、双竞品适配器全部完成或 15% 性能收益。
 

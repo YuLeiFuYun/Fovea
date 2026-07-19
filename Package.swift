@@ -26,6 +26,8 @@ let package = Package(
     .library(name: "FoveaAppKit", targets: ["FoveaAppKit"]),
     .library(name: "FoveaSwiftUI", targets: ["FoveaSwiftUI"]),
     .library(name: "FoveaTesting", targets: ["FoveaTesting"]),
+    .executable(name: "FoveaNetworkLab", targets: ["FoveaNetworkLab"]),
+    .executable(name: "FoveaGalleryDemo", targets: ["FoveaGalleryDemo"]),
   ],
   targets: [
     .target(name: "ImageCraftCore", swiftSettings: concurrencySettings),
@@ -76,6 +78,20 @@ let package = Package(
     .target(
       name: "FoveaSwiftUI",
       dependencies: ["FoveaCore", "ImageCraftCore"],
+      swiftSettings: concurrencySettings
+    ),
+    .executableTarget(
+      name: "FoveaGalleryDemo",
+      dependencies: [
+        "FoveaCore", "FoveaHTTP", "FoveaSwiftUI", "FoveaSystem", "ImageCraftCore",
+      ],
+      path: "Examples/FoveaGalleryDemo",
+      swiftSettings: concurrencySettings
+    ),
+    .executableTarget(
+      name: "FoveaNetworkLab",
+      dependencies: ["FoveaCore", "FoveaHTTP", "FoveaSystem", "ImageCraftCore"],
+      path: "Tools/FoveaNetworkLab",
       swiftSettings: concurrencySettings
     ),
     .executableTarget(

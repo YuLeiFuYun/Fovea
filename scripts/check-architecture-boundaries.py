@@ -188,9 +188,26 @@ if not system_path.is_file():
     errors.append("FoveaSystem safe composition root is missing")
 else:
     system_source = system_path.read_text()
-    for required in ("URLSessionTransport()", "FoveaPersistentStores.open", "ImageIOImageDecoder()"):
+    for required in ("URLSessionTransport(policy: transportPolicy)", "FoveaPersistentStores.open", "ImageIOImageDecoder()", "profileAccessPolicy"):
         if required not in system_source:
             errors.append(f"FoveaSystem composition root is incomplete: {required}")
+
+# SwiftUI 公共 body 只能发布一次阶段内容，禁止相邻重复输出同一 content 树。
+swiftui_image_lines = (source_root / "FoveaSwiftUI/FoveaImage.swift").read_text().splitlines()
+for first, second in zip(swiftui_image_lines, swiftui_image_lines[1:]):
+    if first.strip() == "content" and second.strip() == "content":
+        errors.append("FoveaImage body publishes the phase content tree more than once")
+        break
+
+# 网络实验和 Gallery 必须是显式 executable，不得混入生产 Sources 模块。
+for product, relative in (
+    ("FoveaNetworkLab", "Tools/FoveaNetworkLab/main.swift"),
+    ("FoveaGalleryDemo", "Examples/FoveaGalleryDemo/main.swift"),
+):
+    if f'.executable(name: "{product}"' not in package:
+        errors.append(f"{product} executable product is missing")
+    if not (root / relative).is_file():
+        errors.append(f"{product} source is missing: {relative}")
 
 # 跨进程探针只属于验证图，不得成为生产 Sources 模块或运行时依赖。
 if (source_root / "FoveaStoreProbe").exists():

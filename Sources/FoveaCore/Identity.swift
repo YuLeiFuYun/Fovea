@@ -12,6 +12,10 @@ public struct SecurityNamespaceID: Hashable, Sendable, Codable {
   public let value: String
   public init(_ value: String) { self.value = value }
   public static func publicNamespace(appID: String) -> Self { .init("public:\(appID)") }
+
+  package var isPublicNamespace: Bool {
+    value.hasPrefix("public:") && value.count > "public:".count
+  }
 }
 
 public struct NamespaceGeneration: Hashable, Sendable, Codable {

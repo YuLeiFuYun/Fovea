@@ -18,12 +18,17 @@ public actor URLSessionTransport: HTTPTransporting {
   public init(
     configuration: URLSessionConfiguration? = nil,
     stagingDirectory: URL? = nil,
+    policy: URLSessionTransportPolicy? = nil,
     reusePolicy: TransportReusePolicy? = nil
   ) {
+    let effectivePolicy = policy ?? (configuration == nil ? .secureDefault : nil)
     self.reusePolicy =
       reusePolicy
       ?? (configuration == nil
-        ? .reusable(contextIdentifier: "fovea-url-session-secure-default-v1")
+        ? .reusable(
+          contextIdentifier:
+            "fovea-url-session-secure-default-v2:\(effectivePolicy?.fingerprint ?? "none")"
+        )
         : .taskLocal)
     let secureConfiguration =
       (configuration?.copy() as? URLSessionConfiguration) ?? URLSessionConfiguration.ephemeral
@@ -31,6 +36,7 @@ public actor URLSessionTransport: HTTPTransporting {
     secureConfiguration.httpCookieStorage = nil
     secureConfiguration.httpShouldSetCookies = false
     secureConfiguration.requestCachePolicy = .reloadIgnoringLocalCacheData
+    effectivePolicy?.apply(to: secureConfiguration)
 
     let components = URLSessionEventRouter.makeSession(configuration: secureConfiguration)
     self.eventRouter = components.router
@@ -79,6 +85,7 @@ public actor URLSessionTransport: HTTPTransporting {
       }
 
       var response: HTTPURLResponse?
+      var networkMetrics: TransportNetworkMetrics?
       for try await event in events {
         try Task.checkCancellation()
         switch event {
@@ -91,6 +98,8 @@ public actor URLSessionTransport: HTTPTransporting {
           try accumulator.append(data)
           try Task.checkCancellation()
           task.resume()
+        case .metrics(let metrics):
+          networkMetrics = metrics
         }
       }
 
@@ -111,7 +120,11 @@ public actor URLSessionTransport: HTTPTransporting {
         ),
         body: staged.data,
         digestHex: staged.digestHex,
-        metrics: staged.metrics
+        metrics: TransportMetrics(
+          receivedBytes: staged.metrics.receivedBytes,
+          spilledToDisk: staged.metrics.spilledToDisk,
+          network: networkMetrics
+        )
       )
     } onCancel: {
       priorityTask?.cancel()

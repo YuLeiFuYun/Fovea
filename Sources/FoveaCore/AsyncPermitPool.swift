@@ -2,8 +2,10 @@ import Foundation
 
 package enum PermitPoolError: Error, Sendable {
   case queueLimitExceeded
+  case requestExceedsLimit
 }
 
+/// 支持优先级、防饥饿与带权容量的可取消异步许可池。
 package actor AsyncPermitPool {
   package struct Permit: Sendable {
     fileprivate let identifier: UUID
@@ -16,6 +18,7 @@ package actor AsyncPermitPool {
 
   private struct Waiter {
     let continuation: CheckedContinuation<Bool, Never>
+    let units: Int
     var priority: ImageRequestPriority
     let sequence: UInt64
     var bypassCount: Int
@@ -23,27 +26,34 @@ package actor AsyncPermitPool {
 
   private static let maximumPriorityBypasses = 8
 
+  private let capacity: Int
   private var available: Int
   private let queueLimit: Int
-  private var granted: Set<UUID> = []
+  private var granted: [UUID: Int] = [:]
   private var waiters: [UUID: Waiter] = [:]
   private var cancelledBeforeEnqueue: Set<UUID> = []
   private var nextSequence: UInt64 = 0
 
   package init(limit: Int, queueLimit: Int) {
-    self.available = max(1, limit)
+    let capacity = max(1, limit)
+    self.capacity = capacity
+    self.available = capacity
     self.queueLimit = max(0, queueLimit)
   }
 
   package func acquire(
+    units: Int = 1,
     priority: ImageRequestPriority = .normal,
     priorityUpdates: AsyncStream<ImageRequestPriority>? = nil
   ) async throws -> Permit {
     try Task.checkCancellation()
+    let units = max(1, units)
+    guard units <= capacity else { throw PermitPoolError.requestExceedsLimit }
+
     let identifier = UUID()
-    if available > 0 {
-      available -= 1
-      granted.insert(identifier)
+    if available >= units {
+      available -= units
+      granted[identifier] = units
       if Task.isCancelled {
         release(identifier)
         throw CancellationError()
@@ -63,7 +73,12 @@ package actor AsyncPermitPool {
 
     let acquired = await withTaskCancellationHandler {
       await withCheckedContinuation { continuation in
-        enqueue(identifier, priority: priority, continuation: continuation)
+        enqueue(
+          identifier,
+          units: units,
+          priority: priority,
+          continuation: continuation
+        )
       }
     } onCancel: {
       Task { await self.cancel(identifier) }
@@ -83,8 +98,11 @@ package actor AsyncPermitPool {
     waiters.values.map(\.priority)
   }
 
+  package var usedUnits: Int { capacity - available }
+
   private func enqueue(
     _ identifier: UUID,
+    units: Int,
     priority: ImageRequestPriority,
     continuation: CheckedContinuation<Bool, Never>
   ) {
@@ -95,6 +113,7 @@ package actor AsyncPermitPool {
     nextSequence &+= 1
     waiters[identifier] = Waiter(
       continuation: continuation,
+      units: units,
       priority: priority,
       sequence: nextSequence,
       bypassCount: 0
@@ -112,7 +131,7 @@ package actor AsyncPermitPool {
       waiter.continuation.resume(returning: false)
       return
     }
-    if granted.contains(identifier) {
+    if granted[identifier] != nil {
       release(identifier)
       return
     }
@@ -120,22 +139,30 @@ package actor AsyncPermitPool {
   }
 
   private func release(_ identifier: UUID) {
-    guard granted.remove(identifier) != nil else { return }
-    guard let next = nextWaiterIdentifier(), let waiter = waiters.removeValue(forKey: next) else {
-      available += 1
-      return
-    }
+    guard let units = granted.removeValue(forKey: identifier) else { return }
+    available = min(capacity, available + units)
+    grantFittingWaiters()
+  }
 
-    for (identifier, var other) in waiters {
-      other.bypassCount = min(Self.maximumPriorityBypasses, other.bypassCount + 1)
-      waiters[identifier] = other
+  private func grantFittingWaiters() {
+    while let next = nextWaiterIdentifier(),
+      let waiter = waiters.removeValue(forKey: next)
+    {
+      available -= waiter.units
+      for (identifier, var other) in waiters {
+        other.bypassCount = min(Self.maximumPriorityBypasses, other.bypassCount + 1)
+        waiters[identifier] = other
+      }
+      granted[next] = waiter.units
+      waiter.continuation.resume(returning: true)
     }
-    granted.insert(next)
-    waiter.continuation.resume(returning: true)
   }
 
   private func nextWaiterIdentifier() -> UUID? {
-    if let starved = waiters.min(by: { lhs, rhs in
+    let fitting = waiters.filter { $0.value.units <= available }
+    guard !fitting.isEmpty else { return nil }
+
+    if let starved = fitting.min(by: { lhs, rhs in
       let leftStarved = lhs.value.bypassCount >= Self.maximumPriorityBypasses
       let rightStarved = rhs.value.bypassCount >= Self.maximumPriorityBypasses
       if leftStarved != rightStarved { return leftStarved && !rightStarved }
@@ -144,7 +171,7 @@ package actor AsyncPermitPool {
       return starved.key
     }
 
-    return waiters.max { lhs, rhs in
+    return fitting.max { lhs, rhs in
       if lhs.value.priority != rhs.value.priority {
         return lhs.value.priority < rhs.value.priority
       }

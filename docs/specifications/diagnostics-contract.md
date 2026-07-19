@@ -76,8 +76,10 @@ ContentID / AnalysisKey / PhysicalBlobID
 
 ## 6. Phase 0a 已实现子集
 
-- `DiagnosticEvent.schemaVersion = 1`；
+- `DiagnosticEvent.schemaVersion = 3`；旧 reader 可忽略新增可选字段；
 - fetch/decode 的 queued、started、completed/cancelled 事件可区分 permit 等待与实际工作；
+- decode working-set reservation 与 admission rejection 记录脱敏字节估算和有限 reason code；
+- 官方 URLSession transport 汇总 task duration、transaction count、协商协议、连接复用、系统代理、cellular/expensive/constrained 标记；不输出 URL、IP、header 或原始 metrics 对象；
 - `PipelineFailure` 的 category/stage/disposition/reasonCode 进入结构化失败事件；
 - cache read/write degradation、missing Content-Type、namespace revoke 与 diagnostics drop 均有有限 reason code；
 - 任意外部 sink 被有界 relay 隔离，阻塞或缓慢消费不延迟图片 final；
@@ -132,3 +134,4 @@ previewDroppedBackpressure
 - **DIAG-PT-008**: benchmark trace 可重建阶段顺序和关键指标；
 - **DIAG-PT-009**: production 采样配置不改变请求身份或调度结果；
 - **DIAG-PT-010**: diagnostics retention/upload 不由 Fovea 隐式执行。
+- **DIAG-PT-011**: 官方 transport 通过真实 URLSession delegate 路径产生脱敏事务摘要，摘要不改变请求结果或身份。

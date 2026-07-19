@@ -7,6 +7,15 @@ import ImageCraftImageIO
 import XCTest
 
 final class PipelineFailureTests: XCTestCase {
+  func testInsecureRedirectIsTerminalSecurityPolicyFailure_SEC_CASE_033() {
+    let failure = PipelineFailure.transport(TransportError.insecureRedirect)
+
+    XCTAssertEqual(failure.category, .securityPolicy)
+    XCTAssertEqual(failure.stage, .transport)
+    XCTAssertEqual(failure.disposition, .terminal)
+    XCTAssertEqual(failure.reasonCode, "insecure-redirect")
+  }
+
   func testTransportFailureIsNormalizedAndRetryable_ERR_PT_009() async throws {
     let diagnostics = BoundedDiagnosticsSink()
     let (pipeline, _, _, _) = try await makePipeline(stubs: [], diagnostics: diagnostics)

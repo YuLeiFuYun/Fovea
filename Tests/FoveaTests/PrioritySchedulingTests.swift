@@ -118,6 +118,60 @@ final class PrioritySchedulingTests: XCTestCase {
     XCTAssertLessThanOrEqual(lowIndex, 8)
   }
 
+  func testWeightedPermitsNeverExceedCapacityAndRejectOversizedRequests_RES_PT_013()
+    async throws
+  {
+    let pool = AsyncPermitPool(limit: 4, queueLimit: 8)
+    let first = try await pool.acquire(units: 3)
+    let second = try await pool.acquire(units: 1)
+    let usedAtCapacity = await pool.usedUnits
+    XCTAssertEqual(usedAtCapacity, 4)
+
+    do {
+      _ = try await pool.acquire(units: 5)
+      XCTFail("单次 reservation 超过容量时必须立即拒绝")
+    } catch PermitPoolError.requestExceedsLimit {
+      // 预期结果。
+    }
+
+    await first.release()
+    let usedAfterFirstRelease = await pool.usedUnits
+    XCTAssertEqual(usedAfterFirstRelease, 1)
+    await second.release()
+    let usedAfterAllReleased = await pool.usedUnits
+    XCTAssertEqual(usedAfterAllReleased, 0)
+  }
+
+  func testWeightedPermitOnlyGrantsWaitersThatFitAvailableCapacity_RES_PT_013()
+    async throws
+  {
+    let pool = AsyncPermitPool(limit: 4, queueLimit: 8)
+    let blocker = try await pool.acquire(units: 4)
+    let order = StringOrderRecorder()
+    let large = Task {
+      let permit = try await pool.acquire(units: 3, priority: .high)
+      await order.append("large")
+      try await Task.sleep(for: .milliseconds(20))
+      await permit.release()
+    }
+    await waitForQueuedCount(1, in: pool)
+    let medium = Task {
+      let permit = try await pool.acquire(units: 2, priority: .normal)
+      await order.append("medium")
+      await permit.release()
+    }
+    await waitForQueuedCount(2, in: pool)
+
+    await blocker.release()
+    try await large.value
+    try await medium.value
+
+    let values = await order.values()
+    XCTAssertEqual(values, ["large", "medium"])
+    let used = await pool.usedUnits
+    XCTAssertEqual(used, 0)
+  }
+
   func testPriorityDoesNotChangeRequestIdentity() throws {
     let url = try XCTUnwrap(URL(string: "https://example.test/priority.png"))
     let low = try ImageRequest.publicImage(

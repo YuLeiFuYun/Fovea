@@ -34,6 +34,9 @@
 - [技术雷达](TECHNOLOGY_RADAR.md)
 - [测试 ID 注册表](TEST_CATALOG.md)
 - [AI 主导软件开发质量专题研究（2026）](research/AI_ASSISTED_SOFTWARE_QUALITY_2026.md)
+- [图片加载管线参考审计（2026-07）](research/image-pipeline-reference-audit-2026-07.md)
+- [Fovea 世界级工程审查（2026-07）](research/world-class-engineering-audit-2026-07.md)
+- [Demo 与真实网络实验](../Examples/README.md)
 
 ## ADR
 

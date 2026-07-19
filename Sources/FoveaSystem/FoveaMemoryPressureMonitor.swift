@@ -8,9 +8,13 @@ package actor FoveaMemoryPressureMonitor {
 
   package init(pipeline: FoveaPipeline) {
     self.pipeline = pipeline
+    let queue = DispatchQueue(
+      label: "dev.fovea.system.memory-pressure",
+      qos: .utility
+    )
     let source = DispatchSource.makeMemoryPressureSource(
       eventMask: [.warning, .critical],
-      queue: DispatchQueue.global(qos: .utility)
+      queue: queue
     )
     self.source = source
     source.setEventHandler { [pipeline] in

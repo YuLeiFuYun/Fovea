@@ -37,6 +37,7 @@
 | SEC-CASE-030 | 0b | 已知 schema 的 manifest 字段语义损坏 | 校验摘要、长度、键绑定、Vary 规范、物理 ID 唯一性与时间/状态范围；失败关闭且不得改写原文件 | 防止格式合法但语义矛盾的元数据绕过隔离、完整性或资源约束 |
 | SEC-CASE-031 | 0b | 受管目录、manifest、blob 与锁文件的链接攻击 | 路径与已打开描述符都验证文件类型、属主和普通文件单链接约束；锁使用 `O_NOFOLLOW`，符号链接与硬链接均失败关闭且不得触达外部 inode | 防止缓存根或锁路径被重定向到非预期文件、目录或共享 inode |
 | SEC-CASE-032 | 0b | generation metadata、store manifest 与 blob 的超大文件 | 使用 `O_NOFOLLOW` 打开并在分配前通过 `fstat` 校验类型、属主、链接数和 `st_size`；超限 metadata 不改写，blob 长度不符按完整性损坏隔离 | 防止损坏或攻击性稀疏文件在 schema/摘要校验前触发无界内存分配 |
+| SEC-CASE-033 | 0b | 远程明文 `http://` 图片 URL | 默认拒绝；仅允许 `localhost`、`127.0.0.1`、`::1` loopback 用于本地开发与确定性网络实验 | 防止公网凭证、查询参数和图片内容被明文传输，同时保留不依赖外网的真实 URLSession 测试路径 |
 
 ## DecodeLimits 最小字段
 

@@ -26,10 +26,33 @@ final class PipelineConfigurationTests: XCTestCase {
     XCTAssertEqual(decoded.transportMemoryThreshold, first.transportMemoryThreshold)
     XCTAssertEqual(decoded.maximumConcurrentFetches, first.maximumConcurrentFetches)
     XCTAssertEqual(decoded.maximumConcurrentDecodes, first.maximumConcurrentDecodes)
+    XCTAssertEqual(decoded.maximumDecodeWorkingSetBytes, first.maximumDecodeWorkingSetBytes)
     XCTAssertEqual(decoded.maximumQueuedFetches, first.maximumQueuedFetches)
     XCTAssertEqual(decoded.maximumQueuedDecodes, first.maximumQueuedDecodes)
     XCTAssertEqual(decoded.semanticFingerprint, first.semanticFingerprint)
     XCTAssertEqual(decoded.fullFingerprint, first.fullFingerprint)
+  }
+
+  func testLegacyConfigurationWithoutWorkingSetBudgetUsesSafeDefault_PIPE_PT_010() throws {
+    let configuration = PipelineConfiguration(maximumDecodeWorkingSetBytes: 32 * 1024 * 1024)
+    let encoded = try JSONEncoder().encode(configuration)
+    var object = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+    )
+    object.removeValue(forKey: "maximumDecodeWorkingSetBytes")
+    let legacy = try JSONSerialization.data(withJSONObject: object)
+
+    let decoded = try JSONDecoder().decode(PipelineConfiguration.self, from: legacy)
+
+    XCTAssertEqual(decoded.maximumDecodeWorkingSetBytes, 192 * 1024 * 1024)
+  }
+
+  func testWorkingSetBudgetIsOperationalAndChangesFullFingerprint_PIPE_PT_010() {
+    let first = PipelineConfiguration(maximumDecodeWorkingSetBytes: 32 * 1024 * 1024)
+    let second = PipelineConfiguration(maximumDecodeWorkingSetBytes: 96 * 1024 * 1024)
+
+    XCTAssertEqual(first.semanticFingerprint, second.semanticFingerprint)
+    XCTAssertNotEqual(first.fullFingerprint, second.fullFingerprint)
   }
 
   func testSemanticChangeChangesBothFingerprintsPipePt002() {

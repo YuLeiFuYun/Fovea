@@ -17,6 +17,7 @@ public enum ImageRequestError: Error, Equatable, Sendable {
   case invalidHeaderName(String)
   case invalidHeaderValue(String)
   case unsupportedURLScheme(String?)
+  case insecureRemoteHTTP
   case missingURLHost
   case embeddedURLCredentials
   case invalidURL
@@ -37,6 +38,7 @@ public struct ImageRequest: Sendable {
   public let priority: ImageRequestPriority
   public let cachePolicy: ImageRequestCachePolicy
   public let stalePolicy: ImageRequestStalePolicy
+  public let networkPolicy: ImageRequestNetworkPolicy
   public let headers: [String: String]
   public let credentialHeaderNames: Set<String>
   public let headerVariantFingerprints: [String: HeaderVariantFingerprint]
@@ -55,6 +57,7 @@ public struct ImageRequest: Sendable {
     priority: ImageRequestPriority = .normal,
     cachePolicy: ImageRequestCachePolicy = .automatic,
     stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy,
+    networkPolicy: ImageRequestNetworkPolicy = .interactive,
     headers: [String: String] = [:],
     credentialHeaderNames: Set<String> = [],
     headerVariantFingerprints: [String: HeaderVariantFingerprint] = [:]
@@ -82,6 +85,7 @@ public struct ImageRequest: Sendable {
     self.priority = priority
     self.cachePolicy = cachePolicy
     self.stalePolicy = stalePolicy
+    self.networkPolicy = networkPolicy
     self.headers = normalizedHeaders
     self.credentialHeaderNames = normalizedCredentialNames
     self.headerVariantFingerprints = normalizedFingerprints
@@ -98,6 +102,7 @@ public struct ImageRequest: Sendable {
     priority: ImageRequestPriority = .normal,
     cachePolicy: ImageRequestCachePolicy = .automatic,
     stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy,
+    networkPolicy: ImageRequestNetworkPolicy = .interactive,
     headers: [String: String] = [:],
     credentialHeaderNames: Set<String> = [],
     headerVariantFingerprints: [String: HeaderVariantFingerprint] = [:]
@@ -116,6 +121,7 @@ public struct ImageRequest: Sendable {
       priority: priority,
       cachePolicy: cachePolicy,
       stalePolicy: stalePolicy,
+      networkPolicy: networkPolicy,
       headers: headers,
       credentialHeaderNames: credentialHeaderNames,
       headerVariantFingerprints: headerVariantFingerprints
@@ -130,7 +136,8 @@ public struct ImageRequest: Sendable {
     appID: String,
     priority: ImageRequestPriority = .normal,
     cachePolicy: ImageRequestCachePolicy = .automatic,
-    stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy
+    stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy,
+    networkPolicy: ImageRequestNetworkPolicy = .interactive
   ) throws -> Self {
     try ImageRequest(
       url: url,
@@ -140,7 +147,8 @@ public struct ImageRequest: Sendable {
       namespace: .publicNamespace(appID: appID),
       priority: priority,
       cachePolicy: cachePolicy,
-      stalePolicy: stalePolicy
+      stalePolicy: stalePolicy,
+      networkPolicy: networkPolicy
     )
   }
 
@@ -152,7 +160,8 @@ public struct ImageRequest: Sendable {
     appID: String,
     priority: ImageRequestPriority = .normal,
     cachePolicy: ImageRequestCachePolicy = .automatic,
-    stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy
+    stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy,
+    networkPolicy: ImageRequestNetworkPolicy = .interactive
   ) throws -> Self {
     try ImageRequest(
       url: url,
@@ -162,7 +171,8 @@ public struct ImageRequest: Sendable {
       namespace: .publicNamespace(appID: appID),
       priority: priority,
       cachePolicy: cachePolicy,
-      stalePolicy: stalePolicy
+      stalePolicy: stalePolicy,
+      networkPolicy: networkPolicy
     )
   }
 
@@ -206,7 +216,7 @@ public struct ImageRequest: Sendable {
       credentialGeneration: credentialGeneration,
       revalidationFingerprint: revalidationFingerprint,
       transportPolicyFingerprint:
-        "\(credentialExecutionFingerprint)|\(transportPolicyFingerprint)"
+        "\(credentialExecutionFingerprint)|\(networkPolicy.executionFingerprint)|\(transportPolicyFingerprint)"
     )
   }
 
@@ -220,6 +230,7 @@ public struct ImageRequest: Sendable {
       renderCacheAdmission.rawValue,
       cachePolicy.rawValue,
       stalePolicy.rawValue,
+      networkPolicy.executionFingerprint,
     ].joined(separator: "|")
   }
 
@@ -283,12 +294,18 @@ public struct ImageRequest: Sendable {
     guard let host = components.host, !host.isEmpty else {
       throw ImageRequestError.missingURLHost
     }
+    let normalizedHost = host.lowercased()
+    guard let candidateURL = components.url,
+      HTTPURLSecurityPolicy.permits(candidateURL)
+    else {
+      throw ImageRequestError.insecureRemoteHTTP
+    }
     guard components.user == nil, components.password == nil else {
       throw ImageRequestError.embeddedURLCredentials
     }
 
     components.scheme = scheme
-    components.host = host.lowercased()
+    components.host = normalizedHost
     if (scheme == "http" && components.port == 80)
       || (scheme == "https" && components.port == 443)
     {
@@ -385,11 +402,15 @@ extension ImageRequest {
       target: target,
       contentMode: contentMode,
       geometryPolicyFingerprint: geometryPolicyFingerprint,
+      colorPolicy: colorPolicy,
       renderCacheAdmission: renderCacheAdmission,
       namespace: namespace,
       authorizationContext: authorizationContext,
       credentialGeneration: refreshed.credentialGeneration,
       priority: priority,
+      cachePolicy: cachePolicy,
+      stalePolicy: stalePolicy,
+      networkPolicy: networkPolicy,
       headers: mergedHeaders,
       credentialHeaderNames: refreshedCredentialNames,
       headerVariantFingerprints: fingerprints

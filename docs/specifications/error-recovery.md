@@ -26,6 +26,7 @@ source
 transport
 http
 securityLimit
+securityPolicy
 namespaceRevoked
 schemaIncompatible
 cacheRead
@@ -90,7 +91,7 @@ v1 只自动重试幂等 GET 的明确瞬态失败：
 - 指数退避使用有界 jitter；
 - 重试总次数、总时间和总额外字节有硬上限；
 - 新 subscriber 加入不重置共享任务 retry budget；
-- 取消、securityLimit、schemaIncompatible、确定性 decode failure 默认不重试；
+- 取消、securityLimit、securityPolicy、schemaIncompatible、确定性 decode failure 默认不重试；
 - retry 若改变 exact locator、credential generation、range state 或 transport policy，必须生成新的 FetchExecutionKey；
 - retry 不得绕过 Low Data Mode、expensive network 或 namespace revoke。
 
@@ -139,6 +140,7 @@ fresh reusable result
 | `cancelled` | 静默结束当前 token | 否 | 按 retention policy |
 | `namespaceRevoked` | 立即清除私有像素 | 否 | 不保留旧私有图 |
 | `securityLimit` / unsafe probe | 显式失败或安全占位 | 否 | 不显示被拒绝像素 |
+| `securityPolicy` / 明文远程 URL 或降级 redirect | 显式失败 | 否 | 不发出或立即终止不安全传输 |
 | transient transport | 可显示 retry 状态 | 有限、有预算 | 可保留安全 placeholder/旧公开图 |
 | HTTP 401/403 | 允许一次 authorizer refresh 后失败 | 仅显式一次 | 私有旧图按 namespace policy |
 | HTTP 404/410 | 终止失败 | 默认否 | 调用者错误图 |

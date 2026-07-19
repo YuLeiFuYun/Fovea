@@ -1,0 +1,43 @@
+name: Fovea Live Network Lab
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-network-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live-network:
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          VERIFIED_COMMIT: ${{ github.sha }}
+        run: |
+          set -eu
+          git init .
+          git remote add origin "https://github.com/${REPOSITORY}.git"
+          basic=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64)
+          git -c http.extraHeader="AUTHORIZATION: basic $basic" \
+            fetch --no-tags --depth=1 origin "$VERIFIED_COMMIT"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$VERIFIED_COMMIT"
+
+      - name: Run opt-in public HTTPS laboratory
+        run: scripts/run-live-network-lab.py --timeout 240
+
+      - name: Summarize artifact
+        if: always()
+        run: |
+          if test -f .artifacts/live-network/network-lab.json; then
+            printf '## Fovea Live Network Lab\n\n```json\n' >> "$GITHUB_STEP_SUMMARY"
+            cat .artifacts/live-network/network-lab.json >> "$GITHUB_STEP_SUMMARY"
+            printf '\n```\n' >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -171,13 +171,50 @@ public struct TransportResponseHead: Sendable {
   }
 }
 
+public struct TransportNetworkMetrics: Codable, Hashable, Sendable {
+  public let taskDurationNanoseconds: UInt64
+  public let transactionCount: Int
+  public let negotiatedProtocolNames: [String]
+  public let reusedConnectionCount: Int
+  public let proxyConnectionCount: Int
+  public let cellularTransactionCount: Int
+  public let expensiveTransactionCount: Int
+  public let constrainedTransactionCount: Int
+
+  public init(
+    taskDurationNanoseconds: UInt64,
+    transactionCount: Int,
+    negotiatedProtocolNames: [String],
+    reusedConnectionCount: Int,
+    proxyConnectionCount: Int,
+    cellularTransactionCount: Int,
+    expensiveTransactionCount: Int,
+    constrainedTransactionCount: Int
+  ) {
+    self.taskDurationNanoseconds = taskDurationNanoseconds
+    self.transactionCount = max(0, transactionCount)
+    self.negotiatedProtocolNames = negotiatedProtocolNames.sorted()
+    self.reusedConnectionCount = max(0, reusedConnectionCount)
+    self.proxyConnectionCount = max(0, proxyConnectionCount)
+    self.cellularTransactionCount = max(0, cellularTransactionCount)
+    self.expensiveTransactionCount = max(0, expensiveTransactionCount)
+    self.constrainedTransactionCount = max(0, constrainedTransactionCount)
+  }
+}
+
 public struct TransportMetrics: Sendable {
   public let receivedBytes: Int
   public let spilledToDisk: Bool
+  public let network: TransportNetworkMetrics?
 
-  public init(receivedBytes: Int, spilledToDisk: Bool) {
+  public init(
+    receivedBytes: Int,
+    spilledToDisk: Bool,
+    network: TransportNetworkMetrics? = nil
+  ) {
     self.receivedBytes = receivedBytes
     self.spilledToDisk = spilledToDisk
+    self.network = network
   }
 }
 
@@ -201,6 +238,7 @@ public enum TransportError: Error, Equatable, Sendable {
   case bodyTooLarge
   case invalidContentLength
   case incompleteBody
+  case insecureRedirect
 }
 
 public protocol HTTPTransporting: Sendable {

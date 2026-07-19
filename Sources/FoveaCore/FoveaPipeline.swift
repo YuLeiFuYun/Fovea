@@ -18,6 +18,7 @@ public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
   private let encodedCoordinator: EncodedDataCoordinator
   private let namespaceRegistry: NamespaceRegistry
   private let diagnostics: any DiagnosticsSink
+  private let profileAccessPolicy: ProfileAccessPolicy
 
   public convenience init(
     configuration: PipelineConfiguration = PipelineConfiguration(),
@@ -25,6 +26,7 @@ public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
     encodedStore: any OriginalEncodedStoring,
     recordStore: any RepresentationRecordStoring,
     diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
+    profileAccessPolicy: ProfileAccessPolicy = .unrestricted,
     decoder: any ImageDecoding,
     transformer: any ImageTransforming = IdentityImageTransformer()
   ) {
@@ -36,6 +38,7 @@ public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
       recordStore: recordStore,
       namespaceRegistry: NamespaceRegistry(),
       diagnostics: diagnostics,
+      profileAccessPolicy: profileAccessPolicy,
       decoder: decoder,
       transformer: transformer,
       clock: SystemWallClock(),
@@ -52,6 +55,7 @@ public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
     recordStore: any RepresentationRecordStoring,
     namespaceRegistry: NamespaceRegistry,
     diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
+    profileAccessPolicy: ProfileAccessPolicy = .unrestricted,
     decoder: any ImageDecoding,
     transformer: any ImageTransforming = IdentityImageTransformer(),
     clock: any WallClock = SystemWallClock(),
@@ -60,6 +64,7 @@ public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
   ) {
     self.id = id
     self.configuration = configuration
+    self.profileAccessPolicy = profileAccessPolicy
 
     let diagnostics = pipelineDiagnosticsSink(diagnostics)
     let mutationQueueLimit = Self.saturatedSum([
@@ -91,6 +96,7 @@ public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
       limits: configuration.decodeLimits,
       diagnostics: diagnostics,
       maximumConcurrentDecodes: configuration.maximumConcurrentDecodes,
+      maximumDecodeWorkingSetBytes: configuration.maximumDecodeWorkingSetBytes,
       maximumQueuedDecodes: configuration.maximumQueuedDecodes
     )
     let transformStage = TransformStage(transformer: transformer)
@@ -138,6 +144,7 @@ public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
   @concurrent
   public func image(for request: ImageRequest) async throws -> DecodedImage {
     try await execute {
+      try validateAccess(to: request)
       try validateAuthorization(of: request)
       return try await imageCoordinator.load(request: request)
     }
@@ -145,6 +152,7 @@ public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
 
   public func encodedData(for request: ImageRequest) async throws -> Data {
     try await execute {
+      try validateAccess(to: request)
       try validateAuthorization(of: request)
       return try await encodedCoordinator.load(request: request)
     }
@@ -196,6 +204,12 @@ public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
       )
     )
     if cleanupFailed { throw PipelineFailure.namespaceCleanupFailed }
+  }
+
+  private func validateAccess(to request: ImageRequest) throws {
+    guard profileAccessPolicy.permits(request) else {
+      throw PipelineFailure.profileAccessDenied
+    }
   }
 
   private func validateAuthorization(of request: ImageRequest) throws {

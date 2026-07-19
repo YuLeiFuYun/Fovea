@@ -255,6 +255,32 @@ final class IdentityTests: XCTestCase {
     XCTAssertNotEqual(first.fetchBaseKey, reordered.fetchBaseKey)
   }
 
+  func testImageRequestRejectsRemoteCleartextButAllowsLoopback_SEC_CASE_033() throws {
+    XCTAssertThrowsError(
+      try ImageRequest.publicImage(
+        url: XCTUnwrap(URL(string: "http://example.test/image.png")),
+        target: TargetPixels(width: 20, height: 20),
+        appID: "tests"
+      )
+    ) { error in
+      XCTAssertEqual(error as? ImageRequestError, .insecureRemoteHTTP)
+    }
+
+    let ipv4 = try ImageRequest.publicImage(
+      url: XCTUnwrap(URL(string: "http://127.0.0.1:8080/image.png")),
+      target: TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let ipv6 = try ImageRequest.publicImage(
+      url: XCTUnwrap(URL(string: "http://[::1]:8080/image.png")),
+      target: TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+
+    XCTAssertEqual(ipv4.url.scheme, "http")
+    XCTAssertEqual(ipv6.url.host, "::1")
+  }
+
   func testImageRequestRejectsUnsupportedSchemeAndEmbeddedCredentials() throws {
     XCTAssertThrowsError(
       try ImageRequest.publicImage(
@@ -411,6 +437,27 @@ final class IdentityTests: XCTestCase {
     )
 
     XCTAssertNotEqual(first, second)
+  }
+
+  func testNetworkPolicyChangesExecutionButNotPersistentIdentity_RES_PT_008() throws {
+    let url = try XCTUnwrap(URL(string: "https://example.com/network-policy.png"))
+    let interactive = try ImageRequest.publicImage(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests",
+      networkPolicy: .interactive
+    )
+    let conservative = try ImageRequest.publicImage(
+      url: url,
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests",
+      networkPolicy: .conservative
+    )
+
+    XCTAssertEqual(interactive.fetchBaseKey, conservative.fetchBaseKey)
+    XCTAssertEqual(interactive.fetchVariantKey, conservative.fetchVariantKey)
+    XCTAssertNotEqual(interactive.fetchExecutionKey, conservative.fetchExecutionKey)
+    XCTAssertNotEqual(interactive.displayIdentity, conservative.displayIdentity)
   }
 
   func testTargetChangesDisplayIdentityWithoutChangingFetchIdentity() throws {

@@ -3,6 +3,7 @@ import Foundation
 package enum URLSessionStreamEvent: Sendable {
   case response(URLResponse)
   case data(Data)
+  case metrics(TransportNetworkMetrics)
 }
 
 package final class URLSessionEventRouter: Sendable {
@@ -143,6 +144,32 @@ final class StreamingURLSessionDelegate: NSObject, URLSessionDataDelegate, Senda
   func urlSession(
     _ session: URLSession,
     task: URLSessionTask,
+    didFinishCollecting metrics: URLSessionTaskMetrics
+  ) {
+    let transactions = metrics.transactionMetrics
+    let durationSeconds = max(0, metrics.taskInterval.duration)
+    let durationNanoseconds =
+      durationSeconds >= Double(UInt64.max) / 1_000_000_000
+      ? UInt64.max
+      : UInt64(durationSeconds * 1_000_000_000)
+    let summary = TransportNetworkMetrics(
+      taskDurationNanoseconds: durationNanoseconds,
+      transactionCount: transactions.count,
+      negotiatedProtocolNames: Array(
+        Set(transactions.compactMap(\.networkProtocolName))
+      ),
+      reusedConnectionCount: transactions.filter(\.isReusedConnection).count,
+      proxyConnectionCount: transactions.filter(\.isProxyConnection).count,
+      cellularTransactionCount: transactions.filter(\.isCellular).count,
+      expensiveTransactionCount: transactions.filter(\.isExpensive).count,
+      constrainedTransactionCount: transactions.filter(\.isConstrained).count
+    )
+    router.emit(.metrics(summary), for: task.taskIdentifier)
+  }
+
+  func urlSession(
+    _ session: URLSession,
+    task: URLSessionTask,
     willPerformHTTPRedirection response: HTTPURLResponse,
     newRequest request: URLRequest,
     completionHandler: @escaping @Sendable (URLRequest?) -> Void
@@ -151,13 +178,19 @@ final class StreamingURLSessionDelegate: NSObject, URLSessionDataDelegate, Senda
       let customCredentialHeaders = await router.credentialHeaderNames(
         for: task.taskIdentifier
       )
-      completionHandler(
-        CredentialHeaderPolicy.sanitizedRedirectRequest(
-          original: task.currentRequest ?? task.originalRequest,
-          proposed: request,
-          additionalSensitiveNames: customCredentialHeaders
+      do {
+        completionHandler(
+          try HTTPRedirectPolicy.request(
+            original: task.currentRequest ?? task.originalRequest,
+            proposed: request,
+            additionalSensitiveNames: customCredentialHeaders
+          )
         )
-      )
+      } catch {
+        completionHandler(nil)
+        router.complete(taskID: task.taskIdentifier, error: error)
+        task.cancel()
+      }
     }
   }
 }

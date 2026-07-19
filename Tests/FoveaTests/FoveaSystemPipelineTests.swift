@@ -33,6 +33,26 @@ final class FoveaSystemPipelineTests: XCTestCase {
     XCTAssertEqual(requestCount, 1)
   }
 
+  func testSystemCompositionDefaultsToPublicOnly_AUTH_PT_014() async throws {
+    let root = try makeTemporaryDirectory("system-public-only")
+    let system = try await FoveaSystemPipeline.open(cacheRoot: root)
+    let request = try ImageRequest(
+      url: try XCTUnwrap(URL(string: "https://127.0.0.1:1/private.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      namespace: SecurityNamespaceID("account-a"),
+      authorizationContext: .public,
+      cachePolicy: .onlyIfCached
+    )
+
+    do {
+      _ = try await system.pipeline.image(for: request)
+      XCTFail("官方组合根默认必须拒绝私有 namespace")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .authorization)
+      XCTAssertEqual(failure.reasonCode, "profile-access-denied")
+    }
+  }
+
   func testSafeCompositionRootCreatesSinglePersistentGeneration_PIPE_PT_009() async throws {
     let root = try makeTemporaryDirectory("system-pipeline")
 

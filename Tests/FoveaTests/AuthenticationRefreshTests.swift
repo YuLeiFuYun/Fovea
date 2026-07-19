@@ -150,6 +150,51 @@ final class AuthenticationRefreshTests: XCTestCase {
     XCTAssertNotEqual(first.fetchVariantKey, second.fetchVariantKey)
   }
 
+  func testCredentialReplacementPreservesRequestSemantics_AUTH_PT_013() throws {
+    let original = try ImageRequest(
+      url: try XCTUnwrap(URL(string: "https://example.test/credential-semantics.png")),
+      target: try TargetPixels(width: 44, height: 33),
+      contentMode: .fill,
+      geometryPolicyFingerprint: "tests-geometry-v2",
+      colorPolicy: .convertToSRGB,
+      renderCacheAdmission: .transient,
+      namespace: SecurityNamespaceID("account-a"),
+      authorizationContext: AuthorizationContextID("reader"),
+      credentialGeneration: CredentialGeneration(4),
+      priority: .high,
+      cachePolicy: .onlyIfCached,
+      stalePolicy: .disallow,
+      networkPolicy: .conservative,
+      headers: [
+        "Authorization": "Bearer old",
+        "Accept-Language": "zh-CN",
+      ]
+    )
+    let refreshed = try original.replacingCredentials(
+      CredentialRefreshResult(
+        credentialGeneration: CredentialGeneration(5),
+        headers: ["Authorization": "Bearer new"]
+      )
+    )
+
+    XCTAssertEqual(refreshed.url, original.url)
+    XCTAssertEqual(refreshed.logicalSource, original.logicalSource)
+    XCTAssertEqual(refreshed.target, original.target)
+    XCTAssertEqual(refreshed.contentMode, original.contentMode)
+    XCTAssertEqual(refreshed.geometryPolicyFingerprint, original.geometryPolicyFingerprint)
+    XCTAssertEqual(refreshed.colorPolicy, original.colorPolicy)
+    XCTAssertEqual(refreshed.renderCacheAdmission, original.renderCacheAdmission)
+    XCTAssertEqual(refreshed.namespace, original.namespace)
+    XCTAssertEqual(refreshed.authorizationContext, original.authorizationContext)
+    XCTAssertEqual(refreshed.priority, original.priority)
+    XCTAssertEqual(refreshed.cachePolicy, original.cachePolicy)
+    XCTAssertEqual(refreshed.stalePolicy, original.stalePolicy)
+    XCTAssertEqual(refreshed.networkPolicy, original.networkPolicy)
+    XCTAssertEqual(refreshed.headers["accept-language"], "zh-CN")
+    XCTAssertEqual(refreshed.headers["authorization"], "Bearer new")
+    XCTAssertEqual(refreshed.credentialGeneration, CredentialGeneration(5))
+  }
+
   private func makeFixture(oldStatusCode: Int = 401) async throws -> AuthRefreshFixture {
     let body = try makePNG()
     let transport = CredentialSwitchingTransport(
