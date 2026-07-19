@@ -13,7 +13,7 @@
 
 ### Phase 0a 必读
 
-1. `specifications/phase-0a-surface.md`（允许/禁止实现面）；
+1. `specifications/core-surface.md`（允许/禁止实现面）；
 2. `ARCHITECTURE.md` §3、§6、§8、§18；
 3. `specifications/cache-semantics.md` 的 key/200/304/no-store/commit 子集；
 4. `specifications/auth-context-integration.md`；
@@ -53,7 +53,7 @@ Phase 0a 完成前只接受实现 blocker、规范矛盾、安全缺口和命名
 
 ## 可执行规格
 
-- [Phase 0a 实现面与符号预算](specifications/phase-0a-surface.md)
+- [Phase 0a 实现面与符号预算](specifications/core-surface.md)
 - [Source 身份与失效](specifications/source-identity.md)
 - [Target Geometry 与像素规范化](specifications/target-geometry.md)
 - [缓存、身份与持久格式](specifications/cache-semantics.md)

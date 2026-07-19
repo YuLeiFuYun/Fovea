@@ -82,7 +82,7 @@ W1/W2 provisional 性能门以 `NET-LOCAL-V1` 为主，`NET-CONSTRAINED-V1` 作�
 
 ### Phase 0a harness 实现与 artifact
 
-当前 smoke harness 位于 `FoveaTesting/BenchmarkSmokeHarness.swift`，测试入口位于 `BenchmarkSmokeTests.swift`。运行 `scripts/verify-phase0a.sh` 会在 `.artifacts/benchmarks/` 生成 W1/W2 JSON，并由 `scripts/validate-benchmark-artifacts.py` 校验。artifact 结构由 `docs/schemas/benchmark-smoke-artifact.schema.json` 固定。
+当前 smoke harness 位于 `FoveaTesting/BenchmarkSmokeHarness.swift`，测试入口位于 `BenchmarkSmokeTests.swift`。运行 `scripts/verify.sh` 会在 `.artifacts/benchmarks/` 生成 W1/W2 JSON，并由 `scripts/validate-benchmark-artifacts.py` 校验。artifact 结构由 `docs/schemas/benchmark-smoke-artifact.schema.json` 固定。
 
 这些 smoke 数值只证明 harness、追踪和关键不变量可重复执行，不构成竞品性能结论，也不得用于 Phase 0b 的 15% 存在性判定。
 

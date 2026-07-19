@@ -13,7 +13,7 @@ public struct ImageIOImageDecoder: ImageDecoding {
   public func decode(
     data: Data,
     target: TargetPixels,
-    limits: DecodeLimits = .phase0a
+    limits: DecodeLimits = .coreV1
   ) throws -> DecodedImage {
     let probe = try probe(data: data, limits: limits)
     return try decode(data: data, probe: probe, target: target, limits: limits)
@@ -23,7 +23,7 @@ public struct ImageIOImageDecoder: ImageDecoding {
     data: Data,
     probe: ImageProbe,
     target: TargetPixels,
-    limits: DecodeLimits = .phase0a
+    limits: DecodeLimits = .coreV1
   ) throws -> DecodedImage {
     let inspection = try inspect(data: data, limits: limits)
     let verifiedProbe = inspection.probe
@@ -68,8 +68,18 @@ public struct ImageIOImageDecoder: ImageDecoding {
     guard data.count <= limits.maximumEncodedBytes else {
       throw ImageCraftError.encodedBytesExceeded
     }
+    let container = try EncodedImageSecurityInspector.inspect(data)
+    guard limits.allowedFormats.contains(container.format) else {
+      throw ImageCraftError.unsupportedFormat
+    }
+    guard container.metadataByteCount <= limits.maximumMetadataBytes else {
+      throw ImageCraftError.metadataLimitExceeded
+    }
     guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else {
       throw ImageCraftError.unsupportedOrCorruptImage
+    }
+    guard sourceFormat(source) == container.format else {
+      throw ImageCraftError.formatMismatch
     }
 
     let frameCount = CGImageSourceGetCount(source)
@@ -85,6 +95,16 @@ public struct ImageIOImageDecoder: ImageDecoding {
       throw ImageCraftError.unsupportedOrCorruptImage
     }
 
+    let propertyMetadataBytes = serializedPropertySize(properties)
+    let metadataByteCount = max(container.metadataByteCount, propertyMetadataBytes)
+    guard metadataByteCount <= limits.maximumMetadataBytes else {
+      throw ImageCraftError.metadataLimitExceeded
+    }
+    let auxiliaryAttachmentCount = auxiliaryAttachmentCount(in: source)
+    guard auxiliaryAttachmentCount <= limits.maximumAuxiliaryAttachments else {
+      throw ImageCraftError.auxiliaryAttachmentLimitExceeded
+    }
+
     let orientation = orientationValue(properties[kCGImagePropertyOrientation])
     let swapsDimensions = (5...8).contains(orientation)
     let width = swapsDimensions ? rawHeight : rawWidth
@@ -96,9 +116,46 @@ public struct ImageIOImageDecoder: ImageDecoding {
         pixelWidth: width,
         pixelHeight: height,
         frameCount: frameCount,
-        orientation: orientation
+        orientation: orientation,
+        format: container.format,
+        metadataByteCount: metadataByteCount,
+        auxiliaryAttachmentCount: auxiliaryAttachmentCount
       )
     )
+  }
+
+  private func sourceFormat(_ source: CGImageSource) -> EncodedImageFormat? {
+    guard let type = CGImageSourceGetType(source) as String? else { return nil }
+    switch type {
+    case "public.png": return .png
+    case "public.jpeg": return .jpeg
+    case "com.compuserve.gif": return .gif
+    default: return nil
+    }
+  }
+
+  private func serializedPropertySize(_ properties: [CFString: Any]) -> Int {
+    guard PropertyListSerialization.propertyList(properties, isValidFor: .binary),
+      let data = try? PropertyListSerialization.data(
+        fromPropertyList: properties,
+        format: .binary,
+        options: 0
+      )
+    else { return 0 }
+    return data.count
+  }
+
+  private func auxiliaryAttachmentCount(in source: CGImageSource) -> Int {
+    let types: [CFString] = [
+      kCGImageAuxiliaryDataTypeDisparity,
+      kCGImageAuxiliaryDataTypeDepth,
+      kCGImageAuxiliaryDataTypePortraitEffectsMatte,
+    ]
+    return types.reduce(into: 0) { count, type in
+      if CGImageSourceCopyAuxiliaryDataInfoAtIndex(source, 0, type) != nil {
+        count += 1
+      }
+    }
   }
 
   private var sourceOptions: CFDictionary {

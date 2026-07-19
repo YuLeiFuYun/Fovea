@@ -38,7 +38,7 @@ final class ImageDecoderTests: XCTestCase {
 }
 
 extension ImageDecoderTests {
-  func testPhase0aRejectsMultiFrameImagesSecCase003() throws {
+  func testCoreV1RejectsMultiFrameImagesSecCase003() throws {
     let data = try makeAnimatedGIF()
     XCTAssertThrowsError(
       try ImageIOImageDecoder().decode(
@@ -53,7 +53,7 @@ extension ImageDecoderTests {
   func testExifOrientationParticipatesInTargetGeometryImgPt001() throws {
     let data = try makeOrientedJPEG(width: 120, height: 60, orientation: 6)
     let decoder = ImageIOImageDecoder()
-    let probe = try decoder.probe(data: data, limits: .phase0a)
+    let probe = try decoder.probe(data: data, limits: .coreV1)
     XCTAssertEqual(probe.pixelWidth, 60)
     XCTAssertEqual(probe.pixelHeight, 120)
 
@@ -61,7 +61,7 @@ extension ImageDecoderTests {
       data: data,
       probe: probe,
       target: try TargetPixels(width: 30, height: 60),
-      limits: .phase0a
+      limits: .coreV1
     )
     XCTAssertEqual(decoded.pixelWidth, 30)
     XCTAssertEqual(decoded.pixelHeight, 60)
@@ -75,10 +75,42 @@ extension ImageDecoderTests {
         data: data,
         probe: forged,
         target: try TargetPixels(width: 20, height: 20),
-        limits: .phase0a
+        limits: .coreV1
       )
     ) { error in
       XCTAssertEqual(error as? ImageCraftError, .probeMismatch)
+    }
+  }
+
+  func testOversizedContainerMetadataIsRejectedBeforeDecodeSecCase004() throws {
+    let data = try makePNGWithTextMetadata(payloadBytes: 1_024)
+    let limits = DecodeLimits(maximumMetadataBytes: 128)
+
+    XCTAssertThrowsError(
+      try ImageIOImageDecoder().probe(data: data, limits: limits)
+    ) { error in
+      XCTAssertEqual(error as? ImageCraftError, .metadataLimitExceeded)
+    }
+  }
+
+  func testUnknownAndDisallowedFormatsAreRejectedSecCase021() throws {
+    XCTAssertThrowsError(
+      try ImageIOImageDecoder().probe(
+        data: Data("BM-not-a-supported-core-format".utf8),
+        limits: .coreV1
+      )
+    ) { error in
+      XCTAssertEqual(error as? ImageCraftError, .unsupportedFormat)
+    }
+
+    let png = try makePNG(width: 10, height: 10)
+    XCTAssertThrowsError(
+      try ImageIOImageDecoder().probe(
+        data: png,
+        limits: DecodeLimits(allowedFormats: [.jpeg])
+      )
+    ) { error in
+      XCTAssertEqual(error as? ImageCraftError, .unsupportedFormat)
     }
   }
 
@@ -86,6 +118,22 @@ extension ImageDecoderTests {
     let target = try TargetPixels(width: Int.max, height: Int.max)
     XCTAssertEqual(target.pixelCount, Int.max)
   }
+}
+
+private func makePNGWithTextMetadata(payloadBytes: Int) throws -> Data {
+  var data = try makePNG(width: 10, height: 10)
+  let iendSignature = Data([0, 0, 0, 0, 73, 69, 78, 68])
+  guard let iend = data.range(of: iendSignature)?.lowerBound else {
+    throw ImageFixtureError.creationFailed
+  }
+  var chunk = Data()
+  let length = UInt32(payloadBytes).bigEndian
+  withUnsafeBytes(of: length) { chunk.append(contentsOf: $0) }
+  chunk.append(contentsOf: Data("tEXt".utf8))
+  chunk.append(Data(repeating: 65, count: payloadBytes))
+  chunk.append(Data(repeating: 0, count: 4))
+  data.insert(contentsOf: chunk, at: iend)
+  return data
 }
 
 private func makeAnimatedGIF() throws -> Data {

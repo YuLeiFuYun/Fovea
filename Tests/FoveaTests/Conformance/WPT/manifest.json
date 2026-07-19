@@ -1,0 +1,369 @@
+{
+  "cases": [
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-FUTURE-EXPIRES",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache reuses a response with a future Expires"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-PAST-EXPIRES",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not reuse a response with a past Expires"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-PRESENT-EXPIRES",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not reuse a response with a present Expires"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-INVALID-EXPIRES",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not reuse a response with an invalid Expires"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-INVALID-EXPIRES-LM-NOW",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not reuse a response with an invalid Expires with Last-Modified now"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-INVALID-EXPIRES-LM-PAST",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not reuse a response with an invalid Expires with past Last-Modified"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-MAX-AGE-POSITIVE",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache reuses a response with positive Cache-Control: max-age"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-MAX-AGE-ZERO",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not reuse a response with Cache-Control: max-age=0"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-MAX-AGE-OVERRIDES-PAST-EXPIRES",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache reuses a response with positive Cache-Control: max-age and a past Expires"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-MAX-AGE-OVERRIDES-INVALID-EXPIRES",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache reuses a response with positive Cache-Control: max-age and an invalid Expires"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-MAX-AGE-ZERO-OVERRIDES-FUTURE-EXPIRES",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not reuse a response with Cache-Control: max-age=0 and a future Expires"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-PRIVATE-CACHE-IGNORES-S-MAXAGE",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not prefer Cache-Control: s-maxage over Cache-Control: max-age"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-AGE-EXCEEDS-LIFETIME",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not reuse a response when the Age header is greater than its freshness lifetime"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-NO-STORE",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not store a response with Cache-Control: no-store"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-NO-STORE-OVERRIDES-FRESHNESS",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache does not store a response with Cache-Control: no-store, even with max-age and Expires"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-NO-CACHE-REVALIDATES",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache stores a response with Cache-Control: no-cache, but revalidates upon use"
+    },
+    {
+      "adaptationNotes": "Adapted to injected request/response time and private-cache policy.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-FRESHNESS-NO-CACHE-OVERRIDES-FRESHNESS",
+      "localTestFilter": "HTTPConformanceTests/testWPTFreshnessMatrix_HTTP_CONF_WPT_FRESHNESS",
+      "rfc9111Section": "4.2.1, 5.2",
+      "upstreamFile": "fetch/http-cache/freshness.any.js",
+      "upstreamName": "HTTP cache stores a response with Cache-Control: no-cache, but revalidates upon use, even with max-age and Expires"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-MATCH",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache reuses Vary response when request matches"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-MISMATCH",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache doesn't use Vary response when request doesn't match"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-OMITTED",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache doesn't use Vary response when request omits variant header"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-COEXIST",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache doesn't invalidate existing Vary response"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-IGNORE-UNLISTED",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache doesn't pay attention to headers not listed in Vary"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-TWO-WAY-MATCH",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache reuses two-way Vary response when request matches"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-TWO-WAY-MISMATCH",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache doesn't use two-way Vary response when request doesn't match"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-TWO-WAY-OMITTED",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache doesn't use two-way Vary response when request omits variant header"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-THREE-WAY-MATCH",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache reuses three-way Vary response when request matches"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-THREE-WAY-MISMATCH",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache doesn't use three-way Vary response when request doesn't match"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-THREE-WAY-ORDER-INDEPENDENT",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache doesn't use three-way Vary response when request doesn't match, regardless of header order"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-THREE-WAY-SHARED-ABSENCE",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache uses three-way Vary response when both request and the original request omited a variant header"
+    },
+    {
+      "adaptationNotes": "Adapted to FetchBaseKey candidate selection and typed request-field representation.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-VARY-WILDCARD",
+      "localTestFilter": "HTTPConformanceTests/testWPTVaryMatrix_HTTP_CONF_WPT_VARY",
+      "rfc9111Section": "4.1",
+      "upstreamFile": "fetch/http-cache/vary.any.js",
+      "upstreamName": "HTTP cache doesn't use Vary response with a field value of *"
+    },
+    {
+      "adaptationNotes": "Only profile-persisted metadata is adapted; image API does not expose arbitrary response headers.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-304-LM-STORED",
+      "localTestFilter": "HTTPConformanceTests/testWPT304StoredMetadataMatrix_HTTP_CONF_WPT_304",
+      "rfc9111Section": "4.3.4",
+      "upstreamFile": "fetch/http-cache/304-update.any.js",
+      "upstreamName": "HTTP cache updates stored headers from a Last-Modified 304"
+    },
+    {
+      "adaptationNotes": "Only profile-persisted metadata is adapted; image API does not expose arbitrary response headers.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-304-ETAG-STORED",
+      "localTestFilter": "HTTPConformanceTests/testWPT304StoredMetadataMatrix_HTTP_CONF_WPT_304",
+      "rfc9111Section": "4.3.4",
+      "upstreamFile": "fetch/http-cache/304-update.any.js",
+      "upstreamName": "HTTP cache updates stored headers from a ETag 304"
+    },
+    {
+      "adaptationNotes": "Private image profile stores only successful 200 representations and handles 304 separately.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-STATUS-200-FRESH",
+      "localTestFilter": "HTTPConformanceTests/testWPTStatus200Profile_HTTP_CONF_WPT_STATUS",
+      "rfc9111Section": "3, 4.2",
+      "upstreamFile": "fetch/http-cache/status.any.js",
+      "upstreamName": "HTTP cache avoids going to the network if it has a fresh 200 response"
+    },
+    {
+      "adaptationNotes": "Private image profile stores only successful 200 representations and handles 304 separately.",
+      "applicability": "required",
+      "id": "HTTP-CONF-WPT-STATUS-200-STALE",
+      "localTestFilter": "HTTPConformanceTests/testWPTStatus200Profile_HTTP_CONF_WPT_STATUS",
+      "rfc9111Section": "3, 4.2",
+      "upstreamFile": "fetch/http-cache/status.any.js",
+      "upstreamName": "HTTP cache goes to the network if it has a stale 200 response"
+    },
+    {
+      "applicability": "notApplicable",
+      "id": "HTTP-CONF-WPT-304-RETURNED-HEADERS",
+      "rationale": "Fovea returns decoded images and structured failures, not an HTTP Response object with arbitrary returned headers.",
+      "upstreamFile": "fetch/http-cache/304-update.any.js",
+      "upstreamName": "HTTP cache updates returned headers from a Last-Modified 304 / ETag 304"
+    },
+    {
+      "applicability": "notApplicable",
+      "id": "HTTP-CONF-WPT-304-ARBITRARY-CONTENT-HEADER",
+      "rationale": "The private image profile persists an allowlisted metadata schema, not arbitrary Content-* extension fields.",
+      "upstreamFile": "fetch/http-cache/304-update.any.js",
+      "upstreamName": "Content-* header"
+    },
+    {
+      "applicability": "notApplicable",
+      "id": "HTTP-CONF-WPT-STATUS-NON-200",
+      "rationale": "The versioned private image profile accepts 200 representations and 304 validation only; unsupported status responses are structured terminal/retryable failures and are never stored.",
+      "upstreamFile": "fetch/http-cache/status.any.js",
+      "upstreamName": "fresh/stale 203, 204, 299, 4xx and 5xx responses"
+    }
+  ],
+  "profile": "Fovea Private Image Cache Profile 0b",
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "path": "LICENSE.md",
+      "sha256": "5fac07febb0e2a97fb0d7b0def149ec08b642e1ba4b9c345283ab1cbd2af6570"
+    },
+    {
+      "path": "fetch/http-cache/README.md",
+      "sha256": "88b2da971e60f01ee5494fbe733f2b8981c8d596520ab13a5469788e67031cbb"
+    },
+    {
+      "path": "fetch/http-cache/http-cache.js",
+      "sha256": "536b28598736e13afe26362baae2bb9d7299457c82c59ebca216b34067578805"
+    },
+    {
+      "path": "fetch/http-cache/freshness.any.js",
+      "sha256": "7a20cae2177a413b6cdceab33b8abbb22a8c00f33f3b4705a90d9e2720571b4c"
+    },
+    {
+      "path": "fetch/http-cache/304-update.any.js",
+      "sha256": "c48d9a4feb02925bcdc1c9b82c7abab79d837fa58aa1b8bb6cfc6f6694d9e33c"
+    },
+    {
+      "path": "fetch/http-cache/vary.any.js",
+      "sha256": "c83d30731ea2c2253188dc607215e38bd22696938459b75e385b9b0f06d5f448"
+    },
+    {
+      "path": "fetch/http-cache/status.any.js",
+      "sha256": "1f1de5fd8541df17f28fd1b2ceada3ff688dcb4fc5c5c9b2a1855b902d153c99"
+    }
+  ],
+  "upstream": {
+    "commit": "37cd7ff74eb974fd41600bf7bc01d37576abf8b5",
+    "license": "BSD-3-Clause",
+    "licenseFile": "LICENSE.md",
+    "repository": "https://github.com/web-platform-tests/wpt"
+  }
+}

@@ -411,6 +411,6 @@ comprehensionAttestationFailure
 - `AIQA-MUT-001`、`002`、`007`、`008`、`009`、`015` 被真实执行并杀死；
 - required evidence 针对最终 `verifiedCommit`，由可信 producer 生成；`trusted-ci` 结果必须绑定持久化 CI run locator，Evidence Bundle 自身不能自证其可信来源；
 - rollback 到 base commit 后 clean build 恢复；
-- `phase-0a-surface.md` 无未经 ADR 批准的越界符号。
+- `core-surface.md` 无未经 ADR 批准的越界符号。
 
 Phase 0b 再启用完整 R3 mutant catalog、FoveaAgentEval、供应链和发布门禁。

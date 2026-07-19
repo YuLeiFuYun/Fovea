@@ -30,7 +30,7 @@ Fovea 的早期原型曾把 UIKit 图片类型、缓存、显示适配和平台�
 - `FoveaCore` 不依赖具体 ImageIO decoder；
 - UIKit/AppKit 类型未进入 ImageCraftCore/AkashicCore；
 - 生产代码无未经审计的 `@unchecked Sendable`；
-- `scripts/check-phase0a-surface.py` 对允许模块和关键边界执行机器检查；
+- `scripts/check-architecture-boundaries.py` 对允许模块和关键边界执行机器检查；
 - macOS/iOS 测试、sanitizer、mutation 与 rollback gate 对这些边界提供回归证据。
 
 ## 后果

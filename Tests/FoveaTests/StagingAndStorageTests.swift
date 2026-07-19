@@ -244,6 +244,42 @@ final class StagingAndStorageTests: XCTestCase {
     XCTAssertNil(record)
   }
 
+  func testPersistentStoresApplySecurityAttributes_SEC_CASE_019() async throws {
+    let root = try makeTemporaryDirectory()
+    let encodedRoot = root.appendingPathComponent("encoded", isDirectory: true)
+    let recordRoot = root.appendingPathComponent("records", isDirectory: true)
+    let encoded = try await OriginalEncodedStore.open(root: encodedRoot)
+    let records = try await RepresentationRecordStore.open(root: recordRoot)
+    let data = Data("secure-cache-content".utf8)
+    let contentID = ContentID(data: data)
+    let stored = try await encoded.commit(
+      data: data,
+      contentID: contentID.description,
+      namespace: "public:tests"
+    )
+    try await records.put(
+      makeRepresentationRecord(
+        namespace: "public:tests",
+        baseKeyDigest: "secure-base",
+        variantKeyDigest: "secure-variant",
+        contentID: contentID.description,
+        payloadLength: data.count
+      )
+    )
+
+    let urls = [
+      encodedRoot,
+      encodedRoot.appendingPathComponent("blobs", isDirectory: true),
+      encodedRoot.appendingPathComponent("manifest.json"),
+      encodedRoot.appendingPathComponent("blobs/\(stored.physicalID.description)"),
+      recordRoot,
+      recordRoot.appendingPathComponent("representation-records.json"),
+    ]
+    for url in urls {
+      try assertSecureCacheItem(url)
+    }
+  }
+
   func testCacheWriteFailureDoesNotOverrideFinal_ERR_PT_001() async throws {
     let body = try makePNG()
     let transport = FakeHTTPTransport(stubs: [
@@ -268,6 +304,24 @@ final class StagingAndStorageTests: XCTestCase {
     XCTAssertEqual(image.pixelWidth, 20)
     XCTAssertEqual(image.pixelHeight, 10)
   }
+}
+
+private func assertSecureCacheItem(
+  _ url: URL,
+  file: StaticString = #filePath,
+  line: UInt = #line
+) throws {
+  let values = try url.resourceValues(forKeys: [.isExcludedFromBackupKey])
+  XCTAssertEqual(values.isExcludedFromBackup, true, file: file, line: line)
+  #if os(iOS)
+    let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+    XCTAssertEqual(
+      attributes[.protectionKey] as? FileProtectionType,
+      .completeUntilFirstUserAuthentication,
+      file: file,
+      line: line
+    )
+  #endif
 }
 
 private struct ThrowingTransport: HTTPTransporting {

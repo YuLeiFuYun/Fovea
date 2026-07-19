@@ -109,7 +109,7 @@ independent oracle + trusted CI + accountable human
 
 ### 3.1 Phase 0a：Runnable Slice
 
-0a 的唯一允许实现面由 `docs/specifications/phase-0a-surface.md` 规定。任何超出符号预算的抽象或产品必须提供 blocker evidence 并经 ADR 批准。
+0a 的唯一允许实现面由 `docs/specifications/core-surface.md` 规定。任何超出符号预算的抽象或产品必须提供 blocker evidence 并经 ADR 批准。
 
 0a 只证明最小垂直切片可运行、可替换、可观测，不形成长期兼容或性能领先承诺：
 

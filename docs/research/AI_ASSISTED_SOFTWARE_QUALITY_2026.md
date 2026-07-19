@@ -433,7 +433,7 @@ Fovea 已有的规格化设计特别适合 AI 主导实现，因为它具有：
 - required gate 绑定最终 merge commit，rebase/冲突解决后重跑；
 - 多 agent 使用独立 worktree/owner，局部 PR 合并后重新跑 integration gate；
 - 0a 质量治理分 bootstrap/complete，避免在第一张图片出现前搭建完整发布平台；
-- `phase-0a-surface.md` 成为 AI implementation contract，防止 0b/实验概念提前侵入。
+- `core-surface.md` 成为 AI implementation contract，防止 0b/实验概念提前侵入。
 
 ## 参考资料
 

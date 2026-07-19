@@ -19,25 +19,40 @@ public struct TargetPixels: Hashable, Sendable, Codable {
   }
 }
 
+public enum EncodedImageFormat: String, CaseIterable, Codable, Hashable, Sendable {
+  case png
+  case jpeg
+  case gif
+}
+
 public struct DecodeLimits: Hashable, Sendable, Codable {
   public let maximumEncodedBytes: Int
   public let maximumDimension: Int
   public let maximumPixelCount: Int
   public let maximumFrameCount: Int
+  public let maximumMetadataBytes: Int
+  public let maximumAuxiliaryAttachments: Int
+  public let allowedFormats: Set<EncodedImageFormat>
 
   public init(
     maximumEncodedBytes: Int = 64 * 1024 * 1024,
     maximumDimension: Int = 16_384,
     maximumPixelCount: Int = 100_000_000,
-    maximumFrameCount: Int = 1
+    maximumFrameCount: Int = 1,
+    maximumMetadataBytes: Int = 4 * 1024 * 1024,
+    maximumAuxiliaryAttachments: Int = 0,
+    allowedFormats: Set<EncodedImageFormat> = Set(EncodedImageFormat.allCases)
   ) {
     self.maximumEncodedBytes = max(1, maximumEncodedBytes)
     self.maximumDimension = max(1, maximumDimension)
     self.maximumPixelCount = max(1, maximumPixelCount)
     self.maximumFrameCount = max(1, maximumFrameCount)
+    self.maximumMetadataBytes = max(0, maximumMetadataBytes)
+    self.maximumAuxiliaryAttachments = max(0, maximumAuxiliaryAttachments)
+    self.allowedFormats = allowedFormats
   }
 
-  public static let phase0a = DecodeLimits()
+  public static let coreV1 = DecodeLimits()
 }
 
 public protocol ImageDecoding: Sendable {
@@ -54,6 +69,10 @@ public enum ImageCraftError: Error, Equatable, Sendable {
   case invalidTarget
   case encodedBytesExceeded
   case unsupportedOrCorruptImage
+  case unsupportedFormat
+  case formatMismatch
+  case metadataLimitExceeded
+  case auxiliaryAttachmentLimitExceeded
   case dimensionLimitExceeded
   case pixelLimitExceeded
   case frameLimitExceeded
@@ -66,17 +85,26 @@ public struct ImageProbe: Hashable, Sendable {
   public let pixelHeight: Int
   public let frameCount: Int
   public let orientation: UInt32
+  public let format: EncodedImageFormat
+  public let metadataByteCount: Int
+  public let auxiliaryAttachmentCount: Int
 
   public init(
     pixelWidth: Int,
     pixelHeight: Int,
     frameCount: Int,
-    orientation: UInt32 = 1
+    orientation: UInt32 = 1,
+    format: EncodedImageFormat = .png,
+    metadataByteCount: Int = 0,
+    auxiliaryAttachmentCount: Int = 0
   ) {
     self.pixelWidth = pixelWidth
     self.pixelHeight = pixelHeight
     self.frameCount = frameCount
     self.orientation = orientation
+    self.format = format
+    self.metadataByteCount = metadataByteCount
+    self.auxiliaryAttachmentCount = auxiliaryAttachmentCount
   }
 }
 

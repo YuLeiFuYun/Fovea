@@ -10,7 +10,7 @@ public struct PipelineConfiguration: Sendable {
   public let maximumQueuedDecodes: Int
 
   public init(
-    decodeLimits: DecodeLimits = .phase0a,
+    decodeLimits: DecodeLimits = .coreV1,
     maximumTransportBytes: Int = 64 * 1024 * 1024,
     transportMemoryThreshold: Int = 512 * 1024,
     maximumConcurrentFetches: Int = 6,

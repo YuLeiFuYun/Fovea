@@ -36,7 +36,25 @@ if unexpected:
 if missing:
     errors.append(f"missing required Sources modules: {missing}")
 if found_forbidden:
-    errors.append(f"forbidden Phase 0a products: {found_forbidden}")
+    errors.append(f"forbidden production products: {found_forbidden}")
+
+
+legacy_paths = [
+    root / "Tests/FoveaPhase0aTests",
+    root / "scripts/verify-phase0a.sh",
+    root / "scripts/check-phase0a-surface.py",
+    root / ".github/workflows/phase0a.yml",
+    root / "docs/specifications/phase-0a-surface.md",
+]
+for legacy in legacy_paths:
+    if legacy.exists():
+        errors.append(f"legacy stage-specific path must be removed: {legacy.relative_to(root)}")
+if not (root / "Tests/FoveaTests").is_dir():
+    errors.append("stage-independent FoveaTests target directory is missing")
+if 'name: "FoveaTests"' not in package:
+    errors.append("Package.swift must declare the stage-independent FoveaTests target")
+if not (root / "docs/specifications/core-surface.md").is_file():
+    errors.append("current core surface specification is missing")
 
 # AkashicMemory is a generic cache engine, not an image adapter.
 akashic_memory_files = sorted((source_root / "AkashicMemory").rglob("*.swift"))
@@ -53,7 +71,7 @@ akashic_target = re.search(
 if akashic_target is None:
     errors.append("AkashicMemory target declaration not found")
 elif "dependencies:" in akashic_target.group("body"):
-    errors.append("AkashicMemory target must not declare product dependencies in Phase 0a")
+    errors.append("AkashicMemory target must not declare product dependencies in the production graph")
 
 
 # FoveaCore depends on storage contracts in AkashicCore, not the concrete disk product.
@@ -108,9 +126,9 @@ for obsolete in (root / "docs/archive", root / "docs/ARCHITECTURE_V2.md"):
         errors.append(f"obsolete design artifact must be removed: {obsolete.relative_to(root)}")
 
 if errors:
-    print("Phase 0a surface violation:", file=sys.stderr)
+    print("Architecture boundary violation:", file=sys.stderr)
     for error in errors:
         print(f"- {error}", file=sys.stderr)
     sys.exit(1)
 
-print("Phase 0a surface check passed.")
+print("Architecture boundary check passed.")

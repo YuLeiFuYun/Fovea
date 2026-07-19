@@ -1,4 +1,4 @@
-name: Phase 0a
+name: Fovea Verification
 
 on:
   pull_request:
@@ -9,13 +9,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: phase0a-${{ github.ref }}
+  group: verify-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   verify:
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout exact verified and base commits
         env:
@@ -45,14 +45,14 @@ jobs:
           git cat-file -e "${BASE_COMMIT}^{commit}"
           printf 'FOVEA_BASE_COMMIT=%s\n' "$BASE_COMMIT" >> "$GITHUB_ENV"
 
-      - name: Verify Phase 0a
+      - name: Verify current product gates
         env:
           RUN_IOS_SIMULATOR: "1"
           RUN_CRITICAL_MUTANTS: "1"
         run: |
           set -o pipefail
           mkdir -p .artifacts/logs
-          scripts/verify-phase0a.sh 2>&1 | tee .artifacts/logs/verify.log
+          scripts/verify.sh 2>&1 | tee .artifacts/logs/verify.log
 
       - name: Verify rollback
         run: |
@@ -62,17 +62,20 @@ jobs:
 
       - name: Generate trusted CI evidence
         run: |
+          evidence=.artifacts/evidence/fovea-ci-evidence.json
           scripts/generate-ci-evidence.py \
             --base "$FOVEA_BASE_COMMIT" \
             --head "$GITHUB_SHA" \
+            --assurance-stage 0b \
             --verify-log .artifacts/logs/verify.log \
+            --output "$evidence" \
             --trusted-ci
-          scripts/validate-evidence.py .artifacts/evidence/phase0a-ci-evidence.json
+          scripts/validate-evidence.py "$evidence"
 
-          evidence=.artifacts/evidence/phase0a-ci-evidence.json
           digest=$(shasum -a 256 "$evidence" | awk '{ print $1 }')
           {
-            printf '## Phase 0a Evidence\n\n'
+            printf '## Fovea Verification Evidence\n\n'
+            printf -- '- Assurance stage: `0b`\n'
             printf -- '- Verified commit: `%s`\n' "$GITHUB_SHA"
             printf -- '- Base commit: `%s`\n' "$FOVEA_BASE_COMMIT"
             printf -- '- Evidence SHA-256: `%s`\n\n' "$digest"

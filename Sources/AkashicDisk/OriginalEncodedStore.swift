@@ -53,8 +53,8 @@ public actor OriginalEncodedStore {
   }
 
   private func bootstrap(root: URL) throws {
-    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-    try FileManager.default.createDirectory(at: blobs, withIntermediateDirectories: true)
+    try StorageDirectorySecurity.prepareDirectory(root)
+    try StorageDirectorySecurity.prepareDirectory(blobs)
     guard FileManager.default.fileExists(atPath: manifestURL.path) else { return }
 
     let data = try Data(contentsOf: manifestURL)
@@ -119,8 +119,10 @@ public actor OriginalEncodedStore {
     let temporary = blobs.appendingPathComponent(".tmp-\(UUID().uuidString)")
     let destination = blobURL(physicalID)
     try data.write(to: temporary, options: [.atomic])
+    try StorageDirectorySecurity.securePublishedFile(temporary)
     do {
       try FileManager.default.moveItem(at: temporary, to: destination)
+      try StorageDirectorySecurity.securePublishedFile(destination)
       var next = manifest
       next.entries[key] = Entry(
         physicalID: physicalID,
@@ -217,6 +219,7 @@ public actor OriginalEncodedStore {
   private func persistManifest(_ manifest: Manifest) throws {
     let data = try JSONEncoder().encode(manifest)
     try data.write(to: manifestURL, options: [.atomic])
+    try StorageDirectorySecurity.securePublishedFile(manifestURL)
   }
 
   private func blobURL(_ id: PhysicalBlobID) -> URL {

@@ -92,11 +92,16 @@ def verification_result(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate a Fovea Phase 0a CI Evidence Bundle.")
+    parser = argparse.ArgumentParser(description="Generate a Fovea CI Evidence Bundle.")
     parser.add_argument("--base", required=True)
     parser.add_argument("--head", default="HEAD")
     parser.add_argument("--verify-log", default=".artifacts/logs/verify.log")
-    parser.add_argument("--output", default=".artifacts/evidence/phase0a-ci-evidence.json")
+    parser.add_argument(
+        "--assurance-stage",
+        choices=("0a-bootstrap", "0a-complete", "0b", "release"),
+        default="0b",
+    )
+    parser.add_argument("--output", default=".artifacts/evidence/fovea-ci-evidence.json")
     parser.add_argument("--trusted-ci", action="store_true")
     args = parser.parse_args()
 
@@ -118,8 +123,9 @@ def main() -> int:
         verify_log = (root / args.verify_log).resolve()
         rollback = root / ".artifacts/rollback/rollback-report.json"
         mutation = root / ".artifacts/mutation/critical-mutants.json"
+        conformance = root / ".artifacts/conformance/http-conformance.json"
         benchmark_paths = sorted((root / ".artifacts/benchmarks").glob("*.json"))
-        required_files = [verify_log, rollback, mutation, *benchmark_paths]
+        required_files = [verify_log, rollback, mutation, conformance, *benchmark_paths]
         missing = [str(path.relative_to(root)) for path in required_files if not path.is_file()]
         if missing:
             raise ValueError(f"missing evidence artifacts: {missing}")
@@ -137,6 +143,9 @@ def main() -> int:
         rollback_data = json.loads(rollback.read_text())
         if rollback_data.get("baseCommit") != base or rollback_data.get("headCommit") != head:
             raise ValueError("rollback report commit binding mismatch")
+        conformance_data = json.loads(conformance.read_text())
+        if conformance_data.get("verifiedCommit") != head or conformance_data.get("status") != "pass":
+            raise ValueError("HTTP conformance report is not a passing result bound to the evidence head")
 
         locator_prefix = run_locator if trusted else "local"
         verification = [
@@ -146,7 +155,7 @@ def main() -> int:
                 verify_log,
                 producer,
                 status,
-                f"{locator_prefix}#phase0a-verify",
+                f"{locator_prefix}#verify",
                 head,
             ),
             verification_result(
@@ -167,6 +176,15 @@ def main() -> int:
                 f"{locator_prefix}#rollback-gate",
                 head,
             ),
+            verification_result(
+                "HTTP-CONF-PRIVATE-IMAGE-PROFILE",
+                "test",
+                conformance,
+                producer,
+                status,
+                f"{locator_prefix}#http-conformance",
+                head,
+            ),
         ]
         for workload, path in sorted(workloads.items()):
             verification.append(
@@ -185,19 +203,19 @@ def main() -> int:
             {
                 "base": base,
                 "head": head,
-                "specification": "docs/specifications/phase-0a-surface.md",
-                "workflow": ".github/workflows/phase0a.yml",
+                "specification": "docs/specifications/core-surface.md",
+                "workflow": ".github/workflows/verify.yml",
             },
             sort_keys=True,
         ).encode()
         context_fingerprint = hashlib.sha256(context_material).hexdigest()
         bundle = {
             "schemaVersion": 1,
-            "changeID": f"phase0a-ci-{head[:12]}",
+            "changeID": f"fovea-ci-{head[:12]}",
             "baseCommit": base,
             "headCommit": head,
             "verifiedCommit": head,
-            "assuranceStage": "0a-bootstrap",
+            "assuranceStage": args.assurance_stage,
             "taskContextFingerprint": context_fingerprint,
             "riskClass": "R3",
             "accountableOwner": "pending-human-maintainer",
@@ -205,6 +223,7 @@ def main() -> int:
                 "AIQA-GATE-003",
                 "AIQA-GATE-007",
                 "AIQA-GATE-009",
+                "HTTP-CONF-PRIVATE-IMAGE-PROFILE",
                 "W1-Feed-Scroll-Smoke",
                 "W2-Detail-Hero-Smoke",
                 "W3-Auth-Gallery-Smoke",
@@ -234,7 +253,7 @@ def main() -> int:
             "changedFiles": changed_files(root, base, head),
             "logicalChangedLines": logical_lines(root, base, head),
             "commands": [
-                "scripts/verify-phase0a.sh",
+                "scripts/verify.sh",
                 f"scripts/verify-rollback.py --base {base} --head {head}",
                 "scripts/generate-ci-evidence.py",
             ],

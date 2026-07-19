@@ -199,6 +199,34 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
         disposition: .terminal,
         reasonCode: "encoded-bytes-limit-exceeded"
       )
+    case .unsupportedFormat:
+      return PipelineFailure(
+        category: .securityLimit,
+        stage: .probe,
+        disposition: .terminal,
+        reasonCode: "unsupported-image-format"
+      )
+    case .formatMismatch:
+      return PipelineFailure(
+        category: .securityLimit,
+        stage: .probe,
+        disposition: .terminal,
+        reasonCode: "container-format-mismatch"
+      )
+    case .metadataLimitExceeded:
+      return PipelineFailure(
+        category: .securityLimit,
+        stage: .probe,
+        disposition: .terminal,
+        reasonCode: "metadata-limit-exceeded"
+      )
+    case .auxiliaryAttachmentLimitExceeded:
+      return PipelineFailure(
+        category: .securityLimit,
+        stage: .probe,
+        disposition: .terminal,
+        reasonCode: "auxiliary-attachment-limit-exceeded"
+      )
     case .dimensionLimitExceeded:
       return PipelineFailure(
         category: .securityLimit,

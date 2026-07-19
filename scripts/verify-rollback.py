@@ -127,8 +127,13 @@ def main() -> int:
                 check=True,
             ).stdout.strip()
             env["DEVELOPER_DIR"] = developer_dir
+            boundary_script = (
+                "scripts/check-architecture-boundaries.py"
+                if (worktree / "scripts/check-architecture-boundaries.py").is_file()
+                else "scripts/check-phase0a-surface.py"
+            )
             commands = [
-                ("surface", ["python3", "scripts/check-phase0a-surface.py"]),
+                ("boundaries", ["python3", boundary_script]),
                 (
                     "format",
                     ["xcrun", "swift-format", "lint", "--strict", "-r", "Sources", "Tests", "Package.swift"],

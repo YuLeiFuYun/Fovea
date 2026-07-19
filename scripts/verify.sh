@@ -10,9 +10,10 @@ printf 'Using DEVELOPER_DIR=%s\n' "$DEVELOPER_DIR"
 xcodebuild -version
 xcrun swift --version
 
-python3 scripts/check-phase0a-surface.py
+python3 scripts/check-architecture-boundaries.py
 python3 scripts/check-docs.py
 xcrun swift-format lint --strict -r Sources Tests Package.swift
+python3 scripts/run-http-conformance.py
 
 rm -rf .artifacts/benchmarks
 mkdir -p .artifacts/benchmarks

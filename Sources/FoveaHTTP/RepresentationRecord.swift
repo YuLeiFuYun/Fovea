@@ -140,7 +140,7 @@ public actor RepresentationRecordStore: RepresentationRecordStoring {
   }
 
   private func bootstrap(root: URL) throws {
-    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    try StorageDirectorySecurity.prepareDirectory(root)
     guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
 
     let data = try Data(contentsOf: fileURL)
@@ -240,5 +240,6 @@ public actor RepresentationRecordStore: RepresentationRecordStoring {
     )
     let data = try JSONEncoder().encode(manifest)
     try data.write(to: fileURL, options: [.atomic])
+    try StorageDirectorySecurity.securePublishedFile(fileURL)
   }
 }

@@ -64,12 +64,13 @@ let package = Package(
       swiftSettings: concurrencySettings
     ),
     .testTarget(
-      name: "FoveaPhase0aTests",
+      name: "FoveaTests",
       dependencies: [
         "ImageCraftCore", "ImageCraftImageIO",
         "AkashicCore", "AkashicMemory", "AkashicDisk",
         "FoveaHTTP", "FoveaCore", "FoveaSwiftUI", "FoveaTesting",
       ],
+      resources: [.copy("Conformance")],
       swiftSettings: concurrencySettings
     ),
   ],
