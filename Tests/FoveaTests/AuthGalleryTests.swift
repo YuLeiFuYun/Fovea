@@ -425,6 +425,10 @@ private func centerRed(_ image: CGImage) throws -> UInt8 {
 }
 
 private actor CredentialImageOrigin: HTTPTransporting {
+  nonisolated let reusePolicy = TransportReusePolicy.reusable(
+    contextIdentifier: "tests-credential-image-origin-v1"
+  )
+
   struct Response: Sendable {
     let body: Data
     let headers: [String: String]

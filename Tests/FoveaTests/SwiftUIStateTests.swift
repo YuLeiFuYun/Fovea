@@ -8,6 +8,17 @@ import XCTest
 
 @MainActor
 final class SwiftUIStateTests: XCTestCase {
+  func testReduceMotionDisablesImageTransition_UI_PT_007() {
+    let policy = FoveaImageTransitionPolicy(opacityDuration: 0.25)
+
+    XCTAssertEqual(policy.resolved(reduceMotion: false), .opacity(duration: 0.25))
+    XCTAssertEqual(policy.resolved(reduceMotion: true), .identity)
+    XCTAssertEqual(
+      FoveaImageTransitionPolicy(opacityDuration: 0).resolved(reduceMotion: false),
+      .identity
+    )
+  }
+
   func testLateResultCannotOverwriteNewIdentityUiPt001() async throws {
     let body = try makePNG(width: 100, height: 50)
     let (pipeline, _, _, _) = try await makePipeline(stubs: [
@@ -75,6 +86,78 @@ final class SwiftUIStateTests: XCTestCase {
     XCTAssertEqual(model.phase.kind, .success)
   }
 
+  func testPreviewIdentityChangeRejectsOldFinal_UI_PT_003() async throws {
+    let model = FoveaImageModel()
+    let oldPreview = try decodedImage(width: 10)
+    let oldFinal = try decodedImage(width: 30)
+    let oldLoader = GateProgressiveImageLoader(preview: oldPreview, final: oldFinal)
+    let oldRequest = try request(path: "old-progressive.png", width: 30, height: 30)
+    let previewPublished = expectation(description: "preview 已发布到模型")
+    let observation = model.$phase.sink { phase in
+      if phase.kind == .preview { previewPublished.fulfill() }
+    }
+    defer { observation.cancel() }
+    let oldTask = Task { await model.load(request: oldRequest, loader: oldLoader) }
+    await fulfillment(of: [previewPublished], timeout: 1)
+    XCTAssertEqual(model.phase.kind, .preview)
+
+    let newImage = try decodedImage(width: 20)
+    let newRequest = try request(path: "new-final.png", width: 20, height: 20)
+    await model.load(request: newRequest, loader: ImmediateImageLoader(image: newImage))
+    XCTAssertEqual(model.phase.kind, .success)
+
+    await oldLoader.releaseFinal()
+    await oldTask.value
+
+    guard case .success(let displayed) = model.phase else {
+      return XCTFail("新 identity 的 final 必须保持可见")
+    }
+    XCTAssertEqual(displayed.pixelWidth, 20)
+  }
+
+  func testPreviewOnlyStreamEndsAsFailure() async throws {
+    let model = FoveaImageModel()
+    let loader = PreviewOnlyImageLoader(image: try decodedImage())
+
+    await model.load(
+      request: try request(path: "preview-only.png"),
+      loader: loader
+    )
+
+    guard case .failure(let failure) = model.phase else {
+      return XCTFail("缺少 final 的渐进流必须进入失败状态")
+    }
+    XCTAssertEqual(failure, .incompleteProgressiveStream)
+  }
+
+  func testGeometryBuilderFailureClearsPreviousRequest() throws {
+    let geometryModel = FoveaGeometryRequestModel()
+    let url = try XCTUnwrap(URL(string: "https://example.test/geometry-builder.png"))
+    try geometryModel.update(
+      widthPoints: 20,
+      heightPoints: 20,
+      scale: 2,
+      contentMode: .fit,
+      isStable: true
+    ) { target in
+      try ImageRequest.publicImage(url: url, resolvedTarget: target, appID: "tests")
+    }
+    XCTAssertNotNil(geometryModel.request)
+
+    XCTAssertThrowsError(
+      try geometryModel.update(
+        widthPoints: 30,
+        heightPoints: 30,
+        scale: 2,
+        contentMode: .fit,
+        isStable: true
+      ) { _ in
+        throw GeometryBuilderFixtureError.failed
+      }
+    )
+    XCTAssertNil(geometryModel.request)
+  }
+
   func testInvalidateRejectsLateResultUiPt004() async throws {
     let model = FoveaImageModel()
     let loader = GateImageLoader(image: try decodedImage())
@@ -134,6 +217,54 @@ final class SwiftUIStateTests: XCTestCase {
     XCTAssertEqual(model.phase.kind, .empty)
   }
 
+  func testZeroLayoutDoesNotLoadAndStableSizeLoadsOnce_UI_PT_011() async throws {
+    let geometryModel = FoveaGeometryRequestModel()
+    let imageModel = FoveaImageModel()
+    let loader = CountingImageLoader(image: try decodedImage())
+    let url = try XCTUnwrap(URL(string: "https://example.test/responsive.png"))
+    let builder: (ResolvedImageTarget) throws -> ImageRequest = { target in
+      try ImageRequest.publicImage(url: url, resolvedTarget: target, appID: "tests")
+    }
+
+    try geometryModel.update(
+      widthPoints: 0,
+      heightPoints: 0,
+      scale: 2,
+      contentMode: .fit,
+      isStable: false,
+      requestBuilder: builder
+    )
+    XCTAssertNil(geometryModel.request)
+    let zeroCount = await loader.requestCount
+    XCTAssertEqual(zeroCount, 0)
+
+    try geometryModel.update(
+      widthPoints: 20,
+      heightPoints: 10,
+      scale: 2,
+      contentMode: .fit,
+      isStable: true,
+      requestBuilder: builder
+    )
+    let request = try XCTUnwrap(geometryModel.request)
+    await imageModel.load(request: request, loader: loader)
+
+    try geometryModel.update(
+      widthPoints: 20,
+      heightPoints: 10,
+      scale: 2,
+      contentMode: .fit,
+      isStable: true,
+      requestBuilder: builder
+    )
+    let repeatedRequest = try XCTUnwrap(geometryModel.request)
+    await imageModel.load(request: repeatedRequest, loader: loader)
+
+    let finalCount = await loader.requestCount
+    XCTAssertEqual(finalCount, 1)
+    XCTAssertEqual(imageModel.phase.kind, .success)
+  }
+
   func testRecoveryActionUsesCentralFailureMatrixUiPt014() {
     XCTAssertEqual(
       PipelineFailure(
@@ -164,10 +295,10 @@ final class SwiftUIStateTests: XCTestCase {
     )
   }
 
-  private func decodedImage() throws -> DecodedImage {
+  private func decodedImage(width: Int = 20) throws -> DecodedImage {
     try ImageIOImageDecoder().decode(
       data: makePNG(width: 100, height: 50),
-      target: TargetPixels(width: 20, height: 20)
+      target: TargetPixels(width: width, height: width)
     )
   }
 
@@ -191,6 +322,75 @@ final class SwiftUIStateTests: XCTestCase {
   }
 }
 
+private struct PreviewOnlyImageLoader: ProgressiveImageLoading {
+  let image: DecodedImage
+
+  nonisolated func events(
+    for request: ImageRequest
+  ) -> AsyncThrowingStream<ImageLoadingEvent, Error> {
+    AsyncThrowingStream { continuation in
+      continuation.yield(.preview(image, quality: 1))
+      continuation.finish()
+    }
+  }
+}
+
+private enum GeometryBuilderFixtureError: Error {
+  case failed
+}
+
+private actor GateProgressiveImageLoader: ProgressiveImageLoading {
+  private let preview: DecodedImage
+  private let final: DecodedImage
+  private var previewWaiters: [CheckedContinuation<Void, Never>] = []
+  private var finalWaiters: [CheckedContinuation<Void, Never>] = []
+  private var previewWasConsumed = false
+  private var finalWasReleased = false
+
+  init(preview: DecodedImage, final: DecodedImage) {
+    self.preview = preview
+    self.final = final
+  }
+
+  nonisolated func events(
+    for request: ImageRequest
+  ) -> AsyncThrowingStream<ImageLoadingEvent, Error> {
+    AsyncThrowingStream { continuation in
+      Task {
+        let preview = self.preview
+        continuation.yield(.preview(preview, quality: 1))
+        await self.markPreviewConsumed()
+        await self.waitForFinalRelease()
+        let final = self.final
+        continuation.yield(.final(final))
+        continuation.finish()
+      }
+    }
+  }
+
+  func waitUntilPreviewWasConsumed() async {
+    if previewWasConsumed { return }
+    await withCheckedContinuation { previewWaiters.append($0) }
+  }
+
+  func releaseFinal() {
+    finalWasReleased = true
+    for waiter in finalWaiters { waiter.resume() }
+    finalWaiters.removeAll()
+  }
+
+  private func markPreviewConsumed() {
+    previewWasConsumed = true
+    for waiter in previewWaiters { waiter.resume() }
+    previewWaiters.removeAll()
+  }
+
+  private func waitForFinalRelease() async {
+    if finalWasReleased { return }
+    await withCheckedContinuation { finalWaiters.append($0) }
+  }
+}
+
 private struct ImmediateImageLoader: ImageLoading {
   let image: DecodedImage
   func image(for request: ImageRequest) async throws -> DecodedImage { image }
@@ -202,6 +402,20 @@ private struct DelayedImageLoader: ImageLoading {
 
   func image(for request: ImageRequest) async throws -> DecodedImage {
     try await Task.sleep(nanoseconds: delayNanoseconds)
+    return image
+  }
+}
+
+private actor CountingImageLoader: ImageLoading {
+  let image: DecodedImage
+  private(set) var requestCount = 0
+
+  init(image: DecodedImage) {
+    self.image = image
+  }
+
+  func image(for request: ImageRequest) async throws -> DecodedImage {
+    requestCount += 1
     return image
   }
 }

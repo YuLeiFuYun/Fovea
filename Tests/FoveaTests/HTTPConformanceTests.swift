@@ -168,18 +168,18 @@ final class HTTPConformanceTests: XCTestCase {
     run("omitted Vary field misses present field") {
       XCTAssertNil(select([fooRecord], for: noHeaders))
     }
+    let fooTwoRecord = try record(for: fooTwo, fields: ["Foo"], contentID: "foo-two")
     run("different Vary records coexist") {
-      let fooTwoRecord = try! record(for: fooTwo, fields: ["Foo"], contentID: "foo-two")
       XCTAssertEqual(select([fooRecord, fooTwoRecord], for: fooOne)?.contentID, "foo-one")
       XCTAssertEqual(select([fooRecord, fooTwoRecord], for: fooTwo)?.contentID, "foo-two")
     }
+    let ignoreOtherRecord = try record(
+      for: fooOneOtherTwo,
+      fields: ["Foo"],
+      contentID: "ignore-other"
+    )
     run("headers not named by Vary are ignored") {
-      let record = try! self.record(
-        for: fooOneOtherTwo,
-        fields: ["Foo"],
-        contentID: "ignore-other"
-      )
-      XCTAssertEqual(select([record], for: fooOneOtherThree)?.contentID, "ignore-other")
+      XCTAssertEqual(select([ignoreOtherRecord], for: fooOneOtherThree)?.contentID, "ignore-other")
     }
 
     let twoWay = try request(headers: ["Foo": "1", "Bar": "abc"])

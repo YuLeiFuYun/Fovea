@@ -83,6 +83,39 @@ final class StagingAndStorageTests: XCTestCase {
     XCTAssertNil(revoked)
   }
 
+  func testLegacyRecordSchemaReturnsStableMissWithoutRewritingFile_CACHE_PT_018() async throws {
+    let root = try makeTemporaryDirectory()
+    let fileURL = root.appendingPathComponent("representation-records.json")
+    let legacy = LegacyRecordV4Fixture(
+      recordSchemaVersion: 4,
+      securityNamespaceFingerprint: StorageNamespaceFingerprint(namespace: "public:tests"),
+      namespaceGeneration: 0,
+      variantKeyDigest: "legacy-variant",
+      statusCode: 200,
+      requestTime: Date(timeIntervalSince1970: 10),
+      responseTime: Date(timeIntervalSince1970: 11),
+      expiresAt: Date(timeIntervalSince1970: 3_600),
+      etag: "legacy-etag",
+      lastModified: nil,
+      disposition: .reusable,
+      contentID: "sha256:\(String(repeating: "a", count: 64)):12",
+      payloadLength: 12,
+      contentType: "image/png"
+    )
+    let original = try JSONEncoder().encode([legacy.variantKeyDigest: legacy])
+    try original.write(to: fileURL, options: [.atomic])
+
+    let store = try await RepresentationRecordStore.open(root: root)
+    let records = await store.records(
+      for: "legacy-base-that-schema-4-cannot-represent",
+      namespace: "public:tests",
+      namespaceGeneration: 0
+    )
+
+    XCTAssertTrue(records.isEmpty)
+    XCTAssertEqual(try Data(contentsOf: fileURL), original)
+  }
+
   func testUnknownRecordSchemaFailsWithoutRewritingFile() async throws {
     let root = try makeTemporaryDirectory()
     let record = makeRepresentationRecord(
@@ -161,7 +194,7 @@ final class StagingAndStorageTests: XCTestCase {
     XCTAssertTrue(recordFile.contains(StorageNamespaceFingerprint(namespace: namespace).value))
   }
 
-  func testRemoveDoesNotDeleteBlobWhenManifestPublicationFails() async throws {
+  func testRemoveDoesNotDeleteBlobWhenManifestPublicationFails_CACHE_PT_013() async throws {
     let root = try makeTemporaryDirectory()
     let store = try await OriginalEncodedStore.open(root: root)
     let data = Data("remove-transaction".utf8)
@@ -189,7 +222,7 @@ final class StagingAndStorageTests: XCTestCase {
     }
   }
 
-  func testRemoveAllDoesNotDeleteBlobsWhenManifestPublicationFails() async throws {
+  func testRemoveAllDoesNotDeleteBlobsWhenManifestPublicationFails_CACHE_PT_013() async throws {
     let root = try makeTemporaryDirectory()
     let store = try await OriginalEncodedStore.open(root: root)
     let firstData = Data("namespace-first".utf8)
@@ -404,16 +437,30 @@ private func assertSecureCacheItem(
   XCTAssertEqual(values.isExcludedFromBackup, true, file: file, line: line)
   #if os(iOS)
     let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
-    XCTAssertEqual(
-      attributes[.protectionKey] as? FileProtectionType,
-      .completeUntilFirstUserAuthentication,
-      file: file,
-      line: line
-    )
+    let protection = attributes[.protectionKey] as? FileProtectionType
+    #if targetEnvironment(simulator)
+      // 模拟器不保证暴露数据保护属性；若可观测，仍不得弱于目标保护级别。
+      XCTAssertTrue(
+        protection == nil || protection == .completeUntilFirstUserAuthentication,
+        file: file,
+        line: line
+      )
+    #else
+      XCTAssertEqual(
+        protection,
+        .completeUntilFirstUserAuthentication,
+        file: file,
+        line: line
+      )
+    #endif
   #endif
 }
 
 private struct ThrowingTransport: HTTPTransporting {
+  nonisolated let reusePolicy = TransportReusePolicy.reusable(
+    contextIdentifier: "tests-throwing-transport-v1"
+  )
+
   let error: any Error & Sendable
   func execute(_ request: TransportRequest) async throws -> TransportResponse { throw error }
 }
@@ -478,6 +525,23 @@ private actor InMemoryRecordStore: RepresentationRecordStoring {
       $0.value.securityNamespaceFingerprint != StorageNamespaceFingerprint(namespace: namespace)
     }
   }
+}
+
+private struct LegacyRecordV4Fixture: Encodable {
+  let recordSchemaVersion: UInt16
+  let securityNamespaceFingerprint: StorageNamespaceFingerprint
+  let namespaceGeneration: UInt64
+  let variantKeyDigest: String
+  let statusCode: Int
+  let requestTime: Date
+  let responseTime: Date
+  let expiresAt: Date?
+  let etag: String?
+  let lastModified: String?
+  let disposition: CacheDisposition
+  let contentID: String
+  let payloadLength: Int
+  let contentType: String?
 }
 
 private struct FutureRecordManifest: Encodable {

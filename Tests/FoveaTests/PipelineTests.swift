@@ -7,6 +7,197 @@ import ImageCraftImageIO
 import XCTest
 
 final class PipelineTests: XCTestCase {
+  func testTransformFailureRetainsOriginalAndPublishesNoRendered_CACHE_PT_030() async throws {
+    let root = try makeTemporaryDirectory()
+    let body = try makePNG()
+    let transport = FakeHTTPTransport(stubs: [
+      .init(
+        statusCode: 200,
+        headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+        body: body
+      )
+    ])
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records")
+    )
+    let transformer = FailingImageTransformer()
+    let pipeline = FoveaPipeline(
+      transport: transport,
+      encodedStore: encoded,
+      recordStore: records,
+      decoder: ImageIOImageDecoder(),
+      transformer: transformer
+    )
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/transform-failure.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+
+    for _ in 0..<2 {
+      do {
+        _ = try await pipeline.image(for: request)
+        XCTFail("失败的 transform 不得交付 final")
+      } catch let failure as PipelineFailure {
+        XCTAssertEqual(failure.category, .transform)
+        XCTAssertEqual(failure.stage, .transform)
+        XCTAssertEqual(failure.reasonCode, "transform-failed")
+      }
+    }
+
+    let storedRecords = await records.records(
+      for: request.fetchBaseKey.digestHex,
+      namespace: request.namespace.value,
+      namespaceGeneration: 0
+    )
+    let physicalID = await encoded.physicalID(
+      contentID: ContentID(data: body).description,
+      namespace: request.namespace.value
+    )
+    let requestCount = await transport.capturedRequests().count
+    let transformCount = await transformer.transformCount
+    XCTAssertEqual(storedRecords.count, 1)
+    XCTAssertNotNil(physicalID)
+    XCTAssertEqual(requestCount, 1)
+    XCTAssertEqual(transformCount, 2)
+  }
+
+  func testEncodedDataRequestDoesNotProbeDecodeOrPersist_GEO_PT_008() async throws {
+    let root = try makeTemporaryDirectory()
+    let body = try makePNG()
+    let transport = FakeHTTPTransport(stubs: [
+      .init(
+        statusCode: 200,
+        headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+        body: body
+      )
+    ])
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records")
+    )
+    let pipeline = FoveaPipeline(
+      transport: transport,
+      encodedStore: encoded,
+      recordStore: records,
+      decoder: RejectingDecoder()
+    )
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/encoded-data.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+
+    let received = try await pipeline.encodedData(for: request)
+
+    let requestCount = await transport.capturedRequests().count
+    let storedRecords = await records.records(
+      for: request.fetchBaseKey.digestHex,
+      namespace: request.namespace.value,
+      namespaceGeneration: 0
+    )
+    let storedBlob = await encoded.physicalID(
+      contentID: ContentID(data: body).description,
+      namespace: request.namespace.value
+    )
+    XCTAssertEqual(received, body)
+    XCTAssertEqual(requestCount, 1)
+    XCTAssertTrue(storedRecords.isEmpty)
+    XCTAssertNil(storedBlob)
+  }
+
+  func testOnlyIfCachedMissIsExplicitAndNeverStartsNetwork_ERR_PT_002() async throws {
+    let body = try makePNG()
+    let (pipeline, transport, _, _) = try await makePipeline(stubs: [
+      .init(
+        statusCode: 200,
+        headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+        body: body
+      )
+    ])
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/only-if-cached.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests",
+      cachePolicy: .onlyIfCached
+    )
+
+    do {
+      _ = try await pipeline.image(for: request)
+      XCTFail("onlyIfCached 未命中必须返回明确失败")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .cacheRead)
+      XCTAssertEqual(failure.stage, .cacheLookup)
+      XCTAssertEqual(failure.disposition, .terminal)
+      XCTAssertEqual(failure.reasonCode, "only-if-cached-miss")
+    }
+
+    let requestCount = await transport.capturedRequests().count
+    XCTAssertEqual(requestCount, 0)
+  }
+
+  func testTaskLocalTransportBypassesCacheAndCrossRequestSingleFlight_AUTH_PT_008() async throws {
+    let root = try makeTemporaryDirectory()
+    let body = try makePNG()
+    let transport = FakeHTTPTransport(
+      stubs: [
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+          body: body,
+          delayNanoseconds: 30_000_000
+        ),
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+          body: body,
+          delayNanoseconds: 30_000_000
+        ),
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+          body: body
+        ),
+      ],
+      reusePolicy: .taskLocal
+    )
+    let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records")
+    )
+    let pipeline = FoveaPipeline(
+      transport: transport,
+      encodedStore: encoded,
+      recordStore: records,
+      decoder: ImageIOImageDecoder()
+    )
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/opaque-session.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+
+    async let first = pipeline.image(for: request)
+    async let second = pipeline.image(for: request)
+    _ = try await (first, second)
+    _ = try await pipeline.image(for: request)
+
+    let requestCount = await transport.capturedRequests().count
+    let storedRecords = await records.records(
+      for: request.fetchBaseKey.digestHex,
+      namespace: request.namespace.value,
+      namespaceGeneration: 0
+    )
+    let storedBlob = await encoded.physicalID(
+      contentID: ContentID(data: body).description,
+      namespace: request.namespace.value
+    )
+    XCTAssertEqual(requestCount, 3)
+    XCTAssertTrue(storedRecords.isEmpty)
+    XCTAssertNil(storedBlob)
+  }
+
   func testCredentialHeaderWithoutContextFailsBeforeNetwork_AUTH_PT_006() async throws {
     let body = try makePNG()
     let (pipeline, transport, _, _) = try await makePipeline(stubs: [
@@ -670,6 +861,35 @@ func assertThrowsErrorAsync<T>(
     XCTFail("Expected error", file: file, line: line)
   } catch {
     // 预期会进入错误分支。
+  }
+}
+
+private actor FailingImageTransformer: ImageTransforming {
+  nonisolated let fingerprint = "tests-failing-transform-v1"
+  private(set) var transformCount = 0
+
+  func transform(_ image: DecodedImage) async throws -> DecodedImage {
+    transformCount += 1
+    throw TransformFixtureError.failed
+  }
+}
+
+private enum TransformFixtureError: Error {
+  case failed
+}
+
+private struct RejectingDecoder: ImageDecoding {
+  func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
+    throw ImageCraftError.decodeFailed
+  }
+
+  func decode(
+    data: Data,
+    probe: ImageProbe,
+    request: ImageDecodeRequest,
+    limits: DecodeLimits
+  ) throws -> DecodedImage {
+    throw ImageCraftError.decodeFailed
   }
 }
 

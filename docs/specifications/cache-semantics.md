@@ -422,7 +422,7 @@ v1 不让 App 与 Widget 并发写同一个 Akashic generation。需要 Widget �
 - **CACHE-PT-027**: query 顺序/重复参数变化默认改变 key，只有显式 ephemeral 字段可移除；
 - **CACHE-PT-028**: ENOSPC/cache corruption 不阻止已成功解码图片交付，且不产生半提交；
 - **CACHE-PT-029**: ContentID 已计算但安全 Probe 失败时 OriginalEncoded 不可见；
-- **CACHE-PT-030**: Transform 失败时已安全提交的 OriginalEncoded 保持有效，Rendered/Derived 不提交；
+- **CACHE-PT-030**: Transform 失败时已安全提交的 OriginalEncoded 与 representation record 保持有效，Rendered/Derived 不提交；后续请求可复用原编码并重新执行 transform，不重复发网；
 - **CACHE-PT-031**: ContentID 不直接出现在物理文件名、日志或跨 namespace locator；
 - **CACHE-PT-032**: hard limit/namespace quota 永不被普通写入突破；
 - **CACHE-PT-033**: active lease 期间不物理删除 blob，但逻辑记录可立即 miss；

@@ -4,6 +4,7 @@ import ImageCraftCore
 struct EncodedImageSecurityInspection: Sendable {
   let format: EncodedImageFormat
   let metadataByteCount: Int
+  let sourceColorProfile: SourceColorProfile
 }
 
 enum EncodedImageSecurityInspector {
@@ -23,6 +24,7 @@ enum EncodedImageSecurityInspector {
   private static func inspectPNG(_ data: Data) throws -> EncodedImageSecurityInspection {
     var offset = 8
     var metadataBytes = 0
+    var sourceColorProfile = SourceColorProfile.absent
     var foundEnd = false
     let metadataChunks: Set<String> = ["iCCP", "eXIf", "iTXt", "tEXt", "zTXt"]
     while offset < data.count {
@@ -41,6 +43,11 @@ enum EncodedImageSecurityInspector {
       if metadataChunks.contains(type) {
         metadataBytes = try adding(metadataBytes, payloadLength)
       }
+      if type == "iCCP" {
+        sourceColorProfile = .embeddedICC
+      } else if type == "sRGB", sourceColorProfile == .absent {
+        sourceColorProfile = .standardSRGB
+      }
       offset = chunkEnd.partialValue
       if type == "IEND" {
         foundEnd = true
@@ -48,12 +55,17 @@ enum EncodedImageSecurityInspector {
       }
     }
     guard foundEnd else { throw ImageCraftError.unsupportedOrCorruptImage }
-    return EncodedImageSecurityInspection(format: .png, metadataByteCount: metadataBytes)
+    return EncodedImageSecurityInspection(
+      format: .png,
+      metadataByteCount: metadataBytes,
+      sourceColorProfile: sourceColorProfile
+    )
   }
 
   private static func inspectJPEG(_ data: Data) throws -> EncodedImageSecurityInspection {
     var offset = 2
     var metadataBytes = 0
+    var sourceColorProfile = SourceColorProfile.absent
     while offset < data.count {
       while offset < data.count, data[offset] == 0xFF { offset += 1 }
       guard offset < data.count else { throw ImageCraftError.unsupportedOrCorruptImage }
@@ -61,7 +73,11 @@ enum EncodedImageSecurityInspector {
       offset += 1
       if marker == 0xD9 { break }
       if marker == 0xDA {
-        return EncodedImageSecurityInspection(format: .jpeg, metadataByteCount: metadataBytes)
+        return EncodedImageSecurityInspection(
+          format: .jpeg,
+          metadataByteCount: metadataBytes,
+          sourceColorProfile: sourceColorProfile
+        )
       }
       if marker == 0x01 || (0xD0...0xD8).contains(marker) { continue }
       guard let rawLength = readUInt16BE(data, at: offset), rawLength >= 2 else {
@@ -75,9 +91,22 @@ enum EncodedImageSecurityInspector {
       if marker == 0xE1 || marker == 0xE2 || marker == 0xED || marker == 0xFE {
         metadataBytes = try adding(metadataBytes, segmentLength - 2)
       }
+      if marker == 0xE2 {
+        let payloadStart = offset + 2
+        let signature = Data("ICC_PROFILE\u{0}".utf8)
+        if payloadStart + signature.count <= segmentEnd.partialValue,
+          data[payloadStart..<(payloadStart + signature.count)].elementsEqual(signature)
+        {
+          sourceColorProfile = .embeddedICC
+        }
+      }
       offset = segmentEnd.partialValue
     }
-    return EncodedImageSecurityInspection(format: .jpeg, metadataByteCount: metadataBytes)
+    return EncodedImageSecurityInspection(
+      format: .jpeg,
+      metadataByteCount: metadataBytes,
+      sourceColorProfile: sourceColorProfile
+    )
   }
 
   private static func inspectGIF(_ data: Data) throws -> EncodedImageSecurityInspection {
@@ -94,7 +123,11 @@ enum EncodedImageSecurityInspector {
       offset += 1
       switch marker {
       case 0x3B:
-        return EncodedImageSecurityInspection(format: .gif, metadataByteCount: metadataBytes)
+        return EncodedImageSecurityInspection(
+          format: .gif,
+          metadataByteCount: metadataBytes,
+          sourceColorProfile: .absent
+        )
       case 0x21:
         guard offset < data.count else { throw ImageCraftError.unsupportedOrCorruptImage }
         offset += 1

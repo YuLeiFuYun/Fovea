@@ -23,7 +23,7 @@
 | SEC-CASE-016 | 0a | 登出/namespace revoke | 立即提升 generation、取消任务并阻止旧任务 commit；物理清理可异步 | 防止清理后数据复活 |
 | SEC-CASE-017 | 0a | 重定向至不同 origin | 剥离内置及调用者声明的 credential headers；不允许隐式继承 | 防止凭证泄漏 |
 | SEC-CASE-018 | 0a | 日志事件 | URL 脱敏；不记录 token、cookie、私有 query、ContentID、PhysicalBlobID 或稳定账户标识 | 防止日志泄漏与内容指纹侧信道 |
-| SEC-CASE-019 | 0b | cache 目录 | 默认排除系统备份并使用平台适当文件保护；物理文件名使用随机不透明 ID | 防止缓存进入备份、锁屏后暴露或通过文件名探测已知内容 |
+| SEC-CASE-019 | 0b | cache 目录 | 默认排除系统备份并使用平台适当文件保护；物理文件名使用随机不透明 ID。iOS Simulator 只验证可观测的备份排除和非弱化保护值；真机必须精确验证 `completeUntilFirstUserAuthentication` | 防止缓存进入备份、锁屏后暴露或通过文件名探测已知内容 |
 | SEC-CASE-020 | Experimental | 第三方 C/C++ codec | 版本钉定、fuzz、ASan/UBSan、输入限制 | 降低解析漏洞风险 |
 | SEC-CASE-021 | 0b | 未知 codec/attachment | 不加载；保留原 blob 需符合缓存策略 | 避免未审计解析 |
 | SEC-CASE-022 | 0b | 未知未来磁盘 schema | 不读取为有效条目、不写回；切换安全 generation | 防止降级/升级破坏 |

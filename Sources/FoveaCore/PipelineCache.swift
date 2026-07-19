@@ -168,13 +168,10 @@ final class PipelineCache: Sendable {
     }
   }
 
-  func commit(
+  func commitOriginal(
     data: Data,
     contentID: ContentID,
     record: RepresentationRecord,
-    image: DecodedImage,
-    renderKey: ScopedRenderKey,
-    admitRendered: Bool,
     namespace: SecurityNamespaceID,
     generation: NamespaceGeneration
   ) async throws {
@@ -195,13 +192,10 @@ final class PipelineCache: Sendable {
     }
 
     do {
-      try await commitWhileHoldingMutationPermit(
+      try await commitOriginalWhileHoldingMutationPermit(
         data: data,
         contentID: contentID,
         record: record,
-        image: image,
-        renderKey: renderKey,
-        admitRendered: admitRendered,
         namespace: namespace,
         generation: generation
       )
@@ -231,19 +225,15 @@ final class PipelineCache: Sendable {
     }
   }
 
-  private func commitWhileHoldingMutationPermit(
+  private func commitOriginalWhileHoldingMutationPermit(
     data: Data,
     contentID: ContentID,
     record: RepresentationRecord,
-    image: DecodedImage,
-    renderKey: ScopedRenderKey,
-    admitRendered: Bool,
     namespace: SecurityNamespaceID,
     generation: NamespaceGeneration
   ) async throws {
     var createdBlob = false
     var recordCommitted = false
-    var renderedCommitted = false
 
     do {
       try Task.checkCancellation()
@@ -261,20 +251,13 @@ final class PipelineCache: Sendable {
       try Task.checkCancellation()
       try await requireActive(generation, for: namespace)
 
-      if admitRendered {
-        await memory.insert(image, for: renderKey, cost: image.estimatedByteCost)
-        renderedCommitted = true
-        try Task.checkCancellation()
-        try await requireActive(generation, for: namespace)
-      }
     } catch let failure as PipelineFailure where failure.category == .namespaceRevoked {
       await rollback(
         createdBlob: createdBlob,
         recordCommitted: recordCommitted,
-        renderedCommitted: renderedCommitted,
         contentID: contentID,
         variantDigest: record.variantKeyDigest,
-        renderKey: renderKey,
+        generation: generation,
         namespace: namespace
       )
       throw PipelineFailure.namespaceRevoked
@@ -282,10 +265,9 @@ final class PipelineCache: Sendable {
       await rollback(
         createdBlob: createdBlob,
         recordCommitted: recordCommitted,
-        renderedCommitted: renderedCommitted,
         contentID: contentID,
         variantDigest: record.variantKeyDigest,
-        renderKey: renderKey,
+        generation: generation,
         namespace: namespace
       )
       throw CancellationError()
@@ -293,10 +275,9 @@ final class PipelineCache: Sendable {
       await rollback(
         createdBlob: createdBlob,
         recordCommitted: recordCommitted,
-        renderedCommitted: renderedCommitted,
         contentID: contentID,
         variantDigest: record.variantKeyDigest,
-        renderKey: renderKey,
+        generation: generation,
         namespace: namespace
       )
       await diagnostics.record(
@@ -312,19 +293,17 @@ final class PipelineCache: Sendable {
   private func rollback(
     createdBlob: Bool,
     recordCommitted: Bool,
-    renderedCommitted: Bool,
     contentID: ContentID,
     variantDigest: String,
-    renderKey: ScopedRenderKey,
+    generation: NamespaceGeneration,
     namespace: SecurityNamespaceID
   ) async {
-    if renderedCommitted { await memory.remove(renderKey) }
     if recordCommitted {
       do {
         try await recordStore.remove(
           variantDigest,
           namespace: namespace.value,
-          namespaceGeneration: renderKey.generation.value
+          namespaceGeneration: generation.value
         )
       } catch {
         await recordCacheCleanupFailure(

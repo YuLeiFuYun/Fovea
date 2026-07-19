@@ -1,12 +1,12 @@
 # Fovea 图片加载系统架构
 
-> **状态：Proposed（唯一工作架构文档）**
+> **状态：Proposed（唯一工作架构文档；当前项目状态：`0b-in-progress`）**
 > 本文是当前唯一的架构入口。只有经过可运行原型、自动化正确性测试和真机基准验证的局部决策，才可在对应 ADR 中标记为 `Accepted`。整份蓝图在 Phase 0b 完成前不称“定稿”。
 >
 > **规范优先级：** Accepted ADR 决定其范围内的决策；`specifications/` 决定可执行语义；本文决定系统边界、产品范围和阶段门禁。发现直接冲突时必须停止实现并修正文档，不能由实现者静默择一。
 >
 > **当前平台基线：** iOS/iPadOS 15、macOS 12；其他平台尚未声明支持。
-> **语言：** Swift 6 严格并发；Phase 0a 同时启用 Swift 6.2 `NonisolatedNonsendingByDefault` 与 `InferIsolatedConformances`。
+> **语言：** Swift 6 严格并发；当前实现启用 Swift 6.2 `NonisolatedNonsendingByDefault` 与 `InferIsolatedConformances`。
 > **执行模型：** UI adapter 为 `@MainActor`；加载入口与共享 operation 显式 `@concurrent`；阻塞磁盘 I/O 使用专用串行 executor；核心通过 `ImageDecoding`/`WallClock` 等协议注入平台实现与可控时间。
 > **产品边界：** Apple 平台静态图、动图及其按需辅助平面；不扩张为视频播放器、生成式图片平台或通用网络框架。
 
@@ -279,6 +279,7 @@ FoveaCore
 FoveaSources
 FoveaTransport
 FoveaHTTP
+FoveaPersistence
 FoveaUIKit
 FoveaAppKit
 FoveaSwiftUI
@@ -293,7 +294,7 @@ Phase 0a 已落实该边界：`AkashicMemory` 提供图片无关的 `MemoryCache
 
 ### 4.4 Pipeline 配置与固定职责 stage
 
-Pipeline 在构造后持有不可变配置快照。codec、transport、store、安全策略和 diagnostics 只在 composition root 注入并冻结。Phase 0a 的实现按真实职责拆为：
+Pipeline 在构造后持有不可变配置快照。codec、transport、store、安全策略和 diagnostics 只在 composition root 注入并冻结。当前 `0b-in-progress` 实现按真实职责拆为：
 
 ```text
 FetchStage     exact request + fetch single-flight + network permit
@@ -303,6 +304,10 @@ FoveaPipeline  state-machine orchestration
 ```
 
 这些 stage 使用 Swift `package` 访问级别，不是公共插件点；不提供动态 DAG、interceptor chain 或运行时全局注册。外部调用者只看到请求、配置、pipeline、结构化失败与必要协议。配置变化创建新的 pipeline，进行中的任务继续使用启动时快照。详见 `docs/specifications/pipeline-configuration.md` 与 ADR-0006。
+
+当前 `PipelineCache` 用同一可取消、有界事务门串行化“数据块提交 → 表征记录发布”和显式 mark-and-sweep 垃圾回收，防止 GC 在记录可见前删除新数据块。持久删除先原子发布移除后的 metadata，再删除物理文件；故障可以留下可回收 orphan，但不得留下指向缺失文件的可见记录。自定义 store 只有实现 `OriginalEncodedMaintaining` 与 `RepresentationRecordMaintaining` 才具备公开 GC 能力，否则返回结构化能力错误。
+
+OriginalEncoded/representation 事务与 RenderedMemory 发布是两个 checkpoint：安全 decode 完成后先提交原编码事务，再执行带 fingerprint 的 `TransformStage`；transform 失败保留可复用的 OriginalEncoded，但不得发布 RenderedMemory。该边界使处理失败不会强迫重复网络获取，也不会把半成品伪装成 final。
 
 ---
 
@@ -540,6 +545,7 @@ Akashic 提供事务和存储；FoveaHTTP 拥有 HTTP 语义。热路径所有�
 | blob staging、摘要与原子提交 | Akashic 事务 API | OriginalEncoded |
 | single-flight 注册与订阅 | FoveaCore，按 FetchExecutionKey | 仅内存任务表 |
 | URLSession/URLCache 配置 | FoveaTransport/FoveaHTTP composition root | 不重复持久化 |
+| transport 复用上下文 | `TransportReusePolicy` | task-local 或仅摘要进入精确执行身份 |
 
 完整状态机、profile 范围和外部一致性语料见 `docs/specifications/cache-semantics.md` 与 `docs/specifications/http-cache-conformance.md`。WPT 测试是 Fetch/browser 视角，只移植适用序列并维护 provenance manifest；不得宣称无分析地“全量 WPT 兼容”。
 
@@ -798,7 +804,9 @@ Analysis 缓存键至少包含 `ContentID + AnalysisKind + implementation/model 
 
 ### 11.6 配额、物理标识与 GC
 
-ContentID 是逻辑摘要，不直接作为日志值或物理文件名。store 使用 namespace-local、随机不透明 `PhysicalBlobID`，metadata 维护索引。磁盘设置 hard limit、soft target、namespace quota 与 Original/Derived/Analysis/partial 类别预算；active reader 通过短期 lease 防止提前物理删除；atime 采用聚合/分桶/批量写，避免每次 hit 写盘。详见 `docs/specifications/cache-budget-gc.md` 与 ADR-0007。
+ContentID 是逻辑摘要，不直接作为日志值或物理文件名。store 使用 namespace-local、随机不透明 `PhysicalBlobID`，metadata 维护索引。目标架构包含 hard limit、soft target、namespace quota、分类预算、active-reader lease 与批量 atime；这些目标详见 `docs/specifications/cache-budget-gc.md` 与 ADR-0007。
+
+当前实现具备单 store soft limit、namespace 隔离、opaque locator、引用快照、显式 mark-and-sweep，以及由 `AkashicDisk.StoreGenerationDirectory` 提供的原子 generation 指针切换。`FoveaPersistence` 在同一 generation 根目录组合 encoded/record stores；启动时会清理不完整目录和暂存指针，并恢复到完整且兼容的 generation。仍未实现跨进程协调、namespace quota、reader lease、DiskIOBudget 或批量 atime；这些缺项继续阻塞 0b 完成。
 
 ---
 
@@ -995,7 +1003,7 @@ PipelineFailure category/stage/disposition/reasonCode
 
 ## 18. 实施顺序
 
-### Phase 0a：Runnable Slice（当前状态）
+### Phase 0a：Runnable Slice（本地实现切片已落地，外部信任闭环未完成）
 
 当前本地实现已具备：
 
@@ -1008,9 +1016,9 @@ PipelineFailure category/stage/disposition/reasonCode
 - `PipelineFailure`、有界 diagnostics、W1/W2/W3、critical mutants、rollback 和 sanitizer 门禁；
 - 静态 fetch/decode active + queued hard cap。
 
-当前仍是 `0a-bootstrap`，因为缺少远程 protected required check、可信 CI run locator、human comprehension attestation 与独立 held-out evaluator。功能代码和本地验证通过不能冒充这些外部信任锚。
+当前产品实现已进入 `0b-in-progress`，但 0a/0b 的治理证明仍缺少远程 protected required check、可信 CI run locator、human comprehension attestation 与独立 held-out evaluator。功能代码和本地验证通过不能冒充这些外部信任锚，也不能倒推宣布 0a/0b 已完成。
 
-### Phase 0b：Existence Gate
+### Phase 0b：Existence Gate（当前状态：`0b-in-progress`）
 
 1. 完成 G0 的 schema/generation crash matrix、priority/revoke property suites 和 key golden vectors。
 2. 接入 RFC 向量、cache-tests.fyi 和适用 WPT 的 required external corpus。

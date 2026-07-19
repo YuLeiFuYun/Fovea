@@ -3,6 +3,10 @@ import Foundation
 import FoveaHTTP
 
 public actor DeterministicImageOrigin: HTTPTransporting {
+  public nonisolated let reusePolicy = TransportReusePolicy.reusable(
+    contextIdentifier: "fovea-testing-deterministic-origin-v1"
+  )
+
   public struct Resource: Sendable {
     public let url: URL
     public let body: Data

@@ -138,7 +138,7 @@ httpShouldSetCookies = false
 - 调用者传入不透明 URLSession，无法说明 Cookie、client identity、proxy 或 protocol state；
 - auth refresh 回调可能递归调用同一 pipeline 且没有重入保护。
 
-Fail closed 不等于拒绝显示：请求仍可作为 task-local、不可复用的加载执行。
+Fail closed 不等于拒绝显示：请求仍可作为 task-local、不可复用的加载执行。`HTTPTransporting` 必须显式声明 `TransportReusePolicy`；内建默认 `URLSessionTransport` 使用固定安全配置并可复用，任何调用者提供的 `URLSessionConfiguration` 默认都是 `.taskLocal`。只有调用者提供稳定、非敏感且能覆盖 proxy、protocol、client identity 与其他会改变响应语义的 context identifier 时，才可显式启用跨请求复用。Fovea 只把该 identifier 的摘要纳入精确执行身份，不记录原值。
 
 ## 7. 并发与刷新
 

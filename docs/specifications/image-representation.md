@@ -1,6 +1,6 @@
 # 图像表示、颜色与动态范围契约
 
-> **状态：Proposed；基础静态 orientation/color/alpha 为 Phase 0b/Core v1，HDR/辅助平面为 Phase 2 capability。**
+> **状态：Active Phase 0b 静态图子集；HDR/辅助平面仍为 Phase 2 capability。**
 
 ## 1. 目标
 
@@ -23,7 +23,7 @@ DecodedImage
 └── lazy attachments
 ```
 
-平台 `UIImage`/`NSImage` 是 UI adapter 输出，不作为 Core 唯一真实模型。
+平台 `UIImage`/`NSImage` 是 UI adapter 输出，不作为 Core 唯一真实模型。当前 `DecodedImage` 已记录 source profile 类别、实际输出颜色空间、alpha mode、bits-per-component、bits-per-pixel、row bytes、bitmap info 与 display readiness；ImageIO 的 immediately-cached thumbnail 被标记为 `fullyDecodedCPU`，重复 display preparation 复用同一不可变 `CGImage`。
 
 ## 3. Orientation
 
@@ -45,7 +45,7 @@ DecodedImage
 - P3 到 sRGB、HDR 到 SDR 等转换必须显式且 fingerprinted；
 - 不因 resize/downsample 静默剥离颜色语义。
 
-颜色参数进入 DecodeKey 还是 RenderKey，取决于转换发生阶段；同一语义不得重复编码两次。
+颜色参数进入 DecodeKey 还是 RenderKey，取决于转换发生阶段；同一语义不得重复编码两次。当前 `ImageColorPolicy` 支持 `.preserveSource` 与 `.convertToSRGB`，并进入 `DecodeKey`。PNG `iCCP`/`sRGB` 与 JPEG ICC APP2 由容器检查器识别；无显式 profile 的静态图统一转换到 sRGB，禁止依赖设备色彩空间猜测。
 
 ## 5. Dynamic range 与 HDR
 

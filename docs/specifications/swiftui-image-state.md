@@ -1,6 +1,6 @@
 # SwiftUI 图片状态机规范
 
-> **状态：Proposed，Core v1 Candidate 规格。**
+> **状态：Active Phase 0b 状态机与布局感知子集。**
 
 ## 1. 目标
 
@@ -80,13 +80,13 @@ logical source identity
 | network/source 首次 final | 标准 crossfade |
 | identity 跨账户变化 | 不保留旧图，不 crossfade 私有旧内容 |
 
-Reduce Motion 开启时禁用非必要 transition。
+Reduce Motion 开启时禁用非必要 transition。当前 `FoveaImageTransitionPolicy` 只提供显式 opacity transition；环境中的 `accessibilityReduceMotion` 为真或时长为 0 时解析为 `.identity` 且不创建 `Animation`。
 
 ## 8. Preview
 
-- preview 可以多次到达，但只保留最新、质量单调不下降的结果；
+- `ProgressiveImageLoading` 可以多次发送 preview；`FoveaImageModel` 只接受当前 request token 且质量严格上升的 preview；
 - completeness/fidelity 相同或更差的 preview 可丢弃；
-- final 到达后拒绝所有 preview；
+- final 到达后结束该事件流并拒绝所有后续 preview；identity 改变会先递增 token，因此旧流迟到的 final 不能覆盖新 identity；
 - preview 不能被当成最终成功用于长期状态恢复。
 
 ## 9. View 生命周期
@@ -94,7 +94,7 @@ Reduce Motion 开启时禁用非必要 transition。
 - `onDisappear` 默认取消当前 UI 订阅；
 - 列表预取由独立 prefetch token 管理，不与 view token 混用；
 - body 重算但 identity 未变化时不得创建新订阅；
-- layout 为 0/unknown 时不启动原尺寸 decode；可保持 idle/loading placeholder 或仅预取 encoded；
+- `FoveaResponsiveImage` 通过 `TargetGeometryResolver` 解析布局；0/unknown 尺寸保持 placeholder 且不构造 `ImageRequest`，稳定正尺寸出现后才创建请求；
 - 连续 geometry 变化遵循 target geometry debounce/hysteresis，不每帧创建新订阅；
 - scene/background 策略由 pipeline 决定，view 不自行保持隐藏任务。
 
@@ -112,7 +112,7 @@ Reduce Motion 开启时禁用非必要 transition。
 - **UI-PT-008**: 账户切换默认立即清除旧私有图；
 - **UI-PT-009**: cache hit 与 network final 的状态序列可预测；
 - **UI-PT-010**: cancellation 与共享上游引用计数互不破坏；
-- **UI-PT-011**: 0×0 初始布局不触发 decode，稳定尺寸后只启动一次；
+- **UI-PT-011**: 0×0 初始布局不触发 decode，稳定尺寸后只启动一次；重复相同布局由 request identity 去重；
 - **UI-PT-012**: 连续 resize 不产生无界 request token/RenderKey。
 - **UI-PT-013**: no-store final 仅当前 view token 可继续显示，新 request 不命中；
 - **UI-PT-014**: namespaceRevoked/securityLimit 使用统一错误恢复矩阵；

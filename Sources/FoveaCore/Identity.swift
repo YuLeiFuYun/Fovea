@@ -197,6 +197,7 @@ public struct DecodeKey: Hashable, Sendable, Codable {
   public let targetHeight: Int
   public let contentMode: ImageContentMode
   public let geometryPolicyFingerprint: String
+  public let colorPolicy: ImageColorPolicy
   public let decoderVersion: UInt16
 
   public init(
@@ -205,6 +206,7 @@ public struct DecodeKey: Hashable, Sendable, Codable {
     targetHeight: Int,
     contentMode: ImageContentMode,
     geometryPolicyFingerprint: String,
+    colorPolicy: ImageColorPolicy = .preserveSource,
     decoderVersion: UInt16
   ) {
     self.contentID = contentID
@@ -212,13 +214,25 @@ public struct DecodeKey: Hashable, Sendable, Codable {
     self.targetHeight = targetHeight
     self.contentMode = contentMode
     self.geometryPolicyFingerprint = geometryPolicyFingerprint
+    self.colorPolicy = colorPolicy
     self.decoderVersion = decoderVersion
   }
 }
 
 public struct RenderKey: Hashable, Sendable, Codable {
   public let decodeKey: DecodeKey
+  public let transformerFingerprint: String
   public let renderVersion: UInt16
+
+  public init(
+    decodeKey: DecodeKey,
+    transformerFingerprint: String = "identity-transform-v1",
+    renderVersion: UInt16
+  ) {
+    self.decodeKey = decodeKey
+    self.transformerFingerprint = transformerFingerprint
+    self.renderVersion = renderVersion
+  }
 }
 
 private struct CanonicalEncoder {

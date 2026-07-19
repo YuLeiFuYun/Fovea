@@ -2,7 +2,7 @@
 
 **状态：Phase 0b 实施中；公共 API 尚未稳定。**
 
-Fovea 是面向 Apple 平台的图片加载系统。当前无稳定公共 API；当前实现与规格以单一活动版本持续收敛，实现范围以 [`core-surface.md`](docs/specifications/core-surface.md) 为准。
+Fovea 是面向 Apple 平台的图片加载系统。当前无稳定公共 API；实现与规格以单一活动版本持续收敛。Phase 0a 的首个垂直切片基线记录在 [`core-surface.md`](docs/specifications/core-surface.md)，当前 0b 实现边界以 [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) 和各领域活动规格为准。
 
 当前已打通：
 
@@ -10,11 +10,13 @@ Fovea 是面向 Apple 平台的图片加载系统。当前无稳定公共 API；
 public / authenticated URL
 → FetchBaseKey / Vary-selected FetchVariantKey / FetchExecutionKey
 → bounded staging + spill + streaming SHA-256
-→ namespace-scoped OriginalEncoded + opaque PhysicalBlobID
-→ priority-aware FetchStage / DecodeKey single-flight
-→ ImageIO target-pixel decode
+→ StoreGeneration-scoped OriginalEncoded + representation record + opaque PhysicalBlobID
+→ transport-context-aware FetchStage / DecodeKey single-flight
+→ ImageIO target-pixel decode + explicit color/alpha/pixel-format contract
+→ fingerprinted TransformStage
 → generic Akashic MemoryCache + namespace-scoped render identity
-→ SwiftUI FoveaImage + structured PipelineFailure
+→ responsive/progressive SwiftUI state machine
+→ Core-owned recovery matrix with SwiftUI/UIKit/AppKit adapters
 ```
 
 本地质量门已包含：

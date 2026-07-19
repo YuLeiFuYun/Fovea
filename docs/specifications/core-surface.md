@@ -1,9 +1,9 @@
-# Phase 0a 实现面与符号预算
+# Phase 0a 垂直切片历史基线与符号预算
 
-> **状态：Active，Phase 0a 的规范性范围表。**
-> 本文只回答“第一条可运行垂直切片允许实现什么、明确不实现什么”。它不替代架构和各领域规格；冲突时按 `docs/README.md` 的权威顺序处理。
+> **状态：Historical baseline；不再作为 Phase 0b 的活动模块白名单。**
+> 本文记录第一条可运行垂直切片当时允许实现什么、明确后移什么。当前 `0b-in-progress` 的真实实现边界以 `docs/ARCHITECTURE.md`、`Package.swift` 与各领域活动规格为准；不得用本文的旧限制否定已经通过活动规格和测试门禁的 0b 能力。
 
-## 1. 目标
+## 1. Phase 0a 当时的目标
 
 Phase 0a 只证明以下闭环真实可运行：
 
@@ -20,7 +20,7 @@ public URL
 
 0a 不证明完整 Core v1、完整 RFC 9111 profile、全部 Apple UI surface 或性能领先。
 
-## 2. 首个 UI surface
+## 2. Phase 0a 当时的首个 UI surface
 
 Phase 0a 选择 **iOS 15+ SwiftUI** 作为唯一 UI surface：
 
@@ -33,7 +33,7 @@ placeholder → final / failure / cancelled
 
 UIKit、AppKit、tvOS/watchOS/visionOS UI adapter 在 0a 只要求模块边界可容纳，不编写产品实现。W1 初始 harness 可以使用 SwiftUI；若真机 trace 证明 SwiftUI 本身造成不可控噪声，必须用 ADR 改选 UIKit，不能同时维护两个 0a surface。
 
-## 3. 允许出现的生产模块
+## 3. Phase 0a 当时允许出现的生产模块
 
 ```text
 ImageCraftCore
@@ -47,9 +47,11 @@ FoveaSwiftUI
 FoveaTesting
 ```
 
+当前 0b 在该基线上新增 `FoveaPersistence`、`FoveaUIKit`、`FoveaAppKit`，并引入 StoreGeneration、显式 TransformStage、渐进状态和布局感知 SwiftUI 入口。这些模块均有实际调用路径与门禁，不是占位产品。
+
 不得为了占位创建空的 Trust、Adaptive、Vision、Derived、Animation、Codec plugin 或 FoveaLab product。
 
-## 4. 允许实现的最小符号
+## 4. Phase 0a 当时允许实现的最小符号
 
 ### 4.1 Identity
 
@@ -173,7 +175,7 @@ RequestAuthorizer = not required
 
 是否持久化仅由 HTTP/cache/security policy 决定。0a demo 和 W1/W2 主路径使用该模式；鉴权类型只实现足以通过 key/namespace/revoke 测试的最小接口，不构建完整登录系统。
 
-## 6. 明确禁止进入 0a
+## 6. Phase 0a 当时明确后移的能力
 
 ```text
 DerivedEncoded writes
@@ -193,9 +195,9 @@ FoveaLab dependency
 public stable API or compatibility promise
 ```
 
-若实现需要上述能力才能继续，必须提交 blocker evidence：失败测试 ID、编译/运行日志或最小复现，并通过 ADR 收窄或修改本表。
+上述列表只约束当时的 0a 垂直切片。能力进入 0b 后必须由活动领域规格、稳定测试 ID、追踪矩阵和证据门接管；不能只删除本列表中的名称就宣称完成。
 
-## 7. 0a PR 审查问题
+## 7. Phase 0a 基线审查问题
 
 每个 PR 必须回答：
 

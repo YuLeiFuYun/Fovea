@@ -67,13 +67,45 @@ final class FetchStage: Sendable {
     let executionKey = request.fetchExecutionKey(
       selectedVariant: selectedVariant,
       revalidationFingerprint: Self.revalidationFingerprint(for: conditionalRecord),
-      transportPolicyFingerprint: configuration.transportPolicyFingerprint
+      transportPolicyFingerprint:
+        "\(configuration.transportPolicyFingerprint):\(transport.reusePolicy.executionFingerprint)"
     )
     let scopedKey = ScopedFetchExecutionKey(
       namespace: request.namespace,
       execution: executionKey
     )
     let authorizedRequest = urlRequest
+
+    if !transport.reusePolicy.allowsCrossRequestReuse {
+      await diagnostics.record(
+        DiagnosticEvent(
+          kind: .fetchQueued,
+          keyDigest: executionKey.digestHex,
+          reason: "transport-task-local",
+          requestedPriority: request.priority
+        )
+      )
+      let priorityControl = SharedTaskPriorityControl(priority: request.priority)
+      do {
+        let result = try await executeWithRetry(
+          authorizedRequest: authorizedRequest,
+          request: request,
+          generation: generation,
+          executionKey: executionKey,
+          priorityControl: priorityControl
+        )
+        await priorityControl.finish()
+        return result
+      } catch {
+        await priorityControl.finish()
+        if !(await namespaceRegistry.isActive(generation, for: request.namespace)) {
+          throw PipelineFailure.namespaceRevoked
+        }
+        if error is CancellationError { throw PipelineFailure.cancelled(stage: .transport) }
+        throw error
+      }
+    }
+
     let subscription = await registry.subscribe(
       key: scopedKey,
       priority: request.priority

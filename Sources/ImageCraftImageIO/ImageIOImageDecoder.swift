@@ -71,16 +71,25 @@ public struct ImageIOImageDecoder: ImageDecoding {
       kCGImageSourceShouldCacheImmediately: true,
     ]
 
-    guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+    guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    else {
       throw ImageCraftError.decodeFailed
     }
+    let image = try colorNormalizedImage(
+      thumbnail,
+      sourceProfile: verifiedProbe.sourceColorProfile,
+      policy: request.colorPolicy
+    )
     try validate(width: image.width, height: image.height, limits: limits)
     switch request.contentMode {
     case .fit:
       guard image.width <= target.width, image.height <= target.height else {
         throw ImageCraftError.decodeFailed
       }
-      return DecodedImage(cgImage: image)
+      return DecodedImage(
+        cgImage: image,
+        sourceColorProfile: verifiedProbe.sourceColorProfile
+      )
     case .fill:
       let cropWidth = min(target.width, image.width)
       let cropHeight = min(target.height, image.height)
@@ -94,7 +103,10 @@ public struct ImageIOImageDecoder: ImageDecoding {
         throw ImageCraftError.decodeFailed
       }
       try validate(width: cropped.width, height: cropped.height, limits: limits)
-      return DecodedImage(cgImage: cropped)
+      return DecodedImage(
+        cgImage: cropped,
+        sourceColorProfile: verifiedProbe.sourceColorProfile
+      )
     }
   }
 
@@ -156,9 +168,49 @@ public struct ImageIOImageDecoder: ImageDecoding {
         orientation: orientation,
         format: container.format,
         metadataByteCount: metadataByteCount,
-        auxiliaryAttachmentCount: auxiliaryAttachmentCount
+        auxiliaryAttachmentCount: auxiliaryAttachmentCount,
+        sourceColorProfile: container.sourceColorProfile
       )
     )
+  }
+
+  private func colorNormalizedImage(
+    _ image: CGImage,
+    sourceProfile: SourceColorProfile,
+    policy: ImageColorPolicy
+  ) throws -> CGImage {
+    let requiresSRGB = policy == .convertToSRGB || sourceProfile == .absent
+    guard requiresSRGB || image.colorSpace == nil else { return image }
+    guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else {
+      throw ImageCraftError.decodeFailed
+    }
+    let rowBytes = image.width.multipliedReportingOverflow(by: 4)
+    guard !rowBytes.overflow else { throw ImageCraftError.decodeFailed }
+    let alphaInfo: CGImageAlphaInfo
+    switch image.alphaInfo {
+    case .none, .noneSkipFirst, .noneSkipLast:
+      alphaInfo = .noneSkipLast
+    default:
+      alphaInfo = .premultipliedLast
+    }
+    let bitmapInfo = CGBitmapInfo.byteOrder32Big.union(
+      CGBitmapInfo(rawValue: alphaInfo.rawValue)
+    )
+    guard
+      let context = CGContext(
+        data: nil,
+        width: image.width,
+        height: image.height,
+        bitsPerComponent: 8,
+        bytesPerRow: rowBytes.partialValue,
+        space: colorSpace,
+        bitmapInfo: bitmapInfo.rawValue
+      )
+    else { throw ImageCraftError.decodeFailed }
+    context.setBlendMode(.copy)
+    context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+    guard let converted = context.makeImage() else { throw ImageCraftError.decodeFailed }
+    return converted
   }
 
   private func sourceFormat(_ source: CGImageSource) -> EncodedImageFormat? {

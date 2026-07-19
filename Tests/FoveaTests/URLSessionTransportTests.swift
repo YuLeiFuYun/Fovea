@@ -4,6 +4,19 @@ import FoveaHTTP
 import XCTest
 
 final class URLSessionTransportTests: XCTestCase {
+  func testCustomConfigurationDefaultsToTaskLocalReuse_AUTH_PT_008() {
+    let custom = URLSessionTransport(configuration: .ephemeral)
+    let builtIn = URLSessionTransport()
+    let explicitlyScoped = URLSessionTransport(
+      configuration: .ephemeral,
+      reusePolicy: .reusable(contextIdentifier: "tests-explicit-session-context-v1")
+    )
+
+    XCTAssertFalse(custom.reusePolicy.allowsCrossRequestReuse)
+    XCTAssertTrue(builtIn.reusePolicy.allowsCrossRequestReuse)
+    XCTAssertTrue(explicitlyScoped.reusePolicy.allowsCrossRequestReuse)
+  }
+
   func testDelegateTransportConsumesChunksWithoutPerByteIteration() async throws {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.protocolClasses = [ChunkedURLProtocol.self]

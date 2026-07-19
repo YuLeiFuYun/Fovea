@@ -3,6 +3,8 @@ import Foundation
 import FoveaHTTP
 
 public actor FakeHTTPTransport: HTTPTransporting {
+  public nonisolated let reusePolicy: TransportReusePolicy
+
   public struct Stub: Sendable {
     public let statusCode: Int
     public let headers: [String: String]
@@ -23,8 +25,14 @@ public actor FakeHTTPTransport: HTTPTransporting {
   private var stubs: [Stub]
   private var requests: [URLRequest] = []
 
-  public init(stubs: [Stub]) {
+  public init(
+    stubs: [Stub],
+    reusePolicy: TransportReusePolicy = .reusable(
+      contextIdentifier: "fovea-testing-fake-http-v1"
+    )
+  ) {
     self.stubs = stubs
+    self.reusePolicy = reusePolicy
   }
 
   public func execute(_ request: TransportRequest) async throws -> TransportResponse {

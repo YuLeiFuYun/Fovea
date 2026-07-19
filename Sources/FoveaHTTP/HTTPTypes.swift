@@ -1,4 +1,43 @@
+import CryptoKit
 import Foundation
+
+public struct TransportReusePolicy: Hashable, Sendable {
+  private enum Scope: Hashable, Sendable {
+    case taskLocal
+    case reusable(contextIdentifier: String)
+  }
+
+  private let scope: Scope
+
+  private init(scope: Scope) {
+    self.scope = scope
+  }
+
+  public static let taskLocal = TransportReusePolicy(scope: .taskLocal)
+
+  public static func reusable(contextIdentifier: String) -> TransportReusePolicy {
+    let normalized = contextIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !normalized.isEmpty else { return .taskLocal }
+    return TransportReusePolicy(scope: .reusable(contextIdentifier: normalized))
+  }
+
+  public var allowsCrossRequestReuse: Bool {
+    if case .reusable = scope { return true }
+    return false
+  }
+
+  package var executionFingerprint: String {
+    switch scope {
+    case .taskLocal:
+      return "transport-task-local-v1"
+    case .reusable(let contextIdentifier):
+      var material = Data("transport-context-v1".utf8)
+      material.append(0)
+      material.append(contentsOf: contextIdentifier.utf8)
+      return SHA256.hash(data: material).map { String(format: "%02x", $0) }.joined()
+    }
+  }
+}
 
 public enum TransportPriority: Int, CaseIterable, Codable, Hashable, Sendable, Comparable {
   case background = 0
@@ -164,5 +203,6 @@ public enum TransportError: Error, Equatable, Sendable {
 }
 
 public protocol HTTPTransporting: Sendable {
+  nonisolated var reusePolicy: TransportReusePolicy { get }
   func execute(_ request: TransportRequest) async throws -> TransportResponse
 }

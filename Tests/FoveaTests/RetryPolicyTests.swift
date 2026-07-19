@@ -311,6 +311,10 @@ final class RetryPolicyTests: XCTestCase {
 }
 
 private actor SequencedRetryTransport: HTTPTransporting {
+  nonisolated let reusePolicy = TransportReusePolicy.reusable(
+    contextIdentifier: "tests-sequenced-retry-v1"
+  )
+
   enum Step: Sendable {
     case failure(URLError)
     case response(statusCode: Int, headers: [String: String], body: Data)

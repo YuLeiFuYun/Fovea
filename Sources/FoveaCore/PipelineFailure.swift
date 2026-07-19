@@ -14,6 +14,7 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
     case cacheWrite
     case probe
     case decode
+    case transform
     case cancelled
     case internalFailure
   }
@@ -25,6 +26,7 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
     case responseValidation
     case probe
     case decode
+    case transform
     case persistence
     case revocation
     case pipeline
@@ -94,6 +96,13 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
     reasonCode: "cache-maintenance-unavailable"
   )
 
+  static let onlyIfCachedMiss = PipelineFailure(
+    category: .cacheRead,
+    stage: .cacheLookup,
+    disposition: .terminal,
+    reasonCode: "only-if-cached-miss"
+  )
+
   static let missingCachedBody = PipelineFailure(
     category: .cacheRead,
     stage: .cacheLookup,
@@ -137,6 +146,20 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
       reasonCode: "cancelled"
     )
   }
+
+  public static let incompleteProgressiveStream = PipelineFailure(
+    category: .internalFailure,
+    stage: .pipeline,
+    disposition: .terminal,
+    reasonCode: "progressive-stream-ended-without-final"
+  )
+
+  static let transformFailed = PipelineFailure(
+    category: .transform,
+    stage: .transform,
+    disposition: .terminal,
+    reasonCode: "transform-failed"
+  )
 
   static let invalidContentDigest = PipelineFailure(
     category: .transport,

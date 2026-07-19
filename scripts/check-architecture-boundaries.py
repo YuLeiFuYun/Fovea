@@ -12,6 +12,9 @@ allowed = {
     "AkashicDisk",
     "FoveaCore",
     "FoveaHTTP",
+    "FoveaPersistence",
+    "FoveaUIKit",
+    "FoveaAppKit",
     "FoveaSwiftUI",
     "FoveaTesting",
 }
@@ -90,6 +93,41 @@ if not (source_root / "AkashicCore/OriginalEncodedStoring.swift").is_file():
 
 if "public final class FoveaImageModel" in (source_root / "FoveaSwiftUI/FoveaImage.swift").read_text():
     errors.append("FoveaImageModel is an implementation detail and must remain package-only")
+
+# 平台适配层只能委托核心层的恢复矩阵，禁止复制处置类型或错误类别分支。
+for adapter in ("FoveaUIKit", "FoveaAppKit", "FoveaSwiftUI"):
+    adapter_source = "\n".join(
+        path.read_text() for path in sorted((source_root / adapter).rglob("*.swift"))
+    )
+    if "ImageFailurePolicy" not in adapter_source:
+        errors.append(f"{adapter} must expose an image failure policy adapter")
+    if adapter in ("FoveaUIKit", "FoveaAppKit"):
+        if "failure.imageRecoveryAction" not in adapter_source:
+            errors.append(f"{adapter} must delegate failure mapping to FoveaCore")
+        if re.search(r"failure\.(category|disposition)", adapter_source):
+            errors.append(f"{adapter} must not duplicate the Core failure matrix")
+
+# 原图解码不得通过隐式快捷入口绕过显式 TargetPixels。
+product_source = "\n".join(path.read_text() for path in sorted(source_root.rglob("*.swift")))
+if re.search(r"\boriginalSize\b", product_source):
+    errors.append("implicit original-size API is forbidden; callers must provide TargetPixels")
+if re.search(r"public\s+func\s+image\s*\(\s*for\s+[^:]+:\s*URL\b", product_source):
+    errors.append("public URL image shortcut must not bypass explicit target pixels")
+
+# 管线只能由组合根显式构造；扩展模块不得通过全局默认实例或注册钩子改变行为。
+fovea_core_source = "\n".join(
+    path.read_text() for path in sorted((source_root / "FoveaCore").rglob("*.swift"))
+)
+for forbidden in (
+    "FoveaPipeline.shared",
+    "FoveaPipeline.default",
+    "registerGlobal",
+    "globalPipelineRegistry",
+    "globalDecoderRegistry",
+    "globalTransportRegistry",
+):
+    if forbidden in fovea_core_source:
+        errors.append(f"automatic pipeline composition is forbidden: {forbidden}")
 
 local_evidence = root / "evidence/local"
 if local_evidence.is_dir():

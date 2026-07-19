@@ -20,6 +20,9 @@ let package = Package(
     .library(name: "AkashicDisk", targets: ["AkashicDisk"]),
     .library(name: "FoveaHTTP", targets: ["FoveaHTTP"]),
     .library(name: "FoveaCore", targets: ["FoveaCore"]),
+    .library(name: "FoveaPersistence", targets: ["FoveaPersistence"]),
+    .library(name: "FoveaUIKit", targets: ["FoveaUIKit"]),
+    .library(name: "FoveaAppKit", targets: ["FoveaAppKit"]),
     .library(name: "FoveaSwiftUI", targets: ["FoveaSwiftUI"]),
     .library(name: "FoveaTesting", targets: ["FoveaTesting"]),
   ],
@@ -50,6 +53,21 @@ let package = Package(
       swiftSettings: concurrencySettings
     ),
     .target(
+      name: "FoveaPersistence",
+      dependencies: ["AkashicDisk", "FoveaHTTP"],
+      swiftSettings: concurrencySettings
+    ),
+    .target(
+      name: "FoveaUIKit",
+      dependencies: ["FoveaCore"],
+      swiftSettings: concurrencySettings
+    ),
+    .target(
+      name: "FoveaAppKit",
+      dependencies: ["FoveaCore"],
+      swiftSettings: concurrencySettings
+    ),
+    .target(
       name: "FoveaSwiftUI",
       dependencies: ["FoveaCore", "ImageCraftCore"],
       swiftSettings: concurrencySettings
@@ -68,7 +86,9 @@ let package = Package(
       dependencies: [
         "ImageCraftCore", "ImageCraftImageIO",
         "AkashicCore", "AkashicMemory", "AkashicDisk",
-        "FoveaHTTP", "FoveaCore", "FoveaSwiftUI", "FoveaTesting",
+        "FoveaHTTP", "FoveaCore", "FoveaPersistence", "FoveaUIKit", "FoveaAppKit",
+        "FoveaSwiftUI",
+        "FoveaTesting",
       ],
       resources: [.copy("Conformance")],
       swiftSettings: concurrencySettings

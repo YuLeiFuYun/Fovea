@@ -93,6 +93,6 @@ let original = try await Fovea.shared.image(
 - **GEO-PT-005**: 连续 resize 不无界制造 key；
 - **GEO-PT-006**: bucket/hysteresis policy 变化进入 fingerprint；
 - **GEO-PT-007**: target 超限在分配前拒绝；
-- **GEO-PT-008**: encoded-data request 不产生 decoded megapixels。
+- **GEO-PT-008**: encoded-data request 不产生 decoded megapixels。当前 `EncodedDataLoading.encodedData(for:)` 只读取 fresh 已验证缓存或执行不持久化的新网络获取；新字节在未经图像验证前不得写入 OriginalEncoded/record。
 - **GEO-PT-009**: resize 中间 bucket 不进入正常 RenderedMemory admission/hit-rate；
 - **GEO-PT-010**: stable-target 产生后最多一个长期 RenderKey 被准入。

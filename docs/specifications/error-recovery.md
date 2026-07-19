@@ -63,7 +63,7 @@ statusCode（HTTP 时可选）
 
 Phase 0a 已实现 transport、HTTP、authorization、security limit、namespace revoke、cache degradation、probe、decode 与 cancellation 的脱敏映射。SwiftUI failure surface 接收 `PipelineFailure`，取消 disposition 映射为 `.cancelled`。底层 `URLError`、`TransportError`、`ImageCraftError` 和磁盘路径不直接暴露。
 
-Phase 0a 只标记 `retryable`，不自动执行 retry；retry budget、fallback candidate 和 stale delivery 仍属于后续阶段。
+当前实现对幂等 GET 执行有界 retry，并在 pipeline policy 与请求级 `ImageRequest.stalePolicy` 同时允许时执行 stale-if-error。共享 fetch 的订阅者可分别接受或拒绝 stale；该交付偏好不改变上游 FetchExecutionKey。
 
 ## 4. 非终止性失败
 
@@ -75,7 +75,7 @@ Phase 0a 只标记 `retryable`，不自动执行 retry；retry budget、fallback
 - DerivedEncoded 或 Analysis 写入失败；
 - 已有 final image 后的后台 revalidation 失败，且策略允许保留当前结果。
 
-这些情况记录 degradation event。只有 `.onlyIfCached`、`requirePersistence` 等显式策略才可把对应失败提升为终止结果。
+这些情况记录 degradation event。只有 `.onlyIfCached`、`requirePersistence` 等显式策略才可把对应失败提升为终止结果。当前 `.onlyIfCached` 只接受 fresh、完整且可成功读取/解码的缓存表示；miss、stale、损坏记录或 task-local transport 均在发网前返回 `cacheRead/cacheLookup/terminal/only-if-cached-miss`。缓存条目已命中但解码失败时保留真实解码错误，不伪装成 miss。
 
 ## 5. 重试
 
@@ -107,7 +107,7 @@ fresh reusable result
 → failure
 ```
 
-- stale-if-error 只能在 HTTP profile 与请求策略允许时使用；认证/私有结果仍受 namespace 和 generation 限制；
+- stale-if-error 只能在 HTTP profile、pipeline policy 与请求级策略同时允许时使用；认证/私有结果仍受 namespace 和 generation 限制；
 - 替代 decoder 不得绕过 Probe/SecurityPolicy，也不能改变输出语义而不更新 DecodeKey；
 - representation fallback 必须来自同一 logical asset 的声明候选，不能把任意 URL 当作备用图而沿用原 key；
 - placeholder/error image 是 UI 展示，不是成功结果或可缓存的资源替代。
@@ -163,4 +163,4 @@ UIKit/AppKit/SwiftUI 必须共享同一 disposition 到 UI action 的映射；UI
 - **ERR-PT-011**: namespaceRevoked 在所有 UI adapter 中立即清图且不自动重试；
 - **ERR-PT-012**: securityLimit 不保留被拒绝像素；
 - **ERR-PT-013**: cache degradation 不覆盖成功 final；
-- **ERR-PT-014**: UIKit/AppKit/SwiftUI 对同一 disposition 产生一致默认 UI action。
+- **ERR-PT-014**: UIKit/AppKit/SwiftUI 对同一 disposition 产生一致默认 UI action；恢复矩阵唯一实现在 `FoveaCore`，三个平台策略模块只委托该映射，不维护副本。

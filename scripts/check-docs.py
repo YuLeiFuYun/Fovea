@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import re
 import sys
 from collections import defaultdict
@@ -82,9 +83,13 @@ required_current_ids = {
     "AIQA-MUT-018",
 }
 all_docs_text = "\n".join(path.read_text() for path in markdown_files)
+traceability = json.loads((DOCS / "test-traceability.json").read_text())
+traceability_ids = {entry["id"] for entry in traceability.get("requirements", [])}
 for identifier in sorted(required_current_ids):
     if identifier not in all_docs_text:
         errors.append(f"current required ID missing from active docs: {identifier}")
+    if identifier not in traceability_ids:
+        errors.append(f"current required ID missing from traceability manifest: {identifier}")
 
 if errors:
     print("Documentation checks failed:", file=sys.stderr)

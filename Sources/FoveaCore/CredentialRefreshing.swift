@@ -29,10 +29,22 @@ public protocol CredentialRefreshing: Sendable {
   ) async throws -> CredentialRefreshResult
 }
 
+private struct CredentialRefreshScope: Hashable, Sendable {
+  let namespace: SecurityNamespaceID
+  let authorizationContext: AuthorizationContextID
+}
+
 private struct CredentialRefreshKey: Hashable, Sendable {
   let namespace: SecurityNamespaceID
   let authorizationContext: AuthorizationContextID
   let currentGeneration: CredentialGeneration
+
+  var scope: CredentialRefreshScope {
+    CredentialRefreshScope(
+      namespace: namespace,
+      authorizationContext: authorizationContext
+    )
+  }
 }
 
 private enum CredentialRefreshTaskContext {
@@ -41,6 +53,7 @@ private enum CredentialRefreshTaskContext {
 
 private actor CredentialRefreshCoordinator {
   private let registry = SharedTaskRegistry<CredentialRefreshKey, CredentialRefreshResult>()
+  private var latestResults: [CredentialRefreshScope: CredentialRefreshResult] = [:]
 
   func refresh(
     key: CredentialRefreshKey,
@@ -50,13 +63,20 @@ private actor CredentialRefreshCoordinator {
     guard !CredentialRefreshTaskContext.activeKeys.contains(key) else {
       throw PipelineFailure.authorization(reasonCode: "credential-refresh-reentrancy")
     }
+    if let latest = latestResults[key.scope],
+      latest.credentialGeneration.value > key.currentGeneration.value
+    {
+      return latest
+    }
 
     let subscription = await registry.subscribe(key: key, priority: priority) { _ in
-      try await CredentialRefreshTaskContext.$activeKeys.withValue(
+      let result = try await CredentialRefreshTaskContext.$activeKeys.withValue(
         CredentialRefreshTaskContext.activeKeys.union([key])
       ) {
         try await operation()
       }
+      await self.publish(result, for: key)
+      return result
     }
     return try await withTaskCancellationHandler {
       do {
@@ -75,6 +95,20 @@ private actor CredentialRefreshCoordinator {
     } onCancel: {
       Task { await subscription.cancel() }
     }
+  }
+
+  private func publish(
+    _ result: CredentialRefreshResult,
+    for key: CredentialRefreshKey
+  ) {
+    guard result.credentialGeneration.value > key.currentGeneration.value else { return }
+    if let existing = latestResults[key.scope],
+      existing.credentialGeneration.value >= result.credentialGeneration.value
+    {
+      return
+    }
+    // 每个授权作用域只保留最新结果，用于覆盖同一旧代际中迟到的 401。
+    latestResults[key.scope] = result
   }
 }
 

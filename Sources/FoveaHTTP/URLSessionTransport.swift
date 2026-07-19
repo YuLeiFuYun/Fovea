@@ -2,6 +2,8 @@ import AkashicCore
 import Foundation
 
 public actor URLSessionTransport: HTTPTransporting {
+  public nonisolated let reusePolicy: TransportReusePolicy
+
   private nonisolated let ioExecutor = BlockingIOExecutor(label: "dev.fovea.http.transport")
 
   public nonisolated var unownedExecutor: UnownedSerialExecutor {
@@ -15,8 +17,14 @@ public actor URLSessionTransport: HTTPTransporting {
 
   public init(
     configuration: URLSessionConfiguration? = nil,
-    stagingDirectory: URL? = nil
+    stagingDirectory: URL? = nil,
+    reusePolicy: TransportReusePolicy? = nil
   ) {
+    self.reusePolicy =
+      reusePolicy
+      ?? (configuration == nil
+        ? .reusable(contextIdentifier: "fovea-url-session-secure-default-v1")
+        : .taskLocal)
     let secureConfiguration =
       (configuration?.copy() as? URLSessionConfiguration) ?? URLSessionConfiguration.ephemeral
     secureConfiguration.urlCache = nil

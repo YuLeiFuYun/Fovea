@@ -2,6 +2,16 @@ import Foundation
 import FoveaHTTP
 import ImageCraftCore
 
+public enum ImageRequestCachePolicy: String, Codable, Hashable, Sendable {
+  case automatic
+  case onlyIfCached
+}
+
+public enum ImageRequestStalePolicy: String, Codable, Hashable, Sendable {
+  case inheritPipelinePolicy
+  case disallow
+}
+
 public enum ImageRequestError: Error, Equatable, Sendable {
   case duplicateHeaderName(String)
   case invalidHeaderName(String)
@@ -19,11 +29,14 @@ public struct ImageRequest: Sendable {
   public let target: TargetPixels
   public let contentMode: ImageContentMode
   public let geometryPolicyFingerprint: String
+  public let colorPolicy: ImageColorPolicy
   public let renderCacheAdmission: RenderCacheAdmission
   public let namespace: SecurityNamespaceID
   public let authorizationContext: AuthorizationContextID
   public let credentialGeneration: CredentialGeneration?
   public let priority: ImageRequestPriority
+  public let cachePolicy: ImageRequestCachePolicy
+  public let stalePolicy: ImageRequestStalePolicy
   public let headers: [String: String]
   public let credentialHeaderNames: Set<String>
   public let headerVariantFingerprints: [String: HeaderVariantFingerprint]
@@ -34,11 +47,14 @@ public struct ImageRequest: Sendable {
     target: TargetPixels,
     contentMode: ImageContentMode = .fit,
     geometryPolicyFingerprint: String = "exact-v1",
+    colorPolicy: ImageColorPolicy = .preserveSource,
     renderCacheAdmission: RenderCacheAdmission = .stable,
     namespace: SecurityNamespaceID,
     authorizationContext: AuthorizationContextID = .public,
     credentialGeneration: CredentialGeneration? = nil,
     priority: ImageRequestPriority = .normal,
+    cachePolicy: ImageRequestCachePolicy = .automatic,
+    stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy,
     headers: [String: String] = [:],
     credentialHeaderNames: Set<String> = [],
     headerVariantFingerprints: [String: HeaderVariantFingerprint] = [:]
@@ -58,11 +74,14 @@ public struct ImageRequest: Sendable {
     self.target = target
     self.contentMode = contentMode
     self.geometryPolicyFingerprint = geometryPolicyFingerprint
+    self.colorPolicy = colorPolicy
     self.renderCacheAdmission = renderCacheAdmission
     self.namespace = namespace
     self.authorizationContext = authorizationContext
     self.credentialGeneration = credentialGeneration
     self.priority = priority
+    self.cachePolicy = cachePolicy
+    self.stalePolicy = stalePolicy
     self.headers = normalizedHeaders
     self.credentialHeaderNames = normalizedCredentialNames
     self.headerVariantFingerprints = normalizedFingerprints
@@ -72,10 +91,13 @@ public struct ImageRequest: Sendable {
     url: URL,
     logicalSource: LogicalSourceID? = nil,
     resolvedTarget: ResolvedImageTarget,
+    colorPolicy: ImageColorPolicy = .preserveSource,
     namespace: SecurityNamespaceID,
     authorizationContext: AuthorizationContextID = .public,
     credentialGeneration: CredentialGeneration? = nil,
     priority: ImageRequestPriority = .normal,
+    cachePolicy: ImageRequestCachePolicy = .automatic,
+    stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy,
     headers: [String: String] = [:],
     credentialHeaderNames: Set<String> = [],
     headerVariantFingerprints: [String: HeaderVariantFingerprint] = [:]
@@ -86,11 +108,14 @@ public struct ImageRequest: Sendable {
       target: resolvedTarget.pixels,
       contentMode: resolvedTarget.contentMode,
       geometryPolicyFingerprint: resolvedTarget.geometryPolicyFingerprint,
+      colorPolicy: colorPolicy,
       renderCacheAdmission: resolvedTarget.cacheAdmission,
       namespace: namespace,
       authorizationContext: authorizationContext,
       credentialGeneration: credentialGeneration,
       priority: priority,
+      cachePolicy: cachePolicy,
+      stalePolicy: stalePolicy,
       headers: headers,
       credentialHeaderNames: credentialHeaderNames,
       headerVariantFingerprints: headerVariantFingerprints
@@ -101,15 +126,21 @@ public struct ImageRequest: Sendable {
     url: URL,
     logicalSource: LogicalSourceID? = nil,
     target: TargetPixels,
+    colorPolicy: ImageColorPolicy = .preserveSource,
     appID: String,
-    priority: ImageRequestPriority = .normal
+    priority: ImageRequestPriority = .normal,
+    cachePolicy: ImageRequestCachePolicy = .automatic,
+    stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy
   ) throws -> Self {
     try ImageRequest(
       url: url,
       logicalSource: logicalSource,
       target: target,
+      colorPolicy: colorPolicy,
       namespace: .publicNamespace(appID: appID),
-      priority: priority
+      priority: priority,
+      cachePolicy: cachePolicy,
+      stalePolicy: stalePolicy
     )
   }
 
@@ -117,15 +148,21 @@ public struct ImageRequest: Sendable {
     url: URL,
     logicalSource: LogicalSourceID? = nil,
     resolvedTarget: ResolvedImageTarget,
+    colorPolicy: ImageColorPolicy = .preserveSource,
     appID: String,
-    priority: ImageRequestPriority = .normal
+    priority: ImageRequestPriority = .normal,
+    cachePolicy: ImageRequestCachePolicy = .automatic,
+    stalePolicy: ImageRequestStalePolicy = .inheritPipelinePolicy
   ) throws -> Self {
     try ImageRequest(
       url: url,
       logicalSource: logicalSource,
       resolvedTarget: resolvedTarget,
+      colorPolicy: colorPolicy,
       namespace: .publicNamespace(appID: appID),
-      priority: priority
+      priority: priority,
+      cachePolicy: cachePolicy,
+      stalePolicy: stalePolicy
     )
   }
 
@@ -179,7 +216,10 @@ public struct ImageRequest: Sendable {
       "\(target.width)x\(target.height)",
       contentMode.rawValue,
       geometryPolicyFingerprint,
+      colorPolicy.rawValue,
       renderCacheAdmission.rawValue,
+      cachePolicy.rawValue,
+      stalePolicy.rawValue,
     ].joined(separator: "|")
   }
 

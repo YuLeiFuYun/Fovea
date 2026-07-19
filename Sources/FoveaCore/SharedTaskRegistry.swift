@@ -36,7 +36,7 @@ package actor SharedTaskPriorityControl {
     }
   }
 
-  fileprivate func finish() {
+  package func finish() {
     guard !isFinished else { return }
     isFinished = true
     for continuation in continuations.values { continuation.finish() }

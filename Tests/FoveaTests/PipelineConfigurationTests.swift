@@ -89,6 +89,70 @@ final class PipelineConfigurationTests: XCTestCase {
     )
   }
 
+  func testNewConfigurationGenerationDoesNotChangeInFlightOldTask_PIPE_PT_003() async throws {
+    let body = try makePNG(width: 40, height: 20)
+    let root = try makeTemporaryDirectory()
+    let oldPipeline = FoveaPipeline(
+      configuration: PipelineConfiguration(
+        decodeLimits: DecodeLimits(maximumEncodedBytes: body.count + 1)
+      ),
+      transport: FakeHTTPTransport(stubs: [
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+          body: body,
+          delayNanoseconds: 40_000_000
+        )
+      ]),
+      encodedStore: try await OriginalEncodedStore.open(
+        root: root.appendingPathComponent("old-encoded")
+      ),
+      recordStore: try await RepresentationRecordStore.open(
+        root: root.appendingPathComponent("old-records")
+      ),
+      decoder: ImageIOImageDecoder()
+    )
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/config-generation.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let oldTask = Task { try await oldPipeline.image(for: request) }
+    try await Task.sleep(for: .milliseconds(10))
+
+    let newPipeline = FoveaPipeline(
+      configuration: PipelineConfiguration(
+        decodeLimits: DecodeLimits(maximumEncodedBytes: 1)
+      ),
+      transport: FakeHTTPTransport(stubs: [
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+          body: body
+        )
+      ]),
+      encodedStore: try await OriginalEncodedStore.open(
+        root: root.appendingPathComponent("new-encoded")
+      ),
+      recordStore: try await RepresentationRecordStore.open(
+        root: root.appendingPathComponent("new-records")
+      ),
+      decoder: ImageIOImageDecoder()
+    )
+    do {
+      _ = try await newPipeline.image(for: request)
+      XCTFail("新配置的字节限制必须作用于新 pipeline")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .securityLimit)
+      XCTAssertEqual(failure.stage, .probe)
+    }
+
+    let oldImage = try await oldTask.value
+    XCTAssertEqual(oldImage.pixelWidth, 20)
+    XCTAssertEqual(oldPipeline.configuration.decodeLimits.maximumEncodedBytes, body.count + 1)
+    XCTAssertEqual(newPipeline.configuration.decodeLimits.maximumEncodedBytes, 1)
+  }
+
   func testPipelineIDsAreIndependentAndConfigurationIsImmutablePipePt004() async throws {
     let root = try makeTemporaryDirectory()
     let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))

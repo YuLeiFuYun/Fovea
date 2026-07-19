@@ -3,13 +3,15 @@ import Foundation
 import FoveaHTTP
 import ImageCraftCore
 
-public final class FoveaPipeline: ImageLoading, Sendable {
+public final class FoveaPipeline: ImageLoading, EncodedDataLoading, Sendable {
   public let id: PipelineID
   public let configuration: PipelineConfiguration
 
   private let cache: PipelineCache
+  private let transportReusePolicy: TransportReusePolicy
   private let fetchStage: FetchStage
   private let decodeStage: DecodeStage
+  private let transformStage: TransformStage
   private let namespaceRegistry: NamespaceRegistry
   private let diagnostics: any DiagnosticsSink
   private let clock: any WallClock
@@ -20,7 +22,8 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     encodedStore: any OriginalEncodedStoring,
     recordStore: any RepresentationRecordStoring,
     diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
-    decoder: any ImageDecoding
+    decoder: any ImageDecoding,
+    transformer: any ImageTransforming = IdentityImageTransformer()
   ) {
     self.init(
       id: PipelineID(),
@@ -31,6 +34,7 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       namespaceRegistry: NamespaceRegistry(),
       diagnostics: diagnostics,
       decoder: decoder,
+      transformer: transformer,
       clock: SystemWallClock(),
       retrySleeper: SystemRetrySleeper(),
       retryJitter: SystemRetryJitter()
@@ -46,12 +50,14 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     namespaceRegistry: NamespaceRegistry,
     diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
     decoder: any ImageDecoding,
+    transformer: any ImageTransforming = IdentityImageTransformer(),
     clock: any WallClock = SystemWallClock(),
     retrySleeper: any RetrySleeping = SystemRetrySleeper(),
     retryJitter: any RetryJittering = SystemRetryJitter()
   ) {
     self.id = id
     self.configuration = configuration
+    self.transportReusePolicy = transport.reusePolicy
     let diagnostics = pipelineDiagnosticsSink(diagnostics)
     self.namespaceRegistry = namespaceRegistry
     self.diagnostics = diagnostics
@@ -87,6 +93,7 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       maximumConcurrentDecodes: configuration.maximumConcurrentDecodes,
       maximumQueuedDecodes: configuration.maximumQueuedDecodes
     )
+    self.transformStage = TransformStage(transformer: transformer)
   }
 
   @concurrent
@@ -101,6 +108,31 @@ public final class FoveaPipeline: ImageLoading, Sendable {
 
     do {
       return try await load(request: request)
+    } catch let failure as PipelineFailure {
+      await record(failure)
+      throw failure
+    } catch is CancellationError {
+      let failure = PipelineFailure.cancelled(stage: .pipeline)
+      await record(failure)
+      throw failure
+    } catch {
+      let failure = PipelineFailure.internalFailure(stage: .pipeline)
+      await record(failure)
+      throw failure
+    }
+  }
+
+  public func encodedData(for request: ImageRequest) async throws -> Data {
+    if request.containsCredentialHeaders,
+      request.authorizationContext == .public || request.credentialGeneration == nil
+    {
+      let failure = PipelineFailure.missingAuthorizationContext
+      await record(failure)
+      throw failure
+    }
+
+    do {
+      return try await loadEncodedData(request: request)
     } catch let failure as PipelineFailure {
       await record(failure)
       throw failure
@@ -148,8 +180,102 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     if cleanupFailed { throw PipelineFailure.namespaceCleanupFailed }
   }
 
+  private func loadEncodedData(request: ImageRequest) async throws -> Data {
+    let generation = await namespaceRegistry.generation(for: request.namespace)
+    if transportReusePolicy.allowsCrossRequestReuse {
+      let candidates = await cache.records(
+        for: request.fetchBaseKey.digestHex,
+        namespace: request.namespace,
+        generation: generation
+      )
+      if let record = HTTPCachePolicy.selectRecord(
+        from: candidates,
+        requestHeaders: request.headers,
+        additionalSensitiveNames: request.credentialHeaderNames,
+        sensitiveFingerprints: request.headerVariantFingerprints
+      ), record.isFresh(at: await clock.now()), record.disposition != .noStore {
+        do {
+          let data = try await cache.read(record, namespace: request.namespace)
+          await diagnostics.record(
+            DiagnosticEvent(
+              kind: .originalEncodedHit,
+              keyDigest: record.variantKeyDigest,
+              byteCount: data.count
+            )
+          )
+          return data
+        } catch {
+          await diagnostics.record(
+            DiagnosticEvent(
+              kind: .cacheReadFailed,
+              keyDigest: record.variantKeyDigest,
+              reason: "encoded-data-read"
+            )
+          )
+          await cache.removeRecord(
+            record.variantKeyDigest,
+            namespace: request.namespace,
+            generation: generation
+          )
+        }
+      }
+    }
+
+    guard request.cachePolicy != .onlyIfCached else {
+      throw PipelineFailure.onlyIfCachedMiss
+    }
+    let response = try await fetchStage.response(
+      for: request,
+      conditionalRecord: nil,
+      generation: generation
+    )
+    try Task.checkCancellation()
+    try await requireActive(generation, for: request.namespace)
+    guard response.head.statusCode == 200 else {
+      throw PipelineFailure.unsupportedStatus(response.head.statusCode)
+    }
+    if let contentType = response.head.value(forHeader: "Content-Type") {
+      guard contentType.lowercased().hasPrefix("image/") else {
+        throw PipelineFailure.nonImageResponse
+      }
+    } else {
+      await diagnostics.record(
+        DiagnosticEvent(
+          kind: .responseAnomaly,
+          keyDigest: request.fetchBaseKey.digestHex,
+          reason: "missing-content-type"
+        )
+      )
+    }
+    do {
+      _ = try ContentID(
+        digestHex: response.transport.digestHex,
+        byteCount: response.transport.body.count
+      )
+    } catch {
+      throw PipelineFailure.invalidContentDigest
+    }
+    return response.transport.body
+  }
+
   private func load(request: ImageRequest) async throws -> DecodedImage {
     let generation = await namespaceRegistry.generation(for: request.namespace)
+    if !transportReusePolicy.allowsCrossRequestReuse {
+      guard request.cachePolicy != .onlyIfCached else {
+        throw PipelineFailure.onlyIfCachedMiss
+      }
+      let response = try await fetchStage.response(
+        for: request,
+        conditionalRecord: nil,
+        generation: generation
+      )
+      return try await process200(
+        response,
+        request: request,
+        generation: generation,
+        allowReusableState: false
+      )
+    }
     let baseKey = request.fetchBaseKey
     let now = await clock.now()
     let candidates = await cache.records(
@@ -202,6 +328,10 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       }
     }
 
+    guard request.cachePolicy != .onlyIfCached else {
+      throw PipelineFailure.onlyIfCachedMiss
+    }
+
     do {
       let response = try await fetchStage.response(
         for: request,
@@ -244,7 +374,7 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     after failure: PipelineFailure
   ) async throws -> DecodedImage? {
     let now = await clock.now()
-    guard
+    guard request.stalePolicy != .disallow,
       configuration.staleFallbackPolicy.permits(
         record: record,
         at: now,
@@ -364,13 +494,14 @@ public final class FoveaPipeline: ImageLoading, Sendable {
         namespace: request.namespace,
         generation: generation
       )
-      let image = try await decodeStage.image(
+      let decoded = try await decodeStage.image(
         from: cachedData,
         contentID: ContentID(data: cachedData),
         request: request,
         generation: generation,
         keyDigest: existing.variantKeyDigest
       )
+      let image = try await transformStage.image(from: decoded)
       try Task.checkCancellation()
       try await requireActive(generation, for: request.namespace)
       return image
@@ -420,7 +551,8 @@ public final class FoveaPipeline: ImageLoading, Sendable {
   private func process200(
     _ response: TimedTransportResponse,
     request: ImageRequest,
-    generation: NamespaceGeneration
+    generation: NamespaceGeneration,
+    allowReusableState: Bool = true
   ) async throws -> DecodedImage {
     try Task.checkCancellation()
     guard response.head.statusCode == 200 else {
@@ -459,7 +591,7 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     } catch {
       throw PipelineFailure.invalidContentDigest
     }
-    let image = try await decodeStage.image(
+    let decoded = try await decodeStage.image(
       from: response.transport.body,
       contentID: contentID,
       request: request,
@@ -475,7 +607,7 @@ public final class FoveaPipeline: ImageLoading, Sendable {
 
     try await requireActive(generation, for: request.namespace)
 
-    if disposition != .noStore {
+    if allowReusableState, disposition != .noStore {
       let record = RepresentationRecord(
         securityNamespace: request.namespace.value,
         namespaceGeneration: generation.value,
@@ -498,24 +630,32 @@ public final class FoveaPipeline: ImageLoading, Sendable {
         payloadLength: response.transport.body.count,
         contentType: response.head.value(forHeader: "Content-Type")
       )
-      try await cache.commit(
+      try await cache.commitOriginal(
         data: response.transport.body,
         contentID: contentID,
         record: record,
-        image: image,
-        renderKey: scopedRenderKey(
-          contentID: contentID,
-          request: request,
-          generation: generation
-        ),
-        admitRendered: request.renderCacheAdmission == .stable,
         namespace: request.namespace,
         generation: generation
       )
     }
 
+    let image = try await transformStage.image(from: decoded)
     try Task.checkCancellation()
     try await requireActive(generation, for: request.namespace)
+    if allowReusableState, disposition != .noStore,
+      request.renderCacheAdmission == .stable
+    {
+      let renderKey = scopedRenderKey(
+        contentID: contentID,
+        request: request,
+        generation: generation
+      )
+      await cache.insertRendered(image, for: renderKey)
+      guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
+        await cache.removeRendered(renderKey)
+        throw PipelineFailure.namespaceRevoked
+      }
+    }
     return image
   }
 
@@ -547,13 +687,14 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       return cached
     }
 
-    let image = try await decodeStage.image(
+    let decoded = try await decodeStage.image(
       from: data,
       contentID: contentID,
       request: request,
       generation: generation,
       keyDigest: keyDigest
     )
+    let image = try await transformStage.image(from: decoded)
     try Task.checkCancellation()
     try await requireActive(generation, for: request.namespace)
     if request.renderCacheAdmission == .stable {
@@ -628,12 +769,17 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       targetHeight: request.target.height,
       contentMode: request.contentMode,
       geometryPolicyFingerprint: request.geometryPolicyFingerprint,
+      colorPolicy: request.colorPolicy,
       decoderVersion: 1
     )
     return ScopedRenderKey(
       namespace: request.namespace,
       generation: generation,
-      renderKey: RenderKey(decodeKey: decode, renderVersion: 1)
+      renderKey: RenderKey(
+        decodeKey: decode,
+        transformerFingerprint: transformStage.fingerprint,
+        renderVersion: 1
+      )
     )
   }
 

@@ -68,6 +68,10 @@ final class PriorityPropagationTests: XCTestCase {
 }
 
 private actor PriorityObservingTransport: HTTPTransporting {
+  nonisolated let reusePolicy = TransportReusePolicy.reusable(
+    contextIdentifier: "tests-priority-observing-v1"
+  )
+
   private let body: Data
   private var started = false
   private var released = false

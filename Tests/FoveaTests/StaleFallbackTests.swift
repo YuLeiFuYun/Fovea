@@ -65,6 +65,42 @@ final class StaleFallbackTests: XCTestCase {
     XCTAssertEqual(events.first { $0.kind == .staleFallbackUsed }?.reason, "url-session-transport")
   }
 
+  func testStaleFallbackIsDecidedPerSubscriber_ERR_PT_006() async throws {
+    let fixture = try await makeStaleFixture(path: "per-subscriber.png", staleWindow: 60)
+    await fixture.clock.set(Date(timeIntervalSince1970: 1_010))
+    let transport = StaleSequenceTransport(steps: [
+      .delayedFailure(URLError(.notConnectedToInternet), 40_000_000)
+    ])
+    let pipeline = makePipeline(
+      encoded: fixture.encoded,
+      records: fixture.records,
+      transport: transport,
+      clock: fixture.clock,
+      staleWindow: 60
+    )
+    let denied = try ImageRequest.publicImage(
+      url: fixture.request.url,
+      target: fixture.request.target,
+      appID: "tests",
+      stalePolicy: .disallow
+    )
+
+    let allowedTask = Task { try await pipeline.image(for: fixture.request) }
+    let deniedTask = Task { try await pipeline.image(for: denied) }
+    let allowedImage = try await allowedTask.value
+    XCTAssertGreaterThan(try centerRedComponent(of: allowedImage.cgImage), 120)
+    do {
+      _ = try await deniedTask.value
+      XCTFail("禁止 stale 的订阅者不得接收共享失败后的 stale 表示")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .transport)
+      XCTAssertEqual(failure.reasonCode, "url-session-transport")
+    }
+
+    let requestCount = await transport.requestCount
+    XCTAssertEqual(requestCount, 1)
+  }
+
   func testStaleWindowExpiryReturnsOriginalFailureErrPt005() async throws {
     let fixture = try await makeStaleFixture(path: "expired-fallback.png", staleWindow: 10)
     await fixture.clock.set(Date(timeIntervalSince1970: 1_011))
@@ -252,8 +288,13 @@ private actor MutableStaleClock: WallClock {
 }
 
 private actor StaleSequenceTransport: HTTPTransporting {
+  nonisolated let reusePolicy = TransportReusePolicy.reusable(
+    contextIdentifier: "tests-stale-sequence-v1"
+  )
+
   enum Step: Sendable {
     case failure(URLError)
+    case delayedFailure(URLError, UInt64)
     case response(statusCode: Int, headers: [String: String], body: Data)
   }
 
@@ -269,6 +310,9 @@ private actor StaleSequenceTransport: HTTPTransporting {
     guard !steps.isEmpty else { throw URLError(.resourceUnavailable) }
     switch steps.removeFirst() {
     case .failure(let error):
+      throw error
+    case .delayedFailure(let error, let nanoseconds):
+      try await Task.sleep(nanoseconds: nanoseconds)
       throw error
     case .response(let statusCode, let headers, let body):
       let digest = SHA256.hash(data: body).map { String(format: "%02x", $0) }.joined()

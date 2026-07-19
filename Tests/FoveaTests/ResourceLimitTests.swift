@@ -217,6 +217,10 @@ final class ResourceLimitTests: XCTestCase {
 }
 
 private final class TrackingTransport: HTTPTransporting, Sendable {
+  nonisolated let reusePolicy = TransportReusePolicy.reusable(
+    contextIdentifier: "tests-tracking-transport-v1"
+  )
+
   private let tracker = ConcurrencyTracker()
   private let body: Data
   private let delay: Duration

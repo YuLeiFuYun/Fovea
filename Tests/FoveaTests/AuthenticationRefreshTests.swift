@@ -26,6 +26,26 @@ final class AuthenticationRefreshTests: XCTestCase {
     XCTAssertEqual(counts["Bearer new"], 1)
   }
 
+  func testCompletedRefreshCoversLateOldGenerationUnauthorizedRequestAuthPt007() async throws {
+    let fixture = try await makeFixture()
+    let refresher = FixedCredentialRefresher(
+      result: CredentialRefreshResult(
+        credentialGeneration: CredentialGeneration(2),
+        headers: ["Authorization": "Bearer new"]
+      )
+    )
+    let loader = RefreshingImageLoader(base: fixture.pipeline, refresher: refresher)
+
+    _ = try await loader.image(for: fixture.request)
+    _ = try await loader.image(for: fixture.request)
+
+    let refreshCount = await refresher.refreshCount
+    let counts = await fixture.transport.counts
+    XCTAssertEqual(refreshCount, 1)
+    XCTAssertEqual(counts["Bearer old"], 2)
+    XCTAssertEqual(counts["Bearer new"], 2)
+  }
+
   func testCancellingOneRefreshSubscriberDoesNotCancelOtherAuthPt007() async throws {
     let fixture = try await makeFixture()
     let refresher = GatedCredentialRefresher()
@@ -187,6 +207,10 @@ private struct AuthRefreshFixture {
 }
 
 private actor CredentialSwitchingTransport: HTTPTransporting {
+  nonisolated let reusePolicy = TransportReusePolicy.reusable(
+    contextIdentifier: "tests-credential-switch-v1"
+  )
+
   private let oldStatusCode: Int
   private let body: Data
   private(set) var counts: [String: Int] = [:]

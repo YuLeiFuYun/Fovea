@@ -526,6 +526,10 @@ private struct RedirectResult {
 }
 
 private actor AuthenticatedOrigin: HTTPTransporting {
+  nonisolated let reusePolicy = TransportReusePolicy.reusable(
+    contextIdentifier: "fovea-testing-authenticated-origin-v1"
+  )
+
   struct Response: Sendable {
     let body: Data
     let headers: [String: String]

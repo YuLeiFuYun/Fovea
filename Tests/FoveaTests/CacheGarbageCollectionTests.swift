@@ -39,7 +39,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
     XCTAssertEqual(loaded, data)
   }
 
-  func testContentReferencesReflectPersistedRecordsAfterReopenCachePt019() async throws {
+  func testContentReferencesReflectPersistedRecordsAfterReopenCachePt020() async throws {
     let root = try makeTemporaryDirectory().appendingPathComponent("records")
     let store = try await RepresentationRecordStore.open(root: root)
     let first = makeRepresentationRecord(
@@ -85,7 +85,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
     )
   }
 
-  func testGarbageCollectionRetainsBlobUntilLastVaryReferenceIsRemovedCachePt019() async throws {
+  func testGarbageCollectionRetainsBlobUntilLastVaryReferenceIsRemovedCachePt020() async throws {
     let root = try makeTemporaryDirectory()
     let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
     let records = try await RepresentationRecordStore.open(
@@ -161,7 +161,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
     XCTAssertNil(removedPhysicalID)
   }
 
-  func testCancelledGarbageCollectionWaiterReturnsStructuredCancellation() async throws {
+  func testCancelledGarbageCollectionWaiterReturnsStructuredCancellation_RES_PT_002() async throws {
     let body = try makePNG()
     let root = try makeTemporaryDirectory()
     let baseStore = try await OriginalEncodedStore.open(
@@ -205,6 +205,37 @@ final class CacheGarbageCollectionTests: XCTestCase {
 
     await barrierStore.releaseCommit()
     _ = try await imageTask.value
+  }
+
+  func testGarbageCollectionRecoversBlobPublishedBeforeRecordAfterReopenCachePt013() async throws {
+    let root = try makeTemporaryDirectory()
+    let encodedRoot = root.appendingPathComponent("encoded")
+    let recordsRoot = root.appendingPathComponent("records")
+    let data = Data("published-before-record".utf8)
+    let contentID = ContentID(data: data).description
+    let namespace = "public:tests"
+    let encoded = try await OriginalEncodedStore.open(root: encodedRoot)
+    _ = try await encoded.commit(
+      data: data,
+      contentID: contentID,
+      namespace: namespace
+    )
+
+    let reopenedEncoded = try await OriginalEncodedStore.open(root: encodedRoot)
+    let reopenedRecords = try await RepresentationRecordStore.open(root: recordsRoot)
+    let pipeline = FoveaPipeline(
+      transport: FakeHTTPTransport(stubs: []),
+      encodedStore: reopenedEncoded,
+      recordStore: reopenedRecords,
+      decoder: ImageIOImageDecoder()
+    )
+
+    let result = try await pipeline.garbageCollectCaches()
+
+    XCTAssertEqual(result.removedBlobCount, 1)
+    await assertThrowsErrorAsync {
+      _ = try await reopenedEncoded.read(contentID: contentID, namespace: namespace)
+    }
   }
 
   func testGarbageCollectionWaitsForCommitPublicationCachePt013() async throws {

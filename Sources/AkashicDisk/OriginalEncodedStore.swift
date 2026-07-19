@@ -9,14 +9,14 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
   public nonisolated var unownedExecutor: UnownedSerialExecutor {
     ioExecutor.asUnownedSerialExecutor()
   }
-  private static let manifestSchemaVersion: UInt16 = 4
+  public static let currentSchemaVersion: UInt16 = 4
 
   private struct Manifest: Codable {
     let schemaVersion: UInt16
     var entries: [String: Entry]
 
     init(
-      schemaVersion: UInt16 = OriginalEncodedStore.manifestSchemaVersion,
+      schemaVersion: UInt16 = OriginalEncodedStore.currentSchemaVersion,
       entries: [String: Entry] = [:]
     ) {
       self.schemaVersion = schemaVersion
@@ -59,7 +59,7 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
     if FileManager.default.fileExists(atPath: manifestURL.path) {
       let data = try Data(contentsOf: manifestURL)
       let decoded = try JSONDecoder().decode(Manifest.self, from: data)
-      guard decoded.schemaVersion == Self.manifestSchemaVersion else {
+      guard decoded.schemaVersion == Self.currentSchemaVersion else {
         throw AkashicError.invalidManifest
       }
       manifest = decoded
