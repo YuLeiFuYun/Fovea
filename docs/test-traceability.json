@@ -1241,14 +1241,26 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PipelineConfigurationTests.swift",
+          "kind": "swiftTest",
+          "method": "testEquivalentConfigurationsHaveStableFingerprintsPipePt001"
+        }
+      ],
       "id": "PIPE-PT-001",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PipelineConfigurationTests.swift",
+          "kind": "swiftTest",
+          "method": "testSemanticChangeChangesBothFingerprintsPipePt002"
+        }
+      ],
       "id": "PIPE-PT-002",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [],
@@ -1256,9 +1268,15 @@
       "status": "missing"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PipelineConfigurationTests.swift",
+          "kind": "swiftTest",
+          "method": "testPipelineIDsAreIndependentAndConfigurationIsImmutablePipePt004"
+        }
+      ],
       "id": "PIPE-PT-004",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [],
@@ -1282,9 +1300,15 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PipelineConfigurationTests.swift",
+          "kind": "swiftTest",
+          "method": "testSeparatePipelinesDoNotShareInFlightFetchesPipePt008"
+        }
+      ],
       "id": "PIPE-PT-008",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [

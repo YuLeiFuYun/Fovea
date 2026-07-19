@@ -1,6 +1,11 @@
+import Foundation
 import ImageCraftCore
 
-public struct PipelineConfiguration: Sendable {
+public struct PipelineConfiguration: Codable, Hashable, Sendable {
+  public static let currentSchemaVersion: UInt16 = 1
+
+  public let schemaVersion: UInt16
+  public let memoryCostLimit: Int
   public let decodeLimits: DecodeLimits
   public let transportRetryPolicy: TransportRetryPolicy
   public let maximumTransportBytes: Int
@@ -11,6 +16,8 @@ public struct PipelineConfiguration: Sendable {
   public let maximumQueuedDecodes: Int
 
   public init(
+    schemaVersion: UInt16 = PipelineConfiguration.currentSchemaVersion,
+    memoryCostLimit: Int = 64 * 1024 * 1024,
     decodeLimits: DecodeLimits = .coreV1,
     transportRetryPolicy: TransportRetryPolicy = .coreV1,
     maximumTransportBytes: Int = 64 * 1024 * 1024,
@@ -20,6 +27,8 @@ public struct PipelineConfiguration: Sendable {
     maximumQueuedFetches: Int = 512,
     maximumQueuedDecodes: Int = 512
   ) {
+    self.schemaVersion = schemaVersion
+    self.memoryCostLimit = max(1, memoryCostLimit)
     self.decodeLimits = decodeLimits
     self.transportRetryPolicy = transportRetryPolicy
     self.maximumTransportBytes = max(1, maximumTransportBytes)
@@ -30,7 +39,57 @@ public struct PipelineConfiguration: Sendable {
     self.maximumQueuedDecodes = max(0, maximumQueuedDecodes)
   }
 
+  public var semanticFingerprint: String {
+    fingerprint(domain: "pipeline-semantic-v1", fields: semanticFields)
+  }
+
+  public var fullFingerprint: String {
+    fingerprint(domain: "pipeline-full-v1", fields: semanticFields + operationalFields)
+  }
+
   package var transportPolicyFingerprint: String {
-    "transport-v1|\(transportRetryPolicy.fingerprint)|max-bytes:\(maximumTransportBytes)"
+    fingerprint(
+      domain: "transport-policy-v1",
+      fields: [
+        transportRetryPolicy.fingerprint,
+        "maximumTransportBytes:\(maximumTransportBytes)",
+      ]
+    )
+  }
+
+  private var semanticFields: [String] {
+    [
+      "schemaVersion:\(schemaVersion)",
+      "decode.maximumEncodedBytes:\(decodeLimits.maximumEncodedBytes)",
+      "decode.maximumDimension:\(decodeLimits.maximumDimension)",
+      "decode.maximumPixelCount:\(decodeLimits.maximumPixelCount)",
+      "decode.maximumFrameCount:\(decodeLimits.maximumFrameCount)",
+      "decode.maximumMetadataBytes:\(decodeLimits.maximumMetadataBytes)",
+      "decode.maximumAuxiliaryAttachments:\(decodeLimits.maximumAuxiliaryAttachments)",
+      "decode.allowedFormats:\(decodeLimits.allowedFormats.map(\.rawValue).sorted().joined(separator: ","))",
+      "maximumTransportBytes:\(maximumTransportBytes)",
+    ]
+  }
+
+  private var operationalFields: [String] {
+    [
+      "memoryCostLimit:\(memoryCostLimit)",
+      "transportMemoryThreshold:\(transportMemoryThreshold)",
+      "maximumConcurrentFetches:\(maximumConcurrentFetches)",
+      "maximumConcurrentDecodes:\(maximumConcurrentDecodes)",
+      "maximumQueuedFetches:\(maximumQueuedFetches)",
+      "maximumQueuedDecodes:\(maximumQueuedDecodes)",
+      "retry:\(transportRetryPolicy.fingerprint)",
+    ]
+  }
+
+  private func fingerprint(domain: String, fields: [String]) -> String {
+    var data = Data(domain.utf8)
+    data.append(0)
+    for field in fields {
+      data.append(contentsOf: field.utf8)
+      data.append(0)
+    }
+    return data.sha256Hex
   }
 }

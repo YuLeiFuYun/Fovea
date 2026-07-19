@@ -21,6 +21,7 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     decoder: any ImageDecoding
   ) {
     self.init(
+      id: PipelineID(),
       configuration: configuration,
       transport: transport,
       encodedStore: encodedStore,
@@ -36,6 +37,7 @@ public final class FoveaPipeline: ImageLoading, Sendable {
   }
 
   package init(
+    id: PipelineID = PipelineID(),
     configuration: PipelineConfiguration = PipelineConfiguration(),
     transport: any HTTPTransporting,
     encodedStore: any OriginalEncodedStoring,
@@ -48,6 +50,8 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     retrySleeper: any RetrySleeping = SystemRetrySleeper(),
     retryJitter: any RetryJittering = SystemRetryJitter()
   ) {
+    self.id = id
+    self.configuration = configuration
     let diagnostics = pipelineDiagnosticsSink(diagnostics)
     self.namespaceRegistry = namespaceRegistry
     self.diagnostics = diagnostics
