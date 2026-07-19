@@ -404,6 +404,7 @@ public final class FoveaPipeline: Sendable {
           request: request,
           generation: generation
         ),
+        admitRendered: request.renderCacheAdmission == .stable,
         namespace: request.namespace,
         generation: generation
       )
@@ -451,10 +452,12 @@ public final class FoveaPipeline: Sendable {
     )
     try Task.checkCancellation()
     try await requireActive(generation, for: request.namespace)
-    await cache.insertRendered(image, for: key)
-    guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
-      await cache.removeRendered(key)
-      throw PipelineFailure.namespaceRevoked
+    if request.renderCacheAdmission == .stable {
+      await cache.insertRendered(image, for: key)
+      guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
+        await cache.removeRendered(key)
+        throw PipelineFailure.namespaceRevoked
+      }
     }
     try Task.checkCancellation()
     return image
@@ -519,6 +522,8 @@ public final class FoveaPipeline: Sendable {
       contentID: contentID,
       targetWidth: request.target.width,
       targetHeight: request.target.height,
+      contentMode: request.contentMode,
+      geometryPolicyFingerprint: request.geometryPolicyFingerprint,
       decoderVersion: 1
     )
     return ScopedRenderKey(

@@ -41,6 +41,8 @@ final class DecodeStage: Sendable {
       contentID: contentID,
       targetWidth: request.target.width,
       targetHeight: request.target.height,
+      contentMode: request.contentMode,
+      geometryPolicyFingerprint: request.geometryPolicyFingerprint,
       decoderVersion: 1
     )
     let scopedKey = ScopedDecodeKey(
@@ -149,7 +151,11 @@ final class DecodeStage: Sendable {
         try decoder.decode(
           data: data,
           probe: probe,
-          target: request.target,
+          request: ImageDecodeRequest(
+            target: request.target,
+            contentMode: request.contentMode,
+            geometryPolicyFingerprint: request.geometryPolicyFingerprint
+          ),
           limits: limits
         )
       }

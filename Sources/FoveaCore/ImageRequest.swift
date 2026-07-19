@@ -17,6 +17,9 @@ public struct ImageRequest: Sendable {
   public let url: URL
   public let logicalSource: LogicalSourceID
   public let target: TargetPixels
+  public let contentMode: ImageContentMode
+  public let geometryPolicyFingerprint: String
+  public let renderCacheAdmission: RenderCacheAdmission
   public let namespace: SecurityNamespaceID
   public let authorizationContext: AuthorizationContextID
   public let credentialGeneration: CredentialGeneration?
@@ -29,6 +32,9 @@ public struct ImageRequest: Sendable {
     url: URL,
     logicalSource: LogicalSourceID? = nil,
     target: TargetPixels,
+    contentMode: ImageContentMode = .fit,
+    geometryPolicyFingerprint: String = "exact-v1",
+    renderCacheAdmission: RenderCacheAdmission = .stable,
     namespace: SecurityNamespaceID,
     authorizationContext: AuthorizationContextID = .public,
     credentialGeneration: CredentialGeneration? = nil,
@@ -50,6 +56,9 @@ public struct ImageRequest: Sendable {
     self.url = normalizedURL
     self.logicalSource = logicalSource ?? LogicalSourceID(normalizedHTTPURL: normalizedURL)
     self.target = target
+    self.contentMode = contentMode
+    self.geometryPolicyFingerprint = geometryPolicyFingerprint
+    self.renderCacheAdmission = renderCacheAdmission
     self.namespace = namespace
     self.authorizationContext = authorizationContext
     self.credentialGeneration = credentialGeneration
@@ -57,6 +66,35 @@ public struct ImageRequest: Sendable {
     self.headers = normalizedHeaders
     self.credentialHeaderNames = normalizedCredentialNames
     self.headerVariantFingerprints = normalizedFingerprints
+  }
+
+  public init(
+    url: URL,
+    logicalSource: LogicalSourceID? = nil,
+    resolvedTarget: ResolvedImageTarget,
+    namespace: SecurityNamespaceID,
+    authorizationContext: AuthorizationContextID = .public,
+    credentialGeneration: CredentialGeneration? = nil,
+    priority: ImageRequestPriority = .normal,
+    headers: [String: String] = [:],
+    credentialHeaderNames: Set<String> = [],
+    headerVariantFingerprints: [String: HeaderVariantFingerprint] = [:]
+  ) throws {
+    try self.init(
+      url: url,
+      logicalSource: logicalSource,
+      target: resolvedTarget.pixels,
+      contentMode: resolvedTarget.contentMode,
+      geometryPolicyFingerprint: resolvedTarget.geometryPolicyFingerprint,
+      renderCacheAdmission: resolvedTarget.cacheAdmission,
+      namespace: namespace,
+      authorizationContext: authorizationContext,
+      credentialGeneration: credentialGeneration,
+      priority: priority,
+      headers: headers,
+      credentialHeaderNames: credentialHeaderNames,
+      headerVariantFingerprints: headerVariantFingerprints
+    )
   }
 
   public static func publicImage(
@@ -70,6 +108,22 @@ public struct ImageRequest: Sendable {
       url: url,
       logicalSource: logicalSource,
       target: target,
+      namespace: .publicNamespace(appID: appID),
+      priority: priority
+    )
+  }
+
+  public static func publicImage(
+    url: URL,
+    logicalSource: LogicalSourceID? = nil,
+    resolvedTarget: ResolvedImageTarget,
+    appID: String,
+    priority: ImageRequestPriority = .normal
+  ) throws -> Self {
+    try ImageRequest(
+      url: url,
+      logicalSource: logicalSource,
+      resolvedTarget: resolvedTarget,
       namespace: .publicNamespace(appID: appID),
       priority: priority
     )
@@ -114,7 +168,13 @@ public struct ImageRequest: Sendable {
   }
 
   public var displayIdentity: String {
-    "\(fetchExecutionKey.digestHex)|\(target.width)x\(target.height)"
+    [
+      fetchExecutionKey.digestHex,
+      "\(target.width)x\(target.height)",
+      contentMode.rawValue,
+      geometryPolicyFingerprint,
+      renderCacheAdmission.rawValue,
+    ].joined(separator: "|")
   }
 
   public var containsCredentialHeaders: Bool {

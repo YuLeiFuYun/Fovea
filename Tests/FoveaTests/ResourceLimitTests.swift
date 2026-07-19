@@ -303,14 +303,14 @@ private struct DelayedDecoder: ImageDecoding {
   func decode(
     data: Data,
     probe: ImageProbe,
-    target: TargetPixels,
+    request: ImageDecodeRequest,
     limits: DecodeLimits
   ) throws -> DecodedImage {
     Thread.sleep(forTimeInterval: delay)
     return try ImageIOImageDecoder().decode(
       data: data,
       probe: probe,
-      target: target,
+      request: request,
       limits: limits
     )
   }

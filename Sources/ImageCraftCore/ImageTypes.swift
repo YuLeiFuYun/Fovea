@@ -55,18 +55,35 @@ public struct DecodeLimits: Hashable, Sendable, Codable {
   public static let coreV1 = DecodeLimits()
 }
 
+public struct ImageDecodeRequest: Codable, Hashable, Sendable {
+  public let target: TargetPixels
+  public let contentMode: ImageContentMode
+  public let geometryPolicyFingerprint: String
+
+  public init(
+    target: TargetPixels,
+    contentMode: ImageContentMode = .fit,
+    geometryPolicyFingerprint: String = "exact-v1"
+  ) {
+    self.target = target
+    self.contentMode = contentMode
+    self.geometryPolicyFingerprint = geometryPolicyFingerprint
+  }
+}
+
 public protocol ImageDecoding: Sendable {
   func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe
   func decode(
     data: Data,
     probe: ImageProbe,
-    target: TargetPixels,
+    request: ImageDecodeRequest,
     limits: DecodeLimits
   ) throws -> DecodedImage
 }
 
 public enum ImageCraftError: Error, Equatable, Sendable {
   case invalidTarget
+  case targetLimitExceeded
   case encodedBytesExceeded
   case unsupportedOrCorruptImage
   case unsupportedFormat

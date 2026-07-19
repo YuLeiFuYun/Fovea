@@ -139,6 +139,7 @@ final class PipelineCache: Sendable {
     record: RepresentationRecord,
     image: DecodedImage,
     renderKey: ScopedRenderKey,
+    admitRendered: Bool,
     namespace: SecurityNamespaceID,
     generation: NamespaceGeneration
   ) async throws {
@@ -162,10 +163,12 @@ final class PipelineCache: Sendable {
       try Task.checkCancellation()
       try await requireActive(generation, for: namespace)
 
-      await memory.insert(image, for: renderKey, cost: image.estimatedByteCost)
-      renderedCommitted = true
-      try Task.checkCancellation()
-      try await requireActive(generation, for: namespace)
+      if admitRendered {
+        await memory.insert(image, for: renderKey, cost: image.estimatedByteCost)
+        renderedCommitted = true
+        try Task.checkCancellation()
+        try await requireActive(generation, for: namespace)
+      }
     } catch let failure as PipelineFailure where failure.category == .namespaceRevoked {
       await rollback(
         createdBlob: createdBlob,

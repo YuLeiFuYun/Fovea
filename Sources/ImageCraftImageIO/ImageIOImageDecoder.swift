@@ -15,22 +15,42 @@ public struct ImageIOImageDecoder: ImageDecoding {
     target: TargetPixels,
     limits: DecodeLimits = .coreV1
   ) throws -> DecodedImage {
+    try decode(
+      data: data,
+      request: ImageDecodeRequest(target: target),
+      limits: limits
+    )
+  }
+
+  public func decode(
+    data: Data,
+    request: ImageDecodeRequest,
+    limits: DecodeLimits = .coreV1
+  ) throws -> DecodedImage {
     let probe = try probe(data: data, limits: limits)
-    return try decode(data: data, probe: probe, target: target, limits: limits)
+    return try decode(data: data, probe: probe, request: request, limits: limits)
   }
 
   public func decode(
     data: Data,
     probe: ImageProbe,
-    target: TargetPixels,
+    request: ImageDecodeRequest,
     limits: DecodeLimits = .coreV1
   ) throws -> DecodedImage {
     let inspection = try inspect(data: data, limits: limits)
     let verifiedProbe = inspection.probe
     guard verifiedProbe == probe else { throw ImageCraftError.probeMismatch }
+    let target = request.target
     let widthScale = Double(target.width) / Double(verifiedProbe.pixelWidth)
     let heightScale = Double(target.height) / Double(verifiedProbe.pixelHeight)
-    let scale = min(1, widthScale, heightScale)
+    let requestedScale: Double
+    switch request.contentMode {
+    case .fit:
+      requestedScale = min(widthScale, heightScale)
+    case .fill:
+      requestedScale = max(widthScale, heightScale)
+    }
+    let scale = min(1, requestedScale)
     let thumbnailSize = max(
       1,
       min(
@@ -55,10 +75,27 @@ public struct ImageIOImageDecoder: ImageDecoding {
       throw ImageCraftError.decodeFailed
     }
     try validate(width: image.width, height: image.height, limits: limits)
-    guard image.width <= target.width, image.height <= target.height else {
-      throw ImageCraftError.decodeFailed
+    switch request.contentMode {
+    case .fit:
+      guard image.width <= target.width, image.height <= target.height else {
+        throw ImageCraftError.decodeFailed
+      }
+      return DecodedImage(cgImage: image)
+    case .fill:
+      let cropWidth = min(target.width, image.width)
+      let cropHeight = min(target.height, image.height)
+      let crop = CGRect(
+        x: (image.width - cropWidth) / 2,
+        y: (image.height - cropHeight) / 2,
+        width: cropWidth,
+        height: cropHeight
+      )
+      guard let cropped = image.cropping(to: crop) else {
+        throw ImageCraftError.decodeFailed
+      }
+      try validate(width: cropped.width, height: cropped.height, limits: limits)
+      return DecodedImage(cgImage: cropped)
     }
-    return DecodedImage(cgImage: image)
   }
 
   private func inspect(

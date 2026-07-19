@@ -17,6 +17,30 @@ final class ImageDecoderTests: XCTestCase {
     XCTAssertEqual(decoded.pixelHeight, 10)
   }
 
+  func testFillDecodeCoversAndCenterCropsTargetGeoPt004() throws {
+    let data = try makePNG(width: 100, height: 50)
+    let decoder = ImageIOImageDecoder()
+    let fit = try decoder.decode(
+      data: data,
+      request: ImageDecodeRequest(
+        target: try TargetPixels(width: 20, height: 20),
+        contentMode: .fit
+      )
+    )
+    let fill = try decoder.decode(
+      data: data,
+      request: ImageDecodeRequest(
+        target: try TargetPixels(width: 20, height: 20),
+        contentMode: .fill
+      )
+    )
+
+    XCTAssertEqual(fit.pixelWidth, 20)
+    XCTAssertEqual(fit.pixelHeight, 10)
+    XCTAssertEqual(fill.pixelWidth, 20)
+    XCTAssertEqual(fill.pixelHeight, 20)
+  }
+
   func testTargetDecodeRespectsBothDimensions() throws {
     let data = try makePNG(width: 100, height: 50)
     let decoded = try ImageIOImageDecoder().decode(
@@ -60,7 +84,7 @@ extension ImageDecoderTests {
     let decoded = try decoder.decode(
       data: data,
       probe: probe,
-      target: try TargetPixels(width: 30, height: 60),
+      request: ImageDecodeRequest(target: try TargetPixels(width: 30, height: 60)),
       limits: .coreV1
     )
     XCTAssertEqual(decoded.pixelWidth, 30)
@@ -74,7 +98,7 @@ extension ImageDecoderTests {
       try ImageIOImageDecoder().decode(
         data: data,
         probe: forged,
-        target: try TargetPixels(width: 20, height: 20),
+        request: ImageDecodeRequest(target: try TargetPixels(width: 20, height: 20)),
         limits: .coreV1
       )
     ) { error in

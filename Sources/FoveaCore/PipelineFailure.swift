@@ -192,6 +192,13 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
         disposition: .terminal,
         reasonCode: "invalid-target-pixels"
       )
+    case .targetLimitExceeded:
+      return PipelineFailure(
+        category: .securityLimit,
+        stage: .requestValidation,
+        disposition: .terminal,
+        reasonCode: "target-limit-exceeded"
+      )
     case .encodedBytesExceeded:
       return PipelineFailure(
         category: .securityLimit,

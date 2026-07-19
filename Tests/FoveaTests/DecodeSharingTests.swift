@@ -107,10 +107,10 @@ private struct DelayedDelegatingDecoder: ImageDecoding {
   func decode(
     data: Data,
     probe: ImageProbe,
-    target: TargetPixels,
+    request: ImageDecodeRequest,
     limits: DecodeLimits
   ) throws -> DecodedImage {
     Thread.sleep(forTimeInterval: delay)
-    return try decoder.decode(data: data, probe: probe, target: target, limits: limits)
+    return try decoder.decode(data: data, probe: probe, request: request, limits: limits)
   }
 }

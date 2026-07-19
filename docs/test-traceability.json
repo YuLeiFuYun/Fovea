@@ -675,16 +675,22 @@
       "status": "missing"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/TargetGeometryTests.swift",
+          "kind": "swiftTest",
+          "method": "testEquivalentPointScalePairsProduceSameDecodeIdentityGeoPt001"
+        }
+      ],
       "id": "GEO-PT-001",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
         {
-          "file": "Tests/FoveaTests/IdentityTests.swift",
+          "file": "Tests/FoveaTests/TargetGeometryTests.swift",
           "kind": "swiftTest",
-          "method": "testZeroTargetIsRejected_GEO_PT_002"
+          "method": "testZeroPointGeometryRemainsPendingGeoPt002"
         }
       ],
       "id": "GEO-PT-002",
@@ -696,26 +702,44 @@
       "status": "missing"
     },
     {
-      "evidence": [],
-      "id": "GEO-PT-004",
-      "status": "missing"
-    },
-    {
-      "evidence": [],
-      "id": "GEO-PT-005",
-      "status": "missing"
-    },
-    {
-      "evidence": [],
-      "id": "GEO-PT-006",
-      "status": "missing"
-    },
-    {
       "evidence": [
         {
           "file": "Tests/FoveaTests/ImageDecoderTests.swift",
           "kind": "swiftTest",
-          "method": "testTargetPixelCountSaturatesOnOverflow"
+          "method": "testFillDecodeCoversAndCenterCropsTargetGeoPt004"
+        }
+      ],
+      "id": "GEO-PT-004",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/TargetGeometryTests.swift",
+          "kind": "swiftTest",
+          "method": "testResizeHysteresisSuppressesSmallFluctuationsGeoPt005"
+        }
+      ],
+      "id": "GEO-PT-005",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/TargetGeometryTests.swift",
+          "kind": "swiftTest",
+          "method": "testGeometryPolicyAndContentModeChangeDecodeIdentityGeoPt006"
+        }
+      ],
+      "id": "GEO-PT-006",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/TargetGeometryTests.swift",
+          "kind": "swiftTest",
+          "method": "testExtremeGeometryIsRejectedBeforeAllocationGeoPt007"
         }
       ],
       "id": "GEO-PT-007",

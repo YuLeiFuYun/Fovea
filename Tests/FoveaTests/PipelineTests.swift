@@ -678,7 +678,7 @@ private struct AlwaysFailingDecoder: ImageDecoding {
   func decode(
     data: Data,
     probe: ImageProbe,
-    target: TargetPixels,
+    request: ImageDecodeRequest,
     limits: DecodeLimits
   ) throws -> DecodedImage {
     throw ImageCraftError.decodeFailed
@@ -709,10 +709,10 @@ private struct SlowDecoder: ImageDecoding {
   func decode(
     data: Data,
     probe: ImageProbe,
-    target: TargetPixels,
+    request: ImageDecodeRequest,
     limits: DecodeLimits
   ) throws -> DecodedImage {
     Thread.sleep(forTimeInterval: delay)
-    return try ImageIOImageDecoder().decode(data: data, target: target, limits: limits)
+    return try ImageIOImageDecoder().decode(data: data, request: request, limits: limits)
   }
 }

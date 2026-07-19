@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import ImageCraftCore
 
 public struct LogicalSourceID: Hashable, Sendable, Codable {
   public let value: String
@@ -194,7 +195,25 @@ public struct DecodeKey: Hashable, Sendable, Codable {
   public let contentID: ContentID
   public let targetWidth: Int
   public let targetHeight: Int
+  public let contentMode: ImageContentMode
+  public let geometryPolicyFingerprint: String
   public let decoderVersion: UInt16
+
+  public init(
+    contentID: ContentID,
+    targetWidth: Int,
+    targetHeight: Int,
+    contentMode: ImageContentMode,
+    geometryPolicyFingerprint: String,
+    decoderVersion: UInt16
+  ) {
+    self.contentID = contentID
+    self.targetWidth = targetWidth
+    self.targetHeight = targetHeight
+    self.contentMode = contentMode
+    self.geometryPolicyFingerprint = geometryPolicyFingerprint
+    self.decoderVersion = decoderVersion
+  }
 }
 
 public struct RenderKey: Hashable, Sendable, Codable {
