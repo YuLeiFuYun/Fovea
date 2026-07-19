@@ -174,7 +174,7 @@ def mutant_005(root: Path) -> None:
 def mutant_006(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaHTTP/HTTPCachePolicy.swift",
-        "public static func selectRecord(",
+        "package static func selectRecord(",
         "  }\n}",
         "      return current == record.vary\n",
         "      return current.fieldNames == record.vary.fieldNames\n",
@@ -185,7 +185,7 @@ def mutant_007(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/FoveaPipeline.swift",
         "private func process200(",
-        "private func decodeAndTransformCachedData(",
+        "private func decodeAndCache(",
         "    if allowReusableState, disposition != .noStore {\n",
         "    if allowReusableState {\n",
     )
@@ -235,7 +235,7 @@ def mutant_012(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/SharedTaskRegistry.swift",
         "  package func completed(key: Key, taskID: UUID) async",
-        "  package func cancelAll",
+        "  private static func effectivePriority(",
         "    guard let entry = entries[key], entry.taskID == taskID else { return }\n",
         "    guard let entry = entries[key] else { return }\n",
     )
@@ -269,7 +269,7 @@ def mutant_015(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/FoveaPipeline.swift",
         "private func process200(",
-        "private func decodeAndTransformCachedData(",
+        "private func decodeAndCache(",
         "    let image = try await transformStage.image(from: decoded)\n",
         """    let prematureRenderKey = scopedRenderKey(
       contentID: contentID,
@@ -296,7 +296,7 @@ def mutant_017(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/FoveaPipeline.swift",
         "private func process200(",
-        "private func decodeAndTransformCachedData(",
+        "private func decodeAndCache(",
         "        namespaceGeneration: generation.value,\n",
         "        namespaceGeneration: 0,\n",
     )
