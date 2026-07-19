@@ -94,7 +94,7 @@ public protocol RepresentationRecordStoring: Sendable {
   func removeAll(namespace: String) async throws
 }
 
-public actor RepresentationRecordStore: RepresentationRecordStoring {
+public actor RepresentationRecordStore: RepresentationRecordMaintaining {
   private nonisolated let ioExecutor = BlockingIOExecutor(
     label: "dev.fovea.http.representation-records"
   )
@@ -225,6 +225,17 @@ public actor RepresentationRecordStore: RepresentationRecordStoring {
     recordsByVariant = next
   }
 
+  public func contentReferences() async -> Set<StoredContentReference> {
+    Set(
+      manifest.records.values.map { record in
+        StoredContentReference(
+          namespaceFingerprint: record.securityNamespaceFingerprint,
+          contentID: record.contentID
+        )
+      }
+    )
+  }
+
   public func removeAll(namespace: String) throws {
     let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
     let next = recordsByVariant.filter { $0.value.securityNamespaceFingerprint != fingerprint }
@@ -242,4 +253,8 @@ public actor RepresentationRecordStore: RepresentationRecordStoring {
     try data.write(to: fileURL, options: [.atomic])
     try StorageDirectorySecurity.securePublishedFile(fileURL)
   }
+}
+
+public protocol RepresentationRecordMaintaining: RepresentationRecordStoring {
+  func contentReferences() async -> Set<StoredContentReference>
 }

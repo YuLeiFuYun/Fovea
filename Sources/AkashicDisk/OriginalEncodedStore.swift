@@ -2,14 +2,14 @@ import AkashicCore
 import CryptoKit
 import Foundation
 
-public actor OriginalEncodedStore {
+public actor OriginalEncodedStore: OriginalEncodedMaintaining {
   private nonisolated let ioExecutor = BlockingIOExecutor(
     label: "dev.fovea.akashic.original-encoded")
 
   public nonisolated var unownedExecutor: UnownedSerialExecutor {
     ioExecutor.asUnownedSerialExecutor()
   }
-  private static let manifestSchemaVersion: UInt16 = 3
+  private static let manifestSchemaVersion: UInt16 = 4
 
   private struct Manifest: Codable {
     let schemaVersion: UInt16
@@ -24,9 +24,10 @@ public actor OriginalEncodedStore {
     }
   }
 
-  private struct Entry: Codable {
+  private struct Entry: Codable, Equatable {
     let physicalID: PhysicalBlobID
     let namespaceFingerprint: StorageNamespaceFingerprint
+    let contentID: String
     let byteCount: Int
     let lastAccess: Date
   }
@@ -55,14 +56,15 @@ public actor OriginalEncodedStore {
   private func bootstrap(root: URL) throws {
     try StorageDirectorySecurity.prepareDirectory(root)
     try StorageDirectorySecurity.prepareDirectory(blobs)
-    guard FileManager.default.fileExists(atPath: manifestURL.path) else { return }
-
-    let data = try Data(contentsOf: manifestURL)
-    let decoded = try JSONDecoder().decode(Manifest.self, from: data)
-    guard decoded.schemaVersion == Self.manifestSchemaVersion else {
-      throw AkashicError.invalidManifest
+    if FileManager.default.fileExists(atPath: manifestURL.path) {
+      let data = try Data(contentsOf: manifestURL)
+      let decoded = try JSONDecoder().decode(Manifest.self, from: data)
+      guard decoded.schemaVersion == Self.manifestSchemaVersion else {
+        throw AkashicError.invalidManifest
+      }
+      manifest = decoded
     }
-    manifest = decoded
+    try reconcileStorageAfterBootstrap()
   }
 
   public func read(contentID: String, namespace: String) throws -> Data {
@@ -88,6 +90,7 @@ public actor OriginalEncodedStore {
     entry = Entry(
       physicalID: entry.physicalID,
       namespaceFingerprint: entry.namespaceFingerprint,
+      contentID: entry.contentID,
       byteCount: entry.byteCount,
       lastAccess: Date()
     )
@@ -127,6 +130,7 @@ public actor OriginalEncodedStore {
       next.entries[key] = Entry(
         physicalID: physicalID,
         namespaceFingerprint: namespaceFingerprint,
+        contentID: contentID,
         byteCount: data.count,
         lastAccess: Date()
       )
@@ -144,6 +148,48 @@ public actor OriginalEncodedStore {
     // 回收失败不得回滚已经原子发布的 blob；下次写入或 GC 会继续收敛。
     try? trimIfNeeded()
     return StoredBlob(physicalID: physicalID, byteCount: data.count, wasCreated: true)
+  }
+
+  public func garbageCollect(
+    retaining references: Set<StoredContentReference>
+  ) async throws -> GarbageCollectionResult {
+    let victims = manifest.entries.filter { _, entry in
+      !references.contains(
+        StoredContentReference(
+          namespaceFingerprint: entry.namespaceFingerprint,
+          contentID: entry.contentID
+        )
+      )
+    }
+    guard !victims.isEmpty else {
+      return GarbageCollectionResult(removedBlobCount: 0, removedByteCount: 0)
+    }
+
+    var next = manifest
+    for key in victims.keys { next.entries.removeValue(forKey: key) }
+    try persistManifest(next)
+    manifest = next
+
+    var firstError: (any Error)?
+    var removedCount = 0
+    var removedBytes = 0
+    for entry in victims.values {
+      do {
+        try FileManager.default.removeItem(at: blobURL(entry.physicalID))
+        removedCount += 1
+        removedBytes += entry.byteCount
+      } catch let error as CocoaError where error.code == .fileNoSuchFile {
+        removedCount += 1
+        removedBytes += entry.byteCount
+      } catch {
+        firstError = firstError ?? error
+      }
+    }
+    if firstError != nil { throw AkashicError.storageUnavailable }
+    return GarbageCollectionResult(
+      removedBlobCount: removedCount,
+      removedByteCount: removedBytes
+    )
   }
 
   public func physicalID(contentID: String, namespace: String) -> PhysicalBlobID? {
@@ -194,6 +240,36 @@ public actor OriginalEncodedStore {
       try FileManager.default.removeItem(at: url)
     } catch let error as CocoaError where error.code == .fileNoSuchFile {
       return
+    }
+  }
+
+  private func reconcileStorageAfterBootstrap() throws {
+    let fileManager = FileManager.default
+    let files = try fileManager.contentsOfDirectory(
+      at: blobs,
+      includingPropertiesForKeys: nil,
+      options: [.skipsSubdirectoryDescendants]
+    )
+    let referencedNames = Set(manifest.entries.values.map { $0.physicalID.description })
+    for file in files {
+      let name = file.lastPathComponent
+      if name.hasPrefix(".tmp-") || !referencedNames.contains(name) {
+        try fileManager.removeItem(at: file)
+      }
+    }
+
+    var next = manifest
+    for (key, entry) in manifest.entries {
+      let url = blobURL(entry.physicalID)
+      guard fileManager.fileExists(atPath: url.path) else {
+        next.entries.removeValue(forKey: key)
+        continue
+      }
+      try StorageDirectorySecurity.securePublishedFile(url)
+    }
+    if next.entries != manifest.entries {
+      try persistManifest(next)
+      manifest = next
     }
   }
 

@@ -531,9 +531,15 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/CacheGarbageCollectionTests.swift",
+          "kind": "swiftTest",
+          "method": "testGarbageCollectionWaitsForCommitPublicationCachePt013"
+        }
+      ],
       "id": "CACHE-PT-013",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
@@ -568,9 +574,15 @@
       "status": "missing"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/CacheGarbageCollectionTests.swift",
+          "kind": "swiftTest",
+          "method": "testGarbageCollectionRetainsBlobUntilLastVaryReferenceIsRemovedCachePt019"
+        }
+      ],
       "id": "CACHE-PT-019",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [

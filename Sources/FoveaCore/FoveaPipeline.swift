@@ -107,6 +107,21 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     }
   }
 
+  public func garbageCollectCaches() async throws -> GarbageCollectionResult {
+    do {
+      return try await cache.garbageCollect()
+    } catch let failure as PipelineFailure {
+      throw failure
+    } catch {
+      throw PipelineFailure(
+        category: .cacheWrite,
+        stage: .persistence,
+        disposition: .cacheDegraded,
+        reasonCode: "cache-garbage-collection-failed"
+      )
+    }
+  }
+
   public func revoke(namespace: SecurityNamespaceID) async throws {
     _ = await namespaceRegistry.revoke(namespace)
     await fetchStage.cancelAll(namespace: namespace)

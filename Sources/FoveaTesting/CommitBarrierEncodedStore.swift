@@ -2,7 +2,7 @@ import AkashicCore
 import AkashicDisk
 import Foundation
 
-public actor CommitBarrierEncodedStore: OriginalEncodedStoring {
+public actor CommitBarrierEncodedStore: OriginalEncodedMaintaining {
   private let base: any OriginalEncodedStoring
   private var commitStarted = false
   private var released = false
@@ -41,6 +41,15 @@ public actor CommitBarrierEncodedStore: OriginalEncodedStoring {
 
   public func removeAll(namespace: String) async throws {
     try await base.removeAll(namespace: namespace)
+  }
+
+  public func garbageCollect(
+    retaining references: Set<StoredContentReference>
+  ) async throws -> GarbageCollectionResult {
+    guard let maintenance = base as? any OriginalEncodedMaintaining else {
+      throw AkashicError.storageUnavailable
+    }
+    return try await maintenance.garbageCollect(retaining: references)
   }
 
   public func waitUntilCommitStarts() async {
