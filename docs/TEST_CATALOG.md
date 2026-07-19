@@ -184,3 +184,9 @@ manifest 还必须记录 upstream commit、license、适用性分类、预期结
 - 删除测试必须通过 ADR，并在毕业矩阵中说明替代项；
 - 一个测试可以覆盖多个 ID，但报告必须逐 ID 给出结果；
 - 一个 ID 可以在 unit/property/integration/fuzz 多层实现，最终结果取最严格门禁。
+
+AIQA-MUT-018    304 metadata refresh ignores the post-write namespace generation fence
+AIQA-MUT-019    deleting one Vary representation removes a blob still referenced by another
+AIQA-MUT-020    transient target geometry is admitted into RenderedMemory
+AIQA-MUT-021    encoded metadata byte limits are disabled
+AIQA-MUT-022    each subscriber receives an isolated DecodeKey registry

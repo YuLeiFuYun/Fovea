@@ -1,4 +1,5 @@
 import AkashicDisk
+import CryptoKit
 import FoveaCore
 import FoveaHTTP
 import ImageCraftCore
@@ -18,6 +19,20 @@ final class IdentityTests: XCTestCase {
 
     XCTAssertEqual(first.canonicalBytes, second.canonicalBytes)
     XCTAssertEqual(first.digestHex, second.digestHex)
+  }
+
+  func testFetchBaseKeyDigestUsesStableSHA256AiqaMut013() {
+    let key = FetchBaseKey(
+      source: LogicalSourceID("https://example.test/golden.png"),
+      namespace: SecurityNamespaceID("account-golden"),
+      authorizationContext: AuthorizationContextID("principal-golden")
+    )
+    let expected = SHA256.hash(data: key.canonicalBytes)
+      .map { String(format: "%02x", $0) }
+      .joined()
+
+    XCTAssertEqual(key.digestHex, expected)
+    XCTAssertEqual(key.digestHex.count, 64)
   }
 
   func testNamespaceChangesBaseAndVariantIdentity_CACHE_PT_003() {

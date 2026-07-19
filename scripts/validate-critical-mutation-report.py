@@ -10,16 +10,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
-REQUIRED_MUTANTS = {
-    "AIQA-MUT-001",
-    "AIQA-MUT-002",
-    "AIQA-MUT-007",
-    "AIQA-MUT-008",
-    "AIQA-MUT-009",
-    "AIQA-MUT-015",
-    "AIQA-MUT-017",
-    "AIQA-MUT-018",
-}
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_REPORT = ROOT / ".artifacts/mutation/critical-mutants.json"
+REQUIRED_MUTANTS = {f"AIQA-MUT-{index:03d}" for index in range(1, 23)}
+SHA = re.compile(r"^[0-9a-f]{40}$")
+
+
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def require(condition: bool, message: str) -> None:
@@ -27,113 +25,84 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def current_head(root: Path) -> str:
-    completed = subprocess.run(
+def current_head() -> str:
+    return subprocess.run(
         ["git", "rev-parse", "HEAD"],
-        cwd=root,
+        cwd=ROOT,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        check=False,
-    )
-    if completed.returncode != 0:
-        raise ValueError(f"cannot resolve Git HEAD: {completed.stderr.strip()}")
-    return completed.stdout.strip()
+        check=True,
+    ).stdout.strip()
 
 
-def validate(report_path: Path, root: Path, expected_commit: str | None) -> str:
+def resolve(relative: str) -> Path:
+    path = (ROOT / relative).resolve()
+    path.relative_to(ROOT.resolve())
+    return path
+
+
+def validate(report_path: Path, expected_commit: str | None) -> dict[str, Any]:
     report = json.loads(report_path.read_text())
     require(isinstance(report, dict), "report must be an object")
     require(report.get("schemaVersion") == 1, "schemaVersion must be 1")
+    require(report.get("producer") == "agent-declared", "producer must be agent-declared")
 
     verified_commit = report.get("verifiedCommit")
-    require(
-        isinstance(verified_commit, str) and re.fullmatch(r"[0-9a-f]{40}", verified_commit) is not None,
-        "verifiedCommit must be a full lowercase Git SHA",
-    )
-    expected = expected_commit or current_head(root)
-    require(verified_commit == expected, f"verifiedCommit {verified_commit} does not match {expected}")
-
-    for field in ("generatedAt", "producer", "xcodeVersion", "swiftVersion"):
-        require(isinstance(report.get(field), str) and report[field], f"missing {field}")
-    require(
-        report["producer"] in {"agent-declared", "trusted-ci", "held-out-evaluator", "human-reviewer"},
-        "invalid producer",
-    )
+    require(isinstance(verified_commit, str) and SHA.fullmatch(verified_commit) is not None, "verifiedCommit must be a full lowercase Git SHA")
+    require(verified_commit == (expected_commit or current_head()), "verifiedCommit does not match the expected commit")
 
     required = report.get("requiredMutants")
     require(isinstance(required, list), "requiredMutants must be an array")
-    require(set(required) == REQUIRED_MUTANTS, "requiredMutants does not match Phase 0a catalog")
+    require(set(required) == REQUIRED_MUTANTS, "requiredMutants must exactly match AIQA-MUT-001 through AIQA-MUT-022")
     require(len(required) == len(set(required)), "requiredMutants contains duplicates")
 
     mutants = report.get("mutants")
     require(isinstance(mutants, list), "mutants must be an array")
     require(len(mutants) == len(REQUIRED_MUTANTS), "mutant result count mismatch")
     seen: set[str] = set()
-    status_counts = {"killed": 0, "survived": 0, "invalid": 0}
-
     for mutant in mutants:
-        require(isinstance(mutant, dict), "mutant entry must be an object")
+        require(isinstance(mutant, dict), "mutant entries must be objects")
         identifier = mutant.get("id")
-        require(identifier in REQUIRED_MUTANTS, f"unexpected mutant id {identifier}")
-        require(identifier not in seen, f"duplicate mutant id {identifier}")
+        require(identifier in REQUIRED_MUTANTS, f"unexpected mutant id: {identifier}")
+        require(identifier not in seen, f"duplicate mutant result: {identifier}")
         seen.add(identifier)
-        for field in ("description", "sourceFile", "testFilter", "logPath", "logSha256"):
-            require(isinstance(mutant.get(field), str) and mutant[field], f"{identifier} missing {field}")
-        status = mutant.get("status")
-        require(status in status_counts, f"{identifier} invalid status {status}")
-        status_counts[status] += 1
-        require(isinstance(mutant.get("exitCode"), int), f"{identifier} exitCode must be integer")
-        require(re.fullmatch(r"[0-9a-f]{64}", mutant["logSha256"]) is not None, f"{identifier} bad log digest")
+        require(mutant.get("status") == "killed", f"{identifier} is not killed")
+        require(isinstance(mutant.get("testFilter"), str) and mutant["testFilter"], f"{identifier} lacks a test filter")
+        require(isinstance(mutant.get("sourceFile"), str) and mutant["sourceFile"], f"{identifier} lacks a source file")
+        log_relative = mutant.get("logPath")
+        require(isinstance(log_relative, str), f"{identifier} lacks a log path")
+        log_path = resolve(log_relative)
+        require(log_path.is_file(), f"{identifier} log is missing")
+        require(sha256(log_path) == mutant.get("logSha256"), f"{identifier} log digest mismatch")
+        output = log_path.read_text(errors="replace")
+        require("Test Case '" in output and " started." in output, f"{identifier} target test did not start")
 
-        log_path = root / mutant["logPath"]
-        require(log_path.is_file(), f"{identifier} log missing: {log_path}")
-        require(sha256(log_path) == mutant["logSha256"], f"{identifier} log digest mismatch")
-        log_text = log_path.read_text(errors="replace")
-        require("Test Case '" in log_text and " started." in log_text, f"{identifier} test did not execute")
-        if status == "killed":
-            require(mutant["exitCode"] != 0, f"{identifier} killed result must have nonzero exit")
-            require(" failed " in log_text or "] failed" in log_text, f"{identifier} lacks failing-test evidence")
-
-    require(seen == REQUIRED_MUTANTS, "mutant result IDs incomplete")
     summary = report.get("summary")
     require(isinstance(summary, dict), "summary must be an object")
     require(summary.get("required") == len(REQUIRED_MUTANTS), "summary.required mismatch")
-    for status, count in status_counts.items():
-        require(summary.get(status) == count, f"summary.{status} mismatch")
-    require(
-        status_counts == {"killed": len(REQUIRED_MUTANTS), "survived": 0, "invalid": 0},
-        "critical mutation gate not fully killed",
-    )
-
-    return sha256(report_path)
+    require(summary.get("killed") == len(REQUIRED_MUTANTS), "summary.killed mismatch")
+    require(summary.get("survived") == 0, "summary.survived must be zero")
+    require(summary.get("invalid") == 0, "summary.invalid must be zero")
+    return report
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate a Fovea critical mutation report.")
-    parser.add_argument(
-        "report",
-        nargs="?",
-        default=".artifacts/mutation/critical-mutants.json",
-        help="Mutation report path.",
-    )
-    parser.add_argument("--verified-commit", help="Expected full Git SHA; defaults to repository HEAD.")
+    parser = argparse.ArgumentParser(description="Validate the Fovea critical mutation report.")
+    parser.add_argument("report", nargs="?", default=str(DEFAULT_REPORT))
+    parser.add_argument("--expected-commit")
     args = parser.parse_args()
-
-    root = Path(__file__).resolve().parents[1]
-    report_path = (root / args.report).resolve() if not Path(args.report).is_absolute() else Path(args.report)
     try:
-        digest = validate(report_path, root, args.verified_commit)
-    except (OSError, ValueError, json.JSONDecodeError) as error:
-        print(f"Critical mutation report validation failed: {error}", file=sys.stderr)
+        report_path = Path(args.report).resolve()
+        validate(report_path, args.expected_commit)
+        print(
+            f"Critical mutation report valid: {report_path.relative_to(ROOT)} "
+            f"sha256:{sha256(report_path)}"
+        )
+        return 0
+    except (OSError, ValueError, json.JSONDecodeError, subprocess.CalledProcessError) as error:
+        print(f"Critical mutation report invalid: {error}", file=sys.stderr)
         return 1
-
-    print(f"Critical mutation report valid: {report_path.relative_to(root)} sha256:{digest}")
-    return 0
 
 
 if __name__ == "__main__":

@@ -123,24 +123,44 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-003",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-004",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-005",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-006",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
@@ -173,29 +193,54 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-010",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-011",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-012",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-013",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-014",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
@@ -208,9 +253,14 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
       "id": "AIQA-MUT-016",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
@@ -230,6 +280,46 @@
         }
       ],
       "id": "AIQA-MUT-018",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-019",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-020",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-021",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-022",
       "status": "implemented"
     },
     {
