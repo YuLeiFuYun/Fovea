@@ -669,7 +669,7 @@ func assertThrowsErrorAsync<T>(
     _ = try await expression()
     XCTFail("Expected error", file: file, line: line)
   } catch {
-    // Expected.
+    // 预期会进入错误分支。
   }
 }
 

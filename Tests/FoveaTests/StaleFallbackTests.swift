@@ -28,13 +28,12 @@ final class StaleFallbackTests: XCTestCase {
       staleWindow: 60
     )
     _ = try await initial.image(for: request)
-    let before = try XCTUnwrap(
-      await records.records(
-        for: request.fetchBaseKey.digestHex,
-        namespace: request.namespace.value,
-        namespaceGeneration: 0
-      ).first
+    let beforeCandidates = await records.records(
+      for: request.fetchBaseKey.digestHex,
+      namespace: request.namespace.value,
+      namespaceGeneration: 0
     )
+    let before = try XCTUnwrap(beforeCandidates.first)
 
     await clock.set(Date(timeIntervalSince1970: 1_030))
     let diagnostics = BoundedDiagnosticsSink(capacity: 64)
@@ -52,13 +51,12 @@ final class StaleFallbackTests: XCTestCase {
 
     let image = try await fallback.image(for: request)
     XCTAssertGreaterThan(try centerRedComponent(of: image.cgImage), 120)
-    let after = try XCTUnwrap(
-      await records.records(
-        for: request.fetchBaseKey.digestHex,
-        namespace: request.namespace.value,
-        namespaceGeneration: 0
-      ).first
+    let afterCandidates = await records.records(
+      for: request.fetchBaseKey.digestHex,
+      namespace: request.namespace.value,
+      namespaceGeneration: 0
     )
+    let after = try XCTUnwrap(afterCandidates.first)
     XCTAssertEqual(after, before)
     let failingRequestCount = await failingTransport.requestCount
     XCTAssertEqual(failingRequestCount, 1)
@@ -125,12 +123,11 @@ final class StaleFallbackTests: XCTestCase {
       namespaceGeneration: 0
     )
     let record = try XCTUnwrap(candidates.first)
-    let physicalID = try XCTUnwrap(
-      await fixture.encoded.physicalID(
-        contentID: record.contentID,
-        namespace: fixture.request.namespace.value
-      )
+    let storedPhysicalID = await fixture.encoded.physicalID(
+      contentID: record.contentID,
+      namespace: fixture.request.namespace.value
     )
+    let physicalID = try XCTUnwrap(storedPhysicalID)
     let blobURL = fixture.root
       .appendingPathComponent("encoded/blobs")
       .appendingPathComponent(physicalID.description)

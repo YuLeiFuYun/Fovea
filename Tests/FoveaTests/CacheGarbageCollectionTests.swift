@@ -39,6 +39,52 @@ final class CacheGarbageCollectionTests: XCTestCase {
     XCTAssertEqual(loaded, data)
   }
 
+  func testContentReferencesReflectPersistedRecordsAfterReopenCachePt019() async throws {
+    let root = try makeTemporaryDirectory().appendingPathComponent("records")
+    let store = try await RepresentationRecordStore.open(root: root)
+    let first = makeRepresentationRecord(
+      namespace: "private:alpha",
+      baseKeyDigest: "base-a",
+      variantKeyDigest: "variant-a",
+      contentID: "content-a",
+      payloadLength: 10
+    )
+    let duplicateContent = makeRepresentationRecord(
+      namespace: "private:alpha",
+      baseKeyDigest: "base-b",
+      variantKeyDigest: "variant-b",
+      contentID: "content-a",
+      payloadLength: 10
+    )
+    let secondNamespace = makeRepresentationRecord(
+      namespace: "private:beta",
+      baseKeyDigest: "base-c",
+      variantKeyDigest: "variant-c",
+      contentID: "content-a",
+      payloadLength: 10
+    )
+    try await store.put(first)
+    try await store.put(duplicateContent)
+    try await store.put(secondNamespace)
+
+    let reopened = try await RepresentationRecordStore.open(root: root)
+    let references = await reopened.contentReferences()
+
+    XCTAssertEqual(
+      references,
+      [
+        StoredContentReference(
+          namespaceFingerprint: StorageNamespaceFingerprint(namespace: "private:alpha"),
+          contentID: "content-a"
+        ),
+        StoredContentReference(
+          namespaceFingerprint: StorageNamespaceFingerprint(namespace: "private:beta"),
+          contentID: "content-a"
+        ),
+      ]
+    )
+  }
+
   func testGarbageCollectionRetainsBlobUntilLastVaryReferenceIsRemovedCachePt019() async throws {
     let root = try makeTemporaryDirectory()
     let encoded = try await OriginalEncodedStore.open(root: root.appendingPathComponent("encoded"))
@@ -54,11 +100,11 @@ final class CacheGarbageCollectionTests: XCTestCase {
     )
     let english = HTTPVarySelection(
       fieldNames: ["accept-language"],
-      values: ["accept-language": .plain("en")]
+      values: ["accept-language": .field("en")]
     )
     let french = HTTPVarySelection(
       fieldNames: ["accept-language"],
-      values: ["accept-language": .plain("fr")]
+      values: ["accept-language": .field("fr")]
     )
     try await records.put(
       makeRepresentationRecord(
@@ -94,12 +140,11 @@ final class CacheGarbageCollectionTests: XCTestCase {
     )
     let first = try await pipeline.garbageCollectCaches()
     XCTAssertEqual(first.removedBlobCount, 0)
-    XCTAssertNotNil(
-      await encoded.physicalID(
-        contentID: contentID.description,
-        namespace: "public:tests"
-      )
+    let retainedPhysicalID = await encoded.physicalID(
+      contentID: contentID.description,
+      namespace: "public:tests"
     )
+    XCTAssertNotNil(retainedPhysicalID)
 
     try await records.remove(
       "variant-fr",
@@ -109,12 +154,57 @@ final class CacheGarbageCollectionTests: XCTestCase {
     let second = try await pipeline.garbageCollectCaches()
     XCTAssertEqual(second.removedBlobCount, 1)
     XCTAssertEqual(second.removedByteCount, data.count)
-    XCTAssertNil(
-      await encoded.physicalID(
-        contentID: contentID.description,
-        namespace: "public:tests"
-      )
+    let removedPhysicalID = await encoded.physicalID(
+      contentID: contentID.description,
+      namespace: "public:tests"
     )
+    XCTAssertNil(removedPhysicalID)
+  }
+
+  func testCancelledGarbageCollectionWaiterReturnsStructuredCancellation() async throws {
+    let body = try makePNG()
+    let root = try makeTemporaryDirectory()
+    let baseStore = try await OriginalEncodedStore.open(
+      root: root.appendingPathComponent("encoded")
+    )
+    let barrierStore = CommitBarrierEncodedStore(base: baseStore)
+    let records = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records")
+    )
+    let pipeline = FoveaPipeline(
+      transport: FakeHTTPTransport(stubs: [
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+          body: body
+        )
+      ]),
+      encodedStore: barrierStore,
+      recordStore: records,
+      decoder: ImageIOImageDecoder()
+    )
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/gc-cancel.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let imageTask = Task { try await pipeline.image(for: request) }
+    await barrierStore.waitUntilCommitStarts()
+    let garbageTask = Task { try await pipeline.garbageCollectCaches() }
+    try await Task.sleep(for: .milliseconds(20))
+
+    garbageTask.cancel()
+    do {
+      _ = try await garbageTask.value
+      XCTFail("取消的 GC 等待者不得继续执行")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .cancelled)
+      XCTAssertEqual(failure.stage, .persistence)
+      XCTAssertEqual(failure.disposition, .cancelled)
+    }
+
+    await barrierStore.releaseCommit()
+    _ = try await imageTask.value
   }
 
   func testGarbageCollectionWaitsForCommitPublicationCachePt013() async throws {
@@ -155,13 +245,15 @@ final class CacheGarbageCollectionTests: XCTestCase {
       return result
     }
     try await Task.sleep(for: .milliseconds(20))
-    XCTAssertFalse(await completion.isFinished)
+    let finishedBeforeRelease = await completion.isFinished
+    XCTAssertFalse(finishedBeforeRelease)
 
     await barrierStore.releaseCommit()
     _ = try await imageTask.value
     let result = try await garbageTask.value
     XCTAssertEqual(result.removedBlobCount, 0)
-    XCTAssertTrue(await completion.isFinished)
+    let finishedAfterRelease = await completion.isFinished
+    XCTAssertTrue(finishedAfterRelease)
 
     let candidates = await records.records(
       for: request.fetchBaseKey.digestHex,
@@ -169,12 +261,11 @@ final class CacheGarbageCollectionTests: XCTestCase {
       namespaceGeneration: 0
     )
     let record = try XCTUnwrap(candidates.first)
-    XCTAssertNotNil(
-      await baseStore.physicalID(
-        contentID: record.contentID,
-        namespace: request.namespace.value
-      )
+    let committedPhysicalID = await baseStore.physicalID(
+      contentID: record.contentID,
+      namespace: request.namespace.value
     )
+    XCTAssertNotNil(committedPhysicalID)
   }
 }
 

@@ -145,7 +145,7 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
     if let existing, existing.physicalID != physicalID {
       try? FileManager.default.removeItem(at: blobURL(existing.physicalID))
     }
-    // 回收失败不得回滚已经原子发布的 blob；下次写入或 GC 会继续收敛。
+    // 回收失败不得回滚已经原子发布的数据块；下次写入或垃圾回收会继续收敛。
     try? trimIfNeeded()
     return StoredBlob(physicalID: physicalID, byteCount: data.count, wasCreated: true)
   }
@@ -204,11 +204,12 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
     let namespaceFingerprint = StorageNamespaceFingerprint(namespace: namespace)
     let key = manifestKey(contentID: contentID, namespaceFingerprint: namespaceFingerprint)
     guard let entry = manifest.entries[key] else { return }
-    try removeFileIfPresent(blobURL(entry.physicalID))
+
     var next = manifest
     next.entries.removeValue(forKey: key)
     try persistManifest(next)
     manifest = next
+    try removeFileIfPresent(blobURL(entry.physicalID))
   }
 
   public func removeAll(namespace: String) throws {
@@ -219,18 +220,17 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
     guard !victims.isEmpty else { return }
 
     var next = manifest
+    for key in victims.keys { next.entries.removeValue(forKey: key) }
+    try persistManifest(next)
+    manifest = next
+
     var firstFailure: (any Error)?
-    for (key, entry) in victims {
+    for entry in victims.values {
       do {
         try removeFileIfPresent(blobURL(entry.physicalID))
-        next.entries.removeValue(forKey: key)
       } catch {
-        if firstFailure == nil { firstFailure = error }
+        firstFailure = firstFailure ?? error
       }
-    }
-    if next.entries.count != manifest.entries.count {
-      try persistManifest(next)
-      manifest = next
     }
     if let firstFailure { throw firstFailure }
   }

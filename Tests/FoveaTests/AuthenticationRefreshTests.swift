@@ -19,7 +19,8 @@ final class AuthenticationRefreshTests: XCTestCase {
     await refresher.release()
     _ = try await [first, second]
 
-    XCTAssertEqual(await refresher.refreshCount, 1)
+    let refreshCount = await refresher.refreshCount
+    XCTAssertEqual(refreshCount, 1)
     let counts = await fixture.transport.counts
     XCTAssertEqual(counts["Bearer old"], 1)
     XCTAssertEqual(counts["Bearer new"], 1)
@@ -43,8 +44,10 @@ final class AuthenticationRefreshTests: XCTestCase {
     }
     _ = try await second.value
 
-    XCTAssertEqual(await refresher.refreshCount, 1)
-    XCTAssertFalse(await refresher.wasCancelled)
+    let refreshCount = await refresher.refreshCount
+    let wasCancelled = await refresher.wasCancelled
+    XCTAssertEqual(refreshCount, 1)
+    XCTAssertFalse(wasCancelled)
     let counts = await fixture.transport.counts
     XCTAssertEqual(counts["Bearer new"], 1)
   }
@@ -87,7 +90,8 @@ final class AuthenticationRefreshTests: XCTestCase {
     } catch let failure as PipelineFailure {
       XCTAssertEqual(failure.statusCode, 403)
     }
-    XCTAssertEqual(await refresher.refreshCount, 0)
+    let refreshCount = await refresher.refreshCount
+    XCTAssertEqual(refreshCount, 0)
   }
 
   func testRecursiveRefreshIsRejectedAuthPt009() async throws {
@@ -234,7 +238,7 @@ private actor GatedCredentialRefresher: CredentialRefreshing {
     startWaiters.removeAll()
     do {
       if !released {
-        try await withTaskCancellationHandler {
+        await withTaskCancellationHandler {
           await withCheckedContinuation { releaseWaiters.append($0) }
         } onCancel: {
           Task { await self.markCancelled() }

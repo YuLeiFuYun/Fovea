@@ -56,7 +56,7 @@ if 'name: "FoveaTests"' not in package:
 if not (root / "docs/specifications/core-surface.md").is_file():
     errors.append("current core surface specification is missing")
 
-# AkashicMemory is a generic cache engine, not an image adapter.
+# AkashicMemory 是通用缓存引擎，不是图片适配器。
 akashic_memory_files = sorted((source_root / "AkashicMemory").rglob("*.swift"))
 for path in akashic_memory_files:
     text = path.read_text()
@@ -74,7 +74,7 @@ elif "dependencies:" in akashic_target.group("body"):
     errors.append("AkashicMemory target must not declare product dependencies in the production graph")
 
 
-# FoveaCore depends on storage contracts in AkashicCore, not the concrete disk product.
+# FoveaCore 只依赖 AkashicCore 的存储契约，不依赖具体磁盘产品。
 fovea_target = re.search(
     r'\.target\(\s*name:\s*"FoveaCore",(?P<body>[\s\S]*?)\n\s*\),', package
 )
@@ -97,12 +97,12 @@ if local_evidence.is_dir():
     if len(snapshots) > 1:
         errors.append("evidence/local must contain at most one latest snapshot")
 
-# Strict concurrency must not be weakened in production code.
+# 生产代码不得削弱严格并发检查。
 for path in sorted(source_root.rglob("*.swift")):
     if "@unchecked Sendable" in path.read_text():
         errors.append(f"unchecked Sendable in production source: {path.relative_to(root)}")
 
-# Implementation-only mechanics must not become public API accidentally.
+# 仅供实现使用的机制不得意外暴露为公共 API。
 package_only_files = [
     "Sources/AkashicCore/BlockingIOExecutor.swift",
     "Sources/FoveaCore/NamespaceRegistry.swift",
@@ -120,7 +120,7 @@ for relative in package_only_files:
     if re.search(r"(?m)^\s*public\s+", path.read_text()):
         errors.append(f"implementation-only API became public: {relative}")
 
-# The active tree keeps one current architecture and one current local evidence snapshot.
+# 活动目录只保留一份当前架构文档和一份最新本地证据快照。
 for obsolete in (root / "docs/archive", root / "docs/ARCHITECTURE_V2.md"):
     if obsolete.exists():
         errors.append(f"obsolete design artifact must be removed: {obsolete.relative_to(root)}")

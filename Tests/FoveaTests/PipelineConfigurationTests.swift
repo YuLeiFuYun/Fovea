@@ -116,6 +116,43 @@ final class PipelineConfigurationTests: XCTestCase {
     XCTAssertEqual(second.configuration.fullFingerprint, configuration.fullFingerprint)
   }
 
+  func testMemoryLimitCannotDivergeFromPipelineConfigurationPipePt004() async throws {
+    let body = try makePNG(width: 40, height: 40)
+    let diagnostics = BoundedDiagnosticsSink(capacity: 64)
+    let root = try makeTemporaryDirectory()
+    let pipeline = FoveaPipeline(
+      configuration: PipelineConfiguration(memoryCostLimit: 1),
+      transport: FakeHTTPTransport(stubs: [
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+          body: body
+        )
+      ]),
+      encodedStore: try await OriginalEncodedStore.open(
+        root: root.appendingPathComponent("encoded")
+      ),
+      recordStore: try await RepresentationRecordStore.open(
+        root: root.appendingPathComponent("records")
+      ),
+      diagnostics: diagnostics,
+      decoder: ImageIOImageDecoder()
+    )
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/memory-limit.png")),
+      target: try TargetPixels(width: 40, height: 40),
+      appID: "tests"
+    )
+
+    _ = try await pipeline.image(for: request)
+    _ = try await pipeline.image(for: request)
+
+    let events = await diagnostics.snapshot().map(\.event)
+    XCTAssertEqual(events.filter { $0.kind == .renderedMemoryHit }.count, 0)
+    XCTAssertEqual(events.filter { $0.kind == .originalEncodedHit }.count, 1)
+    XCTAssertEqual(pipeline.configuration.memoryCostLimit, 1)
+  }
+
   func testSeparatePipelinesDoNotShareInFlightFetchesPipePt008() async throws {
     let body = try makePNG()
     let transport = FakeHTTPTransport(stubs: [

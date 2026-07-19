@@ -120,7 +120,7 @@ def mutant_001(root: Path) -> None:
         "public struct FetchBaseKey",
         "public struct FetchVariantKey",
         "    encoder.append(namespace.value)\n",
-        "    // AIQA-MUT-001: namespace deliberately omitted.\n",
+        "    // AIQA-MUT-001：故意省略命名空间。\n",
     )
 
 
@@ -228,7 +228,7 @@ def mutant_011(root: Path) -> None:
         "package func release(key: Key, subscriberID: UUID) async",
         "package func subscriberCount",
         "      await entry.priorityControl.update(effective)\n",
-        "      // AIQA-MUT-011: effective priority is never lowered.\n",
+        "      // AIQA-MUT-011：故意不降低有效优先级。\n",
     )
 
 
@@ -367,7 +367,7 @@ def mutant_018(root: Path) -> None:
         "  func refresh(",
         "  func renderedImage(",
         "      try await requireActive(generation, for: namespace)\n",
-        "      // AIQA-MUT-018: late refresh ignores namespace revocation.\n",
+        "      // AIQA-MUT-018：故意让延迟刷新忽略命名空间撤销。\n",
     )
 
 
@@ -512,7 +512,7 @@ def main() -> int:
                     status = classify(return_code, output)
                 except subprocess.TimeoutExpired as error:
                     output = f"mutation test timed out after {error.timeout} seconds\n{error.stdout or ''}"
-                except Exception as error:  # noqa: BLE001 - gate records every invalid mutation.
+                except Exception as error:  # noqa: BLE001 - 门禁需要记录每个无效变异。
                     output = f"mutation application failed: {error}\n"
                 log_path.write_text(output)
                 result = {

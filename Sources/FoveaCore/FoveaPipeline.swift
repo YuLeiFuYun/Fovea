@@ -4,6 +4,9 @@ import FoveaHTTP
 import ImageCraftCore
 
 public final class FoveaPipeline: ImageLoading, Sendable {
+  public let id: PipelineID
+  public let configuration: PipelineConfiguration
+
   private let cache: PipelineCache
   private let fetchStage: FetchStage
   private let decodeStage: DecodeStage
@@ -16,7 +19,6 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     transport: any HTTPTransporting,
     encodedStore: any OriginalEncodedStoring,
     recordStore: any RepresentationRecordStoring,
-    memoryCacheCostLimit: Int = 64 * 1024 * 1024,
     diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
     decoder: any ImageDecoding
   ) {
@@ -26,7 +28,6 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       transport: transport,
       encodedStore: encodedStore,
       recordStore: recordStore,
-      memoryCacheCostLimit: memoryCacheCostLimit,
       namespaceRegistry: NamespaceRegistry(),
       diagnostics: diagnostics,
       decoder: decoder,
@@ -42,7 +43,6 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     transport: any HTTPTransporting,
     encodedStore: any OriginalEncodedStoring,
     recordStore: any RepresentationRecordStoring,
-    memoryCacheCostLimit: Int = 64 * 1024 * 1024,
     namespaceRegistry: NamespaceRegistry,
     diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
     decoder: any ImageDecoding,
@@ -56,10 +56,18 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     self.namespaceRegistry = namespaceRegistry
     self.diagnostics = diagnostics
     self.clock = clock
+    let mutationQueueLimit = Self.saturatedSum([
+      configuration.maximumConcurrentFetches,
+      configuration.maximumQueuedFetches,
+      configuration.maximumConcurrentDecodes,
+      configuration.maximumQueuedDecodes,
+      1,
+    ])
     self.cache = PipelineCache(
       encodedStore: encodedStore,
       recordStore: recordStore,
-      memoryCostLimit: memoryCacheCostLimit,
+      memoryCostLimit: configuration.memoryCostLimit,
+      mutationQueueLimit: mutationQueueLimit,
       namespaceRegistry: namespaceRegistry,
       diagnostics: diagnostics
     )
@@ -107,11 +115,15 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     }
   }
 
+  /// 回收未被表征记录引用的持久化数据块。
+  /// 自定义存储必须同时实现对应的维护协议，否则以结构化能力错误失败。
   public func garbageCollectCaches() async throws -> GarbageCollectionResult {
     do {
       return try await cache.garbageCollect()
     } catch let failure as PipelineFailure {
       throw failure
+    } catch is CancellationError {
+      throw PipelineFailure.cancelled(stage: .persistence)
     } catch {
       throw PipelineFailure(
         category: .cacheWrite,
@@ -623,6 +635,13 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       generation: generation,
       renderKey: RenderKey(decodeKey: decode, renderVersion: 1)
     )
+  }
+
+  private static func saturatedSum(_ values: [Int]) -> Int {
+    values.reduce(0) { partial, value in
+      let (sum, overflow) = partial.addingReportingOverflow(value)
+      return overflow ? Int.max : sum
+    }
   }
 
   private static func pixelCount(width: Int, height: Int) -> Int {

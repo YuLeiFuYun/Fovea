@@ -52,7 +52,7 @@ final class StagingAndStorageTests: XCTestCase {
       try await store.put(record)
       XCTFail("Expected metadata persistence failure")
     } catch {
-      // Expected.
+      // 预期持久化失败。
     }
     let retainedRecord = await store.record(for: record.variantKeyDigest)
     XCTAssertNil(retainedRecord)
@@ -159,6 +159,76 @@ final class StagingAndStorageTests: XCTestCase {
     XCTAssertFalse(recordFile.contains(namespace))
     XCTAssertTrue(manifest.contains(StorageNamespaceFingerprint(namespace: namespace).value))
     XCTAssertTrue(recordFile.contains(StorageNamespaceFingerprint(namespace: namespace).value))
+  }
+
+  func testRemoveDoesNotDeleteBlobWhenManifestPublicationFails() async throws {
+    let root = try makeTemporaryDirectory()
+    let store = try await OriginalEncodedStore.open(root: root)
+    let data = Data("remove-transaction".utf8)
+    let contentID = ContentID(data: data).description
+    let stored = try await store.commit(
+      data: data,
+      contentID: contentID,
+      namespace: "public:tests"
+    )
+    let blobURL = root.appendingPathComponent("blobs/\(stored.physicalID.description)")
+    let manifestURL = root.appendingPathComponent("manifest.json")
+    try FileManager.default.removeItem(at: manifestURL)
+    try FileManager.default.createDirectory(at: manifestURL, withIntermediateDirectories: false)
+
+    do {
+      try await store.remove(contentID: contentID, namespace: "public:tests")
+      XCTFail("元数据发布失败时删除操作必须失败")
+    } catch {
+      XCTAssertTrue(FileManager.default.fileExists(atPath: blobURL.path))
+      let retainedPhysicalID = await store.physicalID(
+        contentID: contentID,
+        namespace: "public:tests"
+      )
+      XCTAssertEqual(retainedPhysicalID, stored.physicalID)
+    }
+  }
+
+  func testRemoveAllDoesNotDeleteBlobsWhenManifestPublicationFails() async throws {
+    let root = try makeTemporaryDirectory()
+    let store = try await OriginalEncodedStore.open(root: root)
+    let firstData = Data("namespace-first".utf8)
+    let secondData = Data("namespace-second".utf8)
+    let firstID = ContentID(data: firstData).description
+    let secondID = ContentID(data: secondData).description
+    let first = try await store.commit(
+      data: firstData,
+      contentID: firstID,
+      namespace: "private:account"
+    )
+    let second = try await store.commit(
+      data: secondData,
+      contentID: secondID,
+      namespace: "private:account"
+    )
+    let firstURL = root.appendingPathComponent("blobs/\(first.physicalID.description)")
+    let secondURL = root.appendingPathComponent("blobs/\(second.physicalID.description)")
+    let manifestURL = root.appendingPathComponent("manifest.json")
+    try FileManager.default.removeItem(at: manifestURL)
+    try FileManager.default.createDirectory(at: manifestURL, withIntermediateDirectories: false)
+
+    do {
+      try await store.removeAll(namespace: "private:account")
+      XCTFail("元数据发布失败时命名空间清理必须失败")
+    } catch {
+      XCTAssertTrue(FileManager.default.fileExists(atPath: firstURL.path))
+      XCTAssertTrue(FileManager.default.fileExists(atPath: secondURL.path))
+      let retainedFirst = await store.physicalID(
+        contentID: firstID,
+        namespace: "private:account"
+      )
+      let retainedSecond = await store.physicalID(
+        contentID: secondID,
+        namespace: "private:account"
+      )
+      XCTAssertEqual(retainedFirst, first.physicalID)
+      XCTAssertEqual(retainedSecond, second.physicalID)
+    }
   }
 
   func testStoreRejectsMismatchedContentID() async throws {
@@ -277,6 +347,25 @@ final class StagingAndStorageTests: XCTestCase {
     ]
     for url in urls {
       try assertSecureCacheItem(url)
+    }
+  }
+
+  func testGarbageCollectionRejectsStoresWithoutMaintenanceCapability() async throws {
+    let pipeline = FoveaPipeline(
+      transport: FakeHTTPTransport(stubs: []),
+      encodedStore: FailingEncodedStore(),
+      recordStore: InMemoryRecordStore(),
+      decoder: ImageIOImageDecoder()
+    )
+
+    do {
+      _ = try await pipeline.garbageCollectCaches()
+      XCTFail("不支持维护协议的自定义存储不得伪装成可执行 GC")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .cacheWrite)
+      XCTAssertEqual(failure.stage, .persistence)
+      XCTAssertEqual(failure.disposition, .terminal)
+      XCTAssertEqual(failure.reasonCode, "cache-maintenance-unavailable")
     }
   }
 

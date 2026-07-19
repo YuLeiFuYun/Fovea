@@ -1,6 +1,6 @@
 import Foundation
 
-/// A process-local, cost-bounded LRU cache with no knowledge of the stored value's domain.
+/// 进程内、按成本设限的 LRU 缓存；不感知所存值所属的业务领域。
 public actor MemoryCache<Key: Hashable & Sendable, Value: Sendable> {
   private struct Entry {
     var value: Value

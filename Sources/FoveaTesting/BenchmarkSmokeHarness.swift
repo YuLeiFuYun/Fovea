@@ -316,10 +316,10 @@ public enum BenchmarkSmokeHarness {
       root: root.appendingPathComponent("records", isDirectory: true)
     )
     return FoveaPipeline(
+      configuration: PipelineConfiguration(memoryCostLimit: memoryCacheCostLimit),
       transport: origin,
       encodedStore: encoded,
       recordStore: records,
-      memoryCacheCostLimit: memoryCacheCostLimit,
       diagnostics: diagnostics,
       decoder: ImageIOImageDecoder()
     )

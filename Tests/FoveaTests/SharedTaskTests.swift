@@ -20,7 +20,7 @@ final class SharedTaskTests: XCTestCase {
       _ = try await cancelled.value
       XCTFail("Expected cancellation")
     } catch is CancellationError {
-      // Expected.
+      // 预期会进入取消分支。
     }
     let elapsed = started.duration(to: .now)
     XCTAssertLessThan(elapsed, .milliseconds(150))

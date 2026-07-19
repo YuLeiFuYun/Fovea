@@ -126,8 +126,8 @@ final class StreamingURLSessionDelegate: NSObject, URLSessionDataDelegate, Senda
   }
 
   func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-    // URLSession delegate callbacks do not expose an async backpressure hook. Suspend before
-    // enqueueing so each request has at most one unconsumed body chunk in the event pipeline.
+    // URLSession 委托回调不提供异步背压钩子，因此在入队前暂停任务，
+    // 保证每个请求在事件管线中至多存在一个尚未消费的响应体分块。
     dataTask.suspend()
     router.emit(.data(data), for: dataTask.taskIdentifier)
   }

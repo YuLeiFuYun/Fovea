@@ -8,6 +8,7 @@ final class PipelineCache: Sendable {
   private let encodedStore: any OriginalEncodedStoring
   private let recordStore: any RepresentationRecordStoring
   private let memory: MemoryCache<ScopedRenderKey, DecodedImage>
+  private let mutationPermits: AsyncPermitPool
   private let namespaceRegistry: NamespaceRegistry
   private let diagnostics: any DiagnosticsSink
 
@@ -15,12 +16,14 @@ final class PipelineCache: Sendable {
     encodedStore: any OriginalEncodedStoring,
     recordStore: any RepresentationRecordStoring,
     memoryCostLimit: Int,
+    mutationQueueLimit: Int,
     namespaceRegistry: NamespaceRegistry,
     diagnostics: any DiagnosticsSink
   ) {
     self.encodedStore = encodedStore
     self.recordStore = recordStore
     self.memory = MemoryCache(costLimit: memoryCostLimit)
+    self.mutationPermits = AsyncPermitPool(limit: 1, queueLimit: max(1, mutationQueueLimit))
     self.namespaceRegistry = namespaceRegistry
     self.diagnostics = diagnostics
   }
@@ -46,11 +49,18 @@ final class PipelineCache: Sendable {
     namespace: SecurityNamespaceID,
     generation: NamespaceGeneration
   ) async {
-    try? await recordStore.remove(
-      variantDigest,
-      namespace: namespace.value,
-      namespaceGeneration: generation.value
-    )
+    do {
+      try await recordStore.remove(
+        variantDigest,
+        namespace: namespace.value,
+        namespaceGeneration: generation.value
+      )
+    } catch {
+      await recordCacheCleanupFailure(
+        keyDigest: variantDigest,
+        reason: "record-removal-failed"
+      )
+    }
   }
 
   func refresh(
@@ -72,12 +82,20 @@ final class PipelineCache: Sendable {
         )
       }
     } catch {
-      try? await recordStore.remove(
-        newRecord.variantKeyDigest,
-        namespace: namespace.value,
-        namespaceGeneration: generation.value
-      )
-      throw error
+      let originalError = error
+      do {
+        try await recordStore.remove(
+          newRecord.variantKeyDigest,
+          namespace: namespace.value,
+          namespaceGeneration: generation.value
+        )
+      } catch {
+        await recordCacheCleanupFailure(
+          keyDigest: newRecord.variantKeyDigest,
+          reason: "record-refresh-rollback-failed"
+        )
+      }
+      throw originalError
     }
   }
 
@@ -118,22 +136,102 @@ final class PipelineCache: Sendable {
     await memory.removeAll {
       $0.namespace == namespace && $0.generation == generation
     }
-    try? await recordStore.remove(
-      record.variantKeyDigest,
-      namespace: namespace.value,
-      namespaceGeneration: generation.value
-    )
+    do {
+      try await recordStore.remove(
+        record.variantKeyDigest,
+        namespace: namespace.value,
+        namespaceGeneration: generation.value
+      )
+    } catch {
+      await recordCacheCleanupFailure(
+        keyDigest: record.variantKeyDigest,
+        reason: "no-store-record-removal-failed"
+      )
+    }
     let stillReferenced = await recordStore.containsReference(
       to: record.contentID,
       namespace: namespace.value,
       excludingVariantDigest: nil
     )
     if !stillReferenced {
-      try? await encodedStore.remove(contentID: record.contentID, namespace: namespace.value)
+      do {
+        try await encodedStore.remove(
+          contentID: record.contentID,
+          namespace: namespace.value
+        )
+      } catch {
+        await recordCacheCleanupFailure(
+          keyDigest: record.variantKeyDigest,
+          reason: "no-store-blob-removal-failed"
+        )
+      }
     }
   }
 
   func commit(
+    data: Data,
+    contentID: ContentID,
+    record: RepresentationRecord,
+    image: DecodedImage,
+    renderKey: ScopedRenderKey,
+    admitRendered: Bool,
+    namespace: SecurityNamespaceID,
+    generation: NamespaceGeneration
+  ) async throws {
+    let permit: AsyncPermitPool.Permit
+    do {
+      permit = try await mutationPermits.acquire()
+    } catch is CancellationError {
+      throw CancellationError()
+    } catch PermitPoolError.queueLimitExceeded {
+      await diagnostics.record(
+        DiagnosticEvent(
+          kind: .cacheWriteFailed,
+          keyDigest: record.variantKeyDigest,
+          reason: "cache-mutation-queue-limit"
+        )
+      )
+      return
+    }
+
+    do {
+      try await commitWhileHoldingMutationPermit(
+        data: data,
+        contentID: contentID,
+        record: record,
+        image: image,
+        renderKey: renderKey,
+        admitRendered: admitRendered,
+        namespace: namespace,
+        generation: generation
+      )
+      await permit.release()
+    } catch {
+      await permit.release()
+      throw error
+    }
+  }
+
+  func garbageCollect() async throws -> GarbageCollectionResult {
+    guard let recordMaintenance = recordStore as? any RepresentationRecordMaintaining,
+      let encodedMaintenance = encodedStore as? any OriginalEncodedMaintaining
+    else {
+      throw PipelineFailure.cacheMaintenanceUnavailable
+    }
+
+    let permit = try await mutationPermits.acquire()
+    do {
+      let references = await recordMaintenance.contentReferences()
+      let result = try await encodedMaintenance.garbageCollect(retaining: references)
+      await permit.release()
+      return result
+    } catch {
+      await permit.release()
+      throw error
+    }
+  }
+
+  private func commitWhileHoldingMutationPermit(
     data: Data,
     contentID: ContentID,
     record: RepresentationRecord,
@@ -222,11 +320,18 @@ final class PipelineCache: Sendable {
   ) async {
     if renderedCommitted { await memory.remove(renderKey) }
     if recordCommitted {
-      try? await recordStore.remove(
-        variantDigest,
-        namespace: namespace.value,
-        namespaceGeneration: renderKey.generation.value
-      )
+      do {
+        try await recordStore.remove(
+          variantDigest,
+          namespace: namespace.value,
+          namespaceGeneration: renderKey.generation.value
+        )
+      } catch {
+        await recordCacheCleanupFailure(
+          keyDigest: variantDigest,
+          reason: "commit-rollback-record-removal-failed"
+        )
+      }
     }
     if createdBlob {
       let stillReferenced = await recordStore.containsReference(
@@ -235,12 +340,32 @@ final class PipelineCache: Sendable {
         excludingVariantDigest: nil
       )
       if !stillReferenced {
-        try? await encodedStore.remove(
-          contentID: contentID.description,
-          namespace: namespace.value
-        )
+        do {
+          try await encodedStore.remove(
+            contentID: contentID.description,
+            namespace: namespace.value
+          )
+        } catch {
+          await recordCacheCleanupFailure(
+            keyDigest: variantDigest,
+            reason: "commit-rollback-blob-removal-failed"
+          )
+        }
       }
     }
+  }
+
+  private func recordCacheCleanupFailure(
+    keyDigest: String,
+    reason: String
+  ) async {
+    await diagnostics.record(
+      DiagnosticEvent(
+        kind: .cacheWriteFailed,
+        keyDigest: keyDigest,
+        reason: reason
+      )
+    )
   }
 
   private func requireActive(

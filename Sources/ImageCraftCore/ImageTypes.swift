@@ -125,8 +125,8 @@ public struct ImageProbe: Hashable, Sendable {
   }
 }
 
-/// Immutable decoded pixels. CoreGraphics imports `CGImage` as `Sendable` in the supported SDKs;
-/// Fovea never exposes mutable backing storage or mutates the image after construction.
+/// 不可变的解码像素。受支持 SDK 会将 CoreGraphics 的 `CGImage` 导入为 `Sendable`；
+/// Fovea 既不暴露可变的底层存储，也不会在构造后修改图像。
 public struct DecodedImage: Sendable {
   public let cgImage: CGImage
   public let pixelWidth: Int

@@ -340,7 +340,7 @@ public enum AuthGallerySmokeHarness {
       _ = try await task.value
       deliveredAfterRevoke = true
     } catch {
-      // Expected.
+      // 撤销后失败符合预期。
     }
     let record = await records.record(for: imageRequest.fetchVariantKey.digestHex)
     let physicalID = await encoded.physicalID(

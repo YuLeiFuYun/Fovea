@@ -57,6 +57,15 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
     self.statusCode = statusCode
   }
 
+  static func authorization(reasonCode: String) -> PipelineFailure {
+    PipelineFailure(
+      category: .authorization,
+      stage: .requestValidation,
+      disposition: .terminal,
+      reasonCode: reasonCode
+    )
+  }
+
   static let missingAuthorizationContext = PipelineFailure(
     category: .authorization,
     stage: .requestValidation,
@@ -76,6 +85,13 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
     stage: .revocation,
     disposition: .cacheDegraded,
     reasonCode: "namespace-cleanup-failed"
+  )
+
+  static let cacheMaintenanceUnavailable = PipelineFailure(
+    category: .cacheWrite,
+    stage: .persistence,
+    disposition: .terminal,
+    reasonCode: "cache-maintenance-unavailable"
   )
 
   static let missingCachedBody = PipelineFailure(

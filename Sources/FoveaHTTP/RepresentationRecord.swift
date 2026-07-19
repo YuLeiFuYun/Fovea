@@ -159,8 +159,8 @@ public actor RepresentationRecordStore: RepresentationRecordMaintaining {
     if let legacy = try? JSONDecoder().decode([String: LegacyRecordV4].self, from: data),
       legacy.values.allSatisfy({ $0.recordSchemaVersion == 4 })
     {
-      // Pre-release schema 4 cannot be migrated safely because it did not persist the base key
-      // or Vary request selection. Treat it as a stable miss and rewrite only on the next valid put.
+      // 预发布的 schema 4 未持久化基础键和 Vary 请求选择，无法安全迁移。
+      // 将其稳定地视为未命中，仅在下一次有效写入时重建。
       recordsByVariant = [:]
       return
     }
@@ -181,7 +181,7 @@ public actor RepresentationRecordStore: RepresentationRecordMaintaining {
     }
   }
 
-  /// Only for package tests and diagnostics. Product lookup must start from the base key.
+  /// 仅供包内测试和诊断使用。生产查询必须从基础键开始。
   package func record(for variantDigest: String) -> RepresentationRecord? {
     recordsByVariant[variantDigest]
   }
@@ -227,7 +227,7 @@ public actor RepresentationRecordStore: RepresentationRecordMaintaining {
 
   public func contentReferences() async -> Set<StoredContentReference> {
     Set(
-      manifest.records.values.map { record in
+      recordsByVariant.values.map { record in
         StoredContentReference(
           namespaceFingerprint: record.securityNamespaceFingerprint,
           contentID: record.contentID

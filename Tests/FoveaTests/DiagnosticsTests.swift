@@ -1,3 +1,4 @@
+import AkashicCore
 import AkashicDisk
 import FoveaCore
 import FoveaHTTP
@@ -59,6 +60,51 @@ final class DiagnosticsTests: XCTestCase {
     XCTAssertFalse(firstIDs.contains(request.fetchVariantKey.digestHex))
     XCTAssertFalse(firstIDs.contains(request.fetchExecutionKey.digestHex))
     XCTAssertNotEqual(Set(firstIDs), Set(secondIDs))
+  }
+
+  func testFailedCorruptRecordRemovalIsObservable() async throws {
+    let body = try makePNG()
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/removal-diagnostics.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let record = makeRepresentationRecord(
+      namespace: request.namespace.value,
+      baseKeyDigest: request.fetchBaseKey.digestHex,
+      variantKeyDigest: request.fetchVariantKey.digestHex,
+      expiresAt: Date().addingTimeInterval(3_600),
+      contentID: ContentID(data: body).description,
+      payloadLength: body.count
+    )
+    let diagnostics = BoundedDiagnosticsSink(capacity: 64)
+    let pipeline = FoveaPipeline(
+      transport: FakeHTTPTransport(stubs: [
+        .init(
+          statusCode: 200,
+          headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+          body: body
+        )
+      ]),
+      encodedStore: FailingReadEncodedStore(),
+      recordStore: RemovalFailingRecordStore(record: record),
+      diagnostics: diagnostics,
+      decoder: ImageIOImageDecoder()
+    )
+
+    _ = try await pipeline.image(for: request)
+
+    let events = await diagnostics.snapshot().map(\.event)
+    XCTAssertTrue(
+      events.contains {
+        $0.kind == .cacheReadFailed && $0.reason == "original-encoded-read"
+      }
+    )
+    XCTAssertTrue(
+      events.contains {
+        $0.kind == .cacheWriteFailed && $0.reason == "record-removal-failed"
+      }
+    )
   }
 
   func testSlowExternalSinkCannotDelayImageDelivery_DIAG_PT_003() async throws {
@@ -165,4 +211,58 @@ private actor CapturingSlowDiagnosticsSink: DiagnosticsSink {
     try? await Task.sleep(for: delay)
     events.append(event)
   }
+}
+
+private actor FailingReadEncodedStore: OriginalEncodedStoring {
+  func read(contentID: String, namespace: String) async throws -> Data {
+    throw AkashicError.integrityMismatch
+  }
+
+  func commit(data: Data, contentID: String, namespace: String) async throws -> StoredBlob {
+    throw AkashicError.storageUnavailable
+  }
+
+  func physicalID(contentID: String, namespace: String) async -> PhysicalBlobID? { nil }
+  func remove(contentID: String, namespace: String) async throws {}
+  func removeAll(namespace: String) async throws {}
+}
+
+private actor RemovalFailingRecordStore: RepresentationRecordStoring {
+  private let record: RepresentationRecord
+
+  init(record: RepresentationRecord) {
+    self.record = record
+  }
+
+  func records(
+    for baseKeyDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async -> [RepresentationRecord] {
+    guard record.baseKeyDigest == baseKeyDigest,
+      record.securityNamespaceFingerprint == StorageNamespaceFingerprint(namespace: namespace),
+      record.namespaceGeneration == namespaceGeneration
+    else { return [] }
+    return [record]
+  }
+
+  func put(_ record: RepresentationRecord) async throws {}
+
+  func containsReference(
+    to contentID: String,
+    namespace: String,
+    excludingVariantDigest: String?
+  ) async -> Bool {
+    true
+  }
+
+  func remove(
+    _ variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async throws {
+    throw AkashicError.storageUnavailable
+  }
+
+  func removeAll(namespace: String) async throws {}
 }

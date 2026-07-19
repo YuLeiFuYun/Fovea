@@ -1,4 +1,5 @@
 import Foundation
+import FoveaHTTP
 import ImageCraftCore
 
 public struct CredentialRefreshResult: Sendable {

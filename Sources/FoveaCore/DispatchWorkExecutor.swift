@@ -1,6 +1,6 @@
 import Dispatch
 
-/// Runs synchronous, potentially blocking CPU work outside Swift's cooperative executor.
+/// 在 Swift 协作式执行器之外运行同步且可能阻塞的 CPU 工作。
 package final class DispatchWorkExecutor: Sendable {
   private let queue: DispatchQueue
 

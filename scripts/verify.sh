@@ -23,6 +23,18 @@ FOVEA_VERIFIED_COMMIT="$(git rev-parse HEAD 2>/dev/null || printf unverified-loc
 xcrun swift test
 python3 scripts/validate-benchmark-artifacts.py .artifacts/benchmarks/*.json
 
+if [ "${RUN_RELEASE:-1}" = "1" ]; then
+    xcrun swift build -c release -Xswiftc -warnings-as-errors
+fi
+
+if [ "${RUN_THREAD_SANITIZER:-1}" = "1" ]; then
+    xcrun swift test --sanitize=thread
+fi
+
+if [ "${RUN_ADDRESS_SANITIZER:-1}" = "1" ]; then
+    xcrun swift test --sanitize=address
+fi
+
 if [ "${RUN_IOS_SIMULATOR:-1}" = "1" ]; then
     simulator_id=$(python3 scripts/select-ios-simulator.py)
     printf 'Using iOS Simulator %s\n' "$simulator_id"
@@ -30,6 +42,7 @@ if [ "${RUN_IOS_SIMULATOR:-1}" = "1" ]; then
         -scheme Fovea-Package \
         -destination "platform=iOS Simulator,id=$simulator_id" \
         APPINTENTS_METADATA_PROCESSING_ENABLED=NO \
+        SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
         test
 fi
 
