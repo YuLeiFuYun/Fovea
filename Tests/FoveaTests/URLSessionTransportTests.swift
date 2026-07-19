@@ -17,6 +17,85 @@ final class URLSessionTransportTests: XCTestCase {
     XCTAssertTrue(explicitlyScoped.reusePolicy.allowsCrossRequestReuse)
   }
 
+  func testConfigurationIsSanitizedBeforeSessionCreation_AUTH_PT_008() async throws {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [ConfigurationProbeURLProtocol.self]
+    let cookieStorage = HTTPCookieStorage.sharedCookieStorage(
+      forGroupContainerIdentifier: UUID().uuidString)
+    configuration.httpCookieStorage = cookieStorage
+    configuration.httpShouldSetCookies = true
+    let url = try XCTUnwrap(URL(string: "https://configuration.example.test/probe"))
+    let cookie = try XCTUnwrap(
+      HTTPCookie(properties: [
+        .domain: "configuration.example.test",
+        .path: "/",
+        .name: "session",
+        .value: "must-not-leak",
+        .secure: "TRUE",
+      ])
+    )
+    cookieStorage.setCookie(cookie)
+
+    let response = try await URLSessionTransport(configuration: configuration).execute(
+      TransportRequest(
+        request: URLRequest(url: url),
+        maximumBytes: 1024,
+        memoryThreshold: 1024
+      )
+    )
+    let probe = try JSONDecoder().decode(ConfigurationProbe.self, from: response.body)
+
+    XCTAssertNil(probe.cookie)
+    XCTAssertEqual(probe.cachePolicy, URLRequest.CachePolicy.reloadIgnoringLocalCacheData.rawValue)
+  }
+
+  func testMalformedOrConflictingContentLengthFailsClosed_HTTP_CONF_CONTENT_LENGTH_001()
+    async throws
+  {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [ContentLengthURLProtocol.self]
+    let transport = URLSessionTransport(
+      configuration: configuration,
+      stagingDirectory: try makeTemporaryDirectory("content-length-invalid")
+    )
+
+    for path in ["malformed", "conflicting"] {
+      let url = try XCTUnwrap(URL(string: "https://content-length.example.test/\(path)"))
+      do {
+        _ = try await transport.execute(
+          TransportRequest(
+            request: URLRequest(url: url),
+            maximumBytes: 1024,
+            memoryThreshold: 1024
+          )
+        )
+        XCTFail("畸形或冲突 Content-Length 必须失败关闭: \(path)")
+      } catch let error as TransportError {
+        XCTAssertEqual(error, .invalidContentLength)
+      }
+    }
+  }
+
+  func testMatchingDuplicateContentLengthIsAccepted_HTTP_CONF_CONTENT_LENGTH_001() async throws {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [ContentLengthURLProtocol.self]
+    let transport = URLSessionTransport(
+      configuration: configuration,
+      stagingDirectory: try makeTemporaryDirectory("content-length-duplicate")
+    )
+    let url = try XCTUnwrap(URL(string: "https://content-length.example.test/matching"))
+
+    let response = try await transport.execute(
+      TransportRequest(
+        request: URLRequest(url: url),
+        maximumBytes: 1024,
+        memoryThreshold: 1024
+      )
+    )
+
+    XCTAssertEqual(response.body, ContentLengthURLProtocol.body)
+  }
+
   func testDelegateTransportConsumesChunksWithoutPerByteIteration() async throws {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.protocolClasses = [ChunkedURLProtocol.self]
@@ -119,4 +198,90 @@ private final class ChunkedURLProtocol: URLProtocol {
   static func body(for url: URL) -> Data {
     Data((0..<(128 * 1024)).map { UInt8($0 % 251) })
   }
+}
+
+private struct ConfigurationProbe: Codable {
+  let cookie: String?
+  let cachePolicy: UInt
+}
+
+private final class ConfigurationProbeURLProtocol: URLProtocol {
+  override class func canInit(with request: URLRequest) -> Bool {
+    request.url?.host == "configuration.example.test"
+  }
+
+  override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+  override func startLoading() {
+    guard let url = request.url else {
+      client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+      return
+    }
+    let body: Data
+    do {
+      body = try JSONEncoder().encode(
+        ConfigurationProbe(
+          cookie: request.value(forHTTPHeaderField: "Cookie"),
+          cachePolicy: request.cachePolicy.rawValue
+        )
+      )
+    } catch {
+      client?.urlProtocol(self, didFailWithError: error)
+      return
+    }
+    let response = HTTPURLResponse(
+      url: url,
+      statusCode: 200,
+      httpVersion: "HTTP/1.1",
+      headerFields: [
+        "Content-Type": "application/json",
+        "Content-Length": String(body.count),
+      ]
+    )!
+    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+    client?.urlProtocol(self, didLoad: body)
+    client?.urlProtocolDidFinishLoading(self)
+  }
+
+  override func stopLoading() {}
+}
+
+private final class ContentLengthURLProtocol: URLProtocol {
+  static let body = Data("fovea-content-length".utf8)
+
+  override class func canInit(with request: URLRequest) -> Bool {
+    request.url?.host == "content-length.example.test"
+  }
+
+  override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+  override func startLoading() {
+    guard let url = request.url else {
+      client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+      return
+    }
+    let value: String
+    switch url.lastPathComponent {
+    case "malformed":
+      value = "not-a-length"
+    case "conflicting":
+      value = "\(Self.body.count), \(Self.body.count + 1)"
+    default:
+      value = "\(Self.body.count), \(Self.body.count)"
+    }
+    let response = HTTPURLResponse(
+      url: url,
+      statusCode: 200,
+      httpVersion: "HTTP/1.1",
+      headerFields: [
+        "Content-Type": "application/octet-stream",
+        "Content-Length": value,
+      ]
+    )!
+    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+    client?.urlProtocol(self, didLoad: Self.body)
+    client?.urlProtocolDidFinishLoading(self)
+  }
+
+  override func stopLoading() {}
 }

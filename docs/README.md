@@ -11,25 +11,21 @@
 
 ## 实现者最短路径
 
-### Phase 0a 必读
+### 当前 0b 实现者必读
 
-1. `specifications/core-surface.md`（允许/禁止实现面）；
-2. `ARCHITECTURE.md` §3、§6、§8、§18；
-3. `specifications/cache-semantics.md` 的 key/200/304/no-store/commit 子集；
-4. `specifications/auth-context-integration.md`；
-5. `specifications/scheduler-semantics.md`；
-6. `specifications/target-geometry.md`；
-7. `TEST_CATALOG.md` 的 Phase 0a IDs；
-8. `specifications/benchmark-workloads.md` 的 0a smoke gate；
-9. `specifications/ai-development-assurance.md` §16 的 0a-bootstrap/0a-complete AIQA 门禁。
+1. `ARCHITECTURE.md` §3、§4、§8、§11、§18；
+2. 与改动直接相关的活动 `specifications/`；
+3. `TEST_CATALOG.md` 与 `test-traceability.json`；
+4. `specifications/benchmark-workloads.md`、HTTP/cache/AI assurance 规格；
+5. Accepted ADR。Proposed ADR 只记录待接受决策，不得覆盖已执行的活动规格和代码事实。
 
-### Phase 0b / 审查者必读
+### 历史审查
 
-`ARCHITECTURE.md`、`COMPETITIVE_CONTRACTS.md`、`TEST_CATALOG.md`、benchmark/http/cache/AI assurance specs，以及 ADR-0002 至 ADR-0009。
+`specifications/core-surface.md` 只记录 Phase 0a 的历史实现面与符号预算，不再是当前白名单。`COMPETITIVE_CONTRACTS.md`、Technology Radar 与 Proposed ADR 提供研究背景，不构成已交付能力声明。
 
 ## 文档冻结
 
-Phase 0a 完成前只接受实现 blocker、规范矛盾、安全缺口和命名修正；新文档/大章节必须附失败测试 ID、blocker 日志/trace 或安全事件，否则默认拒绝。见 ADR-0008。
+当前阶段新增活动能力必须同时更新架构、对应规格、追踪矩阵和可执行证据。只有愿景而无失败测试、trace 或安全事件的扩展继续保留在 Proposed/Experimental，不得进入 README 的“当前已实现”清单。
 
 ## 当前权威文档
 
@@ -53,7 +49,7 @@ Phase 0a 完成前只接受实现 blocker、规范矛盾、安全缺口和命名
 
 ## 可执行规格
 
-- [Phase 0a 实现面与符号预算](specifications/core-surface.md)
+- [Phase 0a 历史实现面与符号预算](specifications/core-surface.md)
 - [Source 身份与失效](specifications/source-identity.md)
 - [Target Geometry 与像素规范化](specifications/target-geometry.md)
 - [缓存、身份与持久格式](specifications/cache-semantics.md)

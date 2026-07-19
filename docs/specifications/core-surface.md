@@ -47,7 +47,7 @@ FoveaSwiftUI
 FoveaTesting
 ```
 
-当前 0b 在该基线上新增 `FoveaPersistence`、`FoveaUIKit`、`FoveaAppKit`，并引入 StoreGeneration、显式 TransformStage、渐进状态和布局感知 SwiftUI 入口。这些模块均有实际调用路径与门禁，不是占位产品。
+当前 0b 在该基线上新增 `FoveaPersistence`、`FoveaSystem`、`FoveaUIKit`、`FoveaAppKit`，并引入 StoreGeneration、显式 TransformStage、渐进状态和布局感知 SwiftUI 入口。UIKit/AppKit 已具备身份替换、渐进显示、复用清理、离窗/析构取消与显式可访问性；尚未宣称具备列表预取、滚动可见性调度或完整生态扩展面。
 
 不得为了占位创建空的 Trust、Adaptive、Vision、Derived、Animation、Codec plugin 或 FoveaLab product。
 

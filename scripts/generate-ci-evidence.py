@@ -125,11 +125,57 @@ def main() -> int:
         mutation = root / ".artifacts/mutation/critical-mutants.json"
         conformance = root / ".artifacts/conformance/http-conformance.json"
         traceability = root / ".artifacts/traceability/test-traceability.json"
+        store_contention = root / ".artifacts/store-generation/contention.json"
+        coverage = root / ".artifacts/coverage/production-coverage.json"
         benchmark_paths = sorted((root / ".artifacts/benchmarks").glob("*.json"))
-        required_files = [verify_log, rollback, mutation, conformance, traceability, *benchmark_paths]
+        required_files = [
+            verify_log, rollback, mutation, conformance, traceability, store_contention, coverage,
+            *benchmark_paths,
+        ]
         missing = [str(path.relative_to(root)) for path in required_files if not path.is_file()]
         if missing:
             raise ValueError(f"missing evidence artifacts: {missing}")
+        if f"Verified commit: {head}" not in verify_log.read_text(errors="replace"):
+            raise ValueError("verify log is not explicitly bound to the evidence head")
+
+        mutation_validation = subprocess.run(
+            [
+                sys.executable,
+                str(root / "scripts/validate-critical-mutation-report.py"),
+                str(mutation),
+                "--expected-commit",
+                head,
+            ],
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        if mutation_validation.returncode != 0:
+            raise ValueError(
+                "critical mutation report validation failed: "
+                + mutation_validation.stdout.strip()
+            )
+
+        benchmark_validation = subprocess.run(
+            [
+                sys.executable,
+                str(root / "scripts/validate-benchmark-artifacts.py"),
+                *[str(path) for path in benchmark_paths],
+            ],
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        if benchmark_validation.returncode != 0:
+            raise ValueError(
+                "benchmark artifact validation failed: "
+                + benchmark_validation.stdout.strip()
+            )
+
         workloads = {json.loads(path.read_text()).get("workloadID"): path for path in benchmark_paths}
         expected_workloads = {
             "W1-Feed-Scroll-Smoke",
@@ -144,6 +190,22 @@ def main() -> int:
         rollback_data = json.loads(rollback.read_text())
         if rollback_data.get("baseCommit") != base or rollback_data.get("headCommit") != head:
             raise ValueError("rollback report commit binding mismatch")
+        if rollback_data.get("status") != "pass":
+            raise ValueError("rollback report is not passing")
+        rollback_checks = rollback_data.get("checks")
+        if (
+            not isinstance(rollback_checks, list)
+            or len(rollback_checks) != 4
+            or any(check.get("exitCode") != 0 for check in rollback_checks)
+        ):
+            raise ValueError("rollback report contains missing or failed checks")
+        rollback_log_relative = rollback_data.get("log")
+        if not isinstance(rollback_log_relative, str):
+            raise ValueError("rollback report lacks a log path")
+        rollback_log = (root / rollback_log_relative).resolve()
+        rollback_log.relative_to(root.resolve())
+        if not rollback_log.is_file() or rollback_data.get("logDigest") != digest(rollback_log):
+            raise ValueError("rollback log is missing or its digest does not match")
         conformance_data = json.loads(conformance.read_text())
         if conformance_data.get("verifiedCommit") != head or conformance_data.get("status") != "pass":
             raise ValueError("HTTP conformance report is not a passing result bound to the evidence head")
@@ -152,6 +214,44 @@ def main() -> int:
             raise ValueError("traceability report is not bound to the evidence head")
         if args.assurance_stage in {"0b", "release"} and traceability_data.get("status") != "complete":
             raise ValueError("0b/release evidence requires complete requirement traceability")
+        store_contention_data = json.loads(store_contention.read_text())
+        writer_exclusion = store_contention_data.get("writerExclusion", {})
+        if (
+            store_contention_data.get("verifiedCommit") != head
+            or store_contention_data.get("status") != "passed"
+            or store_contention_data.get("participants", 0) < 2
+            or len(store_contention_data.get("uniqueGenerationIdentifiers", [])) != 1
+            or writer_exclusion.get("status") != "passed"
+            or writer_exclusion.get("secondWriterRejected") is not True
+            or writer_exclusion.get("reacquiredAfterOwnerExit") is not True
+        ):
+            raise ValueError(
+                "StoreGeneration contention report is not a passing multi-process result bound to the evidence head"
+            )
+
+        coverage_data = json.loads(coverage.read_text())
+        if coverage_data.get("verifiedCommit") != head or coverage_data.get("status") != "passed":
+            raise ValueError("production coverage report is not a passing result bound to the evidence head")
+        coverage_totals = coverage_data.get("totals")
+        if not isinstance(coverage_totals, dict) or any(
+            not isinstance(summary, dict)
+            or summary.get("percent", -1) < summary.get("minimumPercent", float("inf"))
+            for summary in coverage_totals.values()
+        ):
+            raise ValueError("production coverage aggregate thresholds are not satisfied")
+        module_thresholds = coverage_data.get("moduleLineThresholds")
+        module_summaries = coverage_data.get("modules")
+        if not isinstance(module_thresholds, dict) or not isinstance(module_summaries, dict):
+            raise ValueError("production coverage module thresholds are missing")
+        for module, minimum in module_thresholds.items():
+            summary = module_summaries.get(module, {}).get("lines", {})
+            if summary.get("percent", -1) < minimum:
+                raise ValueError(f"production coverage module threshold failed: {module}")
+
+        for workload, path in workloads.items():
+            artifact = json.loads(path.read_text())
+            if artifact.get("verifiedCommit") != head:
+                raise ValueError(f"benchmark artifact is not bound to the evidence head: {workload}")
 
         locator_prefix = run_locator if trusted else "local"
         verification = [
@@ -200,6 +300,33 @@ def main() -> int:
                 f"{locator_prefix}#test-traceability",
                 head,
             ),
+            verification_result(
+                "CACHE-PT-019",
+                "property",
+                store_contention,
+                producer,
+                status,
+                f"{locator_prefix}#store-generation-contention",
+                head,
+            ),
+            verification_result(
+                "CACHE-PT-024",
+                "property",
+                store_contention,
+                producer,
+                status,
+                f"{locator_prefix}#store-writer-exclusion",
+                head,
+            ),
+            verification_result(
+                "AIQA-COV-001",
+                "test",
+                coverage,
+                producer,
+                status,
+                f"{locator_prefix}#production-coverage",
+                head,
+            ),
         ]
         for workload, path in sorted(workloads.items()):
             verification.append(
@@ -240,6 +367,9 @@ def main() -> int:
                 "AIQA-GATE-009",
                 "HTTP-CONF-PRIVATE-IMAGE-PROFILE",
                 "TEST-TRACEABILITY-0B",
+                "CACHE-PT-019",
+                "CACHE-PT-024",
+                "AIQA-COV-001",
                 "W1-Feed-Scroll-Smoke",
                 "W2-Detail-Hero-Smoke",
                 "W3-Auth-Gallery-Smoke",
@@ -248,6 +378,10 @@ def main() -> int:
                 "SEC-CASE-016",
                 "SEC-CASE-017",
                 "SEC-CASE-018",
+                "SEC-CASE-019",
+                "SEC-CASE-030",
+                "SEC-CASE-031",
+                "SEC-CASE-032",
             ],
             "agent": {
                 "tool": os.environ.get("FOVEA_AGENT_TOOL", "not-attested-by-ci"),
@@ -270,6 +404,8 @@ def main() -> int:
             "logicalChangedLines": logical_lines(root, base, head),
             "commands": [
                 "scripts/verify.sh",
+                "scripts/run-store-generation-contention.py",
+                "scripts/run-production-coverage.py",
                 f"scripts/verify-rollback.py --base {base} --head {head}",
                 "scripts/generate-ci-evidence.py",
             ],

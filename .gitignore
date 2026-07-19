@@ -11,3 +11,4 @@ evidence/local/
 .artifacts/
 __pycache__/
 *.py[cod]
+*.profraw

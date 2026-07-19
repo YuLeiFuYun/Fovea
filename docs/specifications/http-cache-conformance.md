@@ -157,6 +157,8 @@ stricter-security
 - `Set-Cookie` 与认证字段不会进入持久 record；
 - `no-store` response 不产生下一请求可命中的 RenderedMemory/Metadata/Original/Derived/Analysis。
 
+- **HTTP-CONF-AGE-005**: wall clock 在请求期间回拨时，有限的 request/response 时间仍是合法 record；response delay 按零处理，不得把 record 判为语义损坏。
+
 ## 8. 可观测性
 
 每次缓存决策输出脱敏 reason code：
@@ -175,3 +177,7 @@ clockAnomalyTreatedStale
 ```
 
 reason code 必须可用于测试断言，不能只输出自由文本日志。
+
+## 9. 当前传输完整性门禁
+
+- **HTTP-CONF-CONTENT-LENGTH-001**: identity 编码响应的 `Content-Length` 必须是一个或多个完全相同的非负 ASCII 十进制值；畸形、溢出或相互冲突的多值失败关闭，合法重复值仍按完整 body 长度验证。

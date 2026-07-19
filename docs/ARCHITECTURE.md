@@ -274,21 +274,17 @@ AkashicTesting
 
 ### 4.3 Fovea 产品
 
+当前 SwiftPM 生产产品为：
+
 ```text
-FoveaCore
-FoveaSources
-FoveaTransport
-FoveaHTTP
-FoveaPersistence
-FoveaUIKit
-FoveaAppKit
-FoveaSwiftUI
-FoveaDiagnostics
+ImageCraftCore / ImageCraftImageIO
+AkashicCore / AkashicMemory / AkashicDisk
+FoveaHTTP / FoveaCore / FoveaPersistence / FoveaSystem
+FoveaUIKit / FoveaAppKit / FoveaSwiftUI
 FoveaTesting
-Fovea
 ```
 
-格式解码插件属于 ImageCraft，不以 `FoveaAVIF` 等名称倒置职责。
+`FoveaStoreProbe` 是只用于跨进程竞争门禁的验证可执行文件，不是运行时依赖。`FoveaSources`、`FoveaDiagnostics`、聚合 `Fovea` façade 等仍是目标命名，不得在未实现时列入当前产品。格式解码插件属于 ImageCraft，不以 `FoveaAVIF` 等名称倒置职责。
 
 Phase 0a 已落实该边界：`AkashicMemory` 提供图片无关的 `MemoryCache<Key, Value>`，值成本由 Fovea 插入时显式传入；当前决策见 ADR-0001。
 
@@ -297,10 +293,14 @@ Phase 0a 已落实该边界：`AkashicMemory` 提供图片无关的 `MemoryCache
 Pipeline 在构造后持有不可变配置快照。codec、transport、store、安全策略和 diagnostics 只在 composition root 注入并冻结。当前 `0b-in-progress` 实现按真实职责拆为：
 
 ```text
-FetchStage     exact request + fetch single-flight + network permit
-DecodeStage    probe + target decode + decode permit
-PipelineCache  record/blob/memory transaction + rollback
-FoveaPipeline  state-machine orchestration
+FetchStage                  exact request + fetch single-flight + network permit
+DecodeStage                 probe + target decode + decode permit
+PipelineCache               record/blob/memory transaction + rollback
+EncodedDataCoordinator      原编码入口，不触发像素解码或未验证持久化
+ImageLoadCoordinator        cache selection + fetch/revalidate + stale decision
+HTTPImageResponseProcessor  200/304 representation semantics + commit/refresh
+ImageDeliveryCoordinator    decode/transform + RenderedMemory publication
+FoveaPipeline               immutable composition + public failure/revoke boundary
 ```
 
 这些 stage 使用 Swift `package` 访问级别，不是公共插件点；不提供动态 DAG、interceptor chain 或运行时全局注册。外部调用者只看到请求、配置、pipeline、结构化失败与必要协议。配置变化创建新的 pipeline，进行中的任务继续使用启动时快照。详见 `docs/specifications/pipeline-configuration.md` 与 ADR-0006。
@@ -313,20 +313,14 @@ OriginalEncoded/representation 事务与 RenderedMemory 发布是两个 checkpoi
 
 ## 5. 默认简单 API
 
-架构复杂度不能转嫁给普通使用者。首先保证：
+架构复杂度不能转嫁给普通使用者。当前已实现的安全默认组合入口是：
 
 ```swift
-FoveaImage(
-    url: url,
-    accessibility: .label(Text("用户头像"))
-)
+let system = try await FoveaSystemPipeline.open(cacheRoot: cacheRoot)
+let image = try await system.pipeline.image(for: request)
 ```
 
-SwiftUI façade 从稳定布局推导 target pixels；装饰图必须显式使用 `.decorative`，非 UI API 仍必须传入 target。
-
-```swift
-imageView.fovea.setImage(from: url)
-```
+它固定组合禁用 `URLCache`/Cookie 的 transport、同一 StoreGeneration 下的持久存储和 target-pixel ImageIO decoder。自定义 transport/store/decoder 仍通过 `FoveaPipeline` 显式注入。SwiftUI 使用 `FoveaImage(request:loader:accessibility:)`；UIKit/AppKit 使用平台 `FoveaImageView.setImage(request:loader:accessibility:)`。所有 UI surface 都要求显式 decorative 或 label。尚未提供只接收 URL 并猜测 target 的便利 API。
 
 ```swift
 let image = try await Fovea.shared.image(
@@ -598,7 +592,7 @@ Observer 只能观察。任何影响 locator、字节或像素的扩展必须在
 - 不同目标像素在解码阶段分叉；
 - 相同解码、不同圆角在处理阶段分叉。
 
-**当前 Phase 0a 只实现 FetchExecutionKey single-flight。** DecodeKey/RenderKey 级共享尚未实现，相同 target 的并发请求仍可能重复 probe/decode；benchmark、README 和 diagnostics 不得把目标模型冒充为当前能力。
+当前 `0b-in-progress` 已实现 FetchExecutionKey 与 DecodeKey 级 single-flight：相同精确网络执行共享 fetch，相同 namespace generation + DecodeKey 共享 probe/decode。RenderedMemory 按 RenderKey 复用，但独立 transform-stage single-flight 尚未实现；不同请求若同时越过解码且尚无最终内存条目，仍可能重复 transform。不得把 RenderKey 缓存命中冒充为 transform single-flight。
 
 ### 8.2 交付事件
 
@@ -806,13 +800,13 @@ Analysis 缓存键至少包含 `ContentID + AnalysisKind + implementation/model 
 
 ContentID 是逻辑摘要，不直接作为日志值或物理文件名。store 使用 namespace-local、随机不透明 `PhysicalBlobID`，metadata 维护索引。目标架构包含 hard limit、soft target、namespace quota、分类预算、active-reader lease 与批量 atime；这些目标详见 `docs/specifications/cache-budget-gc.md` 与 ADR-0007。
 
-当前实现具备单 store soft limit、namespace 隔离、opaque locator、引用快照、显式 mark-and-sweep，以及由 `AkashicDisk.StoreGenerationDirectory` 提供的原子 generation 指针切换。`FoveaPersistence` 在同一 generation 根目录组合 encoded/record stores；启动时会清理不完整目录和暂存指针，并恢复到完整且兼容的 generation。仍未实现跨进程协调、namespace quota、reader lease、DiskIOBudget 或批量 atime；这些缺项继续阻塞 0b 完成。
+当前实现具备单 store soft limit、namespace 隔离、opaque locator、引用快照、显式 mark-and-sweep，以及由 `AkashicDisk.StoreGenerationDirectory` 提供的原子 generation 指针切换。generation 选择与指针发布同时受进程内锁和 POSIX 文件锁保护，独立进程竞争门禁验证所有 opener 收敛到同一 generation。`FoveaPersistence` 在该 generation 根目录组合 encoded/record stores；启动时会清理不完整目录和暂存指针，并恢复到完整且兼容的 generation。generation 选择之后，`FoveaPersistence` 对活动 generation 持有进程生命周期的单 writer 租约：同进程重复打开复用同一组 store actor，跨进程第二 writer 立即失败关闭，owner 退出后才可重新取得租约。当前仍不支持多个进程共享 writer 或跨进程 reader/writer 快照协调；namespace quota、reader lease、DiskIOBudget 与批量 atime 也尚未实现。
 
 ---
 
 ## 12. 资源治理：先简单、可测
 
-Phase 0a 已实现两个静态、可取消 hard cap：默认最多 6 个唯一 fetch 和 2 个 probe/decode，两个等待队列各最多 512 个请求。permit 位于 single-flight operation 内部；等待者取消不会启动对应阶段或泄漏 permit。该实现只解决基础自 DoS，不宣称具备优先级、公平性、pressure 自适应或 working-set reservation。
+当前实现具有可取消的 fetch/decode hard cap 与有界等待队列。permit 位于 single-flight operation 内部；等待者取消不会启动对应阶段或泄漏 permit。队列按当前订阅者有效优先级选择，并以 `maximumPriorityBypasses` 限制低优先级饥饿；Swift TaskPriority/URLSessionTask.priority 仍只是 best-effort 映射。尚未实现系统 memory-pressure 自适应、namespace 公平配额、working-set reservation 或 CPU 时间预算。
 
 v1 实现：
 

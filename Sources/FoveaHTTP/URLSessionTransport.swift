@@ -40,10 +40,6 @@ public actor URLSessionTransport: HTTPTransporting {
       stagingDirectory
       ?? FileManager.default.temporaryDirectory
       .appendingPathComponent("FoveaTransport", isDirectory: true)
-    try? FileManager.default.createDirectory(
-      at: self.stagingDirectory,
-      withIntermediateDirectories: true
-    )
   }
 
   deinit {
@@ -57,7 +53,9 @@ public actor URLSessionTransport: HTTPTransporting {
       memoryThreshold: request.memoryThreshold,
       stagingDirectory: stagingDirectory
     )
-    let task = session.dataTask(with: request.request)
+    var urlRequest = request.request
+    urlRequest.cachePolicy = .reloadIgnoringLocalCacheData
+    let task = session.dataTask(with: urlRequest)
     task.priority = request.priority.urlSessionTaskValue
     let priorityUpdates = await request.priorityController?.updates()
     let priorityTask = priorityUpdates.map { updates in
@@ -98,9 +96,7 @@ public actor URLSessionTransport: HTTPTransporting {
 
       guard let response else { throw TransportError.nonHTTPResponse }
       let staged = try accumulator.finalize()
-      if let expected = response.value(forHTTPHeaderField: "Content-Length").flatMap(Int.init),
-        response.value(forHTTPHeaderField: "Content-Encoding")?.lowercased() ?? "identity"
-          == "identity",
+      if let expected = try Self.expectedIdentityContentLength(from: response),
         expected != staged.data.count
       {
         throw TransportError.incompleteBody
@@ -123,6 +119,35 @@ public actor URLSessionTransport: HTTPTransporting {
       eventRouter.unregister(taskID: task.taskIdentifier)
     }
   }
+  private static func expectedIdentityContentLength(
+    from response: HTTPURLResponse
+  ) throws -> Int? {
+    let encoding =
+      response.value(forHTTPHeaderField: "Content-Encoding")?
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+      .lowercased() ?? "identity"
+    guard encoding == "identity" else { return nil }
+    guard let raw = response.value(forHTTPHeaderField: "Content-Length") else { return nil }
+
+    let values = raw.split(separator: ",", omittingEmptySubsequences: false).map {
+      $0.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    guard !values.isEmpty else { throw TransportError.invalidContentLength }
+    var expected: Int?
+    for value in values {
+      guard !value.isEmpty, value.utf8.allSatisfy({ $0 >= 48 && $0 <= 57 }),
+        let parsed = Int(value), parsed >= 0
+      else {
+        throw TransportError.invalidContentLength
+      }
+      if let expected, expected != parsed {
+        throw TransportError.invalidContentLength
+      }
+      expected = parsed
+    }
+    return expected
+  }
+
   private static func headers(from response: HTTPURLResponse) -> [String: String] {
     var pairs: [(name: String, value: String)] = []
     pairs.reserveCapacity(response.allHeaderFields.count)

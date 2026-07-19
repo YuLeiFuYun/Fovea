@@ -21,6 +21,7 @@ let package = Package(
     .library(name: "FoveaHTTP", targets: ["FoveaHTTP"]),
     .library(name: "FoveaCore", targets: ["FoveaCore"]),
     .library(name: "FoveaPersistence", targets: ["FoveaPersistence"]),
+    .library(name: "FoveaSystem", targets: ["FoveaSystem"]),
     .library(name: "FoveaUIKit", targets: ["FoveaUIKit"]),
     .library(name: "FoveaAppKit", targets: ["FoveaAppKit"]),
     .library(name: "FoveaSwiftUI", targets: ["FoveaSwiftUI"]),
@@ -54,22 +55,33 @@ let package = Package(
     ),
     .target(
       name: "FoveaPersistence",
-      dependencies: ["AkashicDisk", "FoveaHTTP"],
+      dependencies: ["AkashicCore", "AkashicDisk", "FoveaHTTP"],
+      swiftSettings: concurrencySettings
+    ),
+    .target(
+      name: "FoveaSystem",
+      dependencies: ["FoveaCore", "FoveaHTTP", "FoveaPersistence", "ImageCraftImageIO"],
       swiftSettings: concurrencySettings
     ),
     .target(
       name: "FoveaUIKit",
-      dependencies: ["FoveaCore"],
+      dependencies: ["FoveaCore", "ImageCraftCore"],
       swiftSettings: concurrencySettings
     ),
     .target(
       name: "FoveaAppKit",
-      dependencies: ["FoveaCore"],
+      dependencies: ["FoveaCore", "ImageCraftCore"],
       swiftSettings: concurrencySettings
     ),
     .target(
       name: "FoveaSwiftUI",
       dependencies: ["FoveaCore", "ImageCraftCore"],
+      swiftSettings: concurrencySettings
+    ),
+    .executableTarget(
+      name: "FoveaStoreProbe",
+      dependencies: ["AkashicDisk", "FoveaPersistence"],
+      path: "Tools/FoveaStoreProbe",
       swiftSettings: concurrencySettings
     ),
     .target(
@@ -86,7 +98,7 @@ let package = Package(
       dependencies: [
         "ImageCraftCore", "ImageCraftImageIO",
         "AkashicCore", "AkashicMemory", "AkashicDisk",
-        "FoveaHTTP", "FoveaCore", "FoveaPersistence", "FoveaUIKit", "FoveaAppKit",
+        "FoveaHTTP", "FoveaCore", "FoveaPersistence", "FoveaSystem", "FoveaUIKit", "FoveaAppKit",
         "FoveaSwiftUI",
         "FoveaTesting",
       ],

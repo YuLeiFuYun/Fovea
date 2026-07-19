@@ -11,6 +11,7 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
   case originalEncodedHit
   case staleFallbackUsed
   case renderedMemoryHit
+  case renderedMemoryPurged
   case decodeQueued
   case decodeJoined
   case decodeStarted

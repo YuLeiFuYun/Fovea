@@ -160,7 +160,7 @@ final class HTTPConformanceTests: XCTestCase {
 
     let fooRecord = try record(for: fooOne, fields: ["Foo"], contentID: "foo-one")
     run("matching Vary field reuses record") {
-      XCTAssertEqual(select([fooRecord], for: fooOne)?.contentID, "foo-one")
+      XCTAssertEqual(select([fooRecord], for: fooOne)?.contentID, fooRecord.contentID)
     }
     run("mismatching Vary field misses") {
       XCTAssertNil(select([fooRecord], for: fooTwo))
@@ -170,8 +170,10 @@ final class HTTPConformanceTests: XCTestCase {
     }
     let fooTwoRecord = try record(for: fooTwo, fields: ["Foo"], contentID: "foo-two")
     run("different Vary records coexist") {
-      XCTAssertEqual(select([fooRecord, fooTwoRecord], for: fooOne)?.contentID, "foo-one")
-      XCTAssertEqual(select([fooRecord, fooTwoRecord], for: fooTwo)?.contentID, "foo-two")
+      XCTAssertEqual(
+        select([fooRecord, fooTwoRecord], for: fooOne)?.contentID, fooRecord.contentID)
+      XCTAssertEqual(
+        select([fooRecord, fooTwoRecord], for: fooTwo)?.contentID, fooTwoRecord.contentID)
     }
     let ignoreOtherRecord = try record(
       for: fooOneOtherTwo,
@@ -179,14 +181,15 @@ final class HTTPConformanceTests: XCTestCase {
       contentID: "ignore-other"
     )
     run("headers not named by Vary are ignored") {
-      XCTAssertEqual(select([ignoreOtherRecord], for: fooOneOtherThree)?.contentID, "ignore-other")
+      XCTAssertEqual(
+        select([ignoreOtherRecord], for: fooOneOtherThree)?.contentID, ignoreOtherRecord.contentID)
     }
 
     let twoWay = try request(headers: ["Foo": "1", "Bar": "abc"])
     let twoWayMismatch = try request(headers: ["Foo": "2", "Bar": "abc"])
     let twoWayRecord = try record(for: twoWay, fields: ["Foo", "Bar"], contentID: "two-way")
     run("two-way Vary matches all fields") {
-      XCTAssertEqual(select([twoWayRecord], for: twoWay)?.contentID, "two-way")
+      XCTAssertEqual(select([twoWayRecord], for: twoWay)?.contentID, twoWayRecord.contentID)
     }
     run("two-way Vary rejects one mismatch") {
       XCTAssertNil(select([twoWayRecord], for: twoWayMismatch))
@@ -203,7 +206,7 @@ final class HTTPConformanceTests: XCTestCase {
       contentID: "three-way"
     )
     run("three-way Vary matches all fields") {
-      XCTAssertEqual(select([threeWayRecord], for: threeWay)?.contentID, "three-way")
+      XCTAssertEqual(select([threeWayRecord], for: threeWay)?.contentID, threeWayRecord.contentID)
     }
     run("three-way Vary rejects mismatch independent of header order") {
       XCTAssertNil(select([threeWayRecord], for: threeWayMismatch))
@@ -218,7 +221,7 @@ final class HTTPConformanceTests: XCTestCase {
     run("shared absence of Vary field matches") {
       XCTAssertEqual(
         select([sharedAbsenceRecord], for: sharedAbsence)?.contentID,
-        "shared-absence"
+        sharedAbsenceRecord.contentID
       )
     }
     run("Vary wildcard is not reusable") {

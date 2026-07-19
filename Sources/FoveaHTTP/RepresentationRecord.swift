@@ -95,6 +95,7 @@ public protocol RepresentationRecordStoring: Sendable {
 }
 
 public actor RepresentationRecordStore: RepresentationRecordMaintaining {
+  private static let maximumManifestBytes = 64 * 1024 * 1024
   private nonisolated let ioExecutor = BlockingIOExecutor(
     label: "dev.fovea.http.representation-records"
   )
@@ -142,12 +143,14 @@ public actor RepresentationRecordStore: RepresentationRecordMaintaining {
   private func bootstrap(root: URL) throws {
     try StorageDirectorySecurity.prepareDirectory(root)
     guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
-
-    let data = try Data(contentsOf: fileURL)
+    let data = try BoundedFileReader.read(
+      from: fileURL,
+      maximumBytes: Self.maximumManifestBytes
+    )
     if let manifest = try? JSONDecoder().decode(Manifest.self, from: data) {
       guard manifest.schemaVersion == RepresentationRecord.currentSchemaVersion,
-        manifest.records.values.allSatisfy({
-          $0.recordSchemaVersion == RepresentationRecord.currentSchemaVersion
+        manifest.records.allSatisfy({ key, record in
+          isValidRecord(record, storedUnder: key)
         })
       else {
         throw AkashicError.invalidManifest
@@ -187,7 +190,7 @@ public actor RepresentationRecordStore: RepresentationRecordMaintaining {
   }
 
   public func put(_ record: RepresentationRecord) throws {
-    guard record.recordSchemaVersion == RepresentationRecord.currentSchemaVersion else {
+    guard isValidRecord(record, storedUnder: record.variantKeyDigest) else {
       throw AkashicError.invalidManifest
     }
     var next = recordsByVariant
@@ -244,14 +247,35 @@ public actor RepresentationRecordStore: RepresentationRecordMaintaining {
     recordsByVariant = next
   }
 
+  private func isValidRecord(
+    _ record: RepresentationRecord,
+    storedUnder key: String
+  ) -> Bool {
+    guard record.recordSchemaVersion == RepresentationRecord.currentSchemaVersion,
+      key == record.variantKeyDigest,
+      StoredContentIdentifier.isLowercaseSHA256(record.baseKeyDigest),
+      StoredContentIdentifier.isLowercaseSHA256(record.variantKeyDigest),
+      StoredContentIdentifier.byteCount(
+        in: record.contentID,
+        expectedByteCount: record.payloadLength
+      ) != nil,
+      record.payloadLength >= 0,
+      100...599 ~= record.statusCode,
+      record.requestTime.timeIntervalSinceReferenceDate.isFinite,
+      record.responseTime.timeIntervalSinceReferenceDate.isFinite,
+      record.responseDate?.timeIntervalSinceReferenceDate.isFinite ?? true,
+      record.expiresAt?.timeIntervalSinceReferenceDate.isFinite ?? true
+    else { return false }
+    return true
+  }
+
   private func persist(_ records: [String: RepresentationRecord]) throws {
     let manifest = Manifest(
       schemaVersion: RepresentationRecord.currentSchemaVersion,
       records: records
     )
     let data = try JSONEncoder().encode(manifest)
-    try data.write(to: fileURL, options: [.atomic])
-    try StorageDirectorySecurity.securePublishedFile(fileURL)
+    try DurableFileWriter.writeReplacing(data, to: fileURL)
   }
 }
 

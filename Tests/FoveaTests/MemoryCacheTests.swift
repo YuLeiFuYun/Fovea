@@ -28,4 +28,19 @@ final class MemoryCacheTests: XCTestCase {
     XCTAssertNil(value)
     XCTAssertEqual(count, 0)
   }
+  func testCostAccountingCannotOverflowPastLimit_RES_PT_001() async {
+    let cache = MemoryCache<String, String>(costLimit: Int.max)
+    await cache.insert("huge", for: "huge", cost: Int.max - 5)
+    await cache.insert("small", for: "small", cost: 10)
+
+    let huge = await cache.value(for: "huge")
+    let small = await cache.value(for: "small")
+    let currentCost = await cache.currentCost
+    let count = await cache.count
+    XCTAssertNil(huge)
+    XCTAssertEqual(small, "small")
+    XCTAssertEqual(currentCost, 10)
+    XCTAssertEqual(count, 1)
+  }
+
 }

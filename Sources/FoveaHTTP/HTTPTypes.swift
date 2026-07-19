@@ -199,6 +199,7 @@ public struct TransportResponse: Sendable {
 public enum TransportError: Error, Equatable, Sendable {
   case nonHTTPResponse
   case bodyTooLarge
+  case invalidContentLength
   case incompleteBody
 }
 

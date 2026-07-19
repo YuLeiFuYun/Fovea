@@ -416,7 +416,7 @@ v1 不让 App 与 Widget 并发写同一个 Akashic generation。需要 Widget �
 - **CACHE-PT-021**: unknown future schema 不被当前版本修改；
 - **CACHE-PT-022**: non-identity Content-Encoding 不启用跨请求 Range 拼接；
 - **CACHE-PT-023**: credential-bearing request 缺少安全 auth context 时不持久化、不跨请求合并；
-- **CACHE-PT-024**: 未启用 multi-process capability 时第二个 writer 不会并发修改同一 generation；
+- **CACHE-PT-024**: 未启用 multi-process shared-writer capability 时，同进程重复打开复用同一组 store actor；跨进程第二个 writer 立即失败关闭，owner 退出后才能重新取得租约；活动 generation 的运行预算配置不得静默分叉；
 - **CACHE-PT-025**: blob 文件名命中但长度/摘要不符时视为损坏并隔离；
 - **CACHE-PT-026**: `no-store` 只在同一 in-flight task cohort 内共享；task terminal 后不能满足新请求；
 - **CACHE-PT-027**: query 顺序/重复参数变化默认改变 key，只有显式 ephemeral 字段可移除；
@@ -431,3 +431,4 @@ v1 不让 App 与 Widget 并发写同一个 Akashic generation。需要 Widget �
 - **CACHE-PT-036**: progressive preview 未通过最小 Probe/Security gate 时不向 UI 交付像素；
 - **CACHE-PT-037**: Widget 导出目录不包含 auth OriginalEncoded、ContentID 或敏感 metadata，Widget 不能写主 store；
 - **CACHE-PT-038**: namespace revoke 后的新 200 必须写入当前 NamespaceGeneration；重建内存 pipeline 后仍可选择该 fresh record，不永久退化为网络 miss；
+- **CACHE-PT-039**: 同 variant 的 304 metadata 覆盖若在 namespace 仍有效时被调用方取消，事务必须恢复旧 record；namespace 已撤销时则删除新 record，不能复活旧 generation。

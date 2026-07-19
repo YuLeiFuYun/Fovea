@@ -143,4 +143,5 @@ network constrained/expensive decision
 - **RES-PT-007**: constrained network 下 prefetch 不发起请求；
 - **RES-PT-008**: 交互任务的显式网络权限不被低权限 subscriber 扩大或缩小；
 - **RES-PT-009**: background transition 不留下无主 decode/process；
-- **RES-PT-010**: permit/priority 事件可由 deterministic scheduler 重放。
+- **RES-PT-010**: permit/priority 事件可由 deterministic scheduler 重放；
+- **RES-PT-011**: 官方系统组合层在 warning/critical memory pressure 下清空 RenderedMemory；清理幂等，不删除 OriginalEncoded、不触发重复网络请求，也不改变在途任务身份。

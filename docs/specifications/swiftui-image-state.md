@@ -116,4 +116,7 @@ Reduce Motion 开启时禁用非必要 transition。当前 `FoveaImageTransition
 - **UI-PT-012**: 连续 resize 不产生无界 request token/RenderKey。
 - **UI-PT-013**: no-store final 仅当前 view token 可继续显示，新 request 不命中；
 - **UI-PT-014**: namespaceRevoked/securityLimit 使用统一错误恢复矩阵；
-- **UI-PT-015**: 每个成功图像必须显式选择 decorative 或提供 accessibility label，不存在静默 decorative 默认值。
+- **UI-PT-015**: SwiftUI/UIKit/AppKit 每个成功图像必须显式选择 decorative 或提供 accessibility label，不存在静默 decorative 默认值。
+- **UI-PT-016**: UIKit/AppKit 身份替换拒绝旧结果；重复同 identity 不重订阅；复用、离窗和析构取消不会让旧像素或任务泄漏到下一展示身份。
+- **UI-PT-017**: responsive 几何解析或 request builder 失败必须清除旧请求并进入结构化 failure；`ImageCraftError` 保留为安全限制语义，未知 builder 错误归一化为 request-validation 内部失败，不得静默停留在 placeholder。
+- **UI-PT-018**: UIKit/AppKit 平台图像必须保留 CGImage 像素尺寸，同时按 trait/backing scale 计算 point size；AppKit backing scale 变化时重建当前显示对象，不重复加载。

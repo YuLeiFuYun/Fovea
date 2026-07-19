@@ -138,8 +138,11 @@ def main() -> int:
                     "format",
                     ["xcrun", "swift-format", "lint", "--strict", "-r", "Sources", "Tests", "Package.swift"],
                 ),
-                ("tests", ["xcrun", "swift", "test"]),
-                ("release", ["xcrun", "swift", "build", "-c", "release"]),
+                ("tests", ["xcrun", "swift", "test", "-Xswiftc", "-warnings-as-errors"]),
+                (
+                    "release",
+                    ["xcrun", "swift", "build", "-c", "release", "-Xswiftc", "-warnings-as-errors"],
+                ),
             ]
             for identifier, command in commands:
                 code = run(command, worktree, env, log)

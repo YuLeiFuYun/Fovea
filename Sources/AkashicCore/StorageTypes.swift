@@ -18,6 +18,28 @@ public struct StorageNamespaceFingerprint: Hashable, Sendable, Codable, CustomSt
   }
 
   public var description: String { value }
+
+  private enum CodingKeys: String, CodingKey {
+    case value
+  }
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let value = try container.decode(String.self, forKey: .value)
+    guard StoredContentIdentifier.isLowercaseSHA256(value) else {
+      throw DecodingError.dataCorruptedError(
+        forKey: .value,
+        in: container,
+        debugDescription: "Invalid storage namespace fingerprint"
+      )
+    }
+    self.value = value
+  }
+
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(value, forKey: .value)
+  }
 }
 
 public struct StoredBlob: Hashable, Sendable, Codable {

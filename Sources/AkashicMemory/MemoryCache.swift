@@ -27,24 +27,24 @@ public actor MemoryCache<Key: Hashable & Sendable, Value: Sendable> {
 
   public func insert(_ value: Value, for key: Key, cost: Int) {
     let cost = max(1, cost)
-    if let existing = entries[key] {
-      totalCost -= existing.cost
-      entries[key]?.value = value
-      entries[key]?.cost = cost
-      totalCost += cost
-      moveToMostRecent(key)
-    } else {
-      entries[key] = Entry(
-        value: value,
-        cost: cost,
-        previous: mostRecent,
-        next: nil
-      )
-      if let mostRecent { entries[mostRecent]?.next = key } else { leastRecent = key }
-      mostRecent = key
-      totalCost += cost
+    if entries[key] != nil { remove(key) }
+    guard cost <= costLimit else { return }
+
+    // 先腾出确定空间，再执行加法；即使 limit 为 Int.max，也不会发生总成本溢出。
+    let maximumExistingCost = costLimit - cost
+    while totalCost > maximumExistingCost, let victim = leastRecent {
+      remove(victim)
     }
-    trimIfNeeded()
+
+    entries[key] = Entry(
+      value: value,
+      cost: cost,
+      previous: mostRecent,
+      next: nil
+    )
+    if let mostRecent { entries[mostRecent]?.next = key } else { leastRecent = key }
+    mostRecent = key
+    totalCost += cost
   }
 
   public func remove(_ key: Key) {
@@ -87,12 +87,6 @@ public actor MemoryCache<Key: Hashable & Sendable, Value: Sendable> {
       entries[next]?.previous = entry.previous
     } else {
       mostRecent = entry.previous
-    }
-  }
-
-  private func trimIfNeeded() {
-    while totalCost > costLimit, let victim = leastRecent {
-      remove(victim)
     }
   }
 }

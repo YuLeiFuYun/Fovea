@@ -13,6 +13,7 @@ allowed = {
     "FoveaCore",
     "FoveaHTTP",
     "FoveaPersistence",
+    "FoveaSystem",
     "FoveaUIKit",
     "FoveaAppKit",
     "FoveaSwiftUI",
@@ -157,6 +158,47 @@ for relative in package_only_files:
         continue
     if re.search(r"(?m)^\s*public\s+", path.read_text()):
         errors.append(f"implementation-only API became public: {relative}")
+
+# 公共门面必须保持薄；HTTP、缓存选择和像素交付不得重新堆回 FoveaPipeline。
+pipeline_path = source_root / "FoveaCore/FoveaPipeline.swift"
+pipeline_line_count = len(pipeline_path.read_text().splitlines())
+if pipeline_line_count > 300:
+    errors.append(
+        f"FoveaPipeline facade regressed to {pipeline_line_count} lines; fixed coordinators must own orchestration"
+    )
+
+architecture_text = (root / "docs/ARCHITECTURE.md").read_text()
+if "当前 Phase 0a 只实现 FetchExecutionKey single-flight" in architecture_text:
+    errors.append("active architecture still denies the implemented DecodeKey single-flight")
+
+# 平台模块必须具有真实显示生命周期，而不是只暴露错误策略空壳。
+for adapter in ("FoveaUIKit", "FoveaAppKit"):
+    view_path = source_root / adapter / "FoveaImageView.swift"
+    if not view_path.is_file():
+        errors.append(f"{adapter} must provide a concrete FoveaImageView lifecycle adapter")
+        continue
+    view_source = view_path.read_text()
+    for required in ("ImageDisplaySession", "prepareForReuse", "accessibility:"):
+        if required not in view_source:
+            errors.append(f"{adapter} FoveaImageView lacks required lifecycle contract: {required}")
+
+# 官方默认组合根必须把安全 transport、持久世代和 ImageIO decoder 显式收敛。
+system_path = source_root / "FoveaSystem/FoveaSystemPipeline.swift"
+if not system_path.is_file():
+    errors.append("FoveaSystem safe composition root is missing")
+else:
+    system_source = system_path.read_text()
+    for required in ("URLSessionTransport()", "FoveaPersistentStores.open", "ImageIOImageDecoder()"):
+        if required not in system_source:
+            errors.append(f"FoveaSystem composition root is incomplete: {required}")
+
+# 跨进程探针只属于验证图，不得成为生产 Sources 模块或运行时依赖。
+if (source_root / "FoveaStoreProbe").exists():
+    errors.append("FoveaStoreProbe must remain under Tools, not production Sources")
+if '.executable(name: "FoveaStoreProbe"' in package:
+    errors.append("FoveaStoreProbe must not be exposed as a public package product")
+if 'name: "FoveaStoreProbe"' not in package:
+    errors.append("StoreGeneration contention probe target is missing")
 
 # 活动目录只保留一份当前架构文档和一份最新本地证据快照。
 for obsolete in (root / "docs/archive", root / "docs/ARCHITECTURE_V2.md"):

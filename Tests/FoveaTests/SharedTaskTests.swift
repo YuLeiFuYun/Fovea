@@ -82,6 +82,56 @@ final class SharedTaskTests: XCTestCase {
     await second.detach()
   }
 
+  func testSeededSubscriberExitSoakPreservesRegistryInvariants_SCHED_PT_014() async throws {
+    for seed in 1...128 {
+      var random = SeededRandomNumberGenerator(seed: UInt64(seed))
+      let registry = SharedTaskRegistry<String, Int>()
+      let gate = HandoffOperationGate()
+      let subscriberCount = Int.random(in: 2...10, using: &random)
+      var subscriptions: [SharedTaskSubscription<String, Int>] = []
+      var priorities: [ImageRequestPriority] = []
+
+      for _ in 0..<subscriberCount {
+        let priority = ImageRequestPriority.allCases.randomElement(using: &random) ?? .normal
+        priorities.append(priority)
+        subscriptions.append(
+          await registry.subscribe(key: "seeded-soak", priority: priority) {
+            try await gate.run()
+          }
+        )
+      }
+      await gate.waitUntilStarted()
+      let operationCount = await gate.operationCount
+      XCTAssertEqual(operationCount, 1, "seed=\(seed)")
+      let initialPriority = await registry.effectivePriority(for: "seeded-soak")
+      XCTAssertEqual(initialPriority, priorities.max(), "seed=\(seed)")
+
+      var exitOrder = Array(subscriptions.indices)
+      exitOrder.shuffle(using: &random)
+      var active = Set(subscriptions.indices)
+      for index in exitOrder {
+        await subscriptions[index].cancel()
+        active.remove(index)
+        let count = await registry.subscriberCount(for: "seeded-soak")
+        XCTAssertEqual(count, active.count, "seed=\(seed), index=\(index)")
+        if !active.isEmpty {
+          let expected = active.map { priorities[$0] }.max()
+          let effective = await registry.effectivePriority(for: "seeded-soak")
+          XCTAssertEqual(effective, expected, "seed=\(seed), index=\(index)")
+        }
+      }
+
+      let cancellations = await registry.cancellationCount(for: "seeded-soak")
+      XCTAssertEqual(cancellations, 1, "seed=\(seed)")
+      for _ in 0..<100 {
+        if await gate.wasCancelled { break }
+        await Task.yield()
+      }
+      let wasCancelled = await gate.wasCancelled
+      XCTAssertTrue(wasCancelled, "seed=\(seed)")
+    }
+  }
+
   func testLastSubscriberCancelsUnderlyingTaskOnce_SCHED_PT_004() async throws {
     let registry = SharedTaskRegistry<FetchExecutionKey, Int>()
     let key = makeKey("https://example.com/a")
@@ -199,5 +249,20 @@ private actor HandoffOperationGate {
     wasCancelled = true
     for waiter in releaseWaiters { waiter.resume() }
     releaseWaiters.removeAll()
+  }
+}
+
+private struct SeededRandomNumberGenerator: RandomNumberGenerator {
+  private var state: UInt64
+
+  init(seed: UInt64) {
+    self.state = seed == 0 ? 0x9E37_79B9_7F4A_7C15 : seed
+  }
+
+  mutating func next() -> UInt64 {
+    state ^= state << 13
+    state ^= state >> 7
+    state ^= state << 17
+    return state
   }
 }

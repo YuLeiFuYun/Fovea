@@ -186,7 +186,18 @@ manifest 还必须记录 upstream commit、license、适用性分类、预期结
 - 一个 ID 可以在 unit/property/integration/fuzz 多层实现，最终结果取最严格门禁。
 
 AIQA-MUT-018    304 metadata refresh ignores the post-write namespace generation fence
-AIQA-MUT-019    deleting one Vary representation removes a blob still referenced by another
+AIQA-MUT-019    namespace revocation leaves an already-published representation record behind
 AIQA-MUT-020    transient target geometry is admitted into RenderedMemory
 AIQA-MUT-021    encoded metadata byte limits are disabled
 AIQA-MUT-022    each subscriber receives an isolated DecodeKey registry
+AIQA-MUT-023    cancelled same-variant 304 refresh deletes metadata instead of restoring the old snapshot
+AIQA-MUT-024    memory-cache cost accounting can overflow before eviction
+AIQA-MUT-025    semantically corrupt OriginalEncoded manifests are accepted
+AIQA-MUT-026    semantically corrupt representation manifests are accepted
+AIQA-MUT-027    invalid runtime representation records are accepted
+AIQA-MUT-028    malformed or conflicting Content-Length values are ignored
+AIQA-MUT-029    noncanonical runtime ContentID strings are accepted
+AIQA-MUT-030    hard-linked managed files or lock inodes are accepted
+AIQA-MUT-031    managed-path validation follows symbolic links
+AIQA-MUT-032    metadata files are allocated before enforcing the st_size bound
+AIQA-MUT-033    finite records are rejected when the wall clock moves backward

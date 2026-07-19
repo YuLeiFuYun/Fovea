@@ -178,6 +178,13 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
           disposition: .terminal,
           reasonCode: "encoded-body-limit-exceeded"
         )
+      case .invalidContentLength:
+        return PipelineFailure(
+          category: .http,
+          stage: .responseValidation,
+          disposition: .terminal,
+          reasonCode: "invalid-content-length"
+        )
       case .incompleteBody:
         return PipelineFailure(
           category: .transport,
@@ -225,7 +232,7 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
     )
   }
 
-  static func imageCraft(_ error: any Error, stage: Stage) -> PipelineFailure {
+  package static func imageCraft(_ error: any Error, stage: Stage) -> PipelineFailure {
     guard let imageError = error as? ImageCraftError else {
       return PipelineFailure(
         category: stage == .probe ? .probe : .decode,

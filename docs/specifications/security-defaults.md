@@ -23,7 +23,7 @@
 | SEC-CASE-016 | 0a | 登出/namespace revoke | 立即提升 generation、取消任务并阻止旧任务 commit；物理清理可异步 | 防止清理后数据复活 |
 | SEC-CASE-017 | 0a | 重定向至不同 origin | 剥离内置及调用者声明的 credential headers；不允许隐式继承 | 防止凭证泄漏 |
 | SEC-CASE-018 | 0a | 日志事件 | URL 脱敏；不记录 token、cookie、私有 query、ContentID、PhysicalBlobID 或稳定账户标识 | 防止日志泄漏与内容指纹侧信道 |
-| SEC-CASE-019 | 0b | cache 目录 | 默认排除系统备份并使用平台适当文件保护；物理文件名使用随机不透明 ID。iOS Simulator 只验证可观测的备份排除和非弱化保护值；真机必须精确验证 `completeUntilFirstUserAuthentication` | 防止缓存进入备份、锁屏后暴露或通过文件名探测已知内容 |
+| SEC-CASE-019 | 0b | cache 与 transport staging 目录 | 目录显式收紧为 `0700`、文件为 `0600`，默认排除系统备份并使用平台适当文件保护；物理 blob 文件名使用随机不透明 ID。iOS Simulator 只验证可观测的备份排除和非弱化保护值；真机必须精确验证 `completeUntilFirstUserAuthentication` | 防止缓存或认证响应暂存进入备份、被同机其他主体读取、锁屏后暴露或通过文件名探测已知内容 |
 | SEC-CASE-020 | Experimental | 第三方 C/C++ codec | 版本钉定、fuzz、ASan/UBSan、输入限制 | 降低解析漏洞风险 |
 | SEC-CASE-021 | 0b | 未知 codec/attachment | 不加载；保留原 blob 需符合缓存策略 | 避免未审计解析 |
 | SEC-CASE-022 | 0b | 未知未来磁盘 schema | 不读取为有效条目、不写回；切换安全 generation | 防止降级/升级破坏 |
@@ -34,6 +34,9 @@
 | SEC-CASE-027 | Experimental | 重建型增强 | 默认关闭、显式 opt-in，并标记 reconstructed | 防止内容语义混淆 |
 | SEC-CASE-028 | Experimental | Trust 验证不可用 | 默认 `.unavailable`，不伪造可信状态 | 防止错误安全承诺 |
 | SEC-CASE-029 | 0a | 持久化 namespace metadata | 仅保存带域分离的 namespace fingerprint，不保存调用者账户/租户标识明文 | 防止 manifest/record 泄露稳定主体标识 |
+| SEC-CASE-030 | 0b | 已知 schema 的 manifest 字段语义损坏 | 校验摘要、长度、键绑定、Vary 规范、物理 ID 唯一性与时间/状态范围；失败关闭且不得改写原文件 | 防止格式合法但语义矛盾的元数据绕过隔离、完整性或资源约束 |
+| SEC-CASE-031 | 0b | 受管目录、manifest、blob 与锁文件的链接攻击 | 路径与已打开描述符都验证文件类型、属主和普通文件单链接约束；锁使用 `O_NOFOLLOW`，符号链接与硬链接均失败关闭且不得触达外部 inode | 防止缓存根或锁路径被重定向到非预期文件、目录或共享 inode |
+| SEC-CASE-032 | 0b | generation metadata、store manifest 与 blob 的超大文件 | 使用 `O_NOFOLLOW` 打开并在分配前通过 `fstat` 校验类型、属主、链接数和 `st_size`；超限 metadata 不改写，blob 长度不符按完整性损坏隔离 | 防止损坏或攻击性稀疏文件在 schema/摘要校验前触发无界内存分配 |
 
 ## DecodeLimits 最小字段
 

@@ -83,19 +83,44 @@ final class PipelineCache: Sendable {
       }
     } catch {
       let originalError = error
-      do {
+      let namespaceIsActive = await namespaceRegistry.isActive(generation, for: namespace)
+      await rollbackRefresh(
+        replacing: oldRecord,
+        with: newRecord,
+        namespace: namespace,
+        generation: generation,
+        restoreOverwrittenRecord: namespaceIsActive
+      )
+      throw originalError
+    }
+  }
+
+  private func rollbackRefresh(
+    replacing oldRecord: RepresentationRecord,
+    with newRecord: RepresentationRecord,
+    namespace: SecurityNamespaceID,
+    generation: NamespaceGeneration,
+    restoreOverwrittenRecord: Bool
+  ) async {
+    do {
+      if restoreOverwrittenRecord,
+        oldRecord.variantKeyDigest == newRecord.variantKeyDigest
+      {
+        try await recordStore.put(oldRecord)
+      } else {
         try await recordStore.remove(
           newRecord.variantKeyDigest,
           namespace: namespace.value,
           namespaceGeneration: generation.value
         )
-      } catch {
-        await recordCacheCleanupFailure(
-          keyDigest: newRecord.variantKeyDigest,
-          reason: "record-refresh-rollback-failed"
-        )
       }
-      throw originalError
+    } catch {
+      await recordCacheCleanupFailure(
+        keyDigest: newRecord.variantKeyDigest,
+        reason: restoreOverwrittenRecord
+          ? "record-refresh-restore-failed"
+          : "record-refresh-rollback-failed"
+      )
     }
   }
 
@@ -109,6 +134,12 @@ final class PipelineCache: Sendable {
 
   func removeRendered(_ key: ScopedRenderKey) async {
     await memory.remove(key)
+  }
+
+  func purgeRendered() async -> Int {
+    let removed = await memory.count
+    await memory.removeAll()
+    return removed
   }
 
   func cleanup(namespace: SecurityNamespaceID) async -> Bool {

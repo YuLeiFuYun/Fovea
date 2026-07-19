@@ -27,7 +27,9 @@ public enum StoreGenerationDirectory {
   private static let currentName = "current-generation.json"
   private static let generationsName = "generations"
   private static let descriptorName = "generation.json"
+  private static let lockName = ".store-generation.lock"
   private static let temporaryPrefix = ".current-generation.tmp-"
+  private static let maximumMetadataBytes = 64 * 1024
 
   private struct Descriptor: Codable, Hashable {
     let schemaVersion: UInt16
@@ -60,11 +62,40 @@ public enum StoreGenerationDirectory {
   ) throws -> StoreGenerationHandle {
     processLock.lock()
     defer { processLock.unlock() }
-    return try openWhileHoldingProcessLock(
-      root: root,
-      compatibilityFingerprint: compatibilityFingerprint,
-      faultInjector: faultInjector
-    )
+    try StorageDirectorySecurity.prepareDirectory(root)
+    return try withCrossProcessLock(root: root) {
+      try openWhileHoldingProcessLock(
+        root: root,
+        compatibilityFingerprint: compatibilityFingerprint,
+        faultInjector: faultInjector
+      )
+    }
+  }
+
+  private static func withCrossProcessLock<T>(
+    root: URL,
+    operation: () throws -> T
+  ) throws -> T {
+    let lockURL = root.appendingPathComponent(lockName, isDirectory: false)
+    let descriptor = Darwin.open(
+      lockURL.path, O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, S_IRUSR | S_IWUSR)
+    guard descriptor >= 0 else {
+      throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+    }
+    defer {
+      _ = Darwin.lockf(descriptor, F_ULOCK, 0)
+      Darwin.close(descriptor)
+    }
+    try StorageDirectorySecurity.validateOpenedPrivateRegularFile(descriptor)
+    guard Darwin.fchmod(descriptor, S_IRUSR | S_IWUSR) == 0 else {
+      throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+    }
+    while Darwin.lockf(descriptor, F_LOCK, 0) != 0 {
+      guard errno == EINTR else {
+        throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+      }
+    }
+    return try operation()
   }
 
   private static func openWhileHoldingProcessLock(
@@ -109,10 +140,7 @@ public enum StoreGenerationDirectory {
       createdAt: Date()
     )
     let descriptorURL = generationRoot.appendingPathComponent(descriptorName, isDirectory: false)
-    try JSONEncoder().encode(descriptor).write(to: descriptorURL, options: [.atomic])
-    try StorageDirectorySecurity.securePublishedFile(descriptorURL)
-    try synchronizeFile(at: descriptorURL)
-    try synchronizeDirectory(at: generationRoot)
+    try DurableFileWriter.writeReplacing(JSONEncoder().encode(descriptor), to: descriptorURL)
     try faultInjector(.afterGenerationDescriptorPublished)
 
     let handle = StoreGenerationHandle(
@@ -157,7 +185,10 @@ public enum StoreGenerationDirectory {
     expectedFingerprint: String
   ) throws -> StoreGenerationHandle? {
     guard FileManager.default.fileExists(atPath: pointerURL.path) else { return nil }
-    let data = try Data(contentsOf: pointerURL)
+    let data = try BoundedFileReader.read(
+      from: pointerURL,
+      maximumBytes: maximumMetadataBytes
+    )
     if let envelope = try? JSONDecoder().decode(SchemaEnvelope.self, from: data),
       envelope.schemaVersion != schemaVersion
     {
@@ -214,7 +245,11 @@ public enum StoreGenerationDirectory {
     let identifier = generationRoot.lastPathComponent
     guard UUID(uuidString: identifier) != nil else { throw AkashicError.invalidManifest }
     let descriptorURL = generationRoot.appendingPathComponent(descriptorName, isDirectory: false)
-    let data = try Data(contentsOf: descriptorURL)
+    try StorageDirectorySecurity.validateDirectory(generationRoot)
+    let data = try BoundedFileReader.read(
+      from: descriptorURL,
+      maximumBytes: maximumMetadataBytes
+    )
     if let envelope = try? JSONDecoder().decode(SchemaEnvelope.self, from: data),
       envelope.schemaVersion != schemaVersion
     {
@@ -249,7 +284,6 @@ public enum StoreGenerationDirectory {
       try synchronizeFile(at: temporary)
       try faultInjector(.afterPointerStaged)
       try atomicReplace(temporary: temporary, destination: current)
-      try StorageDirectorySecurity.securePublishedFile(current)
       try synchronizeDirectory(at: root)
       try faultInjector(.afterPointerPublished)
     } catch {
@@ -259,11 +293,19 @@ public enum StoreGenerationDirectory {
   }
 
   private static func synchronizeFile(at url: URL) throws {
-    let descriptor = Darwin.open(url.path, O_RDONLY)
+    let descriptor = Darwin.open(url.path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW)
     guard descriptor >= 0 else {
       throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
     }
     defer { Darwin.close(descriptor) }
+    var status = stat()
+    guard Darwin.fstat(descriptor, &status) == 0 else {
+      throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+    }
+    let fileType = status.st_mode & S_IFMT
+    guard fileType == S_IFREG || fileType == S_IFDIR,
+      status.st_uid == Darwin.geteuid()
+    else { throw AkashicError.storageUnavailable }
     guard Darwin.fsync(descriptor) == 0 else {
       throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
     }

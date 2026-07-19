@@ -130,10 +130,10 @@ final class SwiftUIStateTests: XCTestCase {
     XCTAssertEqual(failure, .incompleteProgressiveStream)
   }
 
-  func testGeometryBuilderFailureClearsPreviousRequest() throws {
+  func testGeometryBuilderFailureIsObservableAndClearsPreviousRequest_UI_PT_017() throws {
     let geometryModel = FoveaGeometryRequestModel()
     let url = try XCTUnwrap(URL(string: "https://example.test/geometry-builder.png"))
-    try geometryModel.update(
+    geometryModel.update(
       widthPoints: 20,
       heightPoints: 20,
       scale: 2,
@@ -144,18 +144,86 @@ final class SwiftUIStateTests: XCTestCase {
     }
     XCTAssertNotNil(geometryModel.request)
 
-    XCTAssertThrowsError(
-      try geometryModel.update(
-        widthPoints: 30,
-        heightPoints: 30,
-        scale: 2,
-        contentMode: .fit,
-        isStable: true
-      ) { _ in
-        throw GeometryBuilderFixtureError.failed
-      }
-    )
+    geometryModel.update(
+      widthPoints: 30,
+      heightPoints: 30,
+      scale: 2,
+      contentMode: .fit,
+      isStable: true
+    ) { _ in
+      throw GeometryBuilderFixtureError.failed
+    }
     XCTAssertNil(geometryModel.request)
+    XCTAssertEqual(geometryModel.failure?.category, .internalFailure)
+    XCTAssertEqual(geometryModel.failure?.stage, .requestValidation)
+    XCTAssertEqual(geometryModel.failure?.reasonCode, "responsive-request-builder-failed")
+
+    let expected = PipelineFailure(
+      category: .transport,
+      stage: .transport,
+      disposition: .retryable,
+      reasonCode: "builder-needs-refresh"
+    )
+    geometryModel.update(
+      widthPoints: 40,
+      heightPoints: 40,
+      scale: 2,
+      contentMode: .fit,
+      isStable: true
+    ) { _ in
+      throw expected
+    }
+    XCTAssertEqual(geometryModel.failure, expected)
+
+    geometryModel.reset()
+    XCTAssertNil(geometryModel.request)
+    XCTAssertNil(geometryModel.failure)
+
+    geometryModel.update(
+      widthPoints: -1,
+      heightPoints: 20,
+      scale: 2,
+      contentMode: .fit,
+      isStable: true
+    ) { target in
+      try ImageRequest.publicImage(url: url, resolvedTarget: target, appID: "tests")
+    }
+    XCTAssertEqual(geometryModel.failure?.category, .securityLimit)
+    XCTAssertEqual(geometryModel.failure?.stage, .requestValidation)
+    XCTAssertEqual(geometryModel.failure?.reasonCode, "invalid-target-pixels")
+  }
+
+  func testPhaseKindsAndFailureRetryContract_UI_PT_017() throws {
+    let image = try decodedImage()
+    let failure = PipelineFailure(
+      category: .transport,
+      stage: .transport,
+      disposition: .retryable,
+      reasonCode: "retryable"
+    )
+    XCTAssertEqual(FoveaImagePhase.empty.kind, .empty)
+    XCTAssertEqual(FoveaImagePhase.loading.kind, .loading)
+    XCTAssertEqual(FoveaImagePhase.preview(image).kind, .preview)
+    XCTAssertEqual(FoveaImagePhase.success(image).kind, .success)
+    XCTAssertEqual(FoveaImagePhase.failure(failure).kind, .failure)
+    XCTAssertEqual(FoveaImagePhase.cancelled.kind, .cancelled)
+
+    var retryCount = 0
+    let retrying = FoveaImageFailureContext(
+      failure: failure,
+      recoveryAction: .retry,
+      retryAction: { retryCount += 1 }
+    )
+    retrying.retry()
+    XCTAssertEqual(retryCount, 1)
+
+    let terminal = FoveaImageFailureContext(
+      failure: failure,
+      recoveryAction: .none,
+      retryAction: { retryCount += 1 }
+    )
+    terminal.retry()
+    XCTAssertEqual(retryCount, 1)
   }
 
   func testInvalidateRejectsLateResultUiPt004() async throws {
@@ -226,7 +294,7 @@ final class SwiftUIStateTests: XCTestCase {
       try ImageRequest.publicImage(url: url, resolvedTarget: target, appID: "tests")
     }
 
-    try geometryModel.update(
+    geometryModel.update(
       widthPoints: 0,
       heightPoints: 0,
       scale: 2,
@@ -238,7 +306,7 @@ final class SwiftUIStateTests: XCTestCase {
     let zeroCount = await loader.requestCount
     XCTAssertEqual(zeroCount, 0)
 
-    try geometryModel.update(
+    geometryModel.update(
       widthPoints: 20,
       heightPoints: 10,
       scale: 2,
@@ -249,7 +317,7 @@ final class SwiftUIStateTests: XCTestCase {
     let request = try XCTUnwrap(geometryModel.request)
     await imageModel.load(request: request, loader: loader)
 
-    try geometryModel.update(
+    geometryModel.update(
       widthPoints: 20,
       heightPoints: 10,
       scale: 2,

@@ -9,6 +9,8 @@ export DEVELOPER_DIR
 printf 'Using DEVELOPER_DIR=%s\n' "$DEVELOPER_DIR"
 xcodebuild -version
 xcrun swift --version
+VERIFIED_COMMIT=$(git rev-parse HEAD)
+printf 'Verified commit: %s\n' "$VERIFIED_COMMIT"
 
 python3 scripts/check-architecture-boundaries.py
 python3 scripts/check-docs.py
@@ -20,19 +22,27 @@ rm -rf .artifacts/benchmarks
 mkdir -p .artifacts/benchmarks
 FOVEA_BENCHMARK_OUTPUT_DIR="$ROOT/.artifacts/benchmarks" \
 FOVEA_VERIFIED_COMMIT="$(git rev-parse HEAD 2>/dev/null || printf unverified-local)" \
-xcrun swift test
+xcrun swift test -Xswiftc -warnings-as-errors
 python3 scripts/validate-benchmark-artifacts.py .artifacts/benchmarks/*.json
+
+if [ "${RUN_STORE_GENERATION_CONTENTION:-1}" = "1" ]; then
+    scripts/run-store-generation-contention.py
+fi
+
+if [ "${RUN_PRODUCTION_COVERAGE:-1}" = "1" ]; then
+    scripts/run-production-coverage.py
+fi
 
 if [ "${RUN_RELEASE:-1}" = "1" ]; then
     xcrun swift build -c release -Xswiftc -warnings-as-errors
 fi
 
 if [ "${RUN_THREAD_SANITIZER:-1}" = "1" ]; then
-    xcrun swift test --sanitize=thread
+    xcrun swift test --sanitize=thread -Xswiftc -warnings-as-errors
 fi
 
 if [ "${RUN_ADDRESS_SANITIZER:-1}" = "1" ]; then
-    xcrun swift test --sanitize=address
+    xcrun swift test --sanitize=address -Xswiftc -warnings-as-errors
 fi
 
 if [ "${RUN_IOS_SIMULATOR:-1}" = "1" ]; then

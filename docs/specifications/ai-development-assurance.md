@@ -254,12 +254,27 @@ R2/R3 至少使用一类，R3 至少使用三类：
 | **AIQA-MUT-016** | cache write/diagnostics 失败覆盖成功 final |
 | **AIQA-MUT-017** | revoke 后的新 200 record 错写为旧 NamespaceGeneration |
 | **AIQA-MUT-018** | revoke 清理后晚到的 304 metadata refresh 重新写回旧 record |
+| **AIQA-MUT-019** | generation revoke 后不回滚已发布 record |
+| **AIQA-MUT-020** | transient geometry 进入 RenderedMemory |
+| **AIQA-MUT-021** | 禁用编码容器 metadata 字节上限 |
+| **AIQA-MUT-022** | 每个订阅者创建独立 DecodeKey registry，破坏解码 single-flight |
+| **AIQA-MUT-023** | 304 同 variant 刷新取消后删除 metadata，而不是恢复旧快照 |
+| **AIQA-MUT-024** | 内存缓存先执行可能溢出的成本加法，再尝试淘汰 |
+| **AIQA-MUT-025** | 接受语义损坏的 OriginalEncoded manifest |
+| **AIQA-MUT-026** | 接受语义损坏的 representation manifest |
+| **AIQA-MUT-027** | 运行期接受非法 representation record |
+| **AIQA-MUT-028** | 忽略畸形或冲突的 Content-Length |
+| **AIQA-MUT-029** | 运行期接受非规范 ContentID 字符串 |
+| **AIQA-MUT-030** | 接受硬链接的受管文件或锁 inode |
+| **AIQA-MUT-031** | 路径验证跟随符号链接 |
+| **AIQA-MUT-032** | 在校验 `st_size` 上限前分配 metadata 文件 |
+| **AIQA-MUT-033** | wall clock 回拨时拒绝有限且可保守处理的 record |
 
-新增关键不变量时同步新增 mutant。通过大量无关 mutant 获得高 mutation percentage 不能替代上述目录全部被杀死。
+新增关键不变量时必须同步新增 mutant、活动规格 ID 和 traceability evidence。通过大量无关 mutant 获得高 mutation percentage 不能替代上述目录全部被杀死。
 
 ### 8.1 Phase 0a curated mutant runner
 
-Phase 0a 的 required mutants `001/002/007/008/009/015/017/018` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定，并由零依赖的 `scripts/validate-critical-mutation-report.py` 复核 commit、结果集合、日志存在性和 SHA-256。
+当前 curated required mutants `001...029` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定，并由零依赖的 `scripts/validate-critical-mutation-report.py` 复核 commit、结果集合、日志存在性和 SHA-256。
 
 该 runner 是 visible oracle，仍不能替代 protected CI、held-out evaluator 或 human attestation。
 
@@ -414,3 +429,7 @@ comprehensionAttestationFailure
 - `core-surface.md` 无未经 ADR 批准的越界符号。
 
 Phase 0b 再启用完整 R3 mutant catalog、FoveaAgentEval、供应链和发布门禁。
+
+### 19.1 生产代码覆盖率防回退
+
+- **AIQA-COV-001**：统一门禁必须生成排除 `FoveaTesting` 与生成文件的生产源码覆盖率报告；行/函数/区域覆盖率分别不得低于 85%/85%/78%。覆盖率只作为回退报警，不替代场景追踪、mutation、sanitizer 或 held-out evaluator。

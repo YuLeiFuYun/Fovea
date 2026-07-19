@@ -1,5 +1,6 @@
 import AkashicDisk
 import CoreGraphics
+import CryptoKit
 import Foundation
 import FoveaCore
 import FoveaHTTP
@@ -112,12 +113,15 @@ func makeRepresentationRecord(
   payloadLength: Int = 0,
   contentType: String? = "image/png"
 ) -> RepresentationRecord {
-  RepresentationRecord(
+  let normalizedBaseDigest = normalizedTestDigest(baseKeyDigest)
+  let normalizedVariantDigest = normalizedTestDigest(variantKeyDigest)
+  let normalizedContentID = normalizedTestContentID(contentID, byteCount: payloadLength)
+  return RepresentationRecord(
     recordSchemaVersion: recordSchemaVersion,
     securityNamespace: namespace,
     namespaceGeneration: namespaceGeneration,
-    baseKeyDigest: baseKeyDigest,
-    variantKeyDigest: variantKeyDigest,
+    baseKeyDigest: normalizedBaseDigest,
+    variantKeyDigest: normalizedVariantDigest,
     vary: vary,
     statusCode: statusCode,
     requestTime: requestTime,
@@ -127,7 +131,7 @@ func makeRepresentationRecord(
     etag: etag,
     lastModified: lastModified,
     disposition: disposition,
-    contentID: contentID,
+    contentID: normalizedContentID,
     payloadLength: payloadLength,
     contentType: contentType
   )
@@ -153,4 +157,32 @@ func centerRedComponent(of image: CGImage) throws -> UInt8 {
   }
   guard rendered else { throw NSError(domain: "FoveaTests", code: 4) }
   return pixel[0]
+}
+
+extension Collection {
+  var singleElement: Element? {
+    count == 1 ? first : nil
+  }
+}
+
+private func normalizedTestDigest(_ value: String) -> String {
+  if value.utf8.count == 64,
+    value.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) })
+  {
+    return value
+  }
+  return SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+}
+
+private func normalizedTestContentID(_ value: String, byteCount: Int) -> String {
+  let parts = value.split(separator: ":", omittingEmptySubsequences: false)
+  if parts.count == 3,
+    parts[0] == "sha256",
+    parts[1].utf8.count == 64,
+    parts[1].utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }),
+    Int(parts[2]) == byteCount
+  {
+    return value
+  }
+  return "sha256:\(normalizedTestDigest(value)):\(byteCount)"
 }

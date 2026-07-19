@@ -10,6 +10,7 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
     ioExecutor.asUnownedSerialExecutor()
   }
   public static let currentSchemaVersion: UInt16 = 4
+  private static let maximumManifestBytes = 64 * 1024 * 1024
 
   private struct Manifest: Codable {
     let schemaVersion: UInt16
@@ -57,9 +58,14 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
     try StorageDirectorySecurity.prepareDirectory(root)
     try StorageDirectorySecurity.prepareDirectory(blobs)
     if FileManager.default.fileExists(atPath: manifestURL.path) {
-      let data = try Data(contentsOf: manifestURL)
+      let data = try BoundedFileReader.read(
+        from: manifestURL,
+        maximumBytes: Self.maximumManifestBytes
+      )
       let decoded = try JSONDecoder().decode(Manifest.self, from: data)
-      guard decoded.schemaVersion == Self.currentSchemaVersion else {
+      guard decoded.schemaVersion == Self.currentSchemaVersion,
+        isValidManifest(decoded)
+      else {
         throw AkashicError.invalidManifest
       }
       manifest = decoded
@@ -75,7 +81,12 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
       throw AkashicError.notFound
     }
     let url = blobURL(entry.physicalID)
-    guard let data = try? Data(contentsOf: url, options: .mappedIfSafe),
+    guard
+      let data = try? BoundedFileReader.read(
+        from: url,
+        maximumBytes: entry.byteCount,
+        expectedBytes: entry.byteCount
+      ),
       data.count == entry.byteCount,
       contentIDMatches(data: data, contentID: contentID)
     else {
@@ -109,7 +120,11 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
     let existing = manifest.entries[key]
     if let existing, existing.namespaceFingerprint == namespaceFingerprint {
       let existingURL = blobURL(existing.physicalID)
-      if let existingData = try? Data(contentsOf: existingURL, options: .mappedIfSafe),
+      if let existingData = try? BoundedFileReader.read(
+        from: existingURL,
+        maximumBytes: existing.byteCount,
+        expectedBytes: existing.byteCount
+      ),
         existingData.count == existing.byteCount,
         contentIDMatches(data: existingData, contentID: contentID)
       {
@@ -119,13 +134,9 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
     }
 
     let physicalID = PhysicalBlobID()
-    let temporary = blobs.appendingPathComponent(".tmp-\(UUID().uuidString)")
     let destination = blobURL(physicalID)
-    try data.write(to: temporary, options: [.atomic])
-    try StorageDirectorySecurity.securePublishedFile(temporary)
     do {
-      try FileManager.default.moveItem(at: temporary, to: destination)
-      try StorageDirectorySecurity.securePublishedFile(destination)
+      try DurableFileWriter.writeReplacing(data, to: destination)
       var next = manifest
       next.entries[key] = Entry(
         physicalID: physicalID,
@@ -137,7 +148,6 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
       try persistManifest(next)
       manifest = next
     } catch {
-      try? FileManager.default.removeItem(at: temporary)
       try? FileManager.default.removeItem(at: destination)
       throw error
     }
@@ -292,10 +302,34 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
     }
   }
 
+  private func isValidManifest(_ manifest: Manifest) -> Bool {
+    var physicalIDs = Set<PhysicalBlobID>()
+    var totalBytes = 0
+    for (key, entry) in manifest.entries {
+      guard entry.byteCount >= 0,
+        entry.byteCount <= softLimitBytes,
+        entry.lastAccess.timeIntervalSinceReferenceDate.isFinite,
+        StoredContentIdentifier.byteCount(
+          in: entry.contentID,
+          expectedByteCount: entry.byteCount
+        ) != nil,
+        key
+          == manifestKey(
+            contentID: entry.contentID,
+            namespaceFingerprint: entry.namespaceFingerprint
+          ),
+        physicalIDs.insert(entry.physicalID).inserted
+      else { return false }
+      let addition = totalBytes.addingReportingOverflow(entry.byteCount)
+      guard !addition.overflow else { return false }
+      totalBytes = addition.partialValue
+    }
+    return true
+  }
+
   private func persistManifest(_ manifest: Manifest) throws {
     let data = try JSONEncoder().encode(manifest)
-    try data.write(to: manifestURL, options: [.atomic])
-    try StorageDirectorySecurity.securePublishedFile(manifestURL)
+    try DurableFileWriter.writeReplacing(data, to: manifestURL)
   }
 
   private func blobURL(_ id: PhysicalBlobID) -> URL {
@@ -303,14 +337,15 @@ public actor OriginalEncodedStore: OriginalEncodedMaintaining {
   }
 
   private func contentIDMatches(data: Data, contentID: String) -> Bool {
-    let parts = contentID.split(separator: ":", omittingEmptySubsequences: false)
-    guard parts.count == 3,
-      parts[0] == "sha256",
-      let expectedLength = Int(parts[2]),
-      expectedLength == data.count
+    guard
+      StoredContentIdentifier.byteCount(
+        in: contentID,
+        expectedByteCount: data.count
+      ) != nil
     else { return false }
+    let expectedDigest = contentID.split(separator: ":", omittingEmptySubsequences: false)[1]
     let actual = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-    return actual == parts[1]
+    return actual == expectedDigest
   }
 
   private func manifestKey(

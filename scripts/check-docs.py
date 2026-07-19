@@ -73,15 +73,13 @@ for identifier, locations in sorted(definitions.items()):
     if len(locations) > 1:
         errors.append(f"duplicate test definition {identifier}: {', '.join(locations)}")
 
-required_current_ids = {
-    "CACHE-PT-038",
-    "AUTH-PT-011",
-    "AUTH-PT-012",
-    "SCHED-PT-013",
-    "IMG-PT-011",
-    "AIQA-MUT-017",
-    "AIQA-MUT-018",
-}
+required_ids_path = DOCS / "current-required-ids.json"
+required_ids_data = json.loads(required_ids_path.read_text())
+if required_ids_data.get("schemaVersion") != 1:
+    errors.append("current required ID manifest schema mismatch")
+required_current_ids = set(required_ids_data.get("ids", []))
+if not required_current_ids:
+    errors.append("current required ID manifest must not be empty")
 all_docs_text = "\n".join(path.read_text() for path in markdown_files)
 traceability = json.loads((DOCS / "test-traceability.json").read_text())
 traceability_ids = {entry["id"] for entry in traceability.get("requirements", [])}

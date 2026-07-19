@@ -10,7 +10,7 @@ import ImageCraftImageIO
 import XCTest
 
 final class StagingAndStorageTests: XCTestCase {
-  func testAccumulatorSpillsAndPreservesDigest() throws {
+  func testAccumulatorSpillsAndPreservesDigest_SEC_CASE_019() throws {
     let directory = try makeTemporaryDirectory()
     let accumulator = try BoundedStagingAccumulator(
       maximumBytes: 64,
@@ -19,6 +19,12 @@ final class StagingAndStorageTests: XCTestCase {
     )
     try accumulator.append(Data("hello".utf8))
     try accumulator.append(Data(" world".utf8))
+
+    let stagedNames = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+    let stagedName = try XCTUnwrap(stagedNames.singleElement)
+    try assertSecureCacheItem(directory)
+    try assertSecureCacheItem(directory.appendingPathComponent(stagedName))
+
     let result = try accumulator.finalize()
     XCTAssertEqual(result.data, Data("hello world".utf8))
     XCTAssertTrue(result.metrics.spilledToDisk)
@@ -433,10 +439,19 @@ private func assertSecureCacheItem(
   file: StaticString = #filePath,
   line: UInt = #line
 ) throws {
-  let values = try url.resourceValues(forKeys: [.isExcludedFromBackupKey])
+  let values = try url.resourceValues(forKeys: [.isDirectoryKey, .isExcludedFromBackupKey])
   XCTAssertEqual(values.isExcludedFromBackup, true, file: file, line: line)
+
+  let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+  let permissions = try XCTUnwrap(
+    attributes[.posixPermissions] as? NSNumber,
+    file: file,
+    line: line
+  )
+  let expectedPermissions = values.isDirectory == true ? 0o700 : 0o600
+  XCTAssertEqual(permissions.intValue & 0o777, expectedPermissions, file: file, line: line)
+
   #if os(iOS)
-    let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
     let protection = attributes[.protectionKey] as? FileProtectionType
     #if targetEnvironment(simulator)
       // 模拟器不保证暴露数据保护属性；若可观测，仍不得弱于目标保护级别。

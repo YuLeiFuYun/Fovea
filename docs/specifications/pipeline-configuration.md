@@ -46,7 +46,7 @@ maximumConcurrentFetches / maximumQueuedFetches
 maximumConcurrentDecodes / maximumQueuedDecodes
 ```
 
-具体 transport、encoded store、record store、decoder 与 diagnostics 在 `FoveaPipeline` composition root 注入。时钟、namespace registry、stage registry 与 executor 是 `package` 实现细节，不进入外部 API。同步 ImageIO probe/decode 由专用 Dispatch work executor 执行，不占用 Swift cooperative executor。
+具体 transport、encoded store、record store、decoder 与 diagnostics 可在 `FoveaPipeline` composition root 显式注入。官方 `FoveaSystemPipeline.open` 提供安全默认组合：禁用 URLCache/Cookie 的 transport、同一 StoreGeneration 下的 stores 与 ImageIO target decoder。时钟、namespace registry、stage registry 与 executor 是 `package` 实现细节，不进入外部 API。同步 ImageIO probe/decode 由专用 Dispatch work executor 执行，不占用 Swift cooperative executor。
 
 运行预算不得通过初始化器旁路覆盖：内存成本上限只能来自已冻结的 `PipelineConfiguration.memoryCostLimit`，并进入 full fingerprint。语义 fingerprint 只包含会改变字节、像素或传输语义的字段；并发度、队列长度和内存成本等运行参数只进入 full fingerprint。配置指纹与实际运行值必须一一对应。
 
@@ -121,3 +121,4 @@ RecordingDiagnosticsSink
 - **PIPE-PT-006**: 两个 pipeline 不隐式共享 subscriber/task state；
 - **PIPE-PT-007**: 共享 store 的 schema/security 不兼容时 fail closed；
 - **PIPE-PT-008**: 测试 pipeline 可完全脱离全局 shared 状态运行。
+- **PIPE-PT-009**: 官方安全组合根在同一缓存根复用兼容 StoreGeneration，并只组合安全默认 transport、持久 stores 与 target-pixel decoder。

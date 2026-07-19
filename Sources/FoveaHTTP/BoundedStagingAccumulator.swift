@@ -1,3 +1,4 @@
+import AkashicCore
 import CryptoKit
 import Foundation
 
@@ -28,7 +29,7 @@ package final class BoundedStagingAccumulator {
     self.maximumBytes = max(0, maximumBytes)
     self.memoryThreshold = max(0, memoryThreshold)
     self.stagingDirectory = stagingDirectory
-    try FileManager.default.createDirectory(at: stagingDirectory, withIntermediateDirectories: true)
+    try StorageDirectorySecurity.prepareDirectory(stagingDirectory)
   }
 
   deinit {
@@ -53,11 +54,20 @@ package final class BoundedStagingAccumulator {
       guard FileManager.default.createFile(atPath: url.path, contents: nil) else {
         throw CocoaError(.fileWriteUnknown)
       }
-      let newHandle = try FileHandle(forWritingTo: url)
-      if !memory.isEmpty {
-        try newHandle.write(contentsOf: memory)
-        memory.removeAll(keepingCapacity: false)
+      var newHandle: FileHandle?
+      do {
+        try StorageDirectorySecurity.securePublishedFile(url)
+        let opened = try FileHandle(forWritingTo: url)
+        newHandle = opened
+        if !memory.isEmpty {
+          try opened.write(contentsOf: memory)
+        }
+      } catch {
+        try? newHandle?.close()
+        try? FileManager.default.removeItem(at: url)
+        throw error
       }
+      memory.removeAll(keepingCapacity: false)
       fileURL = url
       handle = newHandle
     }

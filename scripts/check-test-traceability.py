@@ -12,6 +12,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "docs/test-traceability.json"
+CURRENT_REQUIRED = ROOT / "docs/current-required-ids.json"
 WPT_MANIFEST = ROOT / "Tests/FoveaTests/Conformance/WPT/manifest.json"
 REPORT = ROOT / ".artifacts/traceability/test-traceability.json"
 ID = re.compile(r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$")
@@ -105,6 +106,15 @@ def main() -> int:
                 raise ValueError(f"{identifier}: invalid status {status}")
         if not wpt_ids.issubset(seen):
             raise ValueError("traceability manifest omits required WPT cases")
+        current_required_data = json.loads(CURRENT_REQUIRED.read_text())
+        if current_required_data.get("schemaVersion") != 1:
+            raise ValueError("current required ID manifest schema mismatch")
+        current_required = set(current_required_data.get("ids", []))
+        omitted_current = sorted(current_required - seen)
+        if omitted_current:
+            raise ValueError(
+                f"traceability manifest omits current required IDs: {omitted_current}"
+            )
         report = {
             "schemaVersion": 1,
             "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),

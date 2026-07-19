@@ -130,6 +130,8 @@ final class StoreGenerationTests: XCTestCase {
       compatibilityFingerprint: "schema-v1"
     )
     XCTAssertEqual(first.generation.identifier, same.generation.identifier)
+    XCTAssertTrue(first.encoded === same.encoded)
+    XCTAssertTrue(first.records === same.records)
     let reopenedData = try await same.encoded.read(
       contentID: contentID,
       namespace: "public:tests"
@@ -145,6 +147,26 @@ final class StoreGenerationTests: XCTestCase {
       _ = try await switched.encoded.read(contentID: contentID, namespace: "public:tests")
     }
   }
+  func testActiveGenerationRejectsDivergentStoreConfiguration_CACHE_PT_024() async throws {
+    let root = try makeTemporaryDirectory()
+    _ = try await FoveaPersistentStores.open(
+      root: root,
+      compatibilityFingerprint: "schema-v1",
+      encodedSoftLimitBytes: 1024
+    )
+
+    do {
+      _ = try await FoveaPersistentStores.open(
+        root: root,
+        compatibilityFingerprint: "schema-v1",
+        encodedSoftLimitBytes: 2048
+      )
+      XCTFail("同一活动 generation 不得创建不同预算的第二 store actor")
+    } catch let error as FoveaPersistenceError {
+      XCTAssertEqual(error, .incompatibleActiveConfiguration)
+    }
+  }
+
 }
 
 private struct InjectedGenerationCrash: Error {}

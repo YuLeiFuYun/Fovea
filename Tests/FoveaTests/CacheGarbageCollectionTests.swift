@@ -75,11 +75,11 @@ final class CacheGarbageCollectionTests: XCTestCase {
       [
         StoredContentReference(
           namespaceFingerprint: StorageNamespaceFingerprint(namespace: "private:alpha"),
-          contentID: "content-a"
+          contentID: first.contentID
         ),
         StoredContentReference(
           namespaceFingerprint: StorageNamespaceFingerprint(namespace: "private:beta"),
-          contentID: "content-a"
+          contentID: secondNamespace.contentID
         ),
       ]
     )
@@ -106,26 +106,24 @@ final class CacheGarbageCollectionTests: XCTestCase {
       fieldNames: ["accept-language"],
       values: ["accept-language": .field("fr")]
     )
-    try await records.put(
-      makeRepresentationRecord(
-        namespace: "public:tests",
-        baseKeyDigest: "base",
-        variantKeyDigest: "variant-en",
-        vary: english,
-        contentID: contentID.description,
-        payloadLength: data.count
-      )
+    let englishRecord = makeRepresentationRecord(
+      namespace: "public:tests",
+      baseKeyDigest: "base",
+      variantKeyDigest: "variant-en",
+      vary: english,
+      contentID: contentID.description,
+      payloadLength: data.count
     )
-    try await records.put(
-      makeRepresentationRecord(
-        namespace: "public:tests",
-        baseKeyDigest: "base",
-        variantKeyDigest: "variant-fr",
-        vary: french,
-        contentID: contentID.description,
-        payloadLength: data.count
-      )
+    let frenchRecord = makeRepresentationRecord(
+      namespace: "public:tests",
+      baseKeyDigest: "base",
+      variantKeyDigest: "variant-fr",
+      vary: french,
+      contentID: contentID.description,
+      payloadLength: data.count
     )
+    try await records.put(englishRecord)
+    try await records.put(frenchRecord)
     let pipeline = FoveaPipeline(
       transport: FakeHTTPTransport(stubs: []),
       encodedStore: encoded,
@@ -134,7 +132,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
     )
 
     try await records.remove(
-      "variant-en",
+      englishRecord.variantKeyDigest,
       namespace: "public:tests",
       namespaceGeneration: 0
     )
@@ -147,7 +145,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
     XCTAssertNotNil(retainedPhysicalID)
 
     try await records.remove(
-      "variant-fr",
+      frenchRecord.variantKeyDigest,
       namespace: "public:tests",
       namespaceGeneration: 0
     )

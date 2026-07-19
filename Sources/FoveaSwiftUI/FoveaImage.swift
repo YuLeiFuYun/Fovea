@@ -107,9 +107,9 @@ public enum FoveaSwiftUIImageFailurePolicy {
 @MainActor
 package final class FoveaImageModel: ObservableObject {
   @Published package private(set) var phase: FoveaImagePhase = .empty
-  package private(set) var requestGeneration: UInt64 = 0
-  private var activeIdentity: String?
-  private var latestPreviewQuality: UInt16?
+  package var requestGeneration: UInt64 { session.requestGeneration }
+
+  private let session = ImageDisplaySession()
 
   package init() {}
 
@@ -119,56 +119,14 @@ package final class FoveaImageModel: ObservableObject {
     policy: FoveaImageLoadingPolicy = .default,
     force: Bool = false
   ) async {
-    let identity = request.displayIdentity
-    if !force, activeIdentity == identity { return }
-
-    requestGeneration &+= 1
-    let generation = requestGeneration
-    activeIdentity = identity
-    latestPreviewQuality = nil
-    if policy.retention == .clearImmediately || !isSuccessful {
-      phase = .empty
-    }
-
-    let loadingIndicator = Task { [weak self] in
-      guard policy.placeholderDelayNanoseconds > 0 else {
-        self?.showLoading(generation: generation, identity: identity)
-        return
-      }
-      try? await Task.sleep(nanoseconds: policy.placeholderDelayNanoseconds)
-      guard !Task.isCancelled else { return }
-      self?.showLoading(generation: generation, identity: identity)
-    }
-    defer { loadingIndicator.cancel() }
-
-    do {
-      if let progressive = loader as? any ProgressiveImageLoading {
-        try await consume(
-          progressive.events(for: request),
-          generation: generation,
-          identity: identity
-        )
-      } else {
-        let image = try await loader.image(for: request)
-        guard isCurrent(generation: generation, identity: identity) else { return }
-        phase = .success(image)
-      }
-    } catch let failure as PipelineFailure {
-      guard isCurrent(generation: generation, identity: identity) else { return }
-      phase = failure.disposition == .cancelled ? .cancelled : .failure(failure)
-    } catch is CancellationError {
-      guard isCurrent(generation: generation, identity: identity) else { return }
-      phase = .cancelled
-    } catch {
-      guard isCurrent(generation: generation, identity: identity) else { return }
-      phase = .failure(
-        PipelineFailure(
-          category: .internalFailure,
-          stage: .pipeline,
-          disposition: .terminal,
-          reasonCode: "unexpected-ui-error"
-        )
-      )
+    await session.load(
+      request: request,
+      loader: loader,
+      placeholderDelayNanoseconds: policy.placeholderDelayNanoseconds,
+      retention: policy.retention.coreRetention,
+      force: force
+    ) { [weak self] phase in
+      self?.phase = Self.swiftUIPhase(phase)
     }
   }
 
@@ -184,62 +142,43 @@ package final class FoveaImageModel: ObservableObject {
     to identity: String,
     retention: FoveaImageRetentionPolicy
   ) {
-    guard activeIdentity != identity else { return }
-    requestGeneration &+= 1
-    activeIdentity = nil
-    latestPreviewQuality = nil
-    if retention == .clearImmediately || !isSuccessful {
-      phase = .empty
+    session.prepareForIdentityChange(to: identity, retention: retention.coreRetention) {
+      [weak self] phase in
+      self?.phase = Self.swiftUIPhase(phase)
     }
   }
 
   package func invalidate() {
-    requestGeneration &+= 1
-    activeIdentity = nil
-    latestPreviewQuality = nil
-    phase = .empty
-  }
-
-  private func consume(
-    _ events: AsyncThrowingStream<ImageLoadingEvent, Error>,
-    generation: UInt64,
-    identity: String
-  ) async throws {
-    for try await event in events {
-      try Task.checkCancellation()
-      guard isCurrent(generation: generation, identity: identity) else { return }
-      switch event {
-      case .preview(let image, let quality):
-        guard latestPreviewQuality.map({ quality > $0 }) ?? true else { continue }
-        latestPreviewQuality = quality
-        phase = .preview(image)
-      case .final(let image):
-        latestPreviewQuality = nil
-        phase = .success(image)
-        return
-      }
+    session.invalidate { [weak self] phase in
+      self?.phase = Self.swiftUIPhase(phase)
     }
-    throw PipelineFailure.incompleteProgressiveStream
   }
 
-  private var isSuccessful: Bool {
-    if case .success = phase { return true }
-    return false
+  private static func swiftUIPhase(_ phase: ImageDisplaySessionPhase) -> FoveaImagePhase {
+    switch phase {
+    case .empty: .empty
+    case .loading: .loading
+    case .preview(let image): .preview(image)
+    case .success(let image): .success(image)
+    case .failure(let failure): .failure(failure)
+    case .cancelled: .cancelled
+    }
   }
+}
 
-  private func isCurrent(generation: UInt64, identity: String) -> Bool {
-    requestGeneration == generation && activeIdentity == identity
-  }
-
-  private func showLoading(generation: UInt64, identity: String) {
-    guard isCurrent(generation: generation, identity: identity) else { return }
-    if case .empty = phase { phase = .loading }
+extension FoveaImageRetentionPolicy {
+  package var coreRetention: ImageDisplayRetention {
+    switch self {
+    case .clearImmediately: .clearImmediately
+    case .retainSuccessfulImageUntilReplacement: .retainSuccessfulImageUntilReplacement
+    }
   }
 }
 
 @MainActor
 package final class FoveaGeometryRequestModel: ObservableObject {
   @Published package private(set) var request: ImageRequest?
+  @Published package private(set) var failure: PipelineFailure?
   private var resolver: TargetGeometryResolver
 
   package init(policy: TargetGeometryPolicy = .coreV1) {
@@ -253,26 +192,47 @@ package final class FoveaGeometryRequestModel: ObservableObject {
     contentMode: ImageContentMode,
     isStable: Bool,
     requestBuilder: (ResolvedImageTarget) throws -> ImageRequest
-  ) throws {
-    guard
-      let target = try resolver.resolve(
+  ) {
+    let target: ResolvedImageTarget?
+    do {
+      target = try resolver.resolve(
         widthPoints: widthPoints,
         heightPoints: heightPoints,
         scale: scale,
         contentMode: contentMode,
         isStable: isStable
       )
-    else {
-      request = nil
+    } catch let pipelineFailure as PipelineFailure {
+      publishFailure(pipelineFailure)
+      return
+    } catch let imageError as ImageCraftError {
+      publishFailure(PipelineFailure.imageCraft(imageError, stage: .requestValidation))
+      return
+    } catch {
+      publishFailure(Self.requestBuilderFailure)
       return
     }
+    guard let target else {
+      request = nil
+      failure = nil
+      return
+    }
+
     let next: ImageRequest
     do {
       next = try requestBuilder(target)
+    } catch let pipelineFailure as PipelineFailure {
+      publishFailure(pipelineFailure)
+      return
+    } catch let imageError as ImageCraftError {
+      publishFailure(PipelineFailure.imageCraft(imageError, stage: .requestValidation))
+      return
     } catch {
-      request = nil
-      throw error
+      publishFailure(Self.requestBuilderFailure)
+      return
     }
+
+    failure = nil
     if request?.displayIdentity != next.displayIdentity {
       request = next
     }
@@ -281,7 +241,20 @@ package final class FoveaGeometryRequestModel: ObservableObject {
   package func reset() {
     resolver.reset()
     request = nil
+    failure = nil
   }
+
+  private func publishFailure(_ next: PipelineFailure) {
+    request = nil
+    failure = next
+  }
+
+  private static let requestBuilderFailure = PipelineFailure(
+    category: .internalFailure,
+    stage: .requestValidation,
+    disposition: .terminal,
+    reasonCode: "responsive-request-builder-failed"
+  )
 }
 
 private struct FoveaGeometryTaskIdentity: Hashable {
@@ -290,6 +263,7 @@ private struct FoveaGeometryTaskIdentity: Hashable {
   let scale: Double
   let contentMode: ImageContentMode
   let isStable: Bool
+  let retryGeneration: UInt64
 }
 
 public struct FoveaImage<Placeholder: View, Failure: View>: View {
@@ -397,6 +371,7 @@ public struct FoveaResponsiveImage<Placeholder: View, Failure: View>: View {
   private let placeholder: () -> Placeholder
   private let failure: (FoveaImageFailureContext) -> Failure
   @StateObject private var geometryModel: FoveaGeometryRequestModel
+  @State private var retryGeneration: UInt64 = 0
   @Environment(\.displayScale) private var displayScale
 
   public init(
@@ -438,12 +413,20 @@ public struct FoveaResponsiveImage<Placeholder: View, Failure: View>: View {
             placeholder: placeholder,
             failure: failure
           )
+        } else if let requestFailure = geometryModel.failure {
+          failure(
+            FoveaImageFailureContext(
+              failure: requestFailure,
+              recoveryAction: FoveaSwiftUIImageFailurePolicy.action(for: requestFailure),
+              retryAction: retryGeometryResolution
+            )
+          )
         } else {
           placeholder()
         }
       }
       .task(id: taskIdentity(for: proxy.size)) {
-        try? geometryModel.update(
+        geometryModel.update(
           widthPoints: proxy.size.width,
           heightPoints: proxy.size.height,
           scale: displayScale,
@@ -462,8 +445,14 @@ public struct FoveaResponsiveImage<Placeholder: View, Failure: View>: View {
       heightPoints: size.height,
       scale: displayScale,
       contentMode: contentMode,
-      isStable: geometryIsStable
+      isStable: geometryIsStable,
+      retryGeneration: retryGeneration
     )
+  }
+
+  @MainActor
+  private func retryGeometryResolution() {
+    retryGeneration &+= 1
   }
 }
 

@@ -12,7 +12,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REPORT = ROOT / ".artifacts/mutation/critical-mutants.json"
-REQUIRED_MUTANTS = {f"AIQA-MUT-{index:03d}" for index in range(1, 23)}
+REQUIRED_MUTANTS = {f"AIQA-MUT-{index:03d}" for index in range(1, 34)}
 SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -54,7 +54,7 @@ def validate(report_path: Path, expected_commit: str | None) -> dict[str, Any]:
 
     required = report.get("requiredMutants")
     require(isinstance(required, list), "requiredMutants must be an array")
-    require(set(required) == REQUIRED_MUTANTS, "requiredMutants must exactly match AIQA-MUT-001 through AIQA-MUT-022")
+    require(set(required) == REQUIRED_MUTANTS, "requiredMutants must exactly match AIQA-MUT-001 through AIQA-MUT-033")
     require(len(required) == len(set(required)), "requiredMutants contains duplicates")
 
     mutants = report.get("mutants")
