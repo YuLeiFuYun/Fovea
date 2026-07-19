@@ -245,6 +245,111 @@ final class AuthGalleryTests: XCTestCase {
     XCTAssertNil(physicalID)
   }
 
+  func testRevocationBeforeRecordPublicationNeverTouchesRecordStore_AUTH_PT_003() async throws {
+    let body = try makePNG(red: 125)
+    let origin = CredentialImageOrigin(responses: [
+      "Bearer pre-record": .init(
+        body: body,
+        headers: ["Content-Type": "image/png", "Cache-Control": "private, max-age=3600"]
+      )
+    ])
+    let root = try makeTemporaryDirectory()
+    let baseEncoded = try await OriginalEncodedStore.open(
+      root: root.appendingPathComponent("encoded")
+    )
+    let encoded = CommitBarrierEncodedStore(base: baseEncoded)
+    let baseRecords = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records")
+    )
+    let records = CountingRecordStore(base: baseRecords)
+    let registry = NamespaceRegistry()
+    let pipeline = FoveaPipeline(
+      transport: origin,
+      encodedStore: encoded,
+      recordStore: records,
+      namespaceRegistry: registry,
+      decoder: ImageIOImageDecoder()
+    )
+    let request = try authenticatedRequest(
+      url: try XCTUnwrap(URL(string: "https://images.example.test/pre-record-revoke")),
+      target: try TargetPixels(width: 40, height: 40),
+      namespace: "account-pre-record",
+      principal: "principal-pre-record",
+      token: "Bearer pre-record"
+    )
+
+    let task = Task { try await pipeline.image(for: request) }
+    await encoded.waitUntilCommitStarts()
+    await registry.revoke(request.namespace)
+    await encoded.releaseCommit()
+
+    do {
+      _ = try await task.value
+      XCTFail("失效代际不得继续发布记录")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .namespaceRevoked)
+    }
+    let putCount = await records.putCount
+    let physicalID = await baseEncoded.physicalID(
+      contentID: ContentID(data: body).description,
+      namespace: request.namespace.value
+    )
+    XCTAssertEqual(putCount, 0)
+    XCTAssertNil(physicalID)
+  }
+
+  func testRevocationAfterRecordPublicationRollsBackRecordAndBlob_AUTH_PT_005() async throws {
+    let body = try makePNG(red: 126)
+    let origin = CredentialImageOrigin(responses: [
+      "Bearer post-record": .init(
+        body: body,
+        headers: ["Content-Type": "image/png", "Cache-Control": "private, max-age=3600"]
+      )
+    ])
+    let root = try makeTemporaryDirectory()
+    let encoded = try await OriginalEncodedStore.open(
+      root: root.appendingPathComponent("encoded")
+    )
+    let baseRecords = try await RepresentationRecordStore.open(
+      root: root.appendingPathComponent("records")
+    )
+    let records = PublishedRecordBarrierStore(base: baseRecords)
+    let registry = NamespaceRegistry()
+    let pipeline = FoveaPipeline(
+      transport: origin,
+      encodedStore: encoded,
+      recordStore: records,
+      namespaceRegistry: registry,
+      decoder: ImageIOImageDecoder()
+    )
+    let request = try authenticatedRequest(
+      url: try XCTUnwrap(URL(string: "https://images.example.test/post-record-revoke")),
+      target: try TargetPixels(width: 40, height: 40),
+      namespace: "account-post-record",
+      principal: "principal-post-record",
+      token: "Bearer post-record"
+    )
+
+    let task = Task { try await pipeline.image(for: request) }
+    await records.waitUntilRecordPublished()
+    await registry.revoke(request.namespace)
+    await records.releasePublication()
+
+    do {
+      _ = try await task.value
+      XCTFail("失效代际发布的记录必须回滚")
+    } catch let failure as PipelineFailure {
+      XCTAssertEqual(failure.category, .namespaceRevoked)
+    }
+    let record = await baseRecords.record(for: request.fetchVariantKey.digestHex)
+    let physicalID = await encoded.physicalID(
+      contentID: ContentID(data: body).description,
+      namespace: request.namespace.value
+    )
+    XCTAssertNil(record)
+    XCTAssertNil(physicalID)
+  }
+
   func testRevokeDuring304RefreshRemovesLateMetadata_AUTH_PT_011() async throws {
     let body = try makePNG(red: 140)
     let root = try makeTemporaryDirectory()
@@ -522,6 +627,133 @@ private actor FailingCleanupRecordStore: RepresentationRecordStoring {
   func removeAll(namespace: String) async throws {
     removeAllCount += 1
     throw CleanupTestError.failed
+  }
+}
+
+private actor CountingRecordStore: RepresentationRecordStoring {
+  private let base: RepresentationRecordStore
+  private(set) var putCount = 0
+
+  init(base: RepresentationRecordStore) {
+    self.base = base
+  }
+
+  func records(
+    for baseKeyDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async -> [RepresentationRecord] {
+    await base.records(
+      for: baseKeyDigest,
+      namespace: namespace,
+      namespaceGeneration: namespaceGeneration
+    )
+  }
+
+  func put(_ record: RepresentationRecord) async throws {
+    putCount += 1
+    try await base.put(record)
+  }
+
+  func containsReference(
+    to contentID: String,
+    namespace: String,
+    excludingVariantDigest: String?
+  ) async -> Bool {
+    await base.containsReference(
+      to: contentID,
+      namespace: namespace,
+      excludingVariantDigest: excludingVariantDigest
+    )
+  }
+
+  func remove(
+    _ variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async throws {
+    try await base.remove(
+      variantDigest,
+      namespace: namespace,
+      namespaceGeneration: namespaceGeneration
+    )
+  }
+
+  func removeAll(namespace: String) async throws {
+    try await base.removeAll(namespace: namespace)
+  }
+}
+
+private actor PublishedRecordBarrierStore: RepresentationRecordStoring {
+  private let base: RepresentationRecordStore
+  private var published = false
+  private var released = false
+  private var publishedWaiters: [CheckedContinuation<Void, Never>] = []
+  private var releaseWaiters: [CheckedContinuation<Void, Never>] = []
+
+  init(base: RepresentationRecordStore) {
+    self.base = base
+  }
+
+  func records(
+    for baseKeyDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async -> [RepresentationRecord] {
+    await base.records(
+      for: baseKeyDigest,
+      namespace: namespace,
+      namespaceGeneration: namespaceGeneration
+    )
+  }
+
+  func put(_ record: RepresentationRecord) async throws {
+    try await base.put(record)
+    published = true
+    for waiter in publishedWaiters { waiter.resume() }
+    publishedWaiters.removeAll()
+    if !released {
+      await withCheckedContinuation { releaseWaiters.append($0) }
+    }
+  }
+
+  func containsReference(
+    to contentID: String,
+    namespace: String,
+    excludingVariantDigest: String?
+  ) async -> Bool {
+    await base.containsReference(
+      to: contentID,
+      namespace: namespace,
+      excludingVariantDigest: excludingVariantDigest
+    )
+  }
+
+  func remove(
+    _ variantDigest: String,
+    namespace: String,
+    namespaceGeneration: UInt64
+  ) async throws {
+    try await base.remove(
+      variantDigest,
+      namespace: namespace,
+      namespaceGeneration: namespaceGeneration
+    )
+  }
+
+  func removeAll(namespace: String) async throws {
+    try await base.removeAll(namespace: namespace)
+  }
+
+  func waitUntilRecordPublished() async {
+    if published { return }
+    await withCheckedContinuation { publishedWaiters.append($0) }
+  }
+
+  func releasePublication() {
+    released = true
+    for waiter in releaseWaiters { waiter.resume() }
+    releaseWaiters.removeAll()
   }
 }
 

@@ -350,6 +350,11 @@
           "file": "Tests/FoveaTests/AuthGalleryTests.swift",
           "kind": "swiftTest",
           "method": "testSameURLIsolatedAcrossAccountsAndLogoutPreservesOtherAccount"
+        },
+        {
+          "file": "Tests/FoveaTests/AuthGalleryTests.swift",
+          "kind": "swiftTest",
+          "method": "testRevocationBeforeRecordPublicationNeverTouchesRecordStore_AUTH_PT_003"
         }
       ],
       "id": "AUTH-PT-003",
@@ -372,6 +377,11 @@
           "file": "Tests/FoveaTests/VaryCacheTests.swift",
           "kind": "swiftTest",
           "method": "testSensitiveVaryWithoutFingerprintNeverPersists_AUTH_PT_005"
+        },
+        {
+          "file": "Tests/FoveaTests/AuthGalleryTests.swift",
+          "kind": "swiftTest",
+          "method": "testRevocationAfterRecordPublicationRollsBackRecordAndBlob_AUTH_PT_005"
         }
       ],
       "id": "AUTH-PT-005",
@@ -1760,6 +1770,11 @@
           "file": "Tests/FoveaTests/SharedTaskTests.swift",
           "kind": "swiftTest",
           "method": "testCompletionAndReleaseDoNotDoubleCancel_SCHED_PT_010"
+        },
+        {
+          "file": "Tests/FoveaTests/SharedTaskTests.swift",
+          "kind": "swiftTest",
+          "method": "testMismatchedCompletionCannotRemoveActiveTask"
         }
       ],
       "id": "SCHED-PT-010",

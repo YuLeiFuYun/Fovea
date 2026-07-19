@@ -144,11 +144,11 @@ def mutant_002(root: Path) -> None:
 
 def mutant_003(root: Path) -> None:
     replace_in_section(
-        root / "Sources/FoveaCore/ImageRequest.swift",
-        "package func fetchExecutionKey(",
-        "public var displayIdentity",
-        "      credentialGeneration: credentialGeneration,\n",
-        "      credentialGeneration: nil,\n",
+        root / "Sources/FoveaCore/Identity.swift",
+        "public struct FetchExecutionKey",
+        "public struct ContentID",
+        "    encoder.appendOptional(credentialGeneration?.value)\n",
+        "    encoder.appendOptional(Optional<UInt64>.none)\n",
     )
 
 
@@ -172,27 +172,22 @@ def mutant_005(root: Path) -> None:
 
 
 def mutant_006(root: Path) -> None:
-    candidates = list((root / "Sources/FoveaHTTP").glob("*.swift"))
-    for path in candidates:
-        text = path.read_text()
-        if "fieldNames.allSatisfy" not in text:
-            continue
-        replace_regex(
-            path,
-            r"(?m)^(\s*)(return\s+)?fieldNames\.allSatisfy",
-            r"\1\2true || fieldNames.allSatisfy",
-        )
-        return
-    raise RuntimeError("HTTPVarySelection.matches implementation was not found")
+    replace_in_section(
+        root / "Sources/FoveaHTTP/HTTPCachePolicy.swift",
+        "public static func selectRecord(",
+        "  }\n}",
+        "      return current == record.vary\n",
+        "      return current.fieldNames == record.vary.fieldNames\n",
+    )
 
 
 def mutant_007(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/FoveaPipeline.swift",
         "private func process200(",
-        "private func decodeAndCache(",
-        "    if disposition != .noStore {\n",
-        "    if true {\n",
+        "private func decodeAndTransformCachedData(",
+        "    if allowReusableState, disposition != .noStore {\n",
+        "    if allowReusableState {\n",
     )
 
 
@@ -225,9 +220,13 @@ def mutant_010(root: Path) -> None:
 def mutant_011(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/SharedTaskRegistry.swift",
-        "package func release(key: Key, subscriberID: UUID) async",
-        "package func subscriberCount",
-        "      await entry.priorityControl.update(effective)\n",
+        "  package func release(\n",
+        "  package func subscriberCount",
+        """      if !entry.subscribers.isEmpty {
+        let effective = Self.effectivePriority(entry.subscribers)
+        await entry.priorityControl.update(effective)
+      }
+""",
         "      // AIQA-MUT-011：故意不降低有效优先级。\n",
     )
 
@@ -235,10 +234,10 @@ def mutant_011(root: Path) -> None:
 def mutant_012(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/SharedTaskRegistry.swift",
-        "  func resolve(_ result:",
-        "  }\n}",
-        "      state = .finished\n      continuation.resume(with: result)\n",
-        "      continuation.resume(with: result)\n",
+        "  package func completed(key: Key, taskID: UUID) async",
+        "  package func cancelAll",
+        "    guard let entry = entries[key], entry.taskID == taskID else { return }\n",
+        "    guard let entry = entries[key] else { return }\n",
     )
 
 
@@ -267,95 +266,37 @@ def mutant_014(root: Path) -> None:
 
 
 def mutant_015(root: Path) -> None:
-    cache = root / "Sources/FoveaCore/PipelineCache.swift"
-    pipeline = root / "Sources/FoveaCore/FoveaPipeline.swift"
     replace_in_section(
-        cache,
-        "  func commit(",
-        "  private func rollback(",
-        "  func commit(\n",
-        """  func publishUnsafeOriginal(
-    data: Data,
-    contentID: ContentID,
-    baseKeyDigest: String,
-    variantKeyDigest: String,
-    vary: HTTPVarySelection,
-    namespace: SecurityNamespaceID,
-    generation: NamespaceGeneration
-  ) async {
-    _ = try? await encodedStore.commit(
-      data: data,
-      contentID: contentID.description,
-      namespace: namespace.value
-    )
-    try? await recordStore.put(
-      RepresentationRecord(
-        securityNamespace: namespace.value,
-        namespaceGeneration: generation.value,
-        baseKeyDigest: baseKeyDigest,
-        variantKeyDigest: variantKeyDigest,
-        vary: vary,
-        statusCode: 200,
-        requestTime: Date(),
-        responseTime: Date(),
-        responseDate: Date(),
-        expiresAt: nil,
-        etag: nil,
-        lastModified: nil,
-        disposition: .reusable,
-        contentID: contentID.description,
-        payloadLength: data.count,
-        contentType: nil
-      )
-    )
-  }
-
-  func commit(
-""",
-    )
-    marker = "    let image = try await decodeStage.image(\n"
-    prefix, body, suffix = section(pipeline, "private func process200(", "private func decodeAndCache(")
-    index = body.find(marker)
-    if index < 0:
-        raise RuntimeError("process200 decode call not found")
-    insertion = """    await cache.publishUnsafeOriginal(
-      data: response.transport.body,
+        root / "Sources/FoveaCore/FoveaPipeline.swift",
+        "private func process200(",
+        "private func decodeAndTransformCachedData(",
+        "    let image = try await transformStage.image(from: decoded)\n",
+        """    let prematureRenderKey = scopedRenderKey(
       contentID: contentID,
-      baseKeyDigest: request.fetchBaseKey.digestHex,
-      variantKeyDigest: variant.digestHex,
-      vary: varySelection ?? HTTPVarySelection(fieldNames: [], values: [:]),
-      namespace: request.namespace,
+      request: request,
       generation: generation
     )
-"""
-    pipeline.write_text(prefix + body[:index] + insertion + body[index:] + suffix)
+    await cache.insertRendered(decoded, for: prematureRenderKey)
+    let image = try await transformStage.image(from: decoded)
+""",
+    )
 
 
 def mutant_016(root: Path) -> None:
-    path = root / "Sources/FoveaCore/PipelineCache.swift"
-    old = """      await diagnostics.record(
-        DiagnosticEvent(
-          kind: .cacheWriteFailed,
-          keyDigest: record.variantKeyDigest,
-          reason: "encoded-or-record-write"
-        )
-      )
-"""
-    new = old + """      throw PipelineFailure(
-        category: .cacheWrite,
-        stage: .persistence,
-        disposition: .cacheDegraded,
-        reasonCode: "mutated-cache-write-overrides-final"
-      )
-"""
-    replace_in_section(path, "  func commit(", "  private func rollback(", old, new)
+    replace_in_section(
+        root / "Sources/FoveaCore/PipelineCache.swift",
+        "  private func rollback(",
+        "  private func recordCacheCleanupFailure(",
+        "    if createdBlob {\n",
+        "    if false && createdBlob {\n",
+    )
 
 
 def mutant_017(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/FoveaPipeline.swift",
         "private func process200(",
-        "private func decodeAndCache(",
+        "private func decodeAndTransformCachedData(",
         "        namespaceGeneration: generation.value,\n",
         "        namespaceGeneration: 0,\n",
     )
@@ -374,10 +315,10 @@ def mutant_018(root: Path) -> None:
 def mutant_019(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/PipelineCache.swift",
-        "  func discardReusableState(",
-        "  func commit(",
-        "    if !stillReferenced {\n",
-        "    if true {\n",
+        "  private func rollback(",
+        "  private func recordCacheCleanupFailure(",
+        "    if recordCommitted {\n",
+        "    if false && recordCommitted {\n",
     )
 
 
@@ -410,23 +351,23 @@ def mutant_022(root: Path) -> None:
 MUTANTS = [
     Mutant("AIQA-MUT-001", "Omit namespace from persistent base identity.", "Sources/FoveaCore/Identity.swift", "IdentityTests/testNamespaceChangesBaseAndVariantIdentity_CACHE_PT_003", mutant_001),
     Mutant("AIQA-MUT-002", "Collapse exact fetch execution identity to base-only dimensions.", "Sources/FoveaCore/ImageRequest.swift", "IdentityTests/testImageRequestExecutionKeyIncludesCredentialAndRevalidation", mutant_002),
-    Mutant("AIQA-MUT-003", "Ignore credential generation in exact execution identity.", "Sources/FoveaCore/ImageRequest.swift", "IdentityTests/testCredentialRefreshChangesExecutionButNotBaseOrVariant_AUTH_PT_001", mutant_003),
+    Mutant("AIQA-MUT-003", "Ignore credential generation in exact execution identity.", "Sources/FoveaCore/Identity.swift", "IdentityTests/testCredentialRefreshChangesExecutionButNotBaseOrVariant_AUTH_PT_001", mutant_003),
     Mutant("AIQA-MUT-004", "Treat every persistent representation as fresh.", "Sources/FoveaHTTP/RepresentationRecord.swift", "PipelineTests/testInjectedClockControlsFreshnessWithoutSleeping", mutant_004),
     Mutant("AIQA-MUT-005", "Replace the validated 304 content identity.", "Sources/FoveaCore/FoveaPipeline.swift", "PipelineTests/test304ReusesContentID_CACHE_PT_008", mutant_005),
     Mutant("AIQA-MUT-006", "Reuse a Vary candidate even when selected request fields mismatch.", "Sources/FoveaHTTP/HTTPCachePolicy.swift", "VaryCacheTests/testAcceptLanguageVariantsCoexistAndHitCorrectBodies_CACHE_PT_004", mutant_006),
     Mutant("AIQA-MUT-007", "Publish Cache-Control no-store responses into reusable caches.", "Sources/FoveaCore/FoveaPipeline.swift", "PipelineTests/testNoStoreNeverSatisfiesNewRequest_CACHE_PT_026", mutant_007),
-    Mutant("AIQA-MUT-008", "Allow persistence after namespace generation revocation.", "Sources/FoveaCore/PipelineCache.swift", "AuthGalleryTests/testRevokeDuringBlobCommitRemovesLateBlobAndRecord", mutant_008),
+    Mutant("AIQA-MUT-008", "Allow a revoked generation to reach the record store.", "Sources/FoveaCore/PipelineCache.swift", "AuthGalleryTests/testRevocationBeforeRecordPublicationNeverTouchesRecordStore_AUTH_PT_003", mutant_008),
     Mutant("AIQA-MUT-009", "Accept a zero target dimension.", "Sources/ImageCraftCore/ImageTypes.swift", "IdentityTests/testZeroTargetIsRejected_GEO_PT_002", mutant_009),
     Mutant("AIQA-MUT-010", "Decode a full-size bitmap instead of a target thumbnail.", "Sources/ImageCraftImageIO/ImageIOImageDecoder.swift", "ImageDecoderTests/testTargetDecodeAvoidsFullSizeBitmap", mutant_010),
     Mutant("AIQA-MUT-011", "Keep stale elevated priority after a subscriber leaves.", "Sources/FoveaCore/SharedTaskRegistry.swift", "PrioritySchedulingTests/testSharedTaskEffectivePriorityRisesAndFallsWithSubscribers_SCHED_PT_003", mutant_011),
-    Mutant("AIQA-MUT-012", "Permit completion and cancellation to resume one continuation twice.", "Sources/FoveaCore/SharedTaskRegistry.swift", "SharedTaskTests/testCompletionAndReleaseDoNotDoubleCancel_SCHED_PT_010", mutant_012),
+    Mutant("AIQA-MUT-012", "Let a stale completion remove an active task with the same key.", "Sources/FoveaCore/SharedTaskRegistry.swift", "SharedTaskTests/testMismatchedCompletionCannotRemoveActiveTask", mutant_012),
     Mutant("AIQA-MUT-013", "Use Swift hashValue as a persistent key digest.", "Sources/FoveaCore/Identity.swift", "IdentityTests/testFetchBaseKeyDigestUsesStableSHA256AiqaMut013", mutant_013),
     Mutant("AIQA-MUT-014", "Strip signed query parameters during URL normalization.", "Sources/FoveaCore/ImageRequest.swift", "IdentityTests/testURLNormalizationIsConservativeAndFragmentFree_CACHE_PT_027", mutant_014),
-    Mutant("AIQA-MUT-015", "Publish OriginalEncoded bytes before probe/decode succeeds.", "Sources/FoveaCore/FoveaPipeline.swift", "PipelineTests/testProbeFailureDoesNotPublishRecord_CACHE_PT_029_AIQA_MUT_015", mutant_015),
-    Mutant("AIQA-MUT-016", "Let a cache write degradation overwrite a successful image.", "Sources/FoveaCore/PipelineCache.swift", "StagingAndStorageTests/testCacheWriteFailureDoesNotOverrideFinal_ERR_PT_001", mutant_016),
+    Mutant("AIQA-MUT-015", "Publish RenderedMemory before transform succeeds.", "Sources/FoveaCore/FoveaPipeline.swift", "PipelineTests/testTransformFailureRetainsOriginalAndPublishesNoRendered_CACHE_PT_030", mutant_015),
+    Mutant("AIQA-MUT-016", "Leave a newly created blob behind when record publication fails.", "Sources/FoveaCore/PipelineCache.swift", "AuthGalleryTests/testRevokeDuringBlobCommitRemovesLateBlobAndRecord", mutant_016),
     Mutant("AIQA-MUT-017", "Write a post-revoke 200 record with generation zero.", "Sources/FoveaCore/FoveaPipeline.swift", "PipelineTests/testRevokeThenNewResponsePersistsCurrentGenerationAndHitsDisk_CACHE_PT_038", mutant_017),
     Mutant("AIQA-MUT-018", "Allow a late 304 refresh to survive namespace revocation.", "Sources/FoveaCore/PipelineCache.swift", "AuthGalleryTests/testRevokeDuring304RefreshRemovesLateMetadata_AUTH_PT_011", mutant_018),
-    Mutant("AIQA-MUT-019", "Delete a blob still referenced by another Vary representation.", "Sources/FoveaCore/PipelineCache.swift", "VaryCacheTests/testNoStoreRevalidationRemovesOnlySelectedVariant_CACHE_PT_005", mutant_019),
+    Mutant("AIQA-MUT-019", "Leave a published record behind after generation revocation.", "Sources/FoveaCore/PipelineCache.swift", "AuthGalleryTests/testRevocationAfterRecordPublicationRollsBackRecordAndBlob_AUTH_PT_005", mutant_019),
     Mutant("AIQA-MUT-020", "Admit transient geometry into RenderedMemory.", "Sources/FoveaCore/FoveaPipeline.swift", "TargetGeometryTests/testTransientTargetDoesNotEnterRenderedMemoryUntilStableGeoPt009", mutant_020),
     Mutant("AIQA-MUT-021", "Disable the encoded metadata byte limit.", "Sources/ImageCraftCore/ImageTypes.swift", "PipelineFailureTests/testMetadataSecurityFailurePublishesNoReusableStateSecCase004", mutant_021),
     Mutant("AIQA-MUT-022", "Create a separate DecodeKey registry for every subscriber.", "Sources/FoveaCore/DecodeStage.swift", "DecodeSharingTests/testSameDecodeKeyExecutesProbeAndDecodeOnce_SCHED_PT_002", mutant_022),

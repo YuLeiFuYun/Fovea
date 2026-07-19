@@ -29,6 +29,32 @@ final class SharedTaskTests: XCTestCase {
     await survivor.cancel()
   }
 
+  func testMismatchedCompletionCannotRemoveActiveTask() async throws {
+    let registry = SharedTaskRegistry<String, Int>()
+    let gate = HandoffOperationGate()
+    let first = await registry.subscribe(key: "task-id-guard") {
+      try await gate.run()
+    }
+    await gate.waitUntilStarted()
+
+    await registry.completed(key: "task-id-guard", taskID: UUID())
+    let countAfterMismatchedCompletion = await registry.subscriberCount(for: "task-id-guard")
+    XCTAssertEqual(countAfterMismatchedCompletion, 1)
+
+    let second = await registry.subscribe(key: "task-id-guard") { 99 }
+    XCTAssertTrue(second.wasJoined)
+    await gate.release()
+
+    async let firstValue = first.value()
+    async let secondValue = second.value()
+    let values = try await [firstValue, secondValue]
+    XCTAssertEqual(values, [42, 42])
+    let operationCount = await gate.operationCount
+    XCTAssertEqual(operationCount, 1)
+    await first.cancel()
+    await second.cancel()
+  }
+
   func testDetachedSubscriberLeavesTaskAvailableForLateHandoff() async throws {
     let registry = SharedTaskRegistry<String, Int>()
     let gate = HandoffOperationGate()
