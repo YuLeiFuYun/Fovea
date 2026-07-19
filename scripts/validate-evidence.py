@@ -30,7 +30,7 @@ def validate(path: Path) -> None:
     for field in ("baseCommit", "headCommit", "verifiedCommit"):
         if not COMMIT.fullmatch(data[field]):
             fail(f"{path}: invalid {field}")
-    if data["assuranceStage"] not in {"0a-bootstrap", "0a-complete", "0b", "release"}:
+    if data["assuranceStage"] not in {"0a-bootstrap", "0a-complete", "0b-in-progress", "0b", "release"}:
         fail(f"{path}: invalid assuranceStage")
     permissions = data["permissions"]
     for field in ("hadProductionSecrets", "couldWriteProtectedBranch", "couldReadHeldOutTests"):

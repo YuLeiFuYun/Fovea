@@ -282,6 +282,7 @@
       "enum": [
         "0a-bootstrap",
         "0a-complete",
+        "0b-in-progress",
         "0b",
         "release"
       ]

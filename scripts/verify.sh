@@ -12,6 +12,7 @@ xcrun swift --version
 
 python3 scripts/check-architecture-boundaries.py
 python3 scripts/check-docs.py
+python3 scripts/check-test-traceability.py
 xcrun swift-format lint --strict -r Sources Tests Package.swift
 python3 scripts/run-http-conformance.py
 

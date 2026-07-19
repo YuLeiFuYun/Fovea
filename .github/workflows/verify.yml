@@ -66,7 +66,7 @@ jobs:
           scripts/generate-ci-evidence.py \
             --base "$FOVEA_BASE_COMMIT" \
             --head "$GITHUB_SHA" \
-            --assurance-stage 0b \
+            --assurance-stage 0b-in-progress \
             --verify-log .artifacts/logs/verify.log \
             --output "$evidence" \
             --trusted-ci
@@ -75,7 +75,7 @@ jobs:
           digest=$(shasum -a 256 "$evidence" | awk '{ print $1 }')
           {
             printf '## Fovea Verification Evidence\n\n'
-            printf -- '- Assurance stage: `0b`\n'
+            printf -- '- Assurance stage: `0b-in-progress`\n'
             printf -- '- Verified commit: `%s`\n' "$GITHUB_SHA"
             printf -- '- Base commit: `%s`\n' "$FOVEA_BASE_COMMIT"
             printf -- '- Evidence SHA-256: `%s`\n\n' "$digest"

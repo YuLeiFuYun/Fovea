@@ -98,8 +98,8 @@ def main() -> int:
     parser.add_argument("--verify-log", default=".artifacts/logs/verify.log")
     parser.add_argument(
         "--assurance-stage",
-        choices=("0a-bootstrap", "0a-complete", "0b", "release"),
-        default="0b",
+        choices=("0a-bootstrap", "0a-complete", "0b-in-progress", "0b", "release"),
+        default="0b-in-progress",
     )
     parser.add_argument("--output", default=".artifacts/evidence/fovea-ci-evidence.json")
     parser.add_argument("--trusted-ci", action="store_true")
@@ -124,8 +124,9 @@ def main() -> int:
         rollback = root / ".artifacts/rollback/rollback-report.json"
         mutation = root / ".artifacts/mutation/critical-mutants.json"
         conformance = root / ".artifacts/conformance/http-conformance.json"
+        traceability = root / ".artifacts/traceability/test-traceability.json"
         benchmark_paths = sorted((root / ".artifacts/benchmarks").glob("*.json"))
-        required_files = [verify_log, rollback, mutation, conformance, *benchmark_paths]
+        required_files = [verify_log, rollback, mutation, conformance, traceability, *benchmark_paths]
         missing = [str(path.relative_to(root)) for path in required_files if not path.is_file()]
         if missing:
             raise ValueError(f"missing evidence artifacts: {missing}")
@@ -146,6 +147,11 @@ def main() -> int:
         conformance_data = json.loads(conformance.read_text())
         if conformance_data.get("verifiedCommit") != head or conformance_data.get("status") != "pass":
             raise ValueError("HTTP conformance report is not a passing result bound to the evidence head")
+        traceability_data = json.loads(traceability.read_text())
+        if traceability_data.get("verifiedCommit") != head:
+            raise ValueError("traceability report is not bound to the evidence head")
+        if args.assurance_stage in {"0b", "release"} and traceability_data.get("status") != "complete":
+            raise ValueError("0b/release evidence requires complete requirement traceability")
 
         locator_prefix = run_locator if trusted else "local"
         verification = [
@@ -183,6 +189,15 @@ def main() -> int:
                 producer,
                 status,
                 f"{locator_prefix}#http-conformance",
+                head,
+            ),
+            verification_result(
+                "TEST-TRACEABILITY-0B",
+                "test",
+                traceability,
+                producer,
+                status,
+                f"{locator_prefix}#test-traceability",
                 head,
             ),
         ]
@@ -224,6 +239,7 @@ def main() -> int:
                 "AIQA-GATE-007",
                 "AIQA-GATE-009",
                 "HTTP-CONF-PRIVATE-IMAGE-PROFILE",
+                "TEST-TRACEABILITY-0B",
                 "W1-Feed-Scroll-Smoke",
                 "W2-Detail-Hero-Smoke",
                 "W3-Auth-Gallery-Smoke",
