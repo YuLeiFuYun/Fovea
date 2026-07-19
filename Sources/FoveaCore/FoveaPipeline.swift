@@ -3,7 +3,7 @@ import Foundation
 import FoveaHTTP
 import ImageCraftCore
 
-public final class FoveaPipeline: Sendable {
+public final class FoveaPipeline: ImageLoading, Sendable {
   private let cache: PipelineCache
   private let fetchStage: FetchStage
   private let decodeStage: DecodeStage

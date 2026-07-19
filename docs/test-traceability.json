@@ -1333,7 +1333,7 @@
         {
           "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
           "kind": "swiftTest",
-          "method": "testLateResultCannotOverwriteNewIdentity_UI_PT_001"
+          "method": "testLateResultCannotOverwriteNewIdentityUiPt001"
         }
       ],
       "id": "SCHED-PT-005",
@@ -1580,16 +1580,22 @@
         {
           "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
           "kind": "swiftTest",
-          "method": "testLateResultCannotOverwriteNewIdentity_UI_PT_001"
+          "method": "testLateResultCannotOverwriteNewIdentityUiPt001"
         }
       ],
       "id": "UI-PT-001",
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
+          "kind": "swiftTest",
+          "method": "testNearSynchronousHitDoesNotPublishLoadingUiPt002"
+        }
+      ],
       "id": "UI-PT-002",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [],
@@ -1597,19 +1603,37 @@
       "status": "missing"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
+          "kind": "swiftTest",
+          "method": "testInvalidateRejectsLateResultUiPt004"
+        }
+      ],
       "id": "UI-PT-004",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
+          "kind": "swiftTest",
+          "method": "testSameIdentityCreatesOneSubscriptionUiPt005"
+        }
+      ],
       "id": "UI-PT-005",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
+          "kind": "swiftTest",
+          "method": "testRetryUsesNewGenerationUiPt006"
+        }
+      ],
       "id": "UI-PT-006",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [],
@@ -1617,14 +1641,26 @@
       "status": "missing"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
+          "kind": "swiftTest",
+          "method": "testIdentityChangeClearsPrivateImageBeforeReplacementUiPt008"
+        }
+      ],
       "id": "UI-PT-008",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
+          "kind": "swiftTest",
+          "method": "testSlowLoadPublishesLoadingThenSuccessUiPt009"
+        }
+      ],
       "id": "UI-PT-009",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
@@ -1643,9 +1679,15 @@
       "status": "missing"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/TargetGeometryTests.swift",
+          "kind": "swiftTest",
+          "method": "testResizeHysteresisSuppressesSmallFluctuationsGeoPt005"
+        }
+      ],
       "id": "UI-PT-012",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
@@ -1659,9 +1701,15 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
+          "kind": "swiftTest",
+          "method": "testRecoveryActionUsesCentralFailureMatrixUiPt014"
+        }
+      ],
       "id": "UI-PT-014",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
