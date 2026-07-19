@@ -8,6 +8,7 @@ public struct PipelineConfiguration: Codable, Hashable, Sendable {
   public let memoryCostLimit: Int
   public let decodeLimits: DecodeLimits
   public let transportRetryPolicy: TransportRetryPolicy
+  public let staleFallbackPolicy: StaleFallbackPolicy
   public let maximumTransportBytes: Int
   public let transportMemoryThreshold: Int
   public let maximumConcurrentFetches: Int
@@ -20,6 +21,7 @@ public struct PipelineConfiguration: Codable, Hashable, Sendable {
     memoryCostLimit: Int = 64 * 1024 * 1024,
     decodeLimits: DecodeLimits = .coreV1,
     transportRetryPolicy: TransportRetryPolicy = .coreV1,
+    staleFallbackPolicy: StaleFallbackPolicy = .disabled,
     maximumTransportBytes: Int = 64 * 1024 * 1024,
     transportMemoryThreshold: Int = 512 * 1024,
     maximumConcurrentFetches: Int = 6,
@@ -31,6 +33,7 @@ public struct PipelineConfiguration: Codable, Hashable, Sendable {
     self.memoryCostLimit = max(1, memoryCostLimit)
     self.decodeLimits = decodeLimits
     self.transportRetryPolicy = transportRetryPolicy
+    self.staleFallbackPolicy = staleFallbackPolicy
     self.maximumTransportBytes = max(1, maximumTransportBytes)
     self.transportMemoryThreshold = max(1, min(transportMemoryThreshold, maximumTransportBytes))
     self.maximumConcurrentFetches = max(1, maximumConcurrentFetches)
@@ -53,6 +56,8 @@ public struct PipelineConfiguration: Codable, Hashable, Sendable {
       fields: [
         transportRetryPolicy.fingerprint,
         "maximumTransportBytes:\(maximumTransportBytes)",
+        "staleFallback.enabled:\(staleFallbackPolicy.isEnabled)",
+        "staleFallback.maximumSeconds:\(staleFallbackPolicy.maximumStalenessSeconds)",
       ]
     )
   }

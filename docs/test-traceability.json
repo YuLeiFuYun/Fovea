@@ -607,9 +607,25 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/StaleFallbackTests.swift",
+          "kind": "swiftTest",
+          "method": "testRetryableNetworkFailureUsesBoundedStaleWithoutRefreshingMetadataErrPt005"
+        },
+        {
+          "file": "Tests/FoveaTests/StaleFallbackTests.swift",
+          "kind": "swiftTest",
+          "method": "testAuthorizationFailureNeverUsesStaleErrPt005"
+        },
+        {
+          "file": "Tests/FoveaTests/StaleFallbackTests.swift",
+          "kind": "swiftTest",
+          "method": "testCorruptStaleBlobIsRemovedAndOriginalFailureSurfacesErrPt005"
+        }
+      ],
       "id": "ERR-PT-005",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [],

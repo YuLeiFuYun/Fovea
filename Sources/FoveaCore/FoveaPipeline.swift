@@ -175,24 +175,91 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       }
     }
 
-    let response = try await fetchStage.response(
-      for: request,
-      conditionalRecord: existing,
-      generation: generation
-    )
-    guard response.head.statusCode == 304 else {
-      return try await process200(
+    do {
+      let response = try await fetchStage.response(
+        for: request,
+        conditionalRecord: existing,
+        generation: generation
+      )
+      guard response.head.statusCode == 304 else {
+        return try await process200(
+          response,
+          request: request,
+          generation: generation
+        )
+      }
+
+      return try await process304(
         response,
+        existing: existing,
         request: request,
         generation: generation
       )
+    } catch let failure as PipelineFailure {
+      if let existing,
+        let stale = try await staleFallback(
+          record: existing,
+          request: request,
+          generation: generation,
+          after: failure
+        )
+      {
+        return stale
+      }
+      throw failure
+    }
+  }
+
+  private func staleFallback(
+    record: RepresentationRecord,
+    request: ImageRequest,
+    generation: NamespaceGeneration,
+    after failure: PipelineFailure
+  ) async throws -> DecodedImage? {
+    let now = await clock.now()
+    guard
+      configuration.staleFallbackPolicy.permits(
+        record: record,
+        at: now,
+        after: failure
+      )
+    else { return nil }
+
+    try Task.checkCancellation()
+    try await requireActive(generation, for: request.namespace)
+    let data: Data
+    do {
+      data = try await cache.read(record, namespace: request.namespace)
+    } catch {
+      await diagnostics.record(
+        DiagnosticEvent(
+          kind: .cacheReadFailed,
+          keyDigest: record.variantKeyDigest,
+          reason: "stale-fallback-read"
+        )
+      )
+      await cache.removeRecord(
+        record.variantKeyDigest,
+        namespace: request.namespace,
+        generation: generation
+      )
+      return nil
     }
 
-    return try await process304(
-      response,
-      existing: existing,
+    await diagnostics.record(
+      DiagnosticEvent(
+        kind: .staleFallbackUsed,
+        keyDigest: record.variantKeyDigest,
+        statusCode: failure.statusCode,
+        byteCount: data.count,
+        reason: failure.reasonCode
+      )
+    )
+    return try await decodeAndCache(
+      data: data,
       request: request,
-      generation: generation
+      generation: generation,
+      keyDigest: record.variantKeyDigest
     )
   }
 

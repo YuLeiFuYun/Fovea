@@ -9,6 +9,7 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
   case fetchRetryScheduled
   case fetchCancelled
   case originalEncodedHit
+  case staleFallbackUsed
   case renderedMemoryHit
   case decodeQueued
   case decodeJoined
