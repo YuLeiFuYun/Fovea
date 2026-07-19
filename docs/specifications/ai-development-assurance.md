@@ -266,7 +266,7 @@ R2/R3 至少使用一类，R3 至少使用三类：
 | **AIQA-MUT-028** | 忽略畸形或冲突的 Content-Length |
 | **AIQA-MUT-029** | 运行期接受非规范 ContentID 字符串 |
 | **AIQA-MUT-030** | 接受硬链接的受管文件或锁 inode |
-| **AIQA-MUT-031** | 路径验证跟随符号链接 |
+| **AIQA-MUT-031** | 将符号链接错误接受为受管目录 |
 | **AIQA-MUT-032** | 在校验 `st_size` 上限前分配 metadata 文件 |
 | **AIQA-MUT-033** | wall clock 回拨时拒绝有限且可保守处理的 record |
 

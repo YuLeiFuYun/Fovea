@@ -167,7 +167,7 @@ def mutant_005(root: Path) -> None:
         "  func process304(",
         "  func process200(",
         "      contentID: existing.contentID,\n",
-        '      contentID: "sha256:\\(String(repeating: \"0\", count: 64)):0",\n',
+        '      contentID: "sha256:\\(String(repeating: \"0\", count: 64)):\\(existing.payloadLength)",\n',
     )
 
 
@@ -423,10 +423,12 @@ def mutant_030(root: Path) -> None:
 
 
 def mutant_031(root: Path) -> None:
-    replace_literal(
+    replace_in_section(
         root / "Sources/AkashicCore/StorageDirectorySecurity.swift",
-        "Darwin.lstat($0, &status)",
-        "Darwin.stat($0, &status)",
+        "  package static func validateDirectory(",
+        "  package static func validateRegularFile(",
+        "    guard fileType == S_IFDIR, status.st_uid == Darwin.geteuid() else {\n",
+        "    guard fileType == S_IFDIR || fileType == S_IFLNK,\n      status.st_uid == Darwin.geteuid()\n    else {\n",
     )
 
 
@@ -477,7 +479,7 @@ MUTANTS = [
     Mutant("AIQA-MUT-028", "Ignore malformed or conflicting Content-Length values.", "Sources/FoveaHTTP/URLSessionTransport.swift", "URLSessionTransportTests/testMalformedOrConflictingContentLengthFailsClosed_HTTP_CONF_CONTENT_LENGTH_001", mutant_028),
     Mutant("AIQA-MUT-029", "Accept a noncanonical runtime content identifier.", "Sources/AkashicDisk/OriginalEncodedStore.swift", "ManifestSemanticValidationTests/testOriginalStoreRejectsNoncanonicalRuntimeContentIDWithoutMutation_SEC_CASE_030", mutant_029),
     Mutant("AIQA-MUT-030", "Accept hard-linked managed files and lock inodes.", "Sources/AkashicCore/StorageDirectorySecurity.swift", "FilesystemLinkDefenseTests/testLockAndManifestHardLinksAreRejected_SEC_CASE_031", mutant_030),
-    Mutant("AIQA-MUT-031", "Follow symbolic links during managed-path validation.", "Sources/AkashicCore/StorageDirectorySecurity.swift", "FilesystemLinkDefenseTests/testManagedDirectoryRejectsSymbolicLink_SEC_CASE_031", mutant_031),
+    Mutant("AIQA-MUT-031", "Accept symbolic links as managed directories.", "Sources/AkashicCore/StorageDirectorySecurity.swift", "FilesystemLinkDefenseTests/testManagedDirectoryRejectsSymbolicLink_SEC_CASE_031", mutant_031),
     Mutant("AIQA-MUT-032", "Allocate metadata files without enforcing the pre-read size bound.", "Sources/AkashicCore/BoundedFileReader.swift", "BoundedMetadataReadTests/testOversizedStoreManifestsFailBeforeUnboundedRead_SEC_CASE_032", mutant_032),
     Mutant("AIQA-MUT-033", "Reject finite records when the wall clock moves backward during a request.", "Sources/FoveaHTTP/RepresentationRecord.swift", "ManifestSemanticValidationTests/testRecordStoreAcceptsFiniteWallClockRollback_HTTP_CONF_AGE_005", mutant_033),
 ]

@@ -198,6 +198,6 @@ AIQA-MUT-027    invalid runtime representation records are accepted
 AIQA-MUT-028    malformed or conflicting Content-Length values are ignored
 AIQA-MUT-029    noncanonical runtime ContentID strings are accepted
 AIQA-MUT-030    hard-linked managed files or lock inodes are accepted
-AIQA-MUT-031    managed-path validation follows symbolic links
+AIQA-MUT-031    symbolic links are accepted as managed directories
 AIQA-MUT-032    metadata files are allocated before enforcing the st_size bound
 AIQA-MUT-033    finite records are rejected when the wall clock moves backward
