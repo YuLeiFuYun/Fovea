@@ -142,7 +142,7 @@ Fail closed 不等于拒绝显示：请求仍可作为 task-local、不可复用
 
 ## 7. 并发与刷新
 
-- 同一授权上下文的 refresh 应 single-flight，防止多个 401 同时刷新；
+- 同一授权上下文的 refresh 应 single-flight，防止多个 401 同时刷新；调用者取消只终止自身等待，已启动刷新在短暂零订阅者交接窗口内继续运行，供同一旧代际的迟到 401 复用；
 - 每个 fetch 最多触发一次显式 refresh cycle；
 - refresh 完成后生成新 CredentialGeneration 和 FetchExecutionKey；
 - refresh 期间 namespace 被撤销时立即终止，不再重试；

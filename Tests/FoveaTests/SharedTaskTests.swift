@@ -29,6 +29,33 @@ final class SharedTaskTests: XCTestCase {
     await survivor.cancel()
   }
 
+  func testDetachedSubscriberLeavesTaskAvailableForLateHandoff() async throws {
+    let registry = SharedTaskRegistry<String, Int>()
+    let gate = HandoffOperationGate()
+    let first = await registry.subscribe(key: "refresh-handoff") {
+      try await gate.run()
+    }
+    await gate.waitUntilStarted()
+
+    await first.detach()
+    let subscribersDuringHandoff = await registry.subscriberCount(for: "refresh-handoff")
+    let cancellationsDuringHandoff = await registry.cancellationCount(for: "refresh-handoff")
+    XCTAssertEqual(subscribersDuringHandoff, 0)
+    XCTAssertEqual(cancellationsDuringHandoff, 0)
+
+    let second = await registry.subscribe(key: "refresh-handoff") { 99 }
+    XCTAssertTrue(second.wasJoined)
+    await gate.release()
+
+    let value = try await second.value()
+    let operationCount = await gate.operationCount
+    let wasCancelled = await gate.wasCancelled
+    XCTAssertEqual(value, 42)
+    XCTAssertEqual(operationCount, 1)
+    XCTAssertFalse(wasCancelled)
+    await second.detach()
+  }
+
   func testLastSubscriberCancelsUnderlyingTaskOnce_SCHED_PT_004() async throws {
     let registry = SharedTaskRegistry<FetchExecutionKey, Int>()
     let key = makeKey("https://example.com/a")
@@ -105,4 +132,46 @@ private actor OperationCounter {
   private var count = 0
   func increment() { count += 1 }
   func value() -> Int { count }
+}
+
+private actor HandoffOperationGate {
+  private(set) var operationCount = 0
+  private(set) var wasCancelled = false
+  private var started = false
+  private var released = false
+  private var startWaiters: [CheckedContinuation<Void, Never>] = []
+  private var releaseWaiters: [CheckedContinuation<Void, Never>] = []
+
+  func run() async throws -> Int {
+    operationCount += 1
+    started = true
+    for waiter in startWaiters { waiter.resume() }
+    startWaiters.removeAll()
+    await withTaskCancellationHandler {
+      if !released {
+        await withCheckedContinuation { releaseWaiters.append($0) }
+      }
+    } onCancel: {
+      Task { await self.cancelled() }
+    }
+    try Task.checkCancellation()
+    return 42
+  }
+
+  func waitUntilStarted() async {
+    if started { return }
+    await withCheckedContinuation { startWaiters.append($0) }
+  }
+
+  func release() {
+    released = true
+    for waiter in releaseWaiters { waiter.resume() }
+    releaseWaiters.removeAll()
+  }
+
+  private func cancelled() {
+    wasCancelled = true
+    for waiter in releaseWaiters { waiter.resume() }
+    releaseWaiters.removeAll()
+  }
 }

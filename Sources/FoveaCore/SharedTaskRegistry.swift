@@ -116,18 +116,24 @@ package actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
     )
   }
 
-  package func release(key: Key, subscriberID: UUID) async {
+  package func release(
+    key: Key,
+    subscriberID: UUID,
+    cancelTaskWhenUnused: Bool = true
+  ) async {
     guard var entry = entries[key], entry.subscribers.removeValue(forKey: subscriberID) != nil
     else { return }
-    if entry.subscribers.isEmpty {
+    if entry.subscribers.isEmpty, cancelTaskWhenUnused {
       entry.task.cancel()
       cancellationCounts[key, default: 0] += 1
       entries.removeValue(forKey: key)
       await entry.priorityControl.finish()
     } else {
-      let effective = Self.effectivePriority(entry.subscribers)
       entries[key] = entry
-      await entry.priorityControl.update(effective)
+      if !entry.subscribers.isEmpty {
+        let effective = Self.effectivePriority(entry.subscribers)
+        await entry.priorityControl.update(effective)
+      }
     }
   }
 
@@ -196,6 +202,15 @@ package struct SharedTaskSubscription<Key: Hashable & Sendable, Value: Sendable>
 
   package func cancel() async {
     await registry.release(key: key, subscriberID: subscriberID)
+  }
+
+  /// 终止当前订阅者的等待，但保留已启动的共享任务，允许后续订阅者完成交接。
+  package func detach() async {
+    await registry.release(
+      key: key,
+      subscriberID: subscriberID,
+      cancelTaskWhenUnused: false
+    )
   }
 }
 

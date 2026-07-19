@@ -82,10 +82,10 @@ private actor CredentialRefreshCoordinator {
       do {
         let result = try await subscription.value()
         try Task.checkCancellation()
-        await subscription.cancel()
+        await subscription.detach()
         return result
       } catch {
-        await subscription.cancel()
+        await subscription.detach()
         if error is CancellationError {
           throw PipelineFailure.cancelled(stage: .requestValidation)
         }
@@ -93,7 +93,7 @@ private actor CredentialRefreshCoordinator {
         throw PipelineFailure.authorization(reasonCode: "credential-refresh-failed")
       }
     } onCancel: {
-      Task { await subscription.cancel() }
+      Task { await subscription.detach() }
     }
   }
 
