@@ -86,7 +86,10 @@ final class PipelineFailureTests: XCTestCase {
 
   func testHTTPStatusDispositionIsStable() async throws {
     let (pipeline, _, _, _) = try await makePipeline(
-      stubs: [.init(statusCode: 503, headers: [:], body: Data())]
+      stubs: [.init(statusCode: 503, headers: [:], body: Data())],
+      configuration: PipelineConfiguration(
+        transportRetryPolicy: TransportRetryPolicy(maximumAttempts: 1)
+      )
     )
     let request = try ImageRequest.publicImage(
       url: try XCTUnwrap(URL(string: "https://example.test/unavailable.png")),

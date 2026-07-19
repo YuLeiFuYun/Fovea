@@ -149,12 +149,17 @@ public struct ImageRequest: Sendable {
   }
 
   public var fetchExecutionKey: FetchExecutionKey {
-    fetchExecutionKey(selectedVariant: nil, revalidationFingerprint: "unconditional")
+    fetchExecutionKey(
+      selectedVariant: nil,
+      revalidationFingerprint: "unconditional",
+      transportPolicyFingerprint: "request-default-v1"
+    )
   }
 
   package func fetchExecutionKey(
     selectedVariant: FetchVariantKey?,
-    revalidationFingerprint: String
+    revalidationFingerprint: String,
+    transportPolicyFingerprint: String = "request-default-v1"
   ) -> FetchExecutionKey {
     FetchExecutionKey(
       base: fetchBaseKey,
@@ -163,7 +168,8 @@ public struct ImageRequest: Sendable {
       requestHeaderFingerprint: exactRequestHeaderFingerprint,
       credentialGeneration: credentialGeneration,
       revalidationFingerprint: revalidationFingerprint,
-      transportPolicyFingerprint: credentialExecutionFingerprint
+      transportPolicyFingerprint:
+        "\(credentialExecutionFingerprint)|\(transportPolicyFingerprint)"
     )
   }
 

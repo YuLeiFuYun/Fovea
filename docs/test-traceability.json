@@ -585,16 +585,22 @@
       "status": "missing"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/RetryPolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testSubscriberJoinDoesNotResetRetryBudgetErrPt003"
+        }
+      ],
       "id": "ERR-PT-003",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
         {
-          "file": "Tests/FoveaTests/PipelineTests.swift",
+          "file": "Tests/FoveaTests/RetryPolicyTests.swift",
           "kind": "swiftTest",
-          "method": "testCancellationDuringDecodeDoesNotCommitCache"
+          "method": "testCancellationDuringBackoffStopsFurtherAttemptsErrPt004"
         }
       ],
       "id": "ERR-PT-004",
@@ -611,14 +617,26 @@
       "status": "missing"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/StagingAndStorageTests.swift",
+          "kind": "swiftTest",
+          "method": "testCacheWriteFailureDoesNotOverrideFinal_ERR_PT_001"
+        }
+      ],
       "id": "ERR-PT-007",
-      "status": "missing"
+      "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/DiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testSlowExternalSinkCannotDelayImageDelivery_DIAG_PT_003"
+        }
+      ],
       "id": "ERR-PT-008",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
@@ -643,9 +661,15 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
+          "kind": "swiftTest",
+          "method": "testRecoveryActionUsesCentralFailureMatrixUiPt014"
+        }
+      ],
       "id": "ERR-PT-011",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [

@@ -57,6 +57,31 @@ package enum HTTPCachePolicy {
     return responseTime.addingTimeInterval(min(remaining, representable))
   }
 
+  package static func retryAfterNanoseconds(
+    in headers: [String: String],
+    now: Date,
+    maximum: UInt64
+  ) -> UInt64? {
+    guard
+      let raw = header("Retry-After", in: headers)?
+        .trimmingCharacters(in: .whitespacesAndNewlines),
+      !raw.isEmpty
+    else { return nil }
+
+    let seconds: TimeInterval?
+    if let numeric = TimeInterval(raw), numeric.isFinite, numeric >= 0 {
+      seconds = numeric
+    } else if let date = HTTPDateParser.date(from: raw) {
+      seconds = max(0, date.timeIntervalSince(now))
+    } else {
+      seconds = nil
+    }
+    guard let seconds else { return nil }
+    let nanoseconds = seconds * 1_000_000_000
+    guard nanoseconds.isFinite, nanoseconds >= 0 else { return maximum }
+    return min(maximum, UInt64(min(nanoseconds, Double(UInt64.max))))
+  }
+
   package static func responseDate(in headers: [String: String]) -> Date? {
     header("Date", in: headers).flatMap(HTTPDateParser.date)
   }

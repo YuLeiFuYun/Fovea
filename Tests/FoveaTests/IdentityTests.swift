@@ -378,6 +378,26 @@ final class IdentityTests: XCTestCase {
     XCTAssertNotEqual(unconditional.digestHex, conditional.digestHex)
   }
 
+  func testTransportRetryPolicyChangesExactExecutionIdentityPipePt002() throws {
+    let request = try ImageRequest.publicImage(
+      url: try XCTUnwrap(URL(string: "https://example.test/retry-policy-identity.png")),
+      target: try TargetPixels(width: 20, height: 20),
+      appID: "tests"
+    )
+    let first = request.fetchExecutionKey(
+      selectedVariant: nil,
+      revalidationFingerprint: "unconditional",
+      transportPolicyFingerprint: TransportRetryPolicy(maximumAttempts: 1).fingerprint
+    )
+    let second = request.fetchExecutionKey(
+      selectedVariant: nil,
+      revalidationFingerprint: "unconditional",
+      transportPolicyFingerprint: TransportRetryPolicy(maximumAttempts: 3).fingerprint
+    )
+
+    XCTAssertNotEqual(first, second)
+  }
+
   func testTargetChangesDisplayIdentityWithoutChangingFetchIdentity() throws {
     let url = try XCTUnwrap(URL(string: "https://example.com/target.png"))
     let small = try ImageRequest.publicImage(

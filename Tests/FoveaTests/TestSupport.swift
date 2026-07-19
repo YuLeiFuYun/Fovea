@@ -65,6 +65,7 @@ func makePipeline(
   stubs: [FakeHTTPTransport.Stub],
   root: URL? = nil,
   namespaceRegistry: NamespaceRegistry = NamespaceRegistry(),
+  configuration: PipelineConfiguration = PipelineConfiguration(),
   softLimitBytes: Int = 8 * 1024 * 1024,
   diagnostics: any DiagnosticsSink = NullDiagnosticsSink()
 ) async throws -> (
@@ -77,6 +78,7 @@ func makePipeline(
   let records = try await RepresentationRecordStore.open(
     root: root.appendingPathComponent("records"))
   let pipeline = FoveaPipeline(
+    configuration: configuration,
     transport: transport,
     encodedStore: encoded,
     recordStore: records,

@@ -29,7 +29,9 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       namespaceRegistry: NamespaceRegistry(),
       diagnostics: diagnostics,
       decoder: decoder,
-      clock: SystemWallClock()
+      clock: SystemWallClock(),
+      retrySleeper: SystemRetrySleeper(),
+      retryJitter: SystemRetryJitter()
     )
   }
 
@@ -42,7 +44,9 @@ public final class FoveaPipeline: ImageLoading, Sendable {
     namespaceRegistry: NamespaceRegistry,
     diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
     decoder: any ImageDecoding,
-    clock: any WallClock = SystemWallClock()
+    clock: any WallClock = SystemWallClock(),
+    retrySleeper: any RetrySleeping = SystemRetrySleeper(),
+    retryJitter: any RetryJittering = SystemRetryJitter()
   ) {
     let diagnostics = pipelineDiagnosticsSink(diagnostics)
     self.namespaceRegistry = namespaceRegistry
@@ -60,7 +64,9 @@ public final class FoveaPipeline: ImageLoading, Sendable {
       transport: transport,
       diagnostics: diagnostics,
       clock: clock,
-      namespaceRegistry: namespaceRegistry
+      namespaceRegistry: namespaceRegistry,
+      retrySleeper: retrySleeper,
+      retryJitter: retryJitter
     )
     self.decodeStage = DecodeStage(
       decoder: decoder,

@@ -2,6 +2,7 @@ import ImageCraftCore
 
 public struct PipelineConfiguration: Sendable {
   public let decodeLimits: DecodeLimits
+  public let transportRetryPolicy: TransportRetryPolicy
   public let maximumTransportBytes: Int
   public let transportMemoryThreshold: Int
   public let maximumConcurrentFetches: Int
@@ -11,6 +12,7 @@ public struct PipelineConfiguration: Sendable {
 
   public init(
     decodeLimits: DecodeLimits = .coreV1,
+    transportRetryPolicy: TransportRetryPolicy = .coreV1,
     maximumTransportBytes: Int = 64 * 1024 * 1024,
     transportMemoryThreshold: Int = 512 * 1024,
     maximumConcurrentFetches: Int = 6,
@@ -19,11 +21,16 @@ public struct PipelineConfiguration: Sendable {
     maximumQueuedDecodes: Int = 512
   ) {
     self.decodeLimits = decodeLimits
+    self.transportRetryPolicy = transportRetryPolicy
     self.maximumTransportBytes = max(1, maximumTransportBytes)
     self.transportMemoryThreshold = max(1, min(transportMemoryThreshold, maximumTransportBytes))
     self.maximumConcurrentFetches = max(1, maximumConcurrentFetches)
     self.maximumConcurrentDecodes = max(1, maximumConcurrentDecodes)
     self.maximumQueuedFetches = max(0, maximumQueuedFetches)
     self.maximumQueuedDecodes = max(0, maximumQueuedDecodes)
+  }
+
+  package var transportPolicyFingerprint: String {
+    "transport-v1|\(transportRetryPolicy.fingerprint)|max-bytes:\(maximumTransportBytes)"
   }
 }

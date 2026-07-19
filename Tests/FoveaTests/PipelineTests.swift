@@ -65,6 +65,9 @@ final class PipelineTests: XCTestCase {
       )
     )
     let pipeline = FoveaPipeline(
+      configuration: PipelineConfiguration(
+        transportRetryPolicy: TransportRetryPolicy(maximumAttempts: 1)
+      ),
       transport: transport,
       encodedStore: encoded,
       recordStore: records,

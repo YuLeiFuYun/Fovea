@@ -6,6 +6,7 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
   case fetchStarted
   case fetchJoined
   case fetchCompleted
+  case fetchRetryScheduled
   case fetchCancelled
   case originalEncodedHit
   case renderedMemoryHit
@@ -22,7 +23,7 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
 }
 
 public struct DiagnosticEvent: Codable, Hashable, Sendable {
-  public static let currentSchemaVersion: UInt16 = 1
+  public static let currentSchemaVersion: UInt16 = 2
 
   public let schemaVersion: UInt16
   public let kind: DiagnosticEventKind
@@ -34,6 +35,8 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
   public let targetWidth: Int?
   public let targetHeight: Int?
   public let reason: String?
+  public let attempt: Int?
+  public let retryDelayNanoseconds: UInt64?
   public let requestedPriority: ImageRequestPriority?
   public let effectivePriority: ImageRequestPriority?
   public let failureCategory: PipelineFailure.Category?
@@ -51,6 +54,8 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
     targetWidth: Int? = nil,
     targetHeight: Int? = nil,
     reason: String? = nil,
+    attempt: Int? = nil,
+    retryDelayNanoseconds: UInt64? = nil,
     requestedPriority: ImageRequestPriority? = nil,
     effectivePriority: ImageRequestPriority? = nil,
     failureCategory: PipelineFailure.Category? = nil,
@@ -67,6 +72,8 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
     self.targetWidth = targetWidth
     self.targetHeight = targetHeight
     self.reason = reason
+    self.attempt = attempt
+    self.retryDelayNanoseconds = retryDelayNanoseconds
     self.requestedPriority = requestedPriority
     self.effectivePriority = effectivePriority
     self.failureCategory = failureCategory
@@ -86,6 +93,8 @@ public struct DiagnosticEvent: Codable, Hashable, Sendable {
       targetWidth: targetWidth,
       targetHeight: targetHeight,
       reason: reason,
+      attempt: attempt,
+      retryDelayNanoseconds: retryDelayNanoseconds,
       requestedPriority: requestedPriority,
       effectivePriority: effectivePriority,
       failureCategory: failureCategory,

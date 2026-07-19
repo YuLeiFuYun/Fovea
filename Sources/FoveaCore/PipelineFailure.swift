@@ -158,19 +158,31 @@ public struct PipelineFailure: Error, Equatable, Hashable, Codable, Sendable {
 
     if let urlError = error as? URLError {
       if urlError.code == .cancelled { return cancelled(stage: .transport) }
+      let retryableCodes: Set<URLError.Code> = [
+        .timedOut,
+        .cannotFindHost,
+        .cannotConnectToHost,
+        .networkConnectionLost,
+        .dnsLookupFailed,
+        .notConnectedToInternet,
+        .resourceUnavailable,
+        .backgroundSessionWasDisconnected,
+      ]
       return PipelineFailure(
         category: .transport,
         stage: .transport,
-        disposition: .retryable,
-        reasonCode: "url-session-transport"
+        disposition: retryableCodes.contains(urlError.code) ? .retryable : .terminal,
+        reasonCode: retryableCodes.contains(urlError.code)
+          ? "url-session-transport"
+          : "url-session-terminal"
       )
     }
 
     return PipelineFailure(
       category: .transport,
       stage: .transport,
-      disposition: .retryable,
-      reasonCode: "transport-failure"
+      disposition: .terminal,
+      reasonCode: "unclassified-transport-failure"
     )
   }
 
