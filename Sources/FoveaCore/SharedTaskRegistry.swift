@@ -94,17 +94,26 @@ package actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
 
     let taskID = UUID()
     let priorityControl = SharedTaskPriorityControl(priority: priority)
-    let task = Task { @concurrent in try await operation(priorityControl) }
+    let startGate = SharedTaskStartGate()
+    let task = Task { @concurrent [weak self] in
+      await startGate.wait()
+      do {
+        try Task.checkCancellation()
+        let value = try await operation(priorityControl)
+        await self?.completed(key: key, taskID: taskID)
+        return value
+      } catch {
+        await self?.completed(key: key, taskID: taskID)
+        throw error
+      }
+    }
     entries[key] = Entry(
       taskID: taskID,
       task: task,
       priorityControl: priorityControl,
       subscribers: [subscriberID: priority]
     )
-    Task { [task] in
-      _ = await task.result
-      await self.completed(key: key, taskID: taskID)
-    }
+    await startGate.open()
     return SharedTaskSubscription(
       key: key,
       taskID: taskID,
@@ -211,6 +220,25 @@ package struct SharedTaskSubscription<Key: Hashable & Sendable, Value: Sendable>
       subscriberID: subscriberID,
       cancelTaskWhenUnused: false
     )
+  }
+}
+
+private actor SharedTaskStartGate {
+  private var isOpen = false
+  private var waiters: [CheckedContinuation<Void, Never>] = []
+
+  func wait() async {
+    guard !isOpen else { return }
+    await withCheckedContinuation { continuation in
+      waiters.append(continuation)
+    }
+  }
+
+  func open() {
+    guard !isOpen else { return }
+    isOpen = true
+    for waiter in waiters { waiter.resume() }
+    waiters.removeAll(keepingCapacity: false)
   }
 }
 

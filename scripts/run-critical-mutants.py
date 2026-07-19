@@ -549,6 +549,16 @@ def mutant_043(root: Path) -> None:
     )
 
 
+def mutant_044(root: Path) -> None:
+    replace_in_section(
+        root / "Sources/FoveaCore/SharedTaskRegistry.swift",
+        "    let task = Task { @concurrent [weak self] in",
+        "    entries[key] = Entry(",
+        "        await self?.completed(key: key, taskID: taskID)\n        return value\n",
+        "        return value\n",
+    )
+
+
 MUTANTS = [
     Mutant("AIQA-MUT-001", "Omit namespace from persistent base identity.", "Sources/FoveaCore/Identity.swift", "IdentityTests/testNamespaceChangesBaseAndVariantIdentity_CACHE_PT_003", mutant_001),
     Mutant("AIQA-MUT-002", "Collapse exact fetch execution identity to base-only dimensions.", "Sources/FoveaCore/ImageRequest.swift", "IdentityTests/testImageRequestExecutionKeyIncludesCredentialAndRevalidation", mutant_002),
@@ -593,6 +603,7 @@ MUTANTS = [
     Mutant("AIQA-MUT-041", "Allow HTTPS redirects to downgrade to remote cleartext HTTP.", "Sources/FoveaHTTP/HTTPRedirectPolicy.swift", "URLSessionTransportTests/testRedirectPolicyRejectsRemoteCleartextAndAllowsLoopback_SEC_CASE_033", mutant_041),
     Mutant("AIQA-MUT-042", "Omit decode working-set budget from the full configuration fingerprint.", "Sources/FoveaCore/PipelineConfiguration.swift", "PipelineConfigurationTests/testWorkingSetBudgetIsOperationalAndChangesFullFingerprint_PIPE_PT_010", mutant_042),
     Mutant("AIQA-MUT-043", "Make the official system composition root unrestricted by default.", "Sources/FoveaSystem/FoveaSystemPipeline.swift", "FoveaSystemPipelineTests/testSystemCompositionDefaultsToPublicOnly_AUTH_PT_014", mutant_043),
+    Mutant("AIQA-MUT-044", "Publish a shared task result before removing its completed registry entry.", "Sources/FoveaCore/SharedTaskRegistry.swift", "SharedTaskTests/testCompletedTaskCannotBeJoinedByNewSubscriber_SCHED_PT_015", mutant_044),
 ]
 
 

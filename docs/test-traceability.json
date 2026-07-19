@@ -555,6 +555,16 @@
     {
       "evidence": [
         {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-044",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Tests/FoveaTests/IdentityTests.swift",
           "kind": "swiftTest",
           "method": "testCredentialRefreshChangesExecutionButNotBaseOrVariant_AUTH_PT_001"
@@ -2292,6 +2302,17 @@
         }
       ],
       "id": "SCHED-PT-014",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SharedTaskTests.swift",
+          "kind": "swiftTest",
+          "method": "testCompletedTaskCannotBeJoinedByNewSubscriber_SCHED_PT_015"
+        }
+      ],
+      "id": "SCHED-PT-015",
       "status": "implemented"
     },
     {

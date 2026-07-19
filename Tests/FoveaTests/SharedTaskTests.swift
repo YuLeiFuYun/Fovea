@@ -170,7 +170,7 @@ final class SharedTaskTests: XCTestCase {
     XCTAssertLessThanOrEqual(cancellationCount, 1)
   }
 
-  func testCompletedTaskCannotBeJoinedByNewSubscriber() async throws {
+  func testCompletedTaskCannotBeJoinedByNewSubscriber_SCHED_PT_015() async throws {
     let registry = SharedTaskRegistry<FetchExecutionKey, Int>()
     let key = makeKey("https://example.com/terminal")
     let counter = OperationCounter()
@@ -185,6 +185,7 @@ final class SharedTaskTests: XCTestCase {
       await counter.increment()
       return 2
     }
+    XCTAssertFalse(second.wasJoined)
     _ = try await second.value()
     let operationCount = await counter.value()
     XCTAssertEqual(operationCount, 2)

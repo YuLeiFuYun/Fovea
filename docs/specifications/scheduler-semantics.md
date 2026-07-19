@@ -159,4 +159,5 @@ v1 只对幂等 GET 的明确瞬态 transport error 做有限重试；统一 dis
 - **SCHED-PT-011**: permit 等待中取消不泄漏资源；
 - **SCHED-PT-012**: 同级任务和不同 pipeline/namespace 不永久饥饿；
 - **SCHED-PT-013**: 某 subscriber 取消后立即结束自身等待，不等待共享底层任务完成；其他 subscriber 和底层任务不受影响；
-- **SCHED-PT-014**: 固定种子生成的多订阅者退出序列中，subscriber count、effective priority、底层 operation 次数与最终 cancellation 次数始终满足不变量，并可由 seed 重放。
+- **SCHED-PT-014**: 固定种子生成的多订阅者退出序列中，subscriber count、effective priority、底层 operation 次数与最终 cancellation 次数始终满足不变量，并可由 seed 重放；
+- **SCHED-PT-015**: 底层共享任务完成后，registry entry 必须先按 taskID 清理，再向订阅者发布结果；后续订阅不得加入已完成任务。

@@ -279,6 +279,7 @@ R2/R3 至少使用一类，R3 至少使用三类：
 | **AIQA-MUT-041** | 允许 HTTPS redirect 降级到远程明文 HTTP |
 | **AIQA-MUT-042** | 从 full configuration fingerprint 删除 decode working-set 预算 |
 | **AIQA-MUT-043** | 官方系统组合根默认放开全部 profile |
+| **AIQA-MUT-044** | 已完成共享任务在 registry 清理前发布结果 |
 
 新增关键不变量时必须同步新增 mutant、活动规格 ID 和 traceability evidence。通过大量无关 mutant 获得高 mutation percentage 不能替代上述目录全部被杀死。
 

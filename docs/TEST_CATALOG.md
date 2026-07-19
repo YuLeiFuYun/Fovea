@@ -217,6 +217,7 @@ AIQA-MUT-040    remote cleartext HTTP is accepted as a normal image source
 AIQA-MUT-041    HTTPS redirect is allowed to downgrade to remote cleartext HTTP
 AIQA-MUT-042    decode working-set budget disappears from the full configuration fingerprint
 AIQA-MUT-043    official system composition defaults to unrestricted profile access
+AIQA-MUT-044    completed shared-task result is published before registry cleanup
 
 DEMO-PT-001       opt-in public HTTPS lab emits commit-bound invariant report
 DEMO-PT-002       Gallery and Network Lab build; Network Lab refuses implicit networking
