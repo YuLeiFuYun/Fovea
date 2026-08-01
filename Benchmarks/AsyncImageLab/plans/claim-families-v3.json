@@ -1,0 +1,70 @@
+{
+  "comparators": [
+    "Apple AsyncImage",
+    "Fovea"
+  ],
+  "families": [
+    {
+      "id": "CLAIM-SWIFTUI-W1-EXPERIENCE",
+      "primaryEndpoints": [
+        "main-thread-hitch-time",
+        "peak-dirty-memory"
+      ],
+      "secondaryEndpoints": [
+        "origin-request-count",
+        "origin-stopped-count",
+        "visible-success-count"
+      ],
+      "workloadIDs": [
+        "W1-SCROLL-V1"
+      ]
+    },
+    {
+      "id": "CLAIM-SWIFTUI-W2-HERO",
+      "primaryEndpoints": [
+        "hero-display-latency",
+        "peak-dirty-memory"
+      ],
+      "secondaryEndpoints": [
+        "main-thread-hitch-time",
+        "origin-delivered-bytes"
+      ],
+      "workloadIDs": [
+        "W2-HERO-V1"
+      ]
+    },
+    {
+      "id": "CLAIM-SWIFTUI-W10-IDENTITY",
+      "primaryEndpoints": [
+        "stale-success-count",
+        "visible-success-latency",
+        "main-thread-hitch-time"
+      ],
+      "secondaryEndpoints": [
+        "origin-request-count",
+        "origin-stopped-count",
+        "peak-dirty-memory"
+      ],
+      "workloadIDs": [
+        "W10-SWIFTUI-IDENTITY-CHURN-V1"
+      ]
+    }
+  ],
+  "registryID": "FOVEA-SWIFTUI-SURFACE-CLAIMS-V3",
+  "rules": {
+    "commonEndpointsOnly": true,
+    "formalResamplingUnit": "paired-run-session",
+    "minimumSimulatorPairedBlocks": 5,
+    "missingMetric": "not-comparable-not-zero",
+    "multiplicity": "holm-within-surface-family",
+    "pairedBlockCacheIsolation": "fresh-app-container-and-shared-run-nonce",
+    "samplerArming": "after-inert-root-three-frame-warmup",
+    "simulator": "calibration-only",
+    "simulatorCalibrationUnit": "paired-block",
+    "visibleSuccessBoundary": "rendered-success-view-onAppear"
+  },
+  "schemaVersion": 3,
+  "sourcePlan": "Benchmarks/AsyncImageLab/experiment-plan.json",
+  "status": "preregistered-after-v3-cache-isolation-audit-before-v4-results",
+  "supersedes": "Benchmarks/AsyncImageLab/plans/claim-families-v2.json"
+}

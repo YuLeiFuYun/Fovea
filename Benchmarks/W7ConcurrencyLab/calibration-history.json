@@ -1,0 +1,123 @@
+{
+  "claimBoundary": "All entries are Simulator calibration or benchmark-design counterexamples. None is formal physical-device performance evidence or release-claim evidence.",
+  "historyID": "FOVEA-W7-CALIBRATION-HISTORY-V1",
+  "schemaVersion": 1,
+  "versions": [
+    {
+      "archive": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v1.json",
+      "facts": {
+        "foveaHardFailures": 0,
+        "foveaImmediateToBackgroundP95RatioApprox": 3.78,
+        "foveaPeakThreads": 14
+      },
+      "finding": "Grouped background-first arrivals confounded priority with age and anti-starvation reservation.",
+      "planID": "FOVEA-W7-CONCURRENCY-V1",
+      "status": "archived-calibration-design-confound"
+    },
+    {
+      "archive": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v2.json",
+      "facts": {
+        "boundedPipelineDurationSecondsApprox": 12.0,
+        "kingfisherPriorityBurstDurationSecondsApprox": 0.3
+      },
+      "finding": "Custom URLProtocol bypassed URLSession host connection limits; effective origin concurrency was not equalized.",
+      "planID": "FOVEA-W7-CONCURRENCY-V2",
+      "status": "archived-calibration-service-curve-invalid"
+    },
+    {
+      "archive": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v3.json",
+      "facts": {
+        "boundedClientFetchSlots": 6,
+        "originSlots": 8
+      },
+      "finding": "Origin concurrency was bounded, but configurable client admission budgets still differed and absolute thread peaks included different baselines.",
+      "planID": "FOVEA-W7-CONCURRENCY-V3",
+      "status": "archived-calibration-client-budget-unequal"
+    },
+    {
+      "archive": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v4.json",
+      "facts": {
+        "alamofireImageBaselineThreads": 33,
+        "alamofireImagePeakThreads": 34,
+        "alamofireImageThreadDelta": 1,
+        "foveaBaselineThreads": 9,
+        "foveaPeakThreads": 14,
+        "foveaThreadDelta": 5
+      },
+      "finding": "Peak-minus-baseline thread delta rewarded eager baseline thread creation and finite completion did not directly bound starvation.",
+      "planID": "FOVEA-W7-CONCURRENCY-V4",
+      "status": "archived-calibration-resource-metric-invalid"
+    },
+    {
+      "claimFamilyDigest": "292c26332fb9b4a5476d512b6d45bc4e67c99ff0cd3899444b750707105bc023",
+      "experimentPlanDigest": "80422daed251aebf515a60875602f7bfb7f80db7920dd564ed98caab9ecbdc16",
+      "facts": {
+        "AlamofireImage": {
+          "absolutePeakThreads": 19,
+          "backgroundProbeNewerBypasses": 0,
+          "hardFailures": [],
+          "p99LogicalLatencyNanoseconds": 8782089625
+        },
+        "Fovea": {
+          "absolutePeakThreads": 14,
+          "backgroundProbeNewerBypasses": 8,
+          "hardFailures": [],
+          "p99LogicalLatencyNanoseconds": 8818012375,
+          "postCancellationBytes": 0,
+          "sharedOriginRequests": 16
+        },
+        "Kingfisher": {
+          "absolutePeakThreads": 34,
+          "backgroundProbeNewerBypasses": 0,
+          "hardFailures": [],
+          "p99LogicalLatencyNanoseconds": 8530713000
+        },
+        "Nuke": {
+          "absolutePeakThreads": 11,
+          "backgroundProbeNewerBypasses": 31,
+          "hardFailures": [
+            "background-probe-bypass-bound"
+          ],
+          "p99LogicalLatencyNanoseconds": 8707579875
+        },
+        "SDWebImage": {
+          "absolutePeakThreads": 32,
+          "hardFailures": [
+            "cancelled-subscriber-count-exact",
+            "failed-load-count-zero"
+          ],
+          "p99LogicalLatencyNanoseconds": 8871540792
+        }
+      },
+      "planID": "FOVEA-W7-CONCURRENCY-V5",
+      "sourceIdentity": {
+        "commit": "7768ed083eee9c54ad86b7124a96f73a202d4c65",
+        "includesWorkingTreeChanges": true,
+        "sourceTreeDigest": "4bb1d595510348d34e711b3694c595db134231cb3ba3e06eaba7e385560ff1a2"
+      },
+      "status": "active-simulator-calibration-formal-not-run"
+    },
+    {
+      "archive": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v6.json",
+      "claimFamilyDigest": "b8a331f2929c42d5c475e2efcf8f6adb43124e31de0c1a5b5d085ac5dd7d0954",
+      "experimentPlanDigest": "8943cfa96d1fadfcca05a9da15cc778161bd99be6b91ec0b7f109f22c4b4ce16",
+      "facts": {
+        "clientConcurrentFetchBudget": 8,
+        "foveaCancellationSubscribers": 256,
+        "foveaCompletedSubscribers": 744,
+        "foveaFailedLoads": 0,
+        "foveaObservedOriginStartBypasses": 9,
+        "foveaOriginPeakConcurrency": 8,
+        "internalMaximumGrantBypasses": 8
+      },
+      "finding": "The eight-bypass client scheduler bound was incorrectly applied directly to black-box origin start order. A background request admitted after the eighth newer grant was observed after nine newer origin starts because already-admitted concurrent URLSession work can reorder before reaching the origin.",
+      "planID": "FOVEA-W7-CONCURRENCY-V6",
+      "sourceIdentity": {
+        "commit": "7768ed083eee9c54ad86b7124a96f73a202d4c65",
+        "includesWorkingTreeChanges": true,
+        "sourceTreeDigest": "da713ece5b32ca5a8ea55de4d041b4987dd30d08f5f2e5e440b947981a435207"
+      },
+      "status": "archived-calibration-observable-bound-invalid"
+    }
+  ]
+}

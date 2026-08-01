@@ -1,0 +1,63 @@
+name: Fovea Live Network Lab
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-network-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live-network:
+    runs-on: xcode-27
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          VERIFIED_COMMIT: ${{ github.sha }}
+        run: |
+          set -eu
+          git init .
+          git remote add origin "https://github.com/${REPOSITORY}.git"
+          basic=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64)
+          git -c http.extraHeader="AUTHORIZATION: basic $basic" \
+            fetch --no-tags --depth=1 origin "$VERIFIED_COMMIT"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$VERIFIED_COMMIT"
+
+      - name: Run public HTTPS laboratory
+        run: scripts/run-live-network-lab.py --timeout 240
+
+      - name: Summarize artifact
+        if: always()
+        run: |
+          report=.artifacts/live-network/network-lab.json
+          if test -f "$report"; then
+            digest=$(shasum -a 256 "$report" | awk '{ print $1 }')
+            python3 - "$report" "$digest" >> "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import sys
+
+          path, digest = sys.argv[1:]
+          report = json.load(open(path))
+          lab = report.get("lab") or {}
+          cases = lab.get("cases") or []
+          print("## Fovea Live Network Lab")
+          print()
+          print(f"- Status: `{report.get('status', 'missing')}`")
+          print(f"- Verified commit: `{report.get('verifiedCommit', 'missing')}`")
+          print(f"- Attempts: `{len(report.get('attempts') or [])}`")
+          print(f"- Cases: `{len(cases)}`")
+          print(f"- Expectations satisfied: `{bool(lab.get('allExpectationsSatisfied'))}`")
+          print(f"- Invariants satisfied: `{bool(lab.get('allInvariantsSatisfied'))}`")
+          print(f"- Report SHA-256: `{digest}`")
+          print("- Per-origin labels, protocol paths, and timing metrics are intentionally omitted from the public summary.")
+          PY
+          fi

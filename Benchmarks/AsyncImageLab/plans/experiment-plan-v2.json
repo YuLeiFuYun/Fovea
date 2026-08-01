@@ -1,0 +1,108 @@
+{
+  "applicability": "Benchmarks/AsyncImageLab/applicability.json",
+  "claimFamilies": "Benchmarks/AsyncImageLab/claim-families.json",
+  "comparators": {
+    "platform": {
+      "name": "Apple AsyncImage",
+      "requiredBindings": [
+        "xcodeBuild",
+        "osBuild",
+        "deviceProfileID"
+      ],
+      "sourceIdentity": "platform-build"
+    },
+    "systemUnderTest": {
+      "name": "Fovea",
+      "sourceIdentity": "runner-injected-head-tree-dirty-state",
+      "surface": "FoveaResponsiveImage"
+    }
+  },
+  "execution": {
+    "W10IdentityChanges": 256,
+    "W10IntervalMilliseconds": 16,
+    "W1TimeScaleForSimulator": 0.1,
+    "cacheControl": "not-exposed-by-AsyncImage; report system state and never label cold/warm as controlled",
+    "formalPhysicalRepetitions": 20,
+    "networkProfile": "NET-LOCAL-V1",
+    "pairedOrder": [
+      [
+        "Apple AsyncImage",
+        "Fovea"
+      ],
+      [
+        "Fovea",
+        "Apple AsyncImage"
+      ]
+    ],
+    "simulatorRuns": 1,
+    "thermalStateRequiredAtStart": "nominal"
+  },
+  "outcomePolicy": {
+    "missingMetric": "not-comparable-not-zero",
+    "noCrossSurfaceRanking": true,
+    "pairedComparison": "only-common-endpoints-with-identical-trace-origin-and-sampling",
+    "releaseClaimRequiresPhysicalStableOS": true,
+    "simulator": "functional-and-calibration-only"
+  },
+  "planID": "FOVEA-SWIFTUI-SURFACE-LAB-V2",
+  "schemaVersion": 2,
+  "status": "preregistered-after-v1-single-sided-calibration-before-paired-formal-results",
+  "supersedes": "Benchmarks/AsyncImageLab/plans/experiment-plan-v1.json",
+  "workloads": {
+    "W1-SCROLL-V1": {
+      "cacheStates": [
+        "uncontrolled-system-cache"
+      ],
+      "hardChecks": [
+        "no-crash-or-hang",
+        "stale-success-zero"
+      ],
+      "primaryEndpoints": [
+        "main-thread-hitch-time",
+        "peak-dirty-memory"
+      ],
+      "secondaryEndpoints": [
+        "success-count",
+        "failure-count",
+        "origin-request-count",
+        "origin-stopped-count"
+      ]
+    },
+    "W10-SWIFTUI-IDENTITY-CHURN-V1": {
+      "cacheStates": [
+        "uncontrolled-system-cache"
+      ],
+      "hardChecks": [
+        "stale-success-zero",
+        "no-crash-or-hang"
+      ],
+      "primaryEndpoints": [
+        "stale-success-count",
+        "visible-success-latency",
+        "main-thread-hitch-time"
+      ],
+      "secondaryEndpoints": [
+        "phase-failure-count",
+        "origin-request-count",
+        "origin-stopped-count",
+        "peak-dirty-memory"
+      ]
+    },
+    "W2-HERO-V1": {
+      "cacheStates": [
+        "uncontrolled-system-cache"
+      ],
+      "hardChecks": [
+        "all-three-heroes-reach-success-phase"
+      ],
+      "primaryEndpoints": [
+        "hero-display-latency",
+        "peak-dirty-memory"
+      ],
+      "secondaryEndpoints": [
+        "main-thread-hitch-time",
+        "origin-delivered-bytes"
+      ]
+    }
+  }
+}

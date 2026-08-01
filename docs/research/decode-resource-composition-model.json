@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "modelID": "FOVEA-DECODE-RESOURCE-COMPOSITION-MODEL-V1",
+  "status": "research-gate-active",
+  "currentImplementation": {
+    "strategy": "max-reported-totals",
+    "codePath": "component://ImageCraft/Sources/ImageCraftCore/ImageCodecContract.swift",
+    "codeFragment": "workingSetBytes: max(genericBytes, backendBytes)",
+    "claimBoundary": "admission-estimate-not-proven-complete-live-set"
+  },
+  "cases": [
+    {
+      "id": "complete-common-coverage",
+      "description": "Both reports cover the same complete physical live set; max is exact and sum double-counts.",
+      "allocations": [
+        {"id": "output", "bytes": 80, "start": 0, "end": 2},
+        {"id": "scratch", "bytes": 40, "start": 0, "end": 1}
+      ],
+      "genericCovers": ["output", "scratch"],
+      "backendCovers": ["output", "scratch"],
+      "expected": {
+        "truePeak": 120,
+        "maxReported": 120,
+        "sumReported": 240,
+        "unionReported": 120,
+        "maxClassification": "exact"
+      }
+    },
+    {
+      "id": "disjoint-overlap",
+      "description": "Host surfaces and codec-private temporary storage overlap in time; max under-reports.",
+      "allocations": [
+        {"id": "host-output", "bytes": 100, "start": 0, "end": 2},
+        {"id": "codec-temporary", "bytes": 80, "start": 0, "end": 1}
+      ],
+      "genericCovers": ["host-output"],
+      "backendCovers": ["codec-temporary"],
+      "expected": {
+        "truePeak": 180,
+        "maxReported": 100,
+        "sumReported": 180,
+        "unionReported": 180,
+        "maxClassification": "under"
+      }
+    },
+    {
+      "id": "partial-overlap",
+      "description": "Both reports include the output, while each also covers a distinct temporary allocation; max under-reports and sum over-reports.",
+      "allocations": [
+        {"id": "output", "bytes": 100, "start": 0, "end": 2},
+        {"id": "host-temporary", "bytes": 30, "start": 0, "end": 1},
+        {"id": "codec-temporary", "bytes": 60, "start": 0, "end": 1}
+      ],
+      "genericCovers": ["output", "host-temporary"],
+      "backendCovers": ["output", "codec-temporary"],
+      "expected": {
+        "truePeak": 190,
+        "maxReported": 160,
+        "sumReported": 290,
+        "unionReported": 190,
+        "maxClassification": "under"
+      }
+    },
+    {
+      "id": "mutually-exclusive-branches",
+      "description": "Two allocations belong to non-overlapping phases; summation over-reports and max is exact.",
+      "allocations": [
+        {"id": "host-branch", "bytes": 100, "start": 0, "end": 1},
+        {"id": "codec-branch", "bytes": 80, "start": 1, "end": 2}
+      ],
+      "genericCovers": ["host-branch"],
+      "backendCovers": ["codec-branch"],
+      "expected": {
+        "truePeak": 100,
+        "maxReported": 100,
+        "sumReported": 180,
+        "unionReported": 100,
+        "maxClassification": "exact"
+      }
+    }
+  ],
+  "requiredWitnesses": {
+    "maxUnderReportCasesAtLeast": 2,
+    "maxExactCasesAtLeast": 1,
+    "sumOverReportCasesAtLeast": 2,
+    "partialOverlapCaseRequired": true
+  }
+}

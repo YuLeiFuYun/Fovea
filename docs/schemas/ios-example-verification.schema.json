@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fovea.invalid/schemas/ios-example-verification.schema.json",
+  "title": "FoveaWorkbench iOS Example Verification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "verifiedCommit",
+    "verifiedTree",
+    "includesWorkingTreeChanges",
+    "xcodeVersion",
+    "swiftVersion",
+    "status",
+    "verificationProfile",
+    "skippedPhases",
+    "deploymentTarget",
+    "externalNetworkingDefault",
+    "xcodegenVersion",
+    "project",
+    "projectSha256",
+    "phases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "verifiedCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40,64}$"
+    },
+    "verifiedTree": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40,64}$"
+    },
+    "includesWorkingTreeChanges": {
+      "type": "boolean"
+    },
+    "xcodeVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "swiftVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "const": "passed"
+    },
+    "verificationProfile": {
+      "enum": [
+        "build-unit",
+        "deterministic",
+        "network-smoke",
+        "complete"
+      ]
+    },
+    "skippedPhases": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "build",
+          "unit-tests",
+          "live-network-tests",
+          "ui-tests",
+          "ipad-ui-tests"
+        ]
+      }
+    },
+    "deploymentTarget": {
+      "const": "15.0"
+    },
+    "externalNetworkingDefault": {
+      "const": false
+    },
+    "xcodegenVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project": {
+      "const": "Examples/FoveaWorkbenchApp/FoveaWorkbench.xcodeproj/project.pbxproj"
+    },
+    "projectSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "deviceFamily",
+          "simulatorID",
+          "log",
+          "logSha256",
+          "testCount"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "build",
+              "unit-tests",
+              "live-network-tests",
+              "ui-tests",
+              "ipad-ui-tests"
+            ]
+          },
+          "deviceFamily": {
+            "enum": [
+              "iphone",
+              "ipad"
+            ]
+          },
+          "simulatorID": {
+            "type": "string",
+            "pattern": "^[0-9A-F]{8}(?:-[0-9A-F]{4}){3}-[0-9A-F]{12}$"
+          },
+          "log": {
+            "type": "string",
+            "pattern": "^\\.artifacts/ios-example/.+\\.log$"
+          },
+          "logSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "testCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

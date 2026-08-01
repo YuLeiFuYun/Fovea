@@ -1,0 +1,111 @@
+{
+  "component": "Akashic",
+  "componentCommit": "f04060fbd01b9745b7caa87f389bdb0324874854",
+  "componentReport": {
+    "claims": {
+      "closeFailureIsNotRetried": true,
+      "directoryFsyncFailureHasVisibleButUnprovenDurability": true,
+      "fileAndDirectoryFsyncEINTRRetried": true,
+      "fileFsyncFailurePreservesPublishedDestination": true,
+      "partialWritesHandled": true,
+      "permissionRestorationAllowsBootstrapConvergence": true,
+      "physicalDeviceQualification": false,
+      "powerLossSafety": false,
+      "processCrashRecovery": true,
+      "realAPFSFullVolumeENOSPCRecovery": true,
+      "realAPFSQuotaExhaustionRecovery": true,
+      "renameENOSPCPreservesPublishedDestination": true,
+      "writeEINTRRetried": true,
+      "writeENOSPCPreservesPublishedDestination": true
+    },
+    "errors": [],
+    "exactProcessCrash": {
+      "artifactSHA256": "3b16c8cab5821eda9506b8b139cebf05ff0c2a9eab10bb6065c7c93ae2f96e5f",
+      "caseCount": 11,
+      "powerLossClaim": false,
+      "processCrashClaim": true
+    },
+    "includesWorkingTreeChanges": false,
+    "permissionTransition": {
+      "behavior": "manifest-rename-denial-preserves-miss-and-bootstrap-cleans-leftovers",
+      "logSHA256": "f6530fe6887b6deed557b0cad9e16f1af5fbf9193ac5032685d54f037509e9d9",
+      "testCount": 1
+    },
+    "randomProcessKill": {
+      "artifactSHA256": "d6e59841f83d7f09f27a147255123005b0a3fb7f2867548de064d00819ca0ed6",
+      "caseCount": 78,
+      "hitCount": 64,
+      "maximumDelayMicroseconds": 10000,
+      "missCount": 14,
+      "payloadBytes": 8388608,
+      "powerLossClaim": false,
+      "processCrashClaim": true,
+      "randomCaseCount": 72,
+      "randomCasesPerRound": 24,
+      "randomHitCount": 61,
+      "randomMissCount": 11,
+      "roundCount": 3,
+      "seed": 10855708
+    },
+    "realAPFSQuota": {
+      "artifactSHA256": "51f939460ee80cab25110d21b86173d9092240ecd3edf7a13882ce01879f1e6a",
+      "caseCount": 3,
+      "containerSizeMegabytes": 1024,
+      "filesystem": [
+        "apfs"
+      ],
+      "foundationMetadataPrewriteFailureCaseCount": 1,
+      "kernelENOSPCCaseCount": 2,
+      "payloadBytes": 8388608,
+      "physicalDeviceQualification": false,
+      "powerLossClaim": false,
+      "quotaBytes": 67108864,
+      "realAPFSQuotaExhaustionClaim": true,
+      "wholeContainerFullClaim": false
+    },
+    "realFullVolume": {
+      "artifactSHA256": "37c27e22436892131f1900f3b8deda57e5e508d2deadc6db6d1e36e464fbc2df",
+      "caseCount": 3,
+      "filesystem": [
+        "apfs"
+      ],
+      "imageSizeMegabytes": 64,
+      "payloadBytes": 8388608,
+      "physicalDeviceQualification": false,
+      "powerLossClaim": false,
+      "quotaExhaustionClaim": false,
+      "realMountedFilesystemENOSPCClaim": true
+    },
+    "reportID": "AKASHIC-FAULT-INJECTION-EVIDENCE-V4",
+    "schemaVersion": 4,
+    "status": "passed",
+    "syscallFaults": {
+      "behaviors": [
+        "partial-write-retry",
+        "write-eintr-retry",
+        "file-and-directory-fsync-eintr-retry",
+        "enospc-after-partial-write-preserves-old-destination",
+        "file-fsync-failure-preserves-old-destination",
+        "close-failure-is-not-retried-and-preserves-old-destination",
+        "rename-enospc-preserves-old-destination",
+        "directory-fsync-failure-reports-visible-but-not-proven-durable-replacement"
+      ],
+      "logSHA256": "5b8cab9b6c9b17a5dee52543a5d42ce9687f9349698a655582060babd1d1b67d",
+      "testCount": 8
+    },
+    "verifiedCommit": "f04060fbd01b9745b7caa87f389bdb0324874854"
+  },
+  "componentReportSHA256": "d553eed78fdd50827c3c4f4d3df2dadaa4b6ac8f565b7df62860134ef3fd6780",
+  "evidenceID": "FOVEA-AKASHIC-FAULT-INJECTION-2026-07-30",
+  "foveaEmbeddedSourceTreeSHA256": "0d8b63defd12a6121f9538aafac4895536b5d7576ab04bb6eddd9c0734dd6ea8",
+  "foveaSourceLock": "docs/project-memory/component-pins.json",
+  "hostEvidenceNotImplied": [
+    "Fovea cross-store HTTP-record atomicity under full-volume or quota exhaustion",
+    "device power-loss safety or F_FULLFSYNC equivalence",
+    "real filesystem-induced fsync, rename, close, ACL or different-owner failures",
+    "physical-device I/O, energy or thermal qualification"
+  ],
+  "realAPFSQuotaArtifactSHA256": "51f939460ee80cab25110d21b86173d9092240ecd3edf7a13882ce01879f1e6a",
+  "realFullVolumeArtifactSHA256": "37c27e22436892131f1900f3b8deda57e5e508d2deadc6db6d1e36e464fbc2df",
+  "schemaVersion": 4
+}

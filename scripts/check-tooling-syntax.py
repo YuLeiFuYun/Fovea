@@ -1,0 +1,635 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import ast
+import importlib.util
+import os
+import json
+import re
+import signal
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+errors: list[str] = []
+
+for path in sorted((ROOT / "scripts").glob("*.py")):
+    try:
+        ast.parse(path.read_text(), filename=str(path))
+    except (SyntaxError, UnicodeError) as error:
+        errors.append(f"python syntax error in {path.relative_to(ROOT)}: {error}")
+
+for path in sorted((ROOT / "scripts").glob("*.sh")):
+    result = subprocess.run(
+        ["/bin/sh", "-n", str(path)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    if result.returncode != 0:
+        errors.append(
+            f"shell syntax error in {path.relative_to(ROOT)}: {result.stdout.strip()}"
+        )
+
+mutation_runner = (ROOT / "scripts/run-critical-mutants.py").read_text()
+for removed_prefix in (
+    "Sources/ImageCraftCore/",
+    "Sources/ImageCraftImageIO/",
+    "Sources/AkashicCore/",
+    "Sources/AkashicMemory/",
+    "Sources/AkashicDisk/",
+):
+    if f'root / "{removed_prefix}' in mutation_runner:
+        errors.append(f"mutation runner references removed embedded component path: {removed_prefix}")
+    if re.search(rf'Mutant\([^\n]+"{re.escape(removed_prefix)}', mutation_runner):
+        errors.append(f"mutation catalog records removed embedded component path: {removed_prefix}")
+if "weak var encoded: OriginalEncodedStore?" in mutation_runner:
+    errors.append("mutation runner still targets the retired OriginalEncodedStore type")
+if '"--validate-applications"' not in mutation_runner:
+    errors.append("mutation runner must expose the application-only freshness audit")
+verify_script = (ROOT / "scripts/verify.sh").read_text()
+if "SWIFT_TREAT_WARNINGS_AS_ERRORS=YES" in verify_script:
+    errors.append(
+        "verify.sh must not override external SwiftPM warning policy through a global Xcode setting"
+    )
+if "-collect-test-diagnostics never" not in verify_script:
+    errors.append(
+        "iOS package verification must disable Xcode sysdiagnose collection and rely on bounded logs"
+    )
+
+try:
+    x86_runner_path = ROOT / "scripts/run-x86-identity-test.py"
+    x86_spec = importlib.util.spec_from_file_location("fovea_x86_identity", x86_runner_path)
+    if x86_spec is None or x86_spec.loader is None:
+        raise RuntimeError("unable to load x86 identity runner")
+    x86_runner = importlib.util.module_from_spec(x86_spec)
+    x86_spec.loader.exec_module(x86_runner)
+    command = x86_runner.xctest_command(
+        Path("/toolchain/usr/bin/xctest"),
+        Path("/tmp/FoveaTests.xctest"),
+    )
+    if command != [
+        "/usr/bin/arch",
+        "-x86_64",
+        "/toolchain/usr/bin/xctest",
+        "-XCTest",
+        (
+            "FoveaTests.IdentityTests/"
+            "testPersistentIdentityGoldenVectorsAreArchitectureStable_CACHE_PT_017"
+        ),
+        "/tmp/FoveaTests.xctest",
+    ]:
+        errors.append("x86 identity runner must execute the exact XCTest selector under Rosetta")
+    x86_source = x86_runner_path.read_text()
+    for marker in (
+        '"--build-tests"',
+        'executable_architectures != ["x86_64"]',
+        'environment["FOVEA_EXPECTED_TEST_ARCH"] = "x86_64"',
+        '"DYLD_FRAMEWORK_PATH"',
+        '"DYLD_LIBRARY_PATH"',
+    ):
+        if marker not in x86_source:
+            errors.append(f"x86 identity runner is missing contract marker: {marker}")
+except (OSError, RuntimeError, ValueError) as error:
+    errors.append(f"x86 identity runner contract failed: {error}")
+
+navigation_ui_source = (
+    ROOT / "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/"
+    "FoveaWorkbenchNavigationUITests.swift"
+).read_text()
+ipad_ui_source = (
+    ROOT / "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/"
+    "FoveaWorkbenchIPadUITests.swift"
+).read_text()
+if "addTeardownBlock { @MainActor in" not in navigation_ui_source:
+    errors.append("compact Workbench UI launches must register main-actor app termination")
+if navigation_ui_source.count("registerTermination(of: app)") < 3:
+    errors.append("every compact Workbench UI launch helper must register app termination")
+if "addTeardownBlock { @MainActor in" not in ipad_ui_source:
+    errors.append("regular-width Workbench UI launches must register app termination")
+if ipad_ui_source.count("registerTermination(of: app)") < 1:
+    errors.append("regular-width Workbench UI launch helper must register app termination")
+application_gate = "python3 scripts/run-critical-mutants.py --validate-applications"
+full_gate = "python3 scripts/run-critical-mutants.py\n"
+if application_gate not in verify_script:
+    errors.append("verify.sh must run the mutation application audit before critical mutants")
+elif full_gate not in verify_script or verify_script.index(application_gate) > verify_script.index(full_gate):
+    errors.append("mutation application audit must precede the full critical mutation run")
+
+try:
+    swift_format = json.loads((ROOT / ".swift-format").read_text())
+    if swift_format.get("indentation") != {"spaces": 4}:
+        errors.append(".swift-format must enforce four-space indentation")
+except (OSError, json.JSONDecodeError, UnicodeError) as error:
+    errors.append(f"invalid .swift-format configuration: {error}")
+
+try:
+    verifier_path = ROOT / "scripts/verify-ios-example.py"
+    spec = importlib.util.spec_from_file_location("fovea_verify_ios_example", verifier_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("unable to load iOS example verifier")
+    verifier = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(verifier)
+    import ios_example_process as process_support
+    import ios_example_visual as visual_support
+    import ios_example_xcode as xcode_support
+
+    extension_source = (
+        ROOT / "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/"
+        "FoveaWorkbenchNavigationUITests.swift"
+    )
+    iphone_source = (
+        ROOT / "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift"
+    )
+    ipad_source = (
+        ROOT / "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchIPadUITests.swift"
+    )
+    iphone_timeout = verifier.ui_suite_timeout_seconds(iphone_source)
+    ipad_timeout = verifier.ui_suite_timeout_seconds(ipad_source)
+    if iphone_timeout < 3_600:
+        errors.append("iPhone UI suite timeout must reserve build and diagnostic long-tail budget")
+    if ipad_timeout < 1_800:
+        errors.append("iPad UI suite timeout must reserve build and diagnostic long-tail budget")
+    if verifier.VISUAL_AUDIT_TIMEOUT_SECONDS < 3_600:
+        errors.append("strict visual matrix must reserve at least one hour of aggregate budget")
+    if not 300 <= verifier.VISUAL_FAMILY_TIMEOUT_SECONDS <= 900:
+        errors.append("each visual device family must have a bounded 5-15 minute watchdog")
+    if verifier.VISUAL_CAPTURE_ATTEMPTS != 2:
+        errors.append("strict visual capture must retry infrastructure failure exactly once")
+
+    visual_test_source = (
+        ROOT / "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/"
+        "FoveaWorkbenchVisualTests.swift"
+    ).read_text()
+    lifecycle_orientation = re.search(
+        r"override func (?:setUp|tearDown)WithError\(\) throws \{[^}]*"
+        r"XCUIDevice\.shared\.orientation",
+        visual_test_source,
+        re.DOTALL,
+    )
+    if lifecycle_orientation is not None:
+        errors.append(
+            "XCUIDevice orientation must be mutated inside a @MainActor test method, "
+            "not XCTest lifecycle overrides"
+        )
+
+    required_callables = (
+        "ensure_simulator_booted", "capture_visual_family", "restart_simulator",
+        "recover_core_simulator_service", "verify_visual_assurance",
+        "run_xcode_sharded_phase", "prepare_visual_family",
+        "terminate_visual_family_xcodebuild",
+    )
+    for name in required_callables:
+        if not callable(getattr(verifier, name, None)):
+            errors.append(f"iOS verifier must expose {name}")
+    for marker in (
+        "Failed to get matching snapshots: Error getting main window kAXErrorServerNotFound",
+        "Failed: Timed out while synthesizing event.",
+        "Failed to determine hittability: Activation point invalid and no suggested hit points based on element frame",
+    ):
+        if not verifier.is_simulator_infrastructure_failure(marker):
+            errors.append(f"iOS verifier does not classify simulator infrastructure marker: {marker}")
+
+    verifier_source = verifier_path.read_text()
+    process_source = (ROOT / "scripts/ios_example_process.py").read_text()
+    xcode_source = (ROOT / "scripts/ios_example_xcode.py").read_text()
+    visual_source = (ROOT / "scripts/ios_example_visual.py").read_text()
+    combined_source = "\n".join((verifier_source, process_source, xcode_source, visual_source))
+    source_requirements = {
+        '"w" if attempt == 0 else "a"': "xcode phase retry must preserve prior-attempt logs",
+        '=== attempt {attempt + 1}/{attempts} simulator={destination} ===': "xcode phase logs must identify retry attempts and simulator",
+        'family_env.pop(opposite, None)': "visual capture must remove the opposite simulator override",
+        'timed_out = completed.returncode == -1': "visual watchdog timeout must be classified as infrastructure",
+        'retryable = timed_out or is_simulator_infrastructure_failure(output)': "visual retry must combine timeout and explicit infrastructure markers",
+        'ROOT / result["log"]': "UI shard aggregation must resolve project-relative logs through ROOT",
+        '=== infrastructure stall: no log progress for ': "UI shard watchdog must leave an explicit infrastructure-stall marker",
+        'tempfile.TemporaryFile(mode="w+t")': "subprocess capture must use a file-backed sink",
+        'os.killpg(identifier, 0)': "timed-out process cleanup must detect orphaned process groups",
+        'prepare_visual_family(family, identifier, family_env)': "every visual attempt must prepare its device family",
+        'signal_process_groups(groups, signal.SIGKILL)': "visual orphan cleanup must have a bounded force-kill fallback",
+        'restart_simulator(simulator(env, "ipad"), env)': "navigation proof must start from a restarted iPad",
+        '"com.apple.CoreSimulator.CoreSimulatorService"': "CoreSimulator recovery must target the exact service",
+        'CoreSimulatorService did not recover within 60 seconds': "CoreSimulator recovery must have an explicit bound",
+    }
+    for fragment, message in source_requirements.items():
+        if fragment not in combined_source:
+            errors.append(message)
+    if "resolve_relative(" in combined_source:
+        errors.append("iOS verifier must not call an undefined resolve_relative helper")
+    if combined_source.count("inactivity_timeout_seconds=UI_TEST_INACTIVITY_TIMEOUT_SECONDS") != 3:
+        errors.append("host and UI test entry points must enable the bounded inactivity watchdog")
+    if combined_source.count(f"-only-testing:{{REGULAR_WIDTH_NAVIGATION_TEST}}") != 1:
+        errors.append("iPad UI phase must include the navigation test exactly once")
+    if combined_source.count("recover_core_simulator_service(env)") != 4:
+        errors.append(
+            "simulator discovery, boot retry, restart fallback, and visual preparation must each invoke service recovery"
+        )
+
+    expected_navigation_test = (
+        "FoveaWorkbenchUITests/FoveaWorkbenchUITests/"
+        "testEcologicalAtlasOpensLibraryCasesMapGlossaryAndMethodology_DEMO_PT_024"
+    )
+    if verifier.REGULAR_WIDTH_NAVIGATION_TEST != expected_navigation_test:
+        errors.append("regular-width navigation test routing changed unexpectedly")
+    compact_methods = verifier.compact_ui_methods()
+    if len(compact_methods) != 19 or expected_navigation_test.rsplit("/", 1)[-1] in compact_methods:
+        errors.append("iPhone behavior matrix must contain exactly 19 non-navigation tests")
+    regular_methods, ecological_methods = verifier.compact_ui_method_groups()
+    if len(regular_methods) != 14 or len(ecological_methods) != 5:
+        errors.append("iPhone behavior matrix must retain 14 regular and 5 isolated ecological tests")
+    if set(regular_methods).intersection(ecological_methods):
+        errors.append("regular and ecological UI test partitions must be disjoint")
+    if set(regular_methods) | set(ecological_methods) != set(compact_methods):
+        errors.append("iPhone UI partitions must preserve every compact-width test")
+    regular_shards = verifier.balanced_shards(regular_methods, 3)
+    if [len(shard) for shard in regular_shards] != [5, 5, 4]:
+        errors.append("regular iPhone behavior matrix must use balanced 5/5/4 shards")
+    ecological_shards = verifier.balanced_shards(
+        ecological_methods, len(ecological_methods)
+    )
+    if [len(shard) for shard in ecological_shards] != [1, 1, 1, 1, 1]:
+        errors.append("every ecological matrix test must run in its own simulator shard")
+    if [method for shard in regular_shards for method in shard] != regular_methods:
+        errors.append("regular iPhone UI sharding must preserve method order")
+    if [method for shard in ecological_shards for method in shard] != ecological_methods:
+        errors.append("ecological UI sharding must preserve method order")
+    ipad_methods = verifier.ui_test_methods(ipad_source)
+    ipad_shards = verifier.balanced_shards(ipad_methods, 2)
+    if len(ipad_methods) != 4 or [len(shard) for shard in ipad_shards] != [2, 2]:
+        errors.append("native iPad behavior matrix must use two balanced two-test shards")
+    if not 180 <= verifier.UI_TEST_INACTIVITY_TIMEOUT_SECONDS <= 300:
+        errors.append("UI inactivity watchdog must stay within a 3-5 minute bound")
+    if verifier.inactivity_expired(100.0, 339.9, 240):
+        errors.append("UI inactivity watchdog fires before its deadline")
+    if not verifier.inactivity_expired(100.0, 340.0, 240):
+        errors.append("UI inactivity watchdog must fire at its deadline")
+    try:
+        verifier.inactivity_expired(0.0, 1.0, 0)
+    except ValueError:
+        pass
+    else:
+        errors.append("UI inactivity watchdog must reject a non-positive timeout")
+
+    inherited_output = verifier.run(
+        ["/bin/sh", "-c", "sleep 3 & echo inherited-output"],
+        env=os.environ.copy(), timeout=1,
+    )
+    if inherited_output.returncode != 0 or inherited_output.stdout.strip() != "inherited-output":
+        errors.append("file-backed subprocess capture must not wait for descendant pipe closure")
+
+    snapshot = verifier.generated_project_snapshot()
+    if len(snapshot) != 3:
+        errors.append("generated project reproducibility must cover PBX, scheme, and workspace")
+    project_text = verifier.PBXPROJ.read_text()
+    verifier.validate_generated_project_text(project_text)
+    for token in verifier.REQUIRED_GENERATED_REFERENCES:
+        try:
+            verifier.validate_generated_project_text(project_text.replace(token, ""))
+        except RuntimeError:
+            pass
+        else:
+            errors.append(f"generated project validator accepts missing source reference: {token}")
+    for token in verifier.FORBIDDEN_GENERATED_REFERENCES:
+        try:
+            verifier.validate_generated_project_text(project_text + f"\n{token}\n")
+        except RuntimeError:
+            pass
+        else:
+            errors.append(f"generated project validator accepts forbidden reference: {token}")
+
+    original_run = xcode_support.run
+    readiness_calls: list[list[str]] = []
+    already_booted_payload = json.dumps(
+        {"devices": {"runtime": [{"udid": "already-booted-device", "state": "Booted"}]}}
+    )
+    def already_booted_run(command: list[str], **_kwargs):
+        readiness_calls.append(command)
+        return subprocess.CompletedProcess(command, 0, already_booted_payload, None)
+    xcode_support.run = already_booted_run
+    try:
+        verifier.ensure_simulator_booted("already-booted-device", {})
+    finally:
+        xcode_support.run = original_run
+    if len(readiness_calls) != 1 or readiness_calls[0][2:4] != ["list", "devices"]:
+        errors.append("already-booted simulator must short-circuit from the device-state list")
+
+    cold_boot_calls: list[list[str]] = []
+    shutdown_payload = json.dumps(
+        {"devices": {"runtime": [{"udid": "shutdown-device", "state": "Shutdown"}]}}
+    )
+    booted_payload = json.dumps(
+        {"devices": {"runtime": [{"udid": "shutdown-device", "state": "Booted"}]}}
+    )
+    cold_boot_results = iter([
+        subprocess.CompletedProcess(["simctl", "list"], 0, shutdown_payload, None),
+        subprocess.CompletedProcess(["simctl", "boot"], 0, "", None),
+        subprocess.CompletedProcess(["simctl", "bootstatus"], 0, "Finished", None),
+    ])
+    def cold_boot_run(command: list[str], **_kwargs):
+        cold_boot_calls.append(command)
+        return next(cold_boot_results)
+    xcode_support.run = cold_boot_run
+    try:
+        verifier.ensure_simulator_booted("shutdown-device", {})
+    finally:
+        xcode_support.run = original_run
+    if [command[2] for command in cold_boot_calls] != ["list", "boot", "bootstatus"]:
+        errors.append("shutdown simulator readiness must be decided by bounded bootstatus")
+    if cold_boot_calls[-1][3:] != ["shutdown-device", "-b", "-d"]:
+        errors.append("simulator bootstatus must block for the selected device with diagnostics")
+
+    failed_boot_calls: list[list[str]] = []
+    failed_boot_results = iter([
+        subprocess.CompletedProcess(["simctl", "list"], 0, shutdown_payload, None),
+        subprocess.CompletedProcess(["simctl", "boot"], 0, "", None),
+        subprocess.CompletedProcess(["simctl", "bootstatus"], -1, "migration pending", None),
+        subprocess.CompletedProcess(["simctl", "list"], 0, "{invalid", None),
+    ])
+    def failed_boot_run(command: list[str], **_kwargs):
+        failed_boot_calls.append(command)
+        return next(failed_boot_results)
+    xcode_support.run = failed_boot_run
+    try:
+        try:
+            verifier.ensure_simulator_booted("shutdown-device", {})
+        except RuntimeError as error:
+            failed_boot_message = str(error)
+        else:
+            failed_boot_message = ""
+    finally:
+        xcode_support.run = original_run
+    if (
+        "did not complete bounded bootstatus" not in failed_boot_message
+        or "migration pending" not in failed_boot_message
+        or "last_state=unknown" not in failed_boot_message
+        or [command[2] for command in failed_boot_calls]
+        != ["list", "boot", "bootstatus", "list"]
+    ):
+        errors.append("failed simulator bootstatus must preserve progress and state diagnostics")
+
+    original_subprocess_run = xcode_support.subprocess.run
+    original_recovery = xcode_support.recover_core_simulator_service
+    selector_calls: list[list[str]] = []
+    recovery_calls: list[dict[str, str]] = []
+    selector_results = iter(
+        [
+            subprocess.CompletedProcess(["selector"], 1, "", "discovery timed out"),
+            subprocess.CompletedProcess(["selector"], 0, "recovered-device\n", ""),
+        ]
+    )
+
+    def selector_run(command: list[str], **_kwargs):
+        selector_calls.append(command)
+        return next(selector_results)
+
+    xcode_support.subprocess.run = selector_run
+    xcode_support.recover_core_simulator_service = lambda env: recovery_calls.append(env)
+    try:
+        recovered = xcode_support.simulator({"DEVELOPER_DIR": "test"}, "iphone")
+    finally:
+        xcode_support.subprocess.run = original_subprocess_run
+        xcode_support.recover_core_simulator_service = original_recovery
+    if recovered != "recovered-device" or len(selector_calls) != 2 or len(recovery_calls) != 1:
+        errors.append("simulator discovery must recover once and retry the exact selector")
+
+    override_selector_calls: list[list[str]] = []
+    override_recovery_calls: list[dict[str, str]] = []
+    xcode_support.subprocess.run = lambda command, **_kwargs: override_selector_calls.append(command)
+    xcode_support.recover_core_simulator_service = lambda env: override_recovery_calls.append(env)
+    try:
+        override = xcode_support.simulator(
+            {"FOVEA_IPAD_SIMULATOR_ID": "explicit-ipad"}, "ipad"
+        )
+    finally:
+        xcode_support.subprocess.run = original_subprocess_run
+        xcode_support.recover_core_simulator_service = original_recovery
+    if override != "explicit-ipad" or override_selector_calls or override_recovery_calls:
+        errors.append("explicit simulator override must bypass discovery and recovery")
+
+    failed_results = iter(
+        [
+            subprocess.CompletedProcess(["selector"], 1, "", "first failure"),
+            subprocess.CompletedProcess(["selector"], 1, "", "second failure"),
+        ]
+    )
+    failed_recoveries: list[dict[str, str]] = []
+    xcode_support.subprocess.run = lambda _command, **_kwargs: next(failed_results)
+    xcode_support.recover_core_simulator_service = lambda env: failed_recoveries.append(env)
+    try:
+        try:
+            xcode_support.simulator({"DEVELOPER_DIR": "test"}, "iphone")
+        except RuntimeError as error:
+            failure_message = str(error)
+        else:
+            failure_message = ""
+    finally:
+        xcode_support.subprocess.run = original_subprocess_run
+        xcode_support.recover_core_simulator_service = original_recovery
+    if (
+        len(failed_recoveries) != 1
+        or "before and after CoreSimulatorService recovery" not in failure_message
+        or "first failure" not in failure_message
+        or "second failure" not in failure_message
+    ):
+        errors.append("simulator discovery must preserve both failures after bounded recovery")
+
+    original_simulator = xcode_support.simulator
+    original_ensure_booted = xcode_support.ensure_simulator_booted
+    original_execute_attempt = xcode_support.execute_xcode_attempt
+    original_successful_result = xcode_support.successful_phase_result
+    original_recovery = xcode_support.recover_core_simulator_service
+    boot_attempts = [0]
+    boot_recoveries: list[dict[str, str]] = []
+    executed_attempts: list[int] = []
+
+    def boot_retry_ensure(_identifier: str, _env: dict[str, str]) -> None:
+        boot_attempts[0] += 1
+        if boot_attempts[0] == 1:
+            raise RuntimeError("initial boot failure")
+
+    def boot_retry_execute(
+        _name: str,
+        _actions: list[str],
+        destination: str,
+        _env: dict[str, str],
+        attempt_index: int,
+        _attempts: int,
+        _timeout_seconds: int,
+        _inactivity_timeout_seconds: int | None,
+    ):
+        executed_attempts.append(attempt_index)
+        return xcode_support.PhaseAttempt(
+            command=["xcodebuild"],
+            destination=destination,
+            log=ROOT / ".artifacts/ios-example/tooling-boot-retry.log",
+            return_code=0,
+            output="passed",
+            timed_out=False,
+            stalled=False,
+        )
+
+    xcode_support.simulator = lambda _env, _family: "boot-retry-device"
+    xcode_support.ensure_simulator_booted = boot_retry_ensure
+    xcode_support.recover_core_simulator_service = lambda env: boot_recoveries.append(env)
+    xcode_support.execute_xcode_attempt = boot_retry_execute
+    xcode_support.successful_phase_result = lambda *_args, **_kwargs: {"name": "boot-retry"}
+    try:
+        boot_retry_result = xcode_support.run_xcode_phase(
+            "tooling-boot-retry",
+            ["test"],
+            env={"DEVELOPER_DIR": "test"},
+        )
+    finally:
+        xcode_support.simulator = original_simulator
+        xcode_support.ensure_simulator_booted = original_ensure_booted
+        xcode_support.execute_xcode_attempt = original_execute_attempt
+        xcode_support.successful_phase_result = original_successful_result
+        xcode_support.recover_core_simulator_service = original_recovery
+    if (
+        boot_retry_result != {"name": "boot-retry"}
+        or boot_attempts[0] != 2
+        or len(boot_recoveries) != 1
+        or executed_attempts != [1]
+    ):
+        errors.append("xcode phase must recover once before retrying a failed simulator boot")
+
+    boot_failures = iter(
+        [RuntimeError("first boot failure"), RuntimeError("second boot failure")]
+    )
+    failed_boot_recoveries: list[dict[str, str]] = []
+    xcode_support.simulator = lambda _env, _family: "failed-boot-device"
+    xcode_support.ensure_simulator_booted = lambda _identifier, _env: (_ for _ in ()).throw(next(boot_failures))
+    xcode_support.recover_core_simulator_service = lambda env: failed_boot_recoveries.append(env)
+    try:
+        try:
+            xcode_support.run_xcode_phase(
+                "tooling-boot-failure",
+                ["test"],
+                env={"DEVELOPER_DIR": "test"},
+            )
+        except RuntimeError as error:
+            boot_failure_message = str(error)
+        else:
+            boot_failure_message = ""
+    finally:
+        xcode_support.simulator = original_simulator
+        xcode_support.ensure_simulator_booted = original_ensure_booted
+        xcode_support.recover_core_simulator_service = original_recovery
+    if (
+        len(failed_boot_recoveries) != 1
+        or "before and after CoreSimulatorService recovery" not in boot_failure_message
+        or "first boot failure" not in boot_failure_message
+        or "second boot failure" not in boot_failure_message
+    ):
+        errors.append("xcode phase must preserve both simulator boot failures after recovery")
+
+    class _ExitedLeaderProcess:
+        pid = 73
+
+        def poll(self) -> int:
+            return 0
+
+        def wait(self, timeout: int | float | None = None) -> int:
+            return 0
+
+    original_process_killpg = process_support.os.killpg
+    original_group_exists = process_support.process_group_exists
+    original_monotonic = process_support.time.monotonic
+    original_sleep = process_support.time.sleep
+    group_signals: list[signal.Signals] = []
+    monotonic_values = iter([0.0, 6.0])
+    process_support.os.killpg = lambda _pid, signum: group_signals.append(signum)
+    process_support.process_group_exists = lambda _identifier: True
+    process_support.time.monotonic = lambda: next(monotonic_values)
+    process_support.time.sleep = lambda _seconds: None
+    try:
+        process_support.terminate_process_group(_ExitedLeaderProcess())
+    finally:
+        process_support.os.killpg = original_process_killpg
+        process_support.process_group_exists = original_group_exists
+        process_support.time.monotonic = original_monotonic
+        process_support.time.sleep = original_sleep
+    if group_signals != [signal.SIGTERM, signal.SIGKILL]:
+        errors.append(
+            "process cleanup must terminate an orphaned group even after its leader has exited"
+        )
+
+    original_visual_run = visual_support.run
+    visual_support.run = lambda *_args, **_kwargs: subprocess.CompletedProcess(
+        [], 0,
+        "123 900 xcodebuild " + visual_support.VISUAL_TEST_SELECTOR + " "
+        + str(visual_support.ARTIFACTS / "visual-audit/iphone.xcresult"),
+        None,
+    )
+    try:
+        if visual_support.visual_process_groups("iphone", {}) != {900}:
+            errors.append("visual cleanup must select only the exact family result-bundle process group")
+    finally:
+        visual_support.run = original_visual_run
+except (OSError, RuntimeError, UnicodeError) as error:
+    errors.append(f"invalid iOS example timeout policy: {error}")
+
+try:
+    selector_path = ROOT / "scripts/select-ios-simulator.py"
+    selector_spec = importlib.util.spec_from_file_location(
+        "fovea_select_ios_simulator", selector_path
+    )
+    if selector_spec is None or selector_spec.loader is None:
+        raise RuntimeError("unable to load iOS simulator selector")
+    selector = importlib.util.module_from_spec(selector_spec)
+    selector_spec.loader.exec_module(selector)
+
+    class _PermissionFallbackProcess:
+        pid = 42
+        stdout = None
+        stderr = None
+
+        def __init__(self) -> None:
+            self.wait_count = 0
+            self.terminated = False
+            self.killed = False
+
+        def terminate(self) -> None:
+            self.terminated = True
+
+        def kill(self) -> None:
+            self.killed = True
+
+        def wait(self, timeout: int | None = None) -> int:
+            self.wait_count += 1
+            if self.wait_count == 1:
+                raise subprocess.TimeoutExpired("selector-cleanup", timeout)
+            return 0
+
+    fake = _PermissionFallbackProcess()
+    original_killpg = selector.os.killpg
+    selector.os.killpg = lambda _pid, _signal: (_ for _ in ()).throw(PermissionError())
+    try:
+        selector.terminate_process_group(fake)
+    finally:
+        selector.os.killpg = original_killpg
+    if not fake.terminated or not fake.killed or fake.wait_count != 2:
+        errors.append("simulator selector does not fall back after process-group permission errors")
+except (OSError, RuntimeError, UnicodeError) as error:
+    errors.append(f"invalid iOS simulator cleanup policy: {error}")
+
+json_roots = [ROOT / "docs", ROOT / "evidence", ROOT / "Examples", ROOT / "Benchmarks"]
+for json_root in json_roots:
+    if not json_root.exists():
+        continue
+    for path in sorted(json_root.rglob("*.json")):
+        relative_parts = path.relative_to(ROOT).parts
+        if any(part in {".build", ".swiftpm", ".artifacts", "DerivedData"} for part in relative_parts):
+            continue
+        try:
+            json.loads(path.read_text())
+        except (json.JSONDecodeError, UnicodeError) as error:
+            errors.append(f"JSON syntax error in {path.relative_to(ROOT)}: {error}")
+
+if errors:
+    print("\n".join(errors), file=sys.stderr)
+    raise SystemExit(1)
+
+print("Tooling syntax check passed.")

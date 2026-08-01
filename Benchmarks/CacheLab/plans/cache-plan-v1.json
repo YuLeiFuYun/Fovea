@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "planID": "FOVEA-CACHE-LAB-V1",
+  "status": "preregistered-before-formal-results",
+  "comparators": {
+    "systemUnderTest": "Fovea AkashicMemory/AkashicDisk",
+    "memory": ["LRUCache 1.2.1", "PINCache 3.0.4 PINMemoryCache"],
+    "disk": ["PINCache 3.0.4 PINDiskCache"]
+  },
+  "claimPolicy": {
+    "correctness": "Fovea passes every applicable hard check for implemented cache capabilities.",
+    "performance": "Fovea ranks first or is statistically tied for first on every applicable primary metric.",
+    "unsupported": "Non-common capabilities are reported separately and never imputed as passes."
+  },
+  "memoryWorkloads": {
+    "MEM-HOT-SCAN-V1": {
+      "capacityCost": 128,
+      "hotObjectCount": 32,
+      "scanObjectCount": 4096,
+      "rounds": 20,
+      "hardCorrectness": ["returned-bytes-match", "cost-never-exceeds-limit"],
+      "primaryMetrics": ["hot-set-hit-rate", "operations-per-second", "p99-operation-latency"]
+    },
+    "MEM-CONCURRENT-V1": {
+      "workers": 8,
+      "operationsPerWorker": 5000,
+      "hardCorrectness": ["no-crash-or-hang", "returned-bytes-match", "bounded-cost"],
+      "primaryMetrics": ["operations-per-second", "p99-operation-latency"]
+    }
+  },
+  "diskWorkloads": {
+    "DISK-MIXED-V1": {
+      "objectSizes": [4096, 65536, 1048576],
+      "objectsPerSize": 64,
+      "hardCorrectness": ["restart-persistence", "external-deletion-clean-miss", "concurrent-read-write"],
+      "primaryMetrics": ["write-throughput", "warm-read-throughput", "p99-read-latency"]
+    },
+    "DISK-ADVERSARIAL-V1": {
+      "hardCorrectness": ["corruption-not-served", "atomic-publication", "bounded-bootstrap-reconciliation"],
+      "primaryMetrics": []
+    }
+  },
+  "statistics": {
+    "repetitions": 20,
+    "bootstrapIterations": 10000,
+    "confidenceLevel": 0.95,
+    "randomSeed": 20260725,
+    "resamplingUnit": "process-run"
+  }
+}

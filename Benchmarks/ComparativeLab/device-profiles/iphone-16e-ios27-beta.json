@@ -1,0 +1,30 @@
+{
+  "captureStatus": "declared-not-captured",
+  "hardware": {
+    "chip": "A18",
+    "displayPixels": {
+      "height": 2532,
+      "width": 1170
+    },
+    "gpuCoreCount": 4,
+    "marketingName": "iPhone 16e",
+    "reality": "physical"
+  },
+  "operatingSystem": {
+    "build": null,
+    "channel": "beta",
+    "family": "iOS",
+    "version": "27.0"
+  },
+  "privacy": {
+    "deviceNameStored": false,
+    "uniqueIdentifiersStored": false
+  },
+  "profileID": "iphone-16e-ios27-beta-primary-v1",
+  "role": "primary-current-mid",
+  "schemaVersion": 1,
+  "source": {
+    "deviceFacts": "user-declared; capture pending",
+    "hardwareReference": "Apple iPhone 16e technical specifications"
+  }
+}

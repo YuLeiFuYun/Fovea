@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "registryID": "FOVEA-SWIFTUI-SURFACE-CLAIMS-V1",
+  "status": "preregistered-before-paired-formal-results",
+  "sourcePlan": "Benchmarks/AsyncImageLab/experiment-plan.json",
+  "comparators": ["Apple AsyncImage", "Fovea"],
+  "rules": {
+    "commonEndpointsOnly": true,
+    "missingMetric": "not-comparable-not-zero",
+    "simulator": "calibration-only",
+    "formalResamplingUnit": "paired-run-session",
+    "multiplicity": "holm-within-surface-family"
+  },
+  "families": [
+    {
+      "id": "CLAIM-SWIFTUI-W1-EXPERIENCE",
+      "workloadIDs": ["W1-SCROLL-V1"],
+      "primaryEndpoints": ["main-thread-hitch-time", "peak-dirty-memory"],
+      "secondaryEndpoints": ["origin-request-count", "origin-stopped-count", "visible-success-count"]
+    },
+    {
+      "id": "CLAIM-SWIFTUI-W2-HERO",
+      "workloadIDs": ["W2-HERO-V1"],
+      "primaryEndpoints": ["hero-display-latency", "peak-dirty-memory"],
+      "secondaryEndpoints": ["main-thread-hitch-time", "origin-delivered-bytes"]
+    },
+    {
+      "id": "CLAIM-SWIFTUI-W10-IDENTITY",
+      "workloadIDs": ["W10-SWIFTUI-IDENTITY-CHURN-V1"],
+      "primaryEndpoints": ["stale-success-count", "visible-success-latency", "main-thread-hitch-time"],
+      "secondaryEndpoints": ["origin-request-count", "origin-stopped-count", "peak-dirty-memory"]
+    }
+  ]
+}

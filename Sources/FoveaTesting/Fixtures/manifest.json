@@ -1,0 +1,33 @@
+{
+  "fixtures": [
+    {
+      "byteCount": 40115,
+      "name": "feed-2048x1536.jpg",
+      "pixelHeight": 1536,
+      "pixelWidth": 2048,
+      "sha256": "4275586e9d0a5722b0cf8f3a6c26e09dc867345899b9dd686ab619e7bf3ec4cd"
+    },
+    {
+      "byteCount": 296273,
+      "name": "hero-12mp-4000x3000.jpg",
+      "pixelHeight": 3000,
+      "pixelWidth": 4000,
+      "sha256": "9e1692b2b0590cfb25eb1b87e6400155da9c2ec2d887215811e6a3ec987be9bd"
+    },
+    {
+      "byteCount": 459658,
+      "name": "hero-24mp-6000x4000.jpg",
+      "pixelHeight": 4000,
+      "pixelWidth": 6000,
+      "sha256": "7c7010764c819c0798dcc05ca6cf33c9a5644d54e9dd68e889043f823ab21c06"
+    },
+    {
+      "byteCount": 695689,
+      "name": "hero-48mp-8000x6000.jpg",
+      "pixelHeight": 6000,
+      "pixelWidth": 8000,
+      "sha256": "40ffa4a5860aae9264eaba5191dd5c2c1d40defc568541ef441d5929221d27ed"
+    }
+  ],
+  "schemaVersion": 1
+}

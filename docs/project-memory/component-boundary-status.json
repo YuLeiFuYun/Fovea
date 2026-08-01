@@ -1,0 +1,274 @@
+{
+  "allowedPluginSurfaces": [
+    "ImageCodec",
+    "RenderedImageCaching",
+    "original encoded/blob store through Fovea adapter",
+    "RepresentationRecordStoring",
+    "advanced HTTP transport",
+    "ImageTransforming"
+  ],
+  "canonicalRoadmap": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
+  "components": {
+    "Akashic": {
+      "commit": "e138b4425688cb0ce32fba7788adcc944c936b53",
+      "consumerGate": "passed",
+      "defaultAdapter": "AkashicOriginalEncodedStore",
+      "defaultAdapterVisibility": "package-only",
+      "defaultMechanism": "FileBlobStore",
+      "faultInjectionArtifactSHA256": "d553eed78fdd50827c3c4f4d3df2dadaa4b6ac8f565b7df62860134ef3fd6780",
+      "faultInjectionStatus": "passed-v4-8-syscall-1-permission-3-full-volume-3-quota-11-exact-3-round-78-random",
+      "foveaDomainContractModule": "FoveaStorage",
+      "foveaExternalRevisionHostTestsPassed": 475,
+      "foveaHostTestsPassed": 475,
+      "foveaIntegration": "public-alpha3-exact-revision-typed-default-legacy-source-absent-clean-copy-alpha3-and-alpha2-rollback-475-each",
+      "foveaPublicSymbolCountAfterExtraction": 723,
+      "generationContentionParticipants": 12,
+      "generationContentionStatus": "passed-local-cross-process",
+      "implementedHostObligations": [
+        "AKASHIC-CT-022",
+        "AKASHIC-CT-023",
+        "AKASHIC-CT-024",
+        "AKASHIC-CT-025",
+        "AKASHIC-CT-026"
+      ],
+      "legacyOverlayStatus": "removed-typed-file-blob-store-is-only-production-original-encoded-path",
+      "localTestsPassed": 41,
+      "path": null,
+      "products": [
+        "AkashicCore",
+        "AkashicMemory",
+        "AkashicDisk"
+      ],
+      "publicAPISymbols": 128,
+      "remoteConfigured": true,
+      "sourceBoundary": "passed",
+      "sourceLock": "docs/project-memory/component-pins.json",
+      "tagged": true,
+      "workingTree": "clean",
+      "repositoryURL": "https://github.com/YuLeiFuYun/Akashic.git",
+      "ciStatus": "passed-public-github-actions-xcode27-alpha3",
+      "embeddedSourceStatus": "absent",
+      "tag": "0.1.0-alpha.3",
+      "previousPublicRevision": "07d43af89014eaa266390f21cbc9a6c481627cfb",
+      "previousTag": "0.1.0-alpha.2",
+      "sourceIdentitySHA256": "eb271ce584a799a6753019b5ce6a7edab38c8e9260289c2f29fc2ed848f4ed61",
+      "sourceFileCount": 75,
+      "historicalFullFaultCampaignRevision": "07d43af89014eaa266390f21cbc9a6c481627cfb",
+      "alpha3FullFaultCampaignStatus": "historical-alpha2-campaign-retained-alpha3-full-rebind-pending"
+    },
+    "FoveaStorage": {
+      "dependencies": [
+        "AkashicCore"
+      ],
+      "forbiddenDependencies": [
+        "AkashicDisk",
+        "FoveaHTTP",
+        "FoveaCore",
+        "FoveaPersistence"
+      ],
+      "publicProduct": false,
+      "publicSymbols": 26,
+      "role": "minimal Fovea-owned storage capability and namespace identity module",
+      "status": "implemented-local-domain-boundary-validated"
+    },
+    "ImageCraft": {
+      "commit": "4507da936ef348fa198652c2e4314a1f393b2c90",
+      "consumerGate": "passed",
+      "foveaExternalRevisionHostTestsPassed": 475,
+      "foveaHostTestsPassed": 475,
+      "foveaIntegration": "public-alpha3-exact-revision-embedded-source-absent-clean-copy-alpha3-and-alpha2-rollback-475-each",
+      "foveaOwnedTypesMoved": [
+        "TargetGeometryPolicy and target resolution",
+        "RenderCacheAdmission",
+        "ImageTransforming",
+        "legacy decoder compatibility policy"
+      ],
+      "localTestsPassed": 64,
+      "path": null,
+      "products": [
+        "ImageCraftCore",
+        "ImageCraftImageIO"
+      ],
+      "remoteConfigured": true,
+      "sourceLock": "docs/project-memory/component-pins.json",
+      "tagged": true,
+      "workingTree": "clean",
+      "jpegMarkerScanPerformanceEvidence": "../ImageCraft/Evidence/Experiments/jpeg-marker-scan-ab-2026-07-31.json",
+      "jpegMarkerScanPerformanceEvidenceSHA256": "d00753208ed7b04954f0e7df9d030c2dc0704eac97b5cfc05f47374b34c65f88",
+      "jpegMarkerScanStatus": "interleaved-ab-588-timed-samples-6-paths-5-seven-of-seven-wins-1-six-of-seven-win",
+      "repositoryURL": "https://github.com/YuLeiFuYun/ImageCraft.git",
+      "ciStatus": "passed-public-github-actions-xcode27-alpha3",
+      "embeddedSourceStatus": "absent",
+      "tag": "0.1.0-alpha.3",
+      "previousPublicRevision": "a26d49f20796ce93539dd497c9a81f58fbfc02af",
+      "previousTag": "0.1.0-alpha.2"
+    }
+  },
+  "coreQuestion": "What is the minimum independently versionable codec/cache boundary that preserves Fovea authority, revocation and resource guarantees without adding a runtime framework?",
+  "forbiddenPluginSurfaces": [
+    "ContentID and key derivation",
+    "namespace generation and revoke",
+    "authority checks",
+    "cross-store commit coordination",
+    "credential refresh",
+    "single-flight registry",
+    "UI display session state",
+    "benchmark acceptance policy"
+  ],
+  "foveaGuards": {
+    "adaptiveControlAuthorityIsolation": "implemented",
+    "akashicDomainLeakReverseGate": "implemented-passed",
+    "akashicTypedSourceLock": "retired-replaced-by-external-exact-pin-gate",
+    "architectureCheck": "passed-after-imagecraft-convergence-and-akashic-domain-extraction",
+    "artifactDerivationIdentityCompleteness": "implemented",
+    "defaultCodecExecutionLoaderExclusion": "implemented",
+    "externalComponentRevisionRehearsal": "public-exact-pin-local-host-pass-clean-copy-current-pin-pending",
+    "imageCraftSourceLock": "retired-replaced-by-external-exact-pin-gate"
+  },
+  "nextPhases": [
+    {
+      "phase": "P1",
+      "goal": "Maintain ImageCraft as a public MIT pre-1.0 component with immutable development tags and required CI.",
+      "status": "public-exact-pin-ci-green-alpha-tagged-required-check-active",
+      "exit": "Current pin, tag, required check, rollback and physical-device evidence are all bound to one source identity."
+    },
+    {
+      "phase": "P5",
+      "goal": "Qualify the external Akashic default path through clean-copy, rollback, W8/W13 and device evidence.",
+      "status": "public-exact-pin-host-local-pass-clean-copy-and-rollback-pending",
+      "exit": "Current public pin is CI-green, rollback/forward recovery pass, and no embedded implementation exists."
+    },
+    {
+      "phase": "P6",
+      "goal": "Run codec/cache combination and cross-repository compatibility matrices.",
+      "status": "pending-after-current-pin-clean-copy",
+      "exit": "Default and custom combinations preserve authority, resource and publication semantics."
+    },
+    {
+      "phase": "P7",
+      "goal": "Measure the scoped Pareto frontier against capability-matched loaders, codecs and caches.",
+      "status": "pending",
+      "exit": "Claims remain scoped to equivalent semantics, devices and evidence levels."
+    }
+  ],
+  "researchInputs": [
+    {
+      "adopt": [
+        "transport-independent codec semantics",
+        "deny-by-default capability admission",
+        "host-validated output commit",
+        "explicit cancellation guarantee",
+        "normalized failure categories"
+      ],
+      "decision": "adopt-semantics-not-default-loader-machinery",
+      "defer": [
+        "C ABI dynamic loading",
+        "WASI Component",
+        "XPC or subprocess codec execution",
+        "runtime execution-mode registry"
+      ],
+      "project": "CodecExecutionBoundaryLab"
+    },
+    {
+      "adopt": [
+        "adaptive control cannot self-authorize",
+        "evidence and activation remain separate",
+        "negative results and scope are retained"
+      ],
+      "decision": "adopt-static-governance-boundaries",
+      "defer": [
+        "runtime constitution interpreter",
+        "witness quorum",
+        "self-modifying policy activation"
+      ],
+      "project": "FoveaConstitutionResearch"
+    },
+    {
+      "adopt": [
+        "identity/integrity/authenticity/authority separation",
+        "content-codec-transform-generation derivation identity",
+        "revoke as reachability fence",
+        "resource lifetime rather than scalar-only accounting",
+        "distinct requested/applied/observed evidence levels",
+        "distinct decode/publish/UI exposure checkpoints"
+      ],
+      "decision": "adopt-identity-authority-resource-invariants",
+      "defer": [
+        "generic arbitrary artifact DAG",
+        "global provenance database",
+        "large per-object causal records"
+      ],
+      "project": "ImageArtifactCausalModel"
+    }
+  ],
+  "schemaVersion": 1,
+  "statusID": "FOVEA-COMPONENT-BOUNDARY-2026-07-30",
+  "updatedAt": "2026-08-01",
+  "validation": {
+    "akashicComponentTestsPassed": 41,
+    "akashicDomainLeakCount": 0,
+    "akashicExactProcessCrashCasesPassed": 11,
+    "akashicFaultInjectionArtifactSHA256": "d553eed78fdd50827c3c4f4d3df2dadaa4b6ac8f565b7df62860134ef3fd6780",
+    "akashicFaultSyscallTestsPassed": 8,
+    "akashicGenerationContentionArtifactSHA256": "f5f46b2392df4e584f0cc9c46b52e56087580a33cd36708fe3b64330cb562f49",
+    "akashicGenerationContentionParticipants": 12,
+    "akashicGenerationContentionStatus": "passed",
+    "akashicHostObligationsPassed": 5,
+    "akashicPermissionTransitionTestsPassed": 1,
+    "akashicPlatformMatrixArtifactSHA256": "a1912709d8cef7d22e0f44832ebd35efd483fc0e517c6aa418880b2421457951",
+    "akashicRandomKillCasesPassed": 78,
+    "akashicRandomKillRoundsPassed": 3,
+    "akashicRandomTimingHitCount": 61,
+    "akashicRandomTimingMissCount": 11,
+    "akashicRandomTimingSamplesPassed": 72,
+    "akashicRealAPFSQuotaArtifactSHA256": "51f939460ee80cab25110d21b86173d9092240ecd3edf7a13882ce01879f1e6a",
+    "akashicRealAPFSQuotaCasesPassed": 3,
+    "akashicRealAPFSQuotaFoundationMetadataFailures": 1,
+    "akashicRealAPFSQuotaKernelENOSPCCases": 2,
+    "akashicRealFullVolumeArtifactSHA256": "37c27e22436892131f1900f3b8deda57e5e508d2deadc6db6d1e36e464fbc2df",
+    "akashicRealFullVolumeCasesPassed": 3,
+    "akashicRealMountedAPFSENOSPCClaim": true,
+    "documentationArtifact": ".artifacts/docs/documentation.json",
+    "documentedPublicSymbolPercent": 53.38865836791148,
+    "documentedPublicTypePercent": 100.0,
+    "externalComponentConcurrentFailureRetained": "NEG-EXTERNAL-REHEARSAL-CONCURRENT-BUILD-001",
+    "externalComponentSerialRehearsalStatus": "superseded-by-public-exact-pin-clean-copy-and-rollback-plan",
+    "foveaCompositeStoreContentionArtifactSHA256": "1855b08a6cf1efe4fa82268347909842b16f20e69f0e4ece5a9ba2294362fff6",
+    "foveaExternalRevisionHostTestsPassed": 475,
+    "foveaTypedDefaultHostTestsPassed": 475,
+    "imageCraftComponentTestsPassed": 64,
+    "legacyDomainContractsRemovedFromAkashic": true,
+    "legacyOverlayRemoved": true,
+    "legacyRemovalCriticalMutantsKilled": 5,
+    "legacyRemovalMainSynchronizationStatus": "passed",
+    "legacyRemovalPreimageConflictCount": 0,
+    "legacyRemovalSynchronizedPathCount": 57,
+    "legacyRemovalUnexpectedPostSyncDifferenceCount": 0,
+    "legacyStoreRemovedFromFoveaPersistence": true,
+    "mainHostTestCount": 475,
+    "mainReleaseBuild": "passed",
+    "physicalDeviceComparativeLabRun": false,
+    "portableExternalPathDependencyRejected": true,
+    "productionModuleCount": 9,
+    "publicSymbolCount": 723,
+    "publicTypeCount": 110,
+    "releaseBuildStatus": "passed-local",
+    "typedHostReopenTrace": "passed-local-AKASHIC-CT-026",
+    "componentPinGate": "passed-current-public-swift64-alpha3-revisions",
+    "embeddedComponentProductionSources": 0,
+    "imageCraftPublicCI": "passed-xcode27-alpha3-main",
+    "akashicPublicCI": "passed-xcode27-alpha3-main",
+    "externalComponentCleanCopy": "passed-alpha3-475-of-475-public-https-exact-revisions",
+    "structuralModuleCount": 10,
+    "productionSourceFileCount": 107,
+    "externalComponentCleanCopySourceDigest": "4d92d7a96cf7840eb82d8704220fd62c9bd190901c60128db3ac341773d65d75",
+    "externalComponentCleanCopyArtifactSHA256": "872071d5970b8c13f895e4839681d672f8c7c6e31bbba1791597fcd667a4eed8",
+    "externalComponentRollback": "passed-alpha2-imagecraft-alpha2-akashic-forward-alpha3-475-each",
+    "externalComponentRollbackScenarioCount": 3,
+    "externalComponentRollbackCombinedLogSHA256": "43730412f4aefec1b47184ed137f975e712631416da6b9d9fb9fde679934f303",
+    "externalComponentRollbackArtifactSHA256": "81039fe4fef6a541bd9d856524f2617169d8a84c953659c0f6590d9448f3d5d4",
+    "sharedTaskTombstoneDeadlineReplay": "passed-30-of-30-plus-14-test-suite-and-705-state-model",
+    "externalComponentCleanCopyLogSHA256": "2b4855ed6c49e014442fed17be2aaffd9f7c7a085b85b9d75efbfedceaec1e34",
+    "swift64MutationApplications": "101-of-101-alpha3"
+  }
+}

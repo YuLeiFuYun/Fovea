@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fovea.invalid/schemas/critical-mutation-report.schema.json",
+  "title": "Fovea Critical Mutation Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "verifiedCommit",
+    "verifiedTree",
+    "includesWorkingTreeChanges",
+    "generatedAt",
+    "producer",
+    "xcodeVersion",
+    "swiftVersion",
+    "requiredMutants",
+    "summary",
+    "mutants"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "verifiedCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "enum": [
+        "agent-declared",
+        "trusted-ci",
+        "held-out-evaluator",
+        "human-reviewer"
+      ]
+    },
+    "xcodeVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "swiftVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requiredMutants": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^AIQA-MUT-[0-9]{3}$"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "completed",
+        "killed",
+        "survived",
+        "invalid"
+      ],
+      "properties": {
+        "required": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "killed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "survived": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "invalid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "mutants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "description",
+          "sourceFile",
+          "testFilter",
+          "status",
+          "exitCode",
+          "logPath",
+          "logSha256"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^AIQA-MUT-[0-9]{3}$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceFile": {
+            "type": "string",
+            "minLength": 1
+          },
+          "testFilter": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "killed",
+              "survived",
+              "invalid"
+            ]
+          },
+          "exitCode": {
+            "type": "integer"
+          },
+          "logPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "logSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "verifiedTree": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "includesWorkingTreeChanges": {
+      "type": "boolean"
+    }
+  }
+}

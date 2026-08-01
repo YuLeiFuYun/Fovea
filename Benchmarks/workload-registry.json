@@ -1,0 +1,1195 @@
+{
+  "adjunctWorkloads": [
+    {
+      "canonicalID": "X1-ADAPTIVE-REPRESENTATION-V1",
+      "capabilities": [
+        "transport",
+        "target-decode",
+        "transform",
+        "format-coverage",
+        "scheduling"
+      ],
+      "evidencePaths": [
+        "docs/specifications/benchmark-workloads.md"
+      ],
+      "id": "X1",
+      "name": "Adaptive Representation",
+      "reason": "Preserved from the existing repository specification after restoring W4 to Progressive JPEG. X1 cannot replace or renumber W1-W15.",
+      "status": "specified-not-implemented-non-v1-blocking"
+    }
+  ],
+  "globalRules": {
+    "adjunctRule": "Useful workloads outside the accepted W1-W15 matrix use X-prefixed identifiers and cannot displace an accepted W number.",
+    "currentComparativePlanWorkloadIDs": [
+      "W1-SCROLL-V1",
+      "W2-HERO-V1",
+      "W3-AUTH-V1"
+    ],
+    "currentPhase0bExecutableSubset": [
+      "W1",
+      "W2",
+      "W3"
+    ],
+    "formalClaimRule": "A workload is claim-eligible only after a dedicated immutable experiment plan, semantic profile, primary endpoint family, margins, power target, source/device identities, and held-out rule are activated before formal data.",
+    "fullAcceptedWorkloadRange": "W1-W15",
+    "noGlobalCompletionShortcut": "Completion of W1-W3 does not imply completion of W4-W15 or comprehensive best-within-scope eligibility.",
+    "silentDeletionOrRenumberingForbidden": true,
+    "supersessionRequired": true,
+    "unsupportedRule": "Unsupported production capabilities remain capability-gap and cannot be benchmarked as if implemented."
+  },
+  "implementationOrder": [
+    {
+      "order": 1,
+      "reason": "finish the current Phase 0b baseline and formal physical evidence when external blockers clear",
+      "workloads": [
+        "W1",
+        "W2",
+        "W3"
+      ]
+    },
+    {
+      "order": 2,
+      "reason": "complete cache restart/corruption and phase-changing trace evidence with current schema and claim identities",
+      "workloads": [
+        "W8",
+        "W13"
+      ]
+    },
+    {
+      "order": 3,
+      "reason": "exercise already implemented coalescing, identity, target sharing and lifecycle mechanisms in dedicated comparative runners",
+      "workloads": [
+        "W7",
+        "W10",
+        "W11",
+        "W12"
+      ]
+    },
+    {
+      "order": 4,
+      "reason": "complete HTTP revalidation and constrained/expensive-network policy semantics",
+      "workloads": [
+        "W14",
+        "W15"
+      ]
+    },
+    {
+      "order": 5,
+      "reason": "implement current explicit capability gaps: progressive, animated and resumable/interruption recovery",
+      "workloads": [
+        "W4",
+        "W5",
+        "W6"
+      ]
+    },
+    {
+      "order": 6,
+      "reason": "expand hostile corpus after decoder and format surfaces are stable",
+      "workloads": [
+        "W9"
+      ]
+    },
+    {
+      "order": 7,
+      "reason": "run held-out, stable-OS, multi-device and independent replication across every applicable workload",
+      "workloads": [
+        "W1",
+        "W2",
+        "W3",
+        "W4",
+        "W5",
+        "W6",
+        "W7",
+        "W8",
+        "W9",
+        "W10",
+        "W11",
+        "W12",
+        "W13",
+        "W14",
+        "W15"
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "A",
+      "name": "Governance and Evidence Identity",
+      "purpose": "discussion memory, ontology, semantic profiles, claim families, source/device/binary/dataset identity and negative results"
+    },
+    {
+      "id": "B",
+      "name": "Direct Client-Pipeline Baseline",
+      "purpose": "W1-W3 current end-to-end baseline and direct Apple-platform adapters"
+    },
+    {
+      "id": "C",
+      "name": "Cache Algorithms and Persistence",
+      "purpose": "W8 and W13 memory/disk policies, restart, corruption and oracle regret"
+    },
+    {
+      "id": "D",
+      "name": "Coalescing, Scheduling and Network Policy",
+      "purpose": "W6, W7 and W15 cancellation, fairness, recovery and policy control"
+    },
+    {
+      "id": "E",
+      "name": "Decode, Formats and Representation",
+      "purpose": "W2, W4, W5, W9 and W11 decode/format/transform behavior"
+    },
+    {
+      "id": "F",
+      "name": "Lifecycle, Security and Recovery",
+      "purpose": "W3, W8, W9, W10, W12 and W14 safety, state refinement and recovery"
+    },
+    {
+      "id": "G",
+      "name": "Physical Experience and Long-Run",
+      "purpose": "physical-device hitch, memory, energy, thermal and lifecycle behavior across applicable workloads"
+    },
+    {
+      "id": "H",
+      "name": "Held-Out and Independent Replication",
+      "purpose": "held-out media/traces, stable OS, lower-performance device and independent reruns"
+    }
+  ],
+  "registryID": "FOVEA-CANONICAL-WORKLOAD-CATALOG-V3",
+  "reviewedOn": "2026-07-25",
+  "schemaVersion": 2,
+  "sourceAuthority": {
+    "acceptedMatrix": "docs/project-memory/accepted-workload-matrix.md",
+    "discussionSourceID": "SRC-DISCUSSION-COMPARISON-ROADMAP-01",
+    "discussionSourceSHA256": "361438a15ca974aee4245a393052ee7a9a09fabc1954c1cee76afecf617000bf",
+    "restorationNote": "W1-W15 names and core purposes were restored from retained user-provided prior discussion material. Detailed contracts below are repository normalization and remain subject to explicit versioned refinement, not silent renumbering."
+  },
+  "status": "active-complete-roadmap-current-execution-subset-w1-w3",
+  "workloads": [
+    {
+      "acceptedPurpose": "取消、去重、卡顿、扫描污染",
+      "bTierComparators": [
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "blockers": [
+        "clean formal source",
+        "signed physical run",
+        "stable iOS replication",
+        "lower-performance device",
+        "held-out replication"
+      ],
+      "candidatePrimaryEndpoints": [
+        "cancel-waste-bytes",
+        "main-thread-hitch-time",
+        "peak-dirty-memory"
+      ],
+      "canonicalID": "W1-SCROLL-V1",
+      "capabilities": [
+        "transport",
+        "request-coalescing",
+        "scheduling",
+        "memory-cache",
+        "prefetch",
+        "ui-lifecycle",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-SINGLE-FLIGHT-001",
+        "CH-CANCEL-ISOLATION-002",
+        "CH-CANCEL-WASTE-003",
+        "CH-PREFETCH-LIFECYCLE-015",
+        "CH-QUEUE-FAIRNESS-016",
+        "CH-CALLBACK-ONCE-018"
+      ],
+      "claimActivation": "active-family-release-blocked",
+      "directComparators": [
+        "CMP-APPLE-NATIVE",
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-PINREMOTEIMAGE"
+      ],
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/experiment-plan.json",
+        "Benchmarks/ComparativeLab/Apps/Shared/FeedBenchmark.swift",
+        "Benchmarks/AsyncImageLab/experiment-plan.json",
+        "Benchmarks/AsyncImageLab/applicability.json"
+      ],
+      "hardInvariants": [
+        "wrong-image-flash-zero",
+        "callback-exactly-once",
+        "bounded-memory"
+      ],
+      "id": "W1",
+      "lab": "ComparativeLab",
+      "name": "Feed Scroll",
+      "oracle": "fixed scroll/cancel trace; no clairvoyant performance oracle",
+      "phases": [
+        "B",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "p95-final-latency",
+        "network-bytes",
+        "decoded-megapixels",
+        "post-scroll-cache-pollution",
+        "energy"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-APPLE-ASYNCIMAGE"
+      ],
+      "status": "implemented-simulator-calibration-formal-physical-blocked"
+    },
+    {
+      "acceptedPurpose": "下采样、峰值内存、色彩和方向",
+      "bTierComparators": [
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "blockers": [
+        "clean formal source",
+        "signed physical run",
+        "stable iOS replication",
+        "lower-performance device",
+        "held-out replication"
+      ],
+      "candidatePrimaryEndpoints": [
+        "decoded-megapixels",
+        "peak-dirty-memory"
+      ],
+      "canonicalID": "W2-HERO-V1",
+      "capabilities": [
+        "target-decode",
+        "transform",
+        "disk-cache",
+        "memory-cache",
+        "ui-lifecycle",
+        "format-coverage"
+      ],
+      "challengeIDs": [
+        "CH-TARGET-PIXEL-004",
+        "CH-ORIENTATION-COLOR-005",
+        "CH-TRANSFORM-DEDUPE-017"
+      ],
+      "claimActivation": "active-family-release-blocked",
+      "directComparators": [
+        "CMP-APPLE-NATIVE",
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-PINREMOTEIMAGE"
+      ],
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/experiment-plan.json",
+        "Benchmarks/ComparativeLab/Fixtures/correctness-probes.json",
+        "Benchmarks/AsyncImageLab/experiment-plan.json",
+        "Benchmarks/AsyncImageLab/applicability.json"
+      ],
+      "hardInvariants": [
+        "target-pixel-invariant",
+        "orientation-correct",
+        "color-reference-accepted",
+        "alpha-correct",
+        "no-unnecessary-full-size-bitmap"
+      ],
+      "id": "W2",
+      "lab": "ComparativeLab",
+      "name": "Detail Hero",
+      "oracle": "pixel-reference oracle and target-pixel lower bounds",
+      "phases": [
+        "B",
+        "E",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "ttfp",
+        "p95-final-latency",
+        "main-thread-work",
+        "cpu-time",
+        "energy"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-APPLE-ASYNCIMAGE",
+        "CMP-APPLE-NATIVE",
+        "CMP-LIBVIPS",
+        "CMP-IMAGE-RS"
+      ],
+      "status": "implemented-simulator-calibration-formal-physical-blocked"
+    },
+    {
+      "acceptedPurpose": "no-store、Vary、跨用户隔离、redirect",
+      "bTierComparators": [
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "blockers": [
+        "clean formal source",
+        "signed physical run",
+        "stable iOS replication",
+        "independent security review"
+      ],
+      "candidatePrimaryEndpoints": [],
+      "canonicalID": "W3-AUTH-V1",
+      "capabilities": [
+        "transport",
+        "http-cache",
+        "memory-cache",
+        "disk-cache",
+        "security",
+        "ui-lifecycle",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-NO-STORE-012",
+        "CH-NAMESPACE-REVOKE-013",
+        "CH-AUTH-REDIRECT-014"
+      ],
+      "claimActivation": "active-hard-family-release-blocked",
+      "directComparators": [
+        "CMP-APPLE-NATIVE",
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-PINREMOTEIMAGE"
+      ],
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/experiment-plan.json",
+        "Benchmarks/ComparativeLab/Apps/Shared/OtherWorkloads.swift",
+        "Benchmarks/AsyncImageLab/experiment-plan.json",
+        "Benchmarks/AsyncImageLab/applicability.json"
+      ],
+      "hardInvariants": [
+        "cross-account-pixel-leak-zero",
+        "metadata-blob-coupling-zero",
+        "no-store-reusable-write-zero",
+        "logout-residue-zero",
+        "cross-origin-authorization-leak-zero",
+        "revoke-commit-race-residue-zero"
+      ],
+      "id": "W3",
+      "lab": "ComparativeLab",
+      "name": "Auth Gallery",
+      "oracle": "state-machine safety oracle; unequal security profiles are not performance-ranked",
+      "phases": [
+        "B",
+        "F",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "semantic-contract-cost",
+        "extra-network-bytes",
+        "extra-decode-time"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [],
+      "status": "implemented-simulator-calibration-formal-physical-blocked"
+    },
+    {
+      "acceptedPurpose": "首个可接受结果、扫描质量、取消",
+      "blockers": [
+        "production progressive event path",
+        "progressive fixture corpus",
+        "five-library progressive adapter contract",
+        "claim family"
+      ],
+      "candidatePrimaryEndpoints": [
+        "time-to-first-acceptable-preview",
+        "preview-quality-at-time",
+        "post-cancel-waste-bytes"
+      ],
+      "canonicalID": "W4-PROGRESSIVE-JPEG-V1",
+      "capabilities": [
+        "transport",
+        "target-decode",
+        "progressive",
+        "ui-lifecycle",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-PROGRESSIVE-020"
+      ],
+      "claimActivation": "inactive-capability-gap",
+      "directComparators": [
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "evidencePaths": [
+        "docs/project-memory/accepted-workload-matrix.md",
+        "Benchmarks/ComparativeLab/challenge-suite.json"
+      ],
+      "hardInvariants": [
+        "preview-monotonic-quality",
+        "final-pixel-correct",
+        "cancelled-scan-never-publishes",
+        "bounded-buffering"
+      ],
+      "id": "W4",
+      "lab": "CodecProgressiveLab",
+      "name": "Progressive JPEG",
+      "oracle": "reference scan corpus and quality-time frontier; unsupported remains capability-gap",
+      "phases": [
+        "E",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "scan-count",
+        "final-latency",
+        "peak-memory",
+        "cpu-time"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-PINREMOTEIMAGE",
+        "CMP-YYWEBIMAGE"
+      ],
+      "status": "capability-gap-not-implemented"
+    },
+    {
+      "acceptedPurpose": "帧调度、帧缓存、掉帧、内存",
+      "blockers": [
+        "animated production path",
+        "GIF/APNG/WebP corpus",
+        "frame scheduler",
+        "claim family"
+      ],
+      "candidatePrimaryEndpoints": [
+        "dropped-frame-rate",
+        "peak-frame-cache-memory",
+        "frame-timing-error"
+      ],
+      "canonicalID": "W5-ANIMATED-MEDIA-V1",
+      "capabilities": [
+        "animated",
+        "format-coverage",
+        "memory-cache",
+        "ui-lifecycle",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-ANIMATED-021",
+        "CH-EXOTIC-FORMATS-023"
+      ],
+      "claimActivation": "inactive-capability-gap",
+      "directComparators": [
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE"
+      ],
+      "evidencePaths": [
+        "docs/project-memory/accepted-workload-matrix.md",
+        "Benchmarks/ComparativeLab/challenge-suite.json"
+      ],
+      "hardInvariants": [
+        "frame-order-correct",
+        "loop-count-correct",
+        "duration-clamped-safely",
+        "memory-bounded",
+        "view-disappearance-stops-playback"
+      ],
+      "id": "W5",
+      "lab": "AnimatedMediaLab",
+      "name": "Animated Media",
+      "oracle": "frame timeline oracle and bounded-memory state model",
+      "phases": [
+        "E",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "startup-latency",
+        "decode-cpu-time",
+        "loop-correctness",
+        "energy"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-PINREMOTEIMAGE",
+        "CMP-YYWEBIMAGE",
+        "CMP-GLIDE",
+        "CMP-COIL",
+        "CMP-FRESCO"
+      ],
+      "status": "capability-gap-not-implemented"
+    },
+    {
+      "acceptedPurpose": "retry、resume、Range、流量浪费",
+      "blockers": [
+        "production resumable transfer",
+        "network transition runner",
+        "same-semantics competitor adapters",
+        "claim family"
+      ],
+      "candidatePrimaryEndpoints": [
+        "recovery-success-rate",
+        "duplicate-network-bytes",
+        "resume-saved-bytes"
+      ],
+      "canonicalID": "W6-INTERRUPTION-RECOVERY-V1",
+      "capabilities": [
+        "transport",
+        "resumable-transfer",
+        "scheduling",
+        "http-cache",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-RESUMABLE-022",
+        "CH-CANCEL-WASTE-003"
+      ],
+      "claimActivation": "inactive-partial-gap",
+      "directComparators": [
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "evidencePaths": [
+        "scripts/run-loopback-network-lab.py",
+        "Benchmarks/ComparativeLab/challenge-suite.json"
+      ],
+      "hardInvariants": [
+        "partial-body-never-published",
+        "retry-budget-bounded",
+        "range-validation-correct",
+        "cancelled-recovery-never-revives"
+      ],
+      "id": "W6",
+      "lab": "TransportRecoveryLab",
+      "name": "Weak Network and Interruption Recovery",
+      "oracle": "deterministic fault script and byte-range truth; unsupported resume remains capability-gap",
+      "phases": [
+        "D",
+        "F",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "time-to-recovery",
+        "retry-amplification",
+        "post-cancel-waste-bytes",
+        "energy"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-NUKE",
+        "CMP-APPLE-NATIVE"
+      ],
+      "status": "partial-retry-implemented-resume-capability-gap"
+    },
+    {
+      "acceptedPurpose": "去重、线程数、锁竞争、公平性",
+      "bTierComparators": [
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "blockers": [
+        "final six-comparator V7 Simulator calibration under one source digest",
+        "formal repeated physical-device run",
+        "stable iOS replication",
+        "lower-performance device",
+        "clean trusted source identity"
+      ],
+      "candidatePrimaryEndpoints": [
+        "origin-request-count",
+        "p99-queue-delay",
+        "peak-thread-task-count"
+      ],
+      "canonicalID": "W7-THOUSAND-CONCURRENT-V1",
+      "capabilities": [
+        "transport",
+        "request-coalescing",
+        "scheduling",
+        "target-decode",
+        "memory-cache",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-SINGLE-FLIGHT-001",
+        "CH-CANCEL-ISOLATION-002",
+        "CH-QUEUE-FAIRNESS-016",
+        "CH-CALLBACK-ONCE-018",
+        "CH-MEMORY-CONCURRENCY-007"
+      ],
+      "claimActivation": "preregistered-v7-calibration-pending-release-blocked",
+      "directComparators": [
+        "CMP-APPLE-NATIVE",
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-PINREMOTEIMAGE"
+      ],
+      "evidencePaths": [
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
+        "Benchmarks/W7ConcurrencyLab/claim-families.json",
+        "scripts/run-w7-concurrency-lab.py",
+        "scripts/check-w7-concurrency-plan.py",
+        "scripts/model-check-permit-scheduler.py",
+        "scripts/model-check-shared-task-registry.py",
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v6.json",
+        "Benchmarks/W7ConcurrencyLab/calibration-history.json"
+      ],
+      "hardInvariants": [
+        "capacity-never-exceeded",
+        "one-terminal-callback",
+        "single-flight-identity-correct",
+        "bounded-starvation",
+        "permit-exactly-once-release"
+      ],
+      "id": "W7",
+      "lab": "ConcurrencySchedulerLab",
+      "name": "1,000 Concurrent Requests",
+      "oracle": "S0 physical lower bounds, S1 clairvoyant finite solver, S2 limited-lookahead; gaps and timeouts remain explicit",
+      "phases": [
+        "D",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "throughput",
+        "lock-wait",
+        "deadline-miss-rate",
+        "aggregate-wait",
+        "wasted-work"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-GLIDE",
+        "CMP-COIL",
+        "CMP-FRESCO",
+        "CMP-CAFFEINE",
+        "CMP-MOKA",
+        "CMP-RISTRETTO"
+      ],
+      "status": "implemented-v7-runner-admission-aware-cancellation-fix-and-derived-origin-order-bound-final-calibration-pending",
+      "traceabilityIDs": [
+        "SCHED-PT-022"
+      ]
+    },
+    {
+      "acceptedPurpose": "durability、恢复、外部删除",
+      "blockers": [
+        "clean trusted formal rerun",
+        "real process-kill matrix expansion",
+        "held-out corpus"
+      ],
+      "candidatePrimaryEndpoints": [
+        "restart-recovery-time",
+        "corruption-rejection-rate",
+        "disk-p99-read-latency"
+      ],
+      "canonicalID": "W8-CACHE-RESTART-CORRUPTION-V1",
+      "capabilities": [
+        "memory-cache",
+        "disk-cache",
+        "security",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-DISK-INTEGRITY-008",
+        "CH-EXTERNAL-DELETION-009",
+        "CH-DISK-ATOMICITY-010"
+      ],
+      "claimActivation": "active-component-family-local-gate-passed-clean-blocked",
+      "directComparators": [
+        "CMP-PINCACHE"
+      ],
+      "evidencePaths": [
+        "Benchmarks/CacheLab/cache-plan.json",
+        "Benchmarks/CacheLab/Sources/CacheLabCore"
+      ],
+      "hardInvariants": [
+        "no-partial-publication",
+        "content-digest-correct",
+        "restart-converges",
+        "external-deletion-converges",
+        "corruption-fails-closed"
+      ],
+      "id": "W8",
+      "lab": "CacheLab",
+      "name": "Cache Restart and Corruption",
+      "oracle": "durability state machine and crash matrix; compare only within D-level peers",
+      "phases": [
+        "C",
+        "F",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "write-throughput",
+        "read-throughput",
+        "write-amplification",
+        "metadata-bytes"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-CACHELIB"
+      ],
+      "status": "implemented-component-schema3-formal-local-clean-source-missing"
+    },
+    {
+      "acceptedPurpose": "crash、OOM、超限、fuzz",
+      "blockers": [
+        "complete hostile corpus",
+        "long fuzz/sanitizer campaign",
+        "cross-library corpus adapters",
+        "claim family"
+      ],
+      "candidatePrimaryEndpoints": [
+        "crash-count",
+        "oom-count",
+        "limit-violation-count"
+      ],
+      "canonicalID": "W9-HOSTILE-IMAGE-CORPUS-V1",
+      "capabilities": [
+        "target-decode",
+        "format-coverage",
+        "security",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-ORIENTATION-COLOR-005",
+        "CH-EXOTIC-FORMATS-023"
+      ],
+      "claimActivation": "inactive-roadmap",
+      "directComparators": [
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "evidencePaths": [
+        "docs/project-memory/component-pins.json",
+        "Tests/FoveaTests/ImageDecoderTests.swift",
+        "scripts/test-image-metadata.py"
+      ],
+      "hardInvariants": [
+        "decompression-bomb-bounded",
+        "dimension-frame-count-limits",
+        "malformed-input-fails-closed",
+        "no-sensitive-diagnostics"
+      ],
+      "id": "W9",
+      "lab": "HostileCodecLab",
+      "name": "Hostile Image Corpus",
+      "oracle": "hostile corpus truth and fuzz crash oracle; unsupported format is distinct from unsafe acceptance",
+      "phases": [
+        "E",
+        "F",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "rejection-latency",
+        "false-rejection-rate",
+        "fuzz-throughput",
+        "peak-memory"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-APPLE-NATIVE",
+        "CMP-LIBVIPS",
+        "CMP-IMAGE-RS",
+        "CMP-YYWEBIMAGE"
+      ],
+      "status": "partially-implemented-no-complete-corpus"
+    },
+    {
+      "acceptedPurpose": "view 生命周期、旧图闪现、取消",
+      "bTierComparators": [],
+      "blockers": [
+        "final paired six-run Simulator artifact under one source digest",
+        "formal repeated physical-device run",
+        "stable iOS replication",
+        "lower-performance device",
+        "clean trusted source identity"
+      ],
+      "candidatePrimaryEndpoints": [
+        "wrong-image-flash-count",
+        "stale-result-publication-count",
+        "cancel-latency"
+      ],
+      "canonicalID": "W10-SWIFTUI-IDENTITY-CHURN-V1",
+      "capabilities": [
+        "ui-lifecycle",
+        "request-coalescing",
+        "target-decode",
+        "prefetch",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-CANCEL-ISOLATION-002",
+        "CH-PREFETCH-LIFECYCLE-015",
+        "CH-CALLBACK-ONCE-018"
+      ],
+      "claimActivation": "preregistered-paired-surface-release-blocked",
+      "directComparators": [
+        "CMP-APPLE-ASYNCIMAGE"
+      ],
+      "evidencePaths": [
+        "Benchmarks/AsyncImageLab/experiment-plan.json",
+        "Benchmarks/AsyncImageLab/applicability.json",
+        "Benchmarks/AsyncImageLab/claim-families.json",
+        "scripts/run-asyncimage-simulator-lab.py",
+        "Tests/FoveaTests/SwiftUIStateTests.swift",
+        "Tests/FoveaTests/SwiftUIViewRenderingTests.swift"
+      ],
+      "hardInvariants": [
+        "current-generation-only-publishes",
+        "one-terminal-phase",
+        "disappear-cancels-policy-correct",
+        "identity-change-does-not-reuse-wrong-result"
+      ],
+      "id": "W10",
+      "lab": "SwiftUILifecycleLab",
+      "name": "SwiftUI Identity Churn",
+      "oracle": "view-identity trace refinement and generation oracle",
+      "phases": [
+        "F",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "visible-blank-time",
+        "task-count",
+        "network-waste",
+        "hitch-time"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-APPLE-ASYNCIMAGE"
+      ],
+      "status": "implemented-paired-swiftui-surface-simulator-calibration-formal-physical-blocked"
+    },
+    {
+      "acceptedPurpose": "编码下载共享、变体缓存",
+      "blockers": [
+        "multi-target trace runner",
+        "competitor encoded/processed cache observability",
+        "claim family"
+      ],
+      "candidatePrimaryEndpoints": [
+        "origin-download-count",
+        "encoded-byte-duplication",
+        "variant-cache-hit-rate"
+      ],
+      "canonicalID": "W11-MULTI-TARGET-SAME-SOURCE-V1",
+      "capabilities": [
+        "request-coalescing",
+        "target-decode",
+        "transform",
+        "memory-cache",
+        "disk-cache",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-SINGLE-FLIGHT-001",
+        "CH-TARGET-PIXEL-004",
+        "CH-TRANSFORM-DEDUPE-017"
+      ],
+      "claimActivation": "inactive-roadmap",
+      "directComparators": [
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/DecodeSharingTests.swift",
+        "Tests/FoveaTests/EncodedDataCoordinatorTests.swift"
+      ],
+      "hardInvariants": [
+        "original-identity-shared-safely",
+        "processed-key-includes-transform-and-target",
+        "undersized-result-never-reused",
+        "no-cross-namespace-sharing"
+      ],
+      "id": "W11",
+      "lab": "VariantSharingLab",
+      "name": "Multi-Target Same Source",
+      "oracle": "minimum one encoded fetch per eligible identity class plus pixel/variant identity oracle",
+      "phases": [
+        "E",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "decode-count",
+        "transform-count",
+        "peak-memory",
+        "final-latency"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-APPLE-NATIVE"
+      ],
+      "status": "partially-implemented-no-dedicated-comparative-runner"
+    },
+    {
+      "acceptedPurpose": "回收速度、状态一致性",
+      "blockers": [
+        "scripted OS pressure harness",
+        "background/foreground five-library runner",
+        "physical relaunch evidence",
+        "claim family"
+      ],
+      "candidatePrimaryEndpoints": [
+        "memory-release-latency",
+        "post-pressure-resident-memory",
+        "state-violation-count"
+      ],
+      "canonicalID": "W12-MEMORY-BACKGROUND-TRANSITION-V1",
+      "capabilities": [
+        "ui-lifecycle",
+        "memory-cache",
+        "disk-cache",
+        "scheduling",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-MEMORY-PRESSURE-019"
+      ],
+      "claimActivation": "inactive-roadmap",
+      "directComparators": [
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "evidencePaths": [
+        "Sources/FoveaSystem/FoveaMemoryPressureMonitor.swift",
+        "docs/specifications/resource-budgeting.md"
+      ],
+      "hardInvariants": [
+        "memory-converges-below-budget",
+        "durable-valid-state-only-survives",
+        "old-generation-never-publishes",
+        "all-terminal-work-releases"
+      ],
+      "id": "W12",
+      "lab": "LifecyclePressureLab",
+      "name": "Memory Warning and Background Transition",
+      "oracle": "scripted lifecycle trace refinement and resource upper bounds",
+      "phases": [
+        "F",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "cache-repopulation-time",
+        "network-refetch-bytes",
+        "fd-task-drift",
+        "background-work-time"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-APPLE-ASYNCIMAGE"
+      ],
+      "status": "partially-implemented-no-comparative-runner"
+    },
+    {
+      "acceptedPurpose": "淘汰策略自适应",
+      "blockers": [
+        "clean trusted formal rerun",
+        "held-out real image traces",
+        "large-trace lower-bound methodology",
+        "dynamic-regret claim-family expansion"
+      ],
+      "candidatePrimaryEndpoints": [
+        "dynamic-regret",
+        "byte-hit-regret",
+        "cost-weighted-regret"
+      ],
+      "canonicalID": "W13-PHASE-CHANGING-CACHE-V1",
+      "capabilities": [
+        "memory-cache",
+        "scheduling",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-MEMORY-SCAN-006",
+        "CH-MEMORY-CONCURRENCY-007"
+      ],
+      "claimActivation": "active-component-family-local-gate-passed-clean-blocked",
+      "directComparators": [
+        "CMP-LRUCACHE",
+        "CMP-PINCACHE"
+      ],
+      "evidencePaths": [
+        "scripts/analyze-cache-policies.py",
+        "Benchmarks/CacheLab/cache-plan.json"
+      ],
+      "hardInvariants": [
+        "capacity-bounded",
+        "value-correct",
+        "no-data-race",
+        "policy-state-bounded"
+      ],
+      "id": "W13",
+      "lab": "CachePolicyLab",
+      "name": "Phase-Changing Cache Trace",
+      "oracle": "windowed and dynamic regret against per-objective offline bounds; no universal weighted cache score",
+      "phases": [
+        "C",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "object-hit-rate",
+        "throughput",
+        "p99-operation-latency",
+        "metadata-updates"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-CAFFEINE",
+        "CMP-MOKA",
+        "CMP-RISTRETTO",
+        "CMP-CACHELIB",
+        "CMP-LIBCACHESIM"
+      ],
+      "status": "implemented-component-schema3-formal-local-heldout-dynamic-regret-missing"
+    },
+    {
+      "acceptedPurpose": "stale、304、过期行为",
+      "blockers": [
+        "competitor HTTP semantic adapters",
+        "offline transition runner",
+        "claim family"
+      ],
+      "candidatePrimaryEndpoints": [
+        "protocol-violation-count",
+        "offline-success-rate",
+        "revalidation-network-bytes"
+      ],
+      "canonicalID": "W14-OFFLINE-REVALIDATION-V1",
+      "capabilities": [
+        "transport",
+        "http-cache",
+        "disk-cache",
+        "security",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-EXPIRY-STALE-011",
+        "CH-NO-STORE-012"
+      ],
+      "claimActivation": "inactive-roadmap",
+      "directComparators": [
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "evidencePaths": [
+        "scripts/run-http-conformance.py",
+        "Tests/FoveaTests/HTTPConformanceTests.swift",
+        "Tests/FoveaTests/StaleFallbackTests.swift"
+      ],
+      "hardInvariants": [
+        "freshness-correct",
+        "304-metadata-merge-correct",
+        "no-store-never-reused",
+        "Vary-selection-correct",
+        "offline-policy-explicit"
+      ],
+      "id": "W14",
+      "lab": "HTTPRevalidationLab",
+      "name": "Offline and Revalidation",
+      "oracle": "RFC/profile state machine and deterministic origin truth",
+      "phases": [
+        "D",
+        "F",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "304-latency",
+        "stale-serve-rate",
+        "duplicate-download-bytes",
+        "retry-delay"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-APPLE-NATIVE"
+      ],
+      "status": "partially-implemented-fovea-conformance-only"
+    },
+    {
+      "acceptedPurpose": "策略切换、优先级和预取抑制",
+      "blockers": [
+        "public constrained/expensive network policy surface",
+        "policy controller",
+        "physical network profile",
+        "claim family"
+      ],
+      "candidatePrimaryEndpoints": [
+        "expensive-network-bytes",
+        "visible-deadline-miss-rate",
+        "unnecessary-prefetch-count"
+      ],
+      "canonicalID": "W15-EXPENSIVE-NETWORK-POLICY-V1",
+      "capabilities": [
+        "transport",
+        "prefetch",
+        "scheduling",
+        "ui-lifecycle",
+        "observability"
+      ],
+      "challengeIDs": [
+        "CH-PREFETCH-LIFECYCLE-015",
+        "CH-QUEUE-FAIRNESS-016"
+      ],
+      "claimActivation": "inactive-roadmap",
+      "directComparators": [
+        "CMP-NUKE",
+        "CMP-KINGFISHER",
+        "CMP-SDWEBIMAGE",
+        "CMP-ALAMOFIREIMAGE"
+      ],
+      "evidencePaths": [
+        "docs/specifications/resource-budgeting.md",
+        "docs/specifications/scheduler-semantics.md"
+      ],
+      "hardInvariants": [
+        "low-data-policy-honored",
+        "demand-not-starved",
+        "prefetch-suppressed-within-bound",
+        "credential-security-unchanged"
+      ],
+      "id": "W15",
+      "lab": "NetworkPolicyLab",
+      "name": "Low-Data and Expensive Network",
+      "oracle": "same constrained/expensive network trace and policy state; no cross-platform absolute latency ranking",
+      "phases": [
+        "D",
+        "G",
+        "H"
+      ],
+      "provenance": "restored-from-accepted-discussion-matrix",
+      "secondaryEndpoints": [
+        "quality-degradation",
+        "policy-switch-latency",
+        "energy",
+        "user-visible-failure-rate"
+      ],
+      "semanticProfileStatus": "normalized-contract-requires-versioned-refinement",
+      "specialistComparators": [
+        "CMP-APPLE-ASYNCIMAGE",
+        "CMP-COIL",
+        "CMP-GLIDE"
+      ],
+      "status": "planned-policy-workload-not-implemented"
+    }
+  ]
+}

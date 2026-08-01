@@ -1,0 +1,60 @@
+{
+  "applicableWorkloads": [
+    {
+      "excludedEndpoints": [
+        "explicit-subscriber-cancel-latency",
+        "request-header-propagation",
+        "cache-source-attribution",
+        "target-pixel-decode"
+      ],
+      "id": "W1-SCROLL-V1",
+      "scope": "SwiftUI feed rendering, view disappearance cancellation behavior, hitch, memory, origin request/stopped counts"
+    },
+    {
+      "excludedEndpoints": [
+        "decoded-megapixels",
+        "target-pixel-invariant",
+        "explicit-color-pipeline-control",
+        "explicit-orientation-decoder-contract"
+      ],
+      "id": "W2-HERO-V1",
+      "scope": "hero display latency, process memory, frame hitch and origin bytes"
+    },
+    {
+      "excludedEndpoints": [
+        "underlying-task-cancel-confirmation",
+        "cache-layer-selection"
+      ],
+      "id": "W10-SWIFTUI-IDENTITY-CHURN-V1",
+      "scope": "identity replacement, stale-success observation, phase failures, memory and hitch"
+    }
+  ],
+  "comparators": [
+    "Apple AsyncImage",
+    "Fovea"
+  ],
+  "contractID": "FOVEA-SWIFTUI-SURFACE-APPLICABILITY-V2",
+  "executionMode": "paired-independent-swiftui-surface",
+  "notComparableWorkloads": [
+    {
+      "id": "W3-AUTH-V1",
+      "reason": "AsyncImage does not expose per-request headers, security namespaces, selective revoke or cache policy controls."
+    },
+    {
+      "id": "W7-THOUSAND-CONCURRENT-V1",
+      "reason": "AsyncImage is a SwiftUI view API and does not expose the headless load, priority, subscriber and cancellation contract used by W7."
+    }
+  ],
+  "rules": {
+    "commonEndpointsOnlyForRanking": true,
+    "foveaExtraCapabilitiesReportedSeparately": true,
+    "headlessAdapterForbidden": true,
+    "pairedTraceRequired": true,
+    "platformIdentityRequired": true,
+    "simulatorEvidenceIsProvisional": true,
+    "unsupportedIsNotZero": true
+  },
+  "schemaVersion": 2,
+  "supersedes": "Benchmarks/AsyncImageLab/plans/applicability-v1.json",
+  "surface": "SwiftUI network image view lifecycle"
+}

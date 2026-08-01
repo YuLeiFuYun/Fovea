@@ -1,0 +1,77 @@
+{
+  "reviewedOn": "2026-07-25",
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "exactCommit": "c751c283ed852f73b7fd6f0ed8ba5b8b7e452b38",
+      "language": "Java/Kotlin",
+      "name": "Glide",
+      "repository": "https://github.com/bumptech/glide.git",
+      "selectedStrengths": [
+        "benchmark-from-cache",
+        "benchmark-downsampler",
+        "recycler-preload",
+        "external-disk-cache-deletion",
+        "large-image",
+        "lifecycle-pause-resume",
+        "wide-gamut",
+        "animated-frame-scheduling"
+      ],
+      "tag": "v5.0.7",
+      "testCountObserved": 220
+    },
+    {
+      "exactCommit": "51638b0fa30d8a7bd0f498915a916058f46c734c",
+      "language": "Kotlin Multiplatform",
+      "name": "Coil",
+      "repository": "https://github.com/coil-kt/coil.git",
+      "selectedStrengths": [
+        "concurrent-request-strategy",
+        "cache-control-strategy",
+        "strong-weak-memory-cache",
+        "disk-lru-recovery",
+        "interceptor-chain",
+        "lifecycle-cancellation",
+        "compose-size-resolution",
+        "exif-orientation"
+      ],
+      "tag": "3.4.0",
+      "testCountObserved": 96
+    },
+    {
+      "exactCommit": "9accffe107fcc84918d1de106880eb267cc03aa3",
+      "language": "Java/Kotlin",
+      "name": "Picasso",
+      "repository": "https://github.com/square/picasso.git",
+      "selectedStrengths": [
+        "dispatcher-batching",
+        "hunter-deduplication",
+        "memory-policy",
+        "transformation-contract",
+        "target-action-lifecycle",
+        "network-request-handler"
+      ],
+      "tag": "2.8",
+      "tagObject": "e3569c79b7c73b50bebff524a54216d5338abf98",
+      "testCountObserved": 21
+    },
+    {
+      "exactCommit": "ba4654541385c844f95ec6471efbc0b241213de0",
+      "language": "Java/Kotlin/C++",
+      "name": "Fresco",
+      "repository": "https://github.com/facebook/fresco.git",
+      "selectedStrengths": [
+        "producer-chain-cancellation",
+        "encoded-memory-cache",
+        "disk-storage-corruption",
+        "progressive-jpeg",
+        "animated-frame-cache",
+        "reference-lifetime",
+        "image-performance-monitoring",
+        "memory-pool-pressure"
+      ],
+      "tag": "v3.6.0",
+      "testCountObserved": 197
+    }
+  ]
+}

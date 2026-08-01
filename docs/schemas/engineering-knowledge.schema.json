@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fovea.dev/schemas/engineering-knowledge.schema.json",
+  "title": "Fovea interdisciplinary engineering knowledge registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "document", "principles", "discoveries"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "document": {"type": "string", "minLength": 1},
+    "principles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/principle"}
+    },
+    "discoveries": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/discovery"}
+    }
+  },
+  "$defs": {
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "stringArray": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "target"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["testIDs", "paths"],
+      "properties": {
+        "testIDs": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "paths": {"$ref": "#/$defs/nonEmptyStringArray"}
+      }
+    },
+    "principle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "disciplines",
+        "status",
+        "claim",
+        "applicability",
+        "invariants",
+        "falsifiers",
+        "limits",
+        "metrics",
+        "evidence"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^FOVEA-LAW-[0-9]{3}$"},
+        "title": {"type": "string", "minLength": 1},
+        "disciplines": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "status": {"enum": ["operational", "experimental", "hypothesis", "retired"]},
+        "claim": {"type": "string", "minLength": 1},
+        "applicability": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "invariants": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "falsifiers": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "limits": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/metric"}
+        },
+        "evidence": {"$ref": "#/$defs/evidence"}
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "status",
+        "triggerProblem",
+        "observation",
+        "extractedAsset",
+        "principleIDs",
+        "artifactPaths",
+        "evidencePaths",
+        "evidenceTestIDs",
+        "transferBoundary",
+        "overgeneralizationRisk"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^FOVEA-EGG-[0-9]{3}$"},
+        "title": {"type": "string", "minLength": 1},
+        "status": {"enum": ["promoted", "deferred", "rejected", "retired"]},
+        "triggerProblem": {"type": "string", "minLength": 1},
+        "observation": {"type": "string", "minLength": 1},
+        "extractedAsset": {"type": "string", "minLength": 1},
+        "principleIDs": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "artifactPaths": {"$ref": "#/$defs/stringArray"},
+        "evidencePaths": {"$ref": "#/$defs/stringArray"},
+        "evidenceTestIDs": {"$ref": "#/$defs/stringArray"},
+        "transferBoundary": {"type": "string", "minLength": 1},
+        "overgeneralizationRisk": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

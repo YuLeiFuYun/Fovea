@@ -1,0 +1,123 @@
+{
+  "claimBoundary": "Simulator data are functional calibration only. Formal claims require stable physical iOS, clean source, whole-block thermal validity, held-out repetition, and semantic comparability.",
+  "comparators": [
+    "Fovea",
+    "Nuke",
+    "Kingfisher",
+    "SDWebImage",
+    "AlamofireImage"
+  ],
+  "execution": {
+    "cacheState": "cold",
+    "calibrationRepetitions": 1,
+    "formalOrder": "balanced-cyclic-and-reverse-five-comparator-blocks",
+    "formalRepetitions": 20,
+    "logicalRequestCount": 1000,
+    "maximumPeakThreads": 256,
+    "networkProfile": "NET-CONSTRAINED-V1",
+    "originConcurrentServiceLimit": 8,
+    "thermalRule": "physical formal blocks require nominal throughout and rerun the entire comparator block after drift",
+    "timeoutSecondsPerComparatorRun": 240
+  },
+  "hardChecks": [
+    "logical-request-count-exact",
+    "observation-count-exact",
+    "single-flight-origin-request-bound",
+    "cancelled-subscriber-count-exact",
+    "survivor-completion-count-exact",
+    "priority-burst-no-starvation",
+    "failed-load-count-zero",
+    "target-pixel-invariant",
+    "peak-thread-count-bounded",
+    "origin-peak-concurrency-bounded"
+  ],
+  "planID": "FOVEA-W7-CONCURRENCY-V3",
+  "primaryEndpoints": {
+    "immediate-to-background-p95-ratio": {
+      "direction": "lower",
+      "equivalenceRelative": 0.05,
+      "interpretation": "Round-robin arrivals bound arrival-order skew; values below one indicate useful priority differentiation while starvation checks remain hard gates.",
+      "unit": "ratio"
+    },
+    "p99-logical-latency": {
+      "direction": "lower",
+      "equivalenceRelative": 0.05,
+      "unit": "nanoseconds"
+    },
+    "peak-thread-count": {
+      "direction": "lower",
+      "equivalenceAbsolute": 4,
+      "unit": "threads"
+    },
+    "single-flight-origin-request-count": {
+      "direction": "lower",
+      "equivalenceAbsolute": 1,
+      "unit": "requests"
+    }
+  },
+  "schemaVersion": 3,
+  "secondaryEndpoints": [
+    "throughput",
+    "stopped-origin-request-count",
+    "completed-origin-request-count",
+    "cancelled-outcome-count",
+    "failed-outcome-count",
+    "peak-physical-footprint",
+    "main-thread-hitch-time",
+    "priority-class-p50-p95-p99",
+    "origin-peak-concurrency"
+  ],
+  "statistics": {
+    "bootstrapIterations": 10000,
+    "confidenceLevel": 0.95,
+    "equivalenceMethod": "TOST-on-preregistered-margin",
+    "multipleComparisonCorrection": "holm-within-claim-family",
+    "resamplingUnit": "comparator-run-within-balanced-block"
+  },
+  "status": "preregistered-after-v2-calibration-before-formal-results",
+  "subtraces": {
+    "priorityScheduling": {
+      "expectedCompletedSubscribers": 488,
+      "logicalRequests": 488,
+      "requestsPerPriority": 122,
+      "submissionOrder": "round-robin-background-utility-visible-immediate",
+      "uniqueNoStoreRequests": true
+    },
+    "singleFlightCancellation": {
+      "allCancelGroups": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cancelDelayMilliseconds": 20,
+      "expectedCancelledSubscribers": 256,
+      "expectedCompletedSubscribers": 256,
+      "groups": 16,
+      "halfCancelGroups": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "logicalRequests": 512,
+      "maximumEligibleOriginRequests": 16,
+      "noCancelGroups": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "subscribersPerGroup": 32
+    }
+  },
+  "supersedes": {
+    "plan": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v2.json",
+    "reason": "V2 revealed that custom URLProtocol delivery bypassed URLSession host connection limits, allowing libraries to observe different effective origin concurrency. V3 enforces an origin-owned eight-slot service curve and records its peak."
+  },
+  "workloadID": "W7-THOUSAND-CONCURRENT-V1"
+}

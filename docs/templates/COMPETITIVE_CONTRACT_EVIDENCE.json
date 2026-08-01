@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "contractID": "COMP-CONTRACT-AUTH-001",
+  "claim": "Revoked account namespace cannot be repopulated by an in-flight request after logout.",
+  "competitor": "Nuke",
+  "competitorVersion": "<version-or-commit>",
+  "adapterVersion": "<fovea-adapter-commit>",
+  "configuration": {
+    "cacheBackend": "<value>",
+    "urlCache": "<value>",
+    "authorizationMode": "<value>"
+  },
+  "result": "unknown",
+  "testIDs": [
+    "<adapter-test-id>"
+  ],
+  "reproductionLocator": "<CI-run-or-artifact-path>",
+  "evidenceDate": "2026-07-18",
+  "reviewer": "<accountable-reviewer>",
+  "notes": [],
+  "coverageGaps": []
+}

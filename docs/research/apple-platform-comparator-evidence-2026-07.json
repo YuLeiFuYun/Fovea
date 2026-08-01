@@ -1,0 +1,174 @@
+{
+  "evidenceID": "FOVEA-APPLE-PLATFORM-COMPARATORS-2026-07",
+  "experimentPlan": {
+    "canonicalPlanSHA256": "078206a957e4a44e4b5126543011d61a2746384ce6f87e693cee67c6ab5df8d3",
+    "fileSHA256": "92499b1a507a98849b504690463e0ac164c5956b5ba4e428df86df5cc2ac587b",
+    "oldRuntimeArtifactsValidForCurrentPlan": false,
+    "path": "Benchmarks/ComparativeLab/experiment-plan.json"
+  },
+  "headlessAppleBaseline": {
+    "behaviorTest": {
+      "assertions": [
+        "first load is network",
+        "second load after decoded-memory purge is disk",
+        "origin request count remains one"
+      ],
+      "path": "Benchmarks/ComparativeLab/Adapters/AppleNativeAdapterPackage/Tests/AppleNativeComparatorAdapterTests/AppleNativeComparatorAdapterTests.swift",
+      "sha256": "1d9eb36c2dacb5823e40d338c1ce530897877e76825cf3b39eccf844e650d5a8",
+      "status": "passed"
+    },
+    "cache": "dedicated disk URLCache with useProtocolCachePolicy",
+    "cacheDecisionOwner": "URL Loading System",
+    "cacheSourceObservation": "URLSessionTaskMetrics.resourceFetchType",
+    "decode": "ImageIO target-pixel thumbnail decode",
+    "identity": "Apple URLSession + URLCache + ImageIO",
+    "manualCacheLookupOrPublication": false,
+    "transport": "URLSession"
+  },
+  "iosCrossBuild": {
+    "artifact": ".artifacts/comparators/apple-platform-cross-build.json",
+    "artifactSHA256": "f5260470a996979099f60dd229f9b9df5b312034e7cbf4e60989d678a7c2c392",
+    "claimBoundary": "compile-only-no-install-launch-or-performance-claim",
+    "status": "passed-three-surfaces",
+    "surfaces": [
+      "Apple URLSession + URLCache + ImageIO",
+      "Apple AsyncImage",
+      "Fovea SwiftUI"
+    ],
+    "targetTriple": "arm64-apple-ios15.0-simulator"
+  },
+  "limitations": [
+    "No post-change simulator ranking is claimed.",
+    "Historical simulator artifacts use the previous plan and are descriptive only.",
+    "AsyncImage is not merged into the headless adapter ranking because its public surface and observability differ.",
+    "Physical-device, stable-OS, energy, thermal and independent replication remain pending."
+  ],
+  "runtimeBlocker": {
+    "artifact": ".artifacts/comparative-coresimulator-health.json",
+    "artifactSHA256": "ebda951f7a85a4e757afd66accb63caa0b623d01db1d21ef2f2235eaf7ec5e60",
+    "component": "CoreSimulator system health",
+    "includesRootSimdiskimaged": false,
+    "newAsyncImageW2AggregateAvailable": false,
+    "newHeadlessW2AggregateAvailable": false,
+    "replacementDeviceStatus": "incomplete-first-boot-do-not-reuse",
+    "replacementDeviceUDID": "redacted-local-simulator-device",
+    "replacementFirstBootFailure": "900-second timeout at 00LaunchServicesMigrator",
+    "requiredRecovery": "CoreSimulator recovery completed; archive the incomplete device, then recreate only after the initialization host preflight passes",
+    "status": "coresimulator-healthy-initialization-host-gated",
+    "uninterruptibleProcessCount": 0,
+    "initializationHostPreflightArtifact": ".artifacts/comparative-initialization-host-preflight.json",
+    "initializationHostPreflightArtifactSHA256": "712b3cbd030adcd0d0d9f4ab29abb188b8204108419a6c45940d9ae5c220df13"
+  },
+  "schemaVersion": 1,
+  "simulatorRunner": {
+    "buildMeasurementSeparation": [
+      "--initialize-simulator-only",
+      "--install-only",
+      "--skip-build --skip-prepare"
+    ],
+    "coreSimulatorHealthGate": "rejects-before-simctl-when-any-relevant-U-state-process-exists",
+    "currentDeviceStatus": "incomplete-first-boot-do-not-reuse",
+    "currentDeviceUDID": "redacted-local-simulator-device",
+    "dedicatedDeviceName": "Fovea Comparative iPhone 17e R26",
+    "duplicateRuntimeMitigation": "older-23E244-unmounted",
+    "failedFirstBootPolicy": "records-evidence-and-rejects-device-reuse",
+    "failedRuntime": "iOS 27 beta generic and dedicated install paths",
+    "firstBootCoreLocationMigratorSeconds": 296.287041,
+    "headlessInstallStatus": "historical-prior-device-passed-six-of-six-current-device-incomplete",
+    "healthCheckScript": "scripts/check-comparative-coresimulator-health.py",
+    "liveRuntimeBuildVerification": "passed-23E254a-only",
+    "measurementHostGate": {
+      "artifact": ".artifacts/comparative-host-preflight.json",
+      "latestCPUIdlePercentSamples": [
+        39.91,
+        36.31,
+        41.16
+      ],
+      "latestCompetingProcessCount": 0,
+      "latestDiskMegabytesPerSecondSamples": [
+        23.75,
+        15.76,
+        21.25
+      ],
+      "latestStatus": "blocked-by-CoreSimulator-health-before-host-quiescence",
+      "maximumDiskMegabytesPerSecond": 12.0,
+      "measurementResultCreated": false,
+      "minimumCPUIdlePercent": 65.0,
+      "requiresNoCompetingBuildOrSimulatorProcess": true
+    },
+    "priorDeviceArchive": ".artifacts/simulator-archives/20260731T130128Z",
+    "recoveryScript": "scripts/recover-comparative-simulator.sh",
+    "runtime": "iOS 26.4.1 stable",
+    "runtimeBinding": "exact-bundle-path-plus-.artifacts/comparative-simulator-device.json",
+    "runtimeBuild": "23E254a",
+    "runtimeStatus": "healthy-current-device-incomplete-new-device-initialization-host-gated",
+    "runtimeStorageIdentifier": "redacted-local-runtime-storage",
+    "sharedGenericDeviceReused": false,
+    "staticContractStatus": "passed-7-tests",
+    "subprocessIsolation": "start-new-session-process-group",
+    "supportTests": "passed-13-tests",
+    "swiftUIInstallNormalization": "symmetric-ditto-noextattr-xattr-clear-post-resource-ad-hoc-sign-deep-strict-verify",
+    "swiftUIInstallStagingVerification": ".artifacts/asyncimage-lab/install-staging-verification.json",
+    "swiftUIInstallStagingVerificationSHA256": "7092a6c89aec086c33037d5629faac421ef2c9419fb797bcc4887b8fbff9ba4a",
+    "swiftUIStagingRoot": ".artifacts/asyncimage-lab/InstallStaging",
+    "swiftUIStagingStatus": "both-surface-apps-strict-signature-valid-install-retry-pending",
+    "timeoutRecovery": "SIGTERM-then-SIGKILL-with-bounded-pipe-close",
+    "initializationHostGate": {
+      "artifact": ".artifacts/comparative-initialization-host-preflight.json",
+      "artifactSHA256": "712b3cbd030adcd0d0d9f4ab29abb188b8204108419a6c45940d9ae5c220df13",
+      "latestCPUIdlePercentSamples": [
+        5.41,
+        2.84,
+        23.95
+      ],
+      "latestCompetingProcessCount": 2,
+      "latestDiskMegabytesPerSecondSamples": [
+        5.78,
+        13.25,
+        21.490000000000002
+      ],
+      "latestStatus": "rejected-before-device-create-or-first-boot",
+      "maximumDiskMegabytesPerSecond": 12.0,
+      "minimumCPUIdlePercent": 65.0,
+      "requiresNoCompetingBuildOrSimulatorProcess": true,
+      "simulatorOperationStarted": false
+    }
+  },
+  "status": "passed-local-contracts-install-staging-runtime-health-blocked",
+  "swiftUIAppleBaseline": {
+    "comparisonSurface": "paired independent SwiftUI surface against FoveaResponsiveImage",
+    "headlessRankingMerged": false,
+    "identity": "Apple AsyncImage",
+    "planStatus": "passed",
+    "workloads": [
+      "W1-SCROLL-V1",
+      "W2-HERO-V1",
+      "W10-SWIFTUI-IDENTITY-CHURN-V1"
+    ]
+  },
+  "verification": {
+    "adapterCountBuiltByDefault": 2,
+    "appleAdapterLog": ".artifacts/comparators/apple urlsession + urlcache + imageio-macos-build.log",
+    "appleAdapterLogSHA256": "0c9261f81a8c48f42e9d9cb263b941f5aae14f7e609f94e7b0e68c5bebec31bf",
+    "artifact": ".artifacts/comparators/verification.json",
+    "artifactSHA256": "02ab9db195c1b41bac33235cf12ce73d47134931740654d2a7be70506d0e3d47",
+    "status": "passed"
+  },
+  "w2NetworkOrigin": {
+    "cacheControl": "public, max-age=3600",
+    "customURLProtocolUsed": false,
+    "implementation": "NWListener real loopback HTTP",
+    "sharedBy": [
+      "Apple URLSession + URLCache + ImageIO",
+      "Fovea",
+      "Nuke",
+      "Kingfisher",
+      "SDWebImage",
+      "PINRemoteImage",
+      "Apple AsyncImage",
+      "Fovea SwiftUI"
+    ],
+    "source": "Benchmarks/ComparativeLab/Apps/Shared/LoopbackBenchmarkOriginServer.swift",
+    "sourceSHA256": "3522d71dd63baa54e9d6589b831c32f4056e8ef6491de7283904c82bfe712f3f"
+  }
+}

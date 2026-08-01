@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "planID": "FOVEA-W7-CONCURRENCY-V1",
+  "status": "preregistered-before-formal-results",
+  "workloadID": "W7-THOUSAND-CONCURRENT-V1",
+  "comparators": [
+    "Fovea",
+    "Nuke",
+    "Kingfisher",
+    "SDWebImage",
+    "AlamofireImage"
+  ],
+  "execution": {
+    "logicalRequestCount": 1000,
+    "cacheState": "cold",
+    "networkProfile": "NET-CONSTRAINED-V1",
+    "calibrationRepetitions": 1,
+    "formalRepetitions": 20,
+    "formalOrder": "balanced-cyclic-and-reverse-five-comparator-blocks",
+    "timeoutSecondsPerComparatorRun": 240,
+    "maximumPeakThreads": 256,
+    "thermalRule": "physical formal blocks require nominal throughout and rerun the entire comparator block after drift"
+  },
+  "subtraces": {
+    "singleFlightCancellation": {
+      "logicalRequests": 512,
+      "groups": 16,
+      "subscribersPerGroup": 32,
+      "allCancelGroups": [0, 1, 2, 3],
+      "halfCancelGroups": [4, 5, 6, 7, 8, 9, 10, 11],
+      "noCancelGroups": [12, 13, 14, 15],
+      "cancelDelayMilliseconds": 20,
+      "expectedCancelledSubscribers": 256,
+      "expectedCompletedSubscribers": 256,
+      "maximumEligibleOriginRequests": 16
+    },
+    "priorityScheduling": {
+      "logicalRequests": 488,
+      "requestsPerPriority": 122,
+      "submissionOrder": [
+        "background",
+        "utility",
+        "visible",
+        "immediate"
+      ],
+      "uniqueNoStoreRequests": true,
+      "expectedCompletedSubscribers": 488
+    }
+  },
+  "hardChecks": [
+    "logical-request-count-exact",
+    "observation-count-exact",
+    "single-flight-origin-request-bound",
+    "cancelled-subscriber-count-exact",
+    "survivor-completion-count-exact",
+    "priority-burst-no-starvation",
+    "failed-load-count-zero",
+    "target-pixel-invariant",
+    "peak-thread-count-bounded"
+  ],
+  "primaryEndpoints": {
+    "single-flight-origin-request-count": {
+      "direction": "lower",
+      "equivalenceAbsolute": 1,
+      "unit": "requests"
+    },
+    "p99-logical-latency": {
+      "direction": "lower",
+      "equivalenceRelative": 0.05,
+      "unit": "nanoseconds"
+    },
+    "peak-thread-count": {
+      "direction": "lower",
+      "equivalenceAbsolute": 4,
+      "unit": "threads"
+    },
+    "immediate-to-background-p95-ratio": {
+      "direction": "lower",
+      "equivalenceRelative": 0.05,
+      "unit": "ratio"
+    }
+  },
+  "secondaryEndpoints": [
+    "throughput",
+    "stopped-origin-request-count",
+    "completed-origin-request-count",
+    "cancelled-outcome-count",
+    "failed-outcome-count",
+    "peak-physical-footprint",
+    "main-thread-hitch-time",
+    "priority-class-p50-p95-p99"
+  ],
+  "statistics": {
+    "resamplingUnit": "comparator-run-within-balanced-block",
+    "bootstrapIterations": 10000,
+    "confidenceLevel": 0.95,
+    "multipleComparisonCorrection": "holm-within-claim-family",
+    "equivalenceMethod": "TOST-on-preregistered-margin"
+  },
+  "claimBoundary": "Simulator data are functional calibration only. Formal claims require stable physical iOS, clean source, whole-block thermal validity, held-out repetition, and semantic comparability."
+}

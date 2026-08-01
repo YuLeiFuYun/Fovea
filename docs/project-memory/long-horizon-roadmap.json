@@ -1,0 +1,390 @@
+{
+  "schemaVersion": 1,
+  "roadmapID": "FOVEA-LONG-HORIZON-ROADMAP-V1",
+  "status": "active",
+  "reviewedOn": "2026-08-01",
+  "canonicalPlan": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
+  "authority": {
+    "repositoryManifestIsAuthoritative": true,
+    "phaseRemovalRequiresExplicitSupersession": true,
+    "phaseRenumberingRequiresExplicitSupersession": true,
+    "unfinishedWorkMustRemainVisible": true,
+    "taskMustMapToPhaseAndObligation": true,
+    "implementationMayRefineButNotSilentlyReplaceSkeleton": true,
+    "conflictPolicy": "fail-closed-record-and-resolve"
+  },
+  "routeInvariants": [
+    "Every multi-step Fovea task loads this manifest through the mandatory project context before changes.",
+    "P0 through P9 remain visible until completed or explicitly superseded in the discussion ledger.",
+    "Planned, specified, implemented, calibrated, formally verified and release-eligible remain distinct states.",
+    "Dirty source may support local diagnosis and planning but cannot support trusted release evidence.",
+    "ImageCraft and Akashic migrations begin with local path dependencies and isolated source identities before pinned remote dependencies.",
+    "Fovea retains HTTP, authorization, identity, namespace revocation, shared-work and cross-store commit state machines.",
+    "A second production codec cannot be admitted until resource-estimate coverage and codec conformance obligations are explicit.",
+    "New research changes the route only through a recorded adoption, rejection or supersession decision."
+  ],
+  "activeFrontier": [
+    "P0",
+    "P2",
+    "P4",
+    "P5",
+    "P6",
+    "P7"
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "title": "Stable baseline and safety control plane",
+      "status": "active",
+      "dependencies": [],
+      "objectives": [
+        "Preserve the current dirty worktree without reset or implicit overwrite.",
+        "Capture exact source, dependency, API, storage and evidence baselines.",
+        "Close the decode-resource estimate coverage ambiguity before admitting a second codec."
+      ],
+      "exitCriteria": [
+        "A reproducible baseline manifest exists for the selected migration source identity.",
+        "Existing unrelated modifications are isolated from package-boundary migrations.",
+        "The decode resource contract has an accepted coverage model or a fail-closed interim policy."
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "ImageCraft release qualification and governance",
+      "status": "active-partial",
+      "dependencies": [
+        "P0"
+      ],
+      "objectives": [
+        "Keep ImageCraft independently buildable and testable.",
+        "Establish remote, version, CI and rollback governance.",
+        "Freeze capability, contract and implementation identities for the first consumable release."
+      ],
+      "exitCriteria": [
+        "Clean release-readiness and external consumer gates pass.",
+        "A resolvable remote and exact release pin exist.",
+        "Public API and semantic version policies are recorded."
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Fovea physical migration to external ImageCraft",
+      "status": "active",
+      "dependencies": [
+        "P0",
+        "P1"
+      ],
+      "objectives": [
+        "Prove package-boundary compatibility through an isolated local path dependency.",
+        "Run dual-source and host-integration equivalence gates.",
+        "Remove embedded ImageCraft production sources and adopt an exact pin."
+      ],
+      "exitCriteria": [
+        "Fovea contains no ImageCraft production source copies.",
+        "External ImageCraft passes Fovea integration and rollback gates.",
+        "Decode and render identities remain backend-correct."
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Domain-neutral Akashic contract",
+      "status": "completed-local-contract",
+      "dependencies": [
+        "P0"
+      ],
+      "objectives": [
+        "Separate blob identity, physical locator, partition, generation and transaction semantics.",
+        "Remove image, URL, HTTP, account and Fovea identity vocabulary from the future Akashic public API.",
+        "Keep Fovea-specific adapters and correctness state machines in Fovea."
+      ],
+      "exitCriteria": [
+        "An accepted ADR and public API baseline define the neutral contract.",
+        "Current Fovea behavior can be expressed through explicit adapters.",
+        "Crash, maintenance and unsupported capability semantics are named."
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Independent Akashic repository",
+      "status": "active-partial",
+      "dependencies": [
+        "P3"
+      ],
+      "objectives": [
+        "Extract AkashicCore, AkashicMemory and AkashicDisk.",
+        "Add independent consumer, model, crash, filesystem and resource gates.",
+        "Define storage-generation compatibility and migration policy."
+      ],
+      "exitCriteria": [
+        "Independent Core, Memory and Disk products exist with neutral public API.",
+        "Component correctness, crash, filesystem and platform gates pass from clean immutable source.",
+        "Physical resource, power-loss and release-governance blockers are closed or remain explicitly non-release.",
+        "A resolvable exact release identity and rollback artifact exist."
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Fovea physical migration to external Akashic",
+      "status": "active",
+      "dependencies": [
+        "P0",
+        "P4"
+      ],
+      "objectives": [
+        "Consume external Akashic through Fovea-owned adapters.",
+        "Preserve HTTP records, namespace revocation and cross-store transactions in Fovea.",
+        "Remove embedded Akashic production sources after trace equivalence."
+      ],
+      "exitCriteria": [
+        "Fovea contains no Akashic production source copies.",
+        "W3, W8 and W13 plus component gates show no semantic regression.",
+        "Rollback to the prior Akashic pin is executable."
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Cross-repository conformance and compatibility governance",
+      "status": "pending",
+      "dependencies": [
+        "P2",
+        "P5"
+      ],
+      "objectives": [
+        "Create minimal codec and cache conformance obligations.",
+        "Run exact version matrices across Fovea, ImageCraft and Akashic.",
+        "Keep component evidence distinct from composition evidence."
+      ],
+      "exitCriteria": [
+        "Compatibility changes are classified as refinement, strengthening, breaking or insufficient evidence.",
+        "Cross-repository runners bind exact artifacts and environments.",
+        "Inconclusive and unsupported outcomes fail closed."
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Continuous scoped Pareto comparison",
+      "status": "continuous",
+      "dependencies": [
+        "P0"
+      ],
+      "objectives": [
+        "Re-run component and end-to-end workloads after each material mechanism change.",
+        "Require hard invariants, non-inferiority on all primary endpoints and superiority on at least one endpoint inside each semantic equivalence class.",
+        "Preserve negative, inconclusive and not-comparable results."
+      ],
+      "exitCriteria": [
+        "This phase remains continuous for the lifetime of the project and is never globally completed."
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Second codec and advanced media capabilities",
+      "status": "blocked",
+      "dependencies": [
+        "P2",
+        "P6"
+      ],
+      "objectives": [
+        "Admit AxiomRaster or another codec only through bounded conformance, hostile-corpus, differential, resource and rollout gates.",
+        "Implement progressive, animation and HDR as distinct lifecycle contracts and workloads.",
+        "Keep ImageIO as the rollback reference until scoped default-selection evidence exists."
+      ],
+      "exitCriteria": [
+        "A second backend passes format-scoped canary and physical-device evidence.",
+        "W4, W5 and W9 are activated only when production paths and immutable plans exist.",
+        "Rollback and cache-identity behavior are demonstrated."
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "Evidence-led cross-platform expansion",
+      "status": "deferred",
+      "dependencies": [
+        "P6"
+      ],
+      "objectives": [
+        "Share contracts, fixtures, traces and evidence before sharing runtime code.",
+        "Introduce portable schemas or ABIs only when a real non-Apple implementation tests the abstraction.",
+        "Avoid weakening the Apple implementation for speculative portability."
+      ],
+      "exitCriteria": [
+        "At least one non-Apple prototype provides held-out evidence for the proposed portable boundary.",
+        "Platform-specific and shared responsibilities are explicitly separated."
+      ]
+    }
+  ],
+  "currentExecutionQueue": [
+    {
+      "id": "CTRL-ROADMAP-001",
+      "phase": "P0",
+      "status": "completed-local-governance",
+      "summary": "Make the long-horizon P0-P9 skeleton machine-readable, mandatory in task context and protected against silent removal or renumbering."
+    },
+    {
+      "id": "P0-BASELINE-001",
+      "phase": "P0",
+      "status": "completed-local-nontrusted",
+      "summary": "Captured .artifacts/pluggable-stack/baseline.json for Fovea HEAD 7768ed083eee9c54ad86b7124a96f73a202d4c65 (dirty) and clean ImageCraft HEAD 05ab068c851d32a028f8556b2085a3266f0ee78c; content digest 94fa7a76dee3063c5757931143629d83f028e06f04bdd330b1945ec830330179."
+    },
+    {
+      "id": "P0-RESOURCE-001",
+      "phase": "P0",
+      "status": "in-progress-imageio-lifetime-ledger-passed",
+      "summary": "The retained composition model and a seven-phase ImageIO lifetime ledger now pass. The ledger identifies prepared-state accumulation, framework-private allocations, output ownership transfer, alias composition and cancellation reclaim tails; held-out backend and real-device evidence remain open."
+    },
+    {
+      "id": "P1-GOVERNANCE-001",
+      "phase": "P1",
+      "status": "completed-public-xcode27-ci-green-alpha3-required-check-active",
+      "summary": "ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 is public under MIT, xcode-27 CI-green, tagged 0.1.0-alpha.3 and protected by a required core check. Fovea alpha.3 clean-copy, alpha.2 rollback and forward recovery each pass 475 host tests; physical-device evidence remains open."
+    },
+    {
+      "id": "P3-CONTRACT-001",
+      "phase": "P3",
+      "status": "completed-local-contract",
+      "summary": "ADR-0014 is Accepted. Typed identity, partition-scoped deduplication, one active writer, new-generation migration and 30 named conformance obligations are frozen; implementation moves to P4."
+    },
+    {
+      "id": "P4-CORE-MEMORY-001",
+      "phase": "P4",
+      "status": "superseded-by-three-product-slice",
+      "summary": "The earlier Core/Memory-only prototype is retained historically and superseded by the independent Core/Memory/Disk local vertical slice."
+    },
+    {
+      "id": "P4-DISK-001",
+      "phase": "P4",
+      "status": "public-xcode27-ci-green-alpha3-required-check-fault-rebind-device-pending",
+      "summary": "Akashic e138b4425688cb0ce32fba7788adcc944c936b53 is public under MIT, xcode-27 CI-green, tagged 0.1.0-alpha.3 and protected by a required core check. Fovea alpha.3 clean-copy and alpha.2 rollback/forward pass; historical full fault evidence is retained at alpha.2 and must be rebound before stronger alpha.3 fault claims."
+    },
+    {
+      "id": "P4-EVIDENCE-001",
+      "phase": "P4",
+      "status": "active",
+      "summary": "Extend the passing local process/logical-byte resource envelope to stable physical devices; add controlled ENOSPC, short-write, permission-transition, wrong-owner and long-running kill-at-random/power-loss evidence; then establish immutable release identity and protected CI. Reference-model, directory-overflow, negative-consumer and clean-copy gates are complete."
+    },
+    {
+      "id": "P5-AKASHIC-ADAPTER-001",
+      "phase": "P5",
+      "status": "completed-alpha3-exact-switch-clean-copy-alpha2-rollback-forward-475",
+      "summary": "Fovea consumes Akashic e138b4425688cb0ce32fba7788adcc944c936b53 by exact public revision. Current alpha.3 clean-copy, previous alpha.2 rollback and forward alpha.3 recovery each pass 475 host tests. Fovea private-root CI and physical evidence remain open."
+    },
+    {
+      "id": "P4-MANIFEST-001",
+      "phase": "P4",
+      "status": "active-retained-counterexample",
+      "summary": "Retain the 64 x 4 KiB small-object workload that exposes about 3.8033x application-layer logical write amplification from full-manifest replacement. Compare batching, segmented manifests and append/checkpoint candidates only behind the existing crash, recovery, schema and partition gates."
+    },
+    {
+      "id": "P0-CLEAN-MIGRATION-BASELINE-001",
+      "phase": "P0",
+      "status": "privacy-sanitized-root-ready-public-ci-pending",
+      "summary": "The 636-file privacy-sanitized Fovea publication tree excludes embedded component sources, build artifacts, local paths, credentials and old Git history. Current-pin clean-copy and rollback/forward gates pass; creating the public root and observing public CI remain."
+    },
+    {
+      "id": "P2-IMAGECRAFT-EXTERNAL-SWITCH-001",
+      "phase": "P2",
+      "status": "completed-alpha3-exact-switch-clean-copy-alpha2-rollback-forward-475",
+      "summary": "Fovea consumes ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 through a public exact revision with no embedded production source. Current alpha.3 clean-copy, previous alpha.2 rollback and forward alpha.3 recovery each pass 475 host tests. Fovea private-root CI and physical evidence remain open."
+    },
+    {
+      "id": "P6-CROSS-REPOSITORY-CONFORMANCE-001",
+      "phase": "P6",
+      "status": "active-public-components-and-rollback-foundation-complete",
+      "summary": "Public exact component pins, required component CI, current-pin host clean-copy and previous/current compatibility drills are complete. Build separate versioned codec/storage conformance kits and current/previous contract matrices next."
+    },
+    {
+      "id": "P6-QUALIFIED-COMPOSITION-SEAMS-001",
+      "phase": "P6",
+      "status": "specified-design-pending",
+      "summary": "Qualify new codec injection through ImageCodec and design an immutable persistent-store bundle that preserves generation, writer lifetime, namespace persistence and cross-store transaction semantics without a global registry."
+    },
+    {
+      "id": "P7-POST-MIGRATION-PARETO-001",
+      "phase": "P7",
+      "status": "blocked-current-pin-clean-copy-and-composition-evidence",
+      "summary": "Repin the full A-tier matrix and rerun W1/W2/W3/W7/W8/W10/W13 after public current-pin clean-copy, rollback and composition gates pass."
+    },
+    {
+      "id": "P0-SWIFT64-TOOLCHAIN-001",
+      "phase": "P0",
+      "status": "components-alpha3-xcode27-green-private-fovea-root-pending",
+      "summary": "Xcode 27/Swift 6.4 selection and local gates pass. ImageCraft and Akashic alpha.3 are merged, tagged and green on xcode-27; Fovea alpha.3 clean-copy/rollback pass and the sanitized private Fovea root is next."
+    },
+    {
+      "id": "P1-SWIFT64-IMAGECRAFT-001",
+      "phase": "P1",
+      "status": "public-alpha3-xcode27-green-advanced-ownership-deferred",
+      "summary": "ImageCraft passes 64 tests, release, compatibility and macOS 12/iOS 15 platform builds under Swift 6.4. RawSpan hot parsing and public noncopyable preparation remain evidence-blocked."
+    },
+    {
+      "id": "P4-SWIFT64-AKASHIC-001",
+      "phase": "P4",
+      "status": "public-alpha3-xcode27-green-full-fault-rebind-pending",
+      "summary": "Akashic noncopyable writer lease and defer cleanup pass 41 tests, release, consumers, API baseline and six macOS 12/iOS 15 platform cases."
+    },
+    {
+      "id": "P6-SWIFT64-COMPOSITION-001",
+      "phase": "P6",
+      "status": "local-475-composition-and-full-comparator-build-matrix-passed-clean-copy-ci-pending",
+      "summary": "Fovea with local Swift 6.4 ImageCraft/Akashic passes 475/475. Seven macOS adapters, seven iOS adapters and Apple/Fovea SwiftUI surfaces build under the locked comparative contract. No performance or Phase 1 claim is permitted; clean-copy protected CI and rollback matrices remain."
+    }
+  ],
+  "researchInputs": [
+    {
+      "name": "ImagePipelineResourceEnvelopeLab",
+      "adoption": "P0 resource contract and admission evidence input; not a runtime dependency"
+    },
+    {
+      "name": "ArtifactDerivationAlgebra",
+      "adoption": "Identity, derivation, locator, authorization and revocation separation input; not a hot-path graph dependency"
+    },
+    {
+      "name": "ImageCodecCapabilityAlgebra",
+      "adoption": "Minimal manifest, request-offer, refinement and conformance vocabulary input; full trust system deferred"
+    },
+    {
+      "name": "DecodeSessionContractLab",
+      "adoption": "Future W4/W6 session, final publication and recovery contract input"
+    },
+    {
+      "name": "CodecExecutionBoundaryLab",
+      "adoption": "Platform-specific codec execution and conformance-runner isolation input"
+    },
+    {
+      "name": "EvidenceCompositionAlgebra",
+      "adoption": "Evidence-family and bounded-certificate governance input"
+    },
+    {
+      "name": "ImagePipelineWorkloadLab",
+      "adoption": "Greenfield placeholder; not accepted as mature evidence"
+    },
+    {
+      "name": "HostileImageCorpusLab",
+      "adoption": "Greenfield placeholder; not accepted as a complete hostile corpus"
+    },
+    {
+      "name": "ImageCodecConformanceKit",
+      "adoption": "Greenfield placeholder; must be built before cross-repository completion claims"
+    },
+    {
+      "name": "CoilGlideFrescoMechanismAudit",
+      "adoption": "P6 immutable composition, join-cancel-release and ownership-ledger challenge input; no global registry or public producer DAG"
+    },
+    {
+      "name": "LibvipsRegionTileModel",
+      "adoption": "P8/P9 internal region/tile identity and bounded-working-set experiment; public API deferred until a second backend exists"
+    },
+    {
+      "name": "CaffeineCachePolicyOracle",
+      "adoption": "P7/W13 fixed-revision external replay oracle for SIEVE, S3-FIFO and W-TinyLFU; no JVM runtime dependency"
+    },
+    {
+      "name": "S4FIFOSeerMidasResearch",
+      "adoption": "P7/W12/W13/W15 research input for low-frequency learned control, weak future signals and reclaim-tail evaluation; deterministic fallback mandatory"
+    },
+    {
+      "name": "Swift 6.4 ownership and toolchain audit",
+      "adoption": "Adopt async defer, weak let, linear writer lease and Swift Build path discovery; defer RawSpan hot paths, public linear decode preparation, cancellation shields, SBOM certification and manual optimizer attributes until explicit gates pass."
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "certificateLevels": [
+    {
+      "decision": "universal-pass-required",
+      "id": "L1-hard",
+      "inconclusivePolicy": "treated-as-unresolved-hard-gate",
+      "meaning": "Correctness, security, privacy, identity, lifecycle, resource and durability invariants."
+    },
+    {
+      "decision": "hierarchical-gatekeeping-and-intersection-union-noninferiority",
+      "id": "L2-primary-portfolio",
+      "inconclusivePolicy": "blocks-only-this-claim-family-and-its-ancestors",
+      "meaning": "A small preregistered endpoint family that represents one bounded technical claim."
+    },
+    {
+      "decision": "report-effect-interval-and-pareto-or-co-frontier-status",
+      "id": "L3-secondary-frontier",
+      "inconclusivePolicy": "reported-but-does-not-invalidate-an-unrelated-L2-family",
+      "meaning": "Secondary performance, efficiency and distribution diagnostics."
+    },
+    {
+      "decision": "no-release-ranking",
+      "id": "L4-research",
+      "inconclusivePolicy": "expected-and-retained-as-research-evidence",
+      "meaning": "Oracle regret, model checking, alternative policies and exploratory distribution models."
+    }
+  ],
+  "claimFamilies": "Benchmarks/statistical-claim-families.json",
+  "claimPolicyID": "FOVEA-STATISTICAL-CLAIM-POLICY-V2",
+  "comparatorRegistry": "docs/research/comparator-registry.json",
+  "distributionDiagnostics": {
+    "extremeValueTheory": "Research sensitivity analysis only until threshold selection, dependence, goodness-of-fit and threshold uncertainty are preregistered and validated.",
+    "role": "L3-secondary-unless-explicitly-preregistered-as-L2",
+    "stochasticDominance": "Use directional dominance inference with dependence-aware block subsampling; a visual ECDF or ordinary equality KS test is insufficient.",
+    "wasserstein": "Report unit-preserving or preregistered-normalized W1 with block-bootstrap uncertainty; W1 alone does not identify which tail or user-visible endpoint improved."
+  },
+  "durabilityLevels": [
+    {
+      "id": "D0",
+      "meaning": "plain-write-no-atomicity"
+    },
+    {
+      "id": "D1",
+      "meaning": "atomic-replacement"
+    },
+    {
+      "id": "D2",
+      "meaning": "file-data-synchronized"
+    },
+    {
+      "id": "D3",
+      "meaning": "parent-directory-synchronized"
+    },
+    {
+      "id": "D4",
+      "meaning": "metadata-publication-transaction"
+    },
+    {
+      "id": "D5",
+      "meaning": "content-validated-durable-commit"
+    }
+  ],
+  "hardGates": [
+    "all-applicable-hard-correctness-pass",
+    "semantic-profile-equivalent-before-performance-ranking",
+    "no-crash-hang-data-race-deadlock-or-security-leak",
+    "all-preregistered-primary-endpoints-present",
+    "source-device-os-dataset-plan-harness-and-claim-family-identities-bound",
+    "stable-os-and-required-physical-device-evidence-for-release-claim",
+    "held-out-and-independent-replication-before-best-within-scope-claim"
+  ],
+  "metricOrientation": {
+    "canonicalLoss": "Every quantitative endpoint declares direction and is transformed to a loss for which lower is better.",
+    "orientedAdvantage": "advantage(F,j,m)=loss(j,m)-loss(F,m); positive values favor Fovea.",
+    "prohibition": "Raw point estimates with mixed higher-is-better and lower-is-better orientation cannot enter claim logic."
+  },
+  "missingOrDifferentSemantics": "not-comparable-with-explicit-dimension-diff",
+  "negativeResultsRegistry": "docs/research/negative-results.json",
+  "ontology": "docs/research/comparison-ontology.json",
+  "policyChangeRule": "Changing endpoint membership, margins, gate order or scope after formal results invalidates claim eligibility until the affected experiment is rerun.",
+  "schemaVersion": 2,
+  "scopeCertificate": {
+    "allowedOutputs": [
+      "best-within-scope",
+      "noninferior-within-scope",
+      "co-pareto-frontier-within-scope",
+      "empirically-superior",
+      "empirically-equivalent",
+      "empirically-noninferior",
+      "proven-in-finite-model",
+      "inconclusive",
+      "inferior",
+      "not-comparable",
+      "capability-gap",
+      "invalid-evidence"
+    ],
+    "bestWithinScope": [
+      "all L1 hard gates for the scope pass",
+      "every L2 primary endpoint in the opened family is superior, equivalent, or noninferior after correction",
+      "at least one L2 primary endpoint is superior by a preregistered practically meaningful margin",
+      "no L2 primary endpoint in the family is inferior or inconclusive",
+      "the exact evidence scope and all digests are machine emitted"
+    ],
+    "coParetoFrontier": "L3 endpoints may establish non-domination or a shared Pareto frontier, but cannot override an L1 failure or manufacture an L2 best claim.",
+    "globalWorldBestMarketingClaim": "forbidden",
+    "noninferiorWithinScope": [
+      "all L1 hard gates for the scope pass",
+      "every L2 primary endpoint is equivalent or noninferior after correction",
+      "no superiority assertion is implied"
+    ],
+    "requiredIdentityFields": [
+      "capabilitySet",
+      "workloadFamily",
+      "comparatorSet",
+      "deviceOSSet",
+      "semanticProfileVersion",
+      "sourceTreeDigest",
+      "binaryDigest",
+      "datasetDigest",
+      "experimentPlanDigest",
+      "claimFamilyDigest",
+      "harnessDigest"
+    ]
+  },
+  "semanticProfileDimensions": [
+    "outputQuality",
+    "durability",
+    "securityIsolation",
+    "cachePolicy",
+    "targetGeometry",
+    "colorManagement",
+    "cancellation",
+    "requestIdentity",
+    "resourceBounds",
+    "lifecycle",
+    "privacy"
+  ],
+  "statisticalDecision": {
+    "confidenceLevel": 0.95,
+    "equivalence": "TOST confidence interval entirely inside preregistered [-delta,+delta]",
+    "estimand": "preregistered paired run/session-block effect on canonical loss",
+    "insufficientEvidence": "inconclusive-never-promoted-to-tie-or-inferiority",
+    "multipleComparisons": "hierarchical gatekeeping across claim families, then Holm correction within each opened endpoint family",
+    "nonInferiority": "one-sided confidence bound inside preregistered noninferiority margin",
+    "power": "Each L2 family preregisters target power, maximum inconclusive budget and sample-size escalation rule before formal data.",
+    "prohibitedTieRule": "p-value-above-0.05-is-not-equivalence",
+    "resampling": "paired run-session-cluster bootstrap; request/frame observations are never treated as independent replicates",
+    "superiority": "confidence interval excludes zero in the favorable direction and exceeds the preregistered meaningful effect",
+    "tailQuantiles": "p95/p99 endpoints use run-block or moving-block quantile inference with a preregistered minimum tail sample count"
+  },
+  "status": "active-before-next-formal-results",
+  "unsupported": "capability-gap-with-owner-and-exit-test"
+}

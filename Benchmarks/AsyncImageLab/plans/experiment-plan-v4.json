@@ -1,0 +1,119 @@
+{
+  "applicability": "Benchmarks/AsyncImageLab/applicability.json",
+  "claimFamilies": "Benchmarks/AsyncImageLab/claim-families.json",
+  "comparators": {
+    "platform": {
+      "name": "Apple AsyncImage",
+      "requiredBindings": [
+        "xcodeBuild",
+        "osBuild",
+        "deviceProfileID"
+      ],
+      "sourceIdentity": "platform-build"
+    },
+    "systemUnderTest": {
+      "name": "Fovea",
+      "sourceIdentity": "runner-injected-head-tree-dirty-state",
+      "surface": "FoveaResponsiveImage"
+    }
+  },
+  "execution": {
+    "W10IdentityChanges": 256,
+    "W10IntervalMilliseconds": 16,
+    "W1TimeScaleForSimulator": 0.1,
+    "appContainerIsolation": "uninstall-and-reinstall-prebuilt-app-before-every-comparator-run",
+    "artifactIndexing": "comparator-workload-run-index",
+    "cacheControl": "not-exposed-by-AsyncImage; report system state and never label cold/warm as controlled",
+    "formalPhysicalRepetitions": 20,
+    "foveaCacheIsolation": "unique-run-nonce-cache-root-with-fail-closed-cleanup",
+    "networkProfile": "NET-LOCAL-V1",
+    "pairedBlockUnit": "same-workload-same-run-nonce-two-comparator-processes",
+    "pairedOrder": [
+      [
+        "Apple AsyncImage",
+        "Fovea"
+      ],
+      [
+        "Fovea",
+        "Apple AsyncImage"
+      ]
+    ],
+    "requestCacheIsolation": "shared-paired-block-nonce-appended-to-every-origin-URL",
+    "samplerWarmupFrames": 3,
+    "simulatorPairedBlocks": 5,
+    "sourceIdentityCapture": "after-resource-preparation-xcodegen-and-build-before-first-launch",
+    "surfaceArming": "mount-inert-root-wait-three-display-frames-start-samplers-then-arm",
+    "thermalStateRequiredAtStart": "nominal",
+    "visibleSuccessObservation": "success-view-onAppear-for-both-comparators"
+  },
+  "methodologyRevision": "V3 aligned the visible-success boundary and sampler arming but still reused app containers, fixed run index zero and cacheable URLs across repeated calibration invocations. V4 preserves the same traces and endpoints, adds five alternating paired blocks, resets each app container before every run, appends one shared nonce to both comparators in a pair, gives every artifact a distinct run index, and treats the paired block as the calibration resampling unit. V3 artifacts remain diagnostic only.",
+  "outcomePolicy": {
+    "missingMetric": "not-comparable-not-zero",
+    "noCrossSurfaceRanking": true,
+    "pairedComparison": "only-common-endpoints-with-identical-trace-origin-and-sampling",
+    "releaseClaimRequiresPhysicalStableOS": true,
+    "simulator": "functional-and-calibration-only",
+    "visibleSuccessBoundary": "rendered-success-view-onAppear"
+  },
+  "planID": "FOVEA-SWIFTUI-SURFACE-LAB-V4",
+  "schemaVersion": 4,
+  "status": "preregistered-after-v3-cache-isolation-audit-before-v4-results",
+  "supersedes": "Benchmarks/AsyncImageLab/plans/experiment-plan-v3.json",
+  "workloads": {
+    "W1-SCROLL-V1": {
+      "cacheStates": [
+        "uncontrolled-system-cache"
+      ],
+      "hardChecks": [
+        "no-crash-or-hang",
+        "stale-success-zero"
+      ],
+      "primaryEndpoints": [
+        "main-thread-hitch-time",
+        "peak-dirty-memory"
+      ],
+      "secondaryEndpoints": [
+        "success-count",
+        "failure-count",
+        "origin-request-count",
+        "origin-stopped-count"
+      ]
+    },
+    "W10-SWIFTUI-IDENTITY-CHURN-V1": {
+      "cacheStates": [
+        "uncontrolled-system-cache"
+      ],
+      "hardChecks": [
+        "stale-success-zero",
+        "no-crash-or-hang"
+      ],
+      "primaryEndpoints": [
+        "stale-success-count",
+        "visible-success-latency",
+        "main-thread-hitch-time"
+      ],
+      "secondaryEndpoints": [
+        "phase-failure-count",
+        "origin-request-count",
+        "origin-stopped-count",
+        "peak-dirty-memory"
+      ]
+    },
+    "W2-HERO-V1": {
+      "cacheStates": [
+        "uncontrolled-system-cache"
+      ],
+      "hardChecks": [
+        "all-three-heroes-reach-success-phase"
+      ],
+      "primaryEndpoints": [
+        "hero-display-latency",
+        "peak-dirty-memory"
+      ],
+      "secondaryEndpoints": [
+        "main-thread-hitch-time",
+        "origin-delivered-bytes"
+      ]
+    }
+  }
+}

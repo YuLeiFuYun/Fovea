@@ -1,0 +1,508 @@
+{
+  "challenges": [
+    {
+      "capability": "duplicate request coalescing with independent subscribers",
+      "foveaEvidence": [
+        "Tests/FoveaTests/PipelineTests.swift"
+      ],
+      "id": "CH-SINGLE-FLIGHT-001",
+      "sources": [
+        {
+          "path": "Tests/NukeTests/ImagePipelineTests/ImagePipelineCoalescingTests.swift",
+          "project": "Nuke"
+        },
+        {
+          "path": "Tests/ImageDownloaderTests.swift",
+          "project": "AlamofireImage"
+        },
+        {
+          "path": "picasso/src/test/java/com/squareup/picasso/BitmapHunterTest.java",
+          "project": "Picasso"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "cancel one subscriber without cancelling shared work needed by another",
+      "foveaEvidence": [
+        "Tests/FoveaTests/PipelineTests.swift"
+      ],
+      "id": "CH-CANCEL-ISOLATION-002",
+      "sources": [
+        {
+          "path": "Tests/NukeTests/ImagePipelineTests/ImagePipelineTaskDelegateTests.swift",
+          "project": "Nuke"
+        },
+        {
+          "path": "Tests/Tests/SDWebImageDownloaderTests.m",
+          "project": "SDWebImage"
+        },
+        {
+          "path": "Tests/ImageDownloaderTests.swift",
+          "project": "AlamofireImage"
+        },
+        {
+          "path": "imagepipeline/src/test/java/com/facebook/imagepipeline/producers/MultiplexProducerTest.java",
+          "project": "Fresco"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "bounded bytes delivered after cancellation under scrolling churn",
+      "foveaEvidence": [
+        "Benchmarks/ComparativeLab/Apps/Shared/FeedBenchmark.swift"
+      ],
+      "id": "CH-CANCEL-WASTE-003",
+      "sources": [
+        {
+          "path": "Tests/ImageDownloaderStressTests.swift",
+          "project": "AlamofireImage"
+        },
+        {
+          "path": "instrumentation/src/androidTest/java/com/bumptech/glide/MultiRequestTest.java",
+          "project": "Glide"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "decode and transform output stays inside the requested pixel box",
+      "foveaEvidence": [
+        "Tests/FoveaTests/TargetGeometryTests.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/OtherWorkloads.swift"
+      ],
+      "id": "CH-TARGET-PIXEL-004",
+      "sources": [
+        {
+          "path": "Tests/NukeTests/ImageProcessorsTests/ImageDownsampleTests.swift",
+          "project": "Nuke"
+        },
+        {
+          "path": "Tests/KingfisherTests/ImageProcessorTests.swift",
+          "project": "Kingfisher"
+        },
+        {
+          "path": "Tests/Tests/SDImageCoderTests.m",
+          "project": "SDWebImage"
+        },
+        {
+          "path": "benchmark/src/androidTest/java/com/bumptech/glide/load/resource/bitmap/BenchmarkDownsampler.java",
+          "project": "Glide"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "EXIF orientation and sRGB reference colors survive target-size decode",
+      "foveaEvidence": [
+        "Benchmarks/ComparativeLab/Fixtures/correctness-probes.json"
+      ],
+      "id": "CH-ORIENTATION-COLOR-005",
+      "sources": [
+        {
+          "path": "Tests/Tests/SDImageCoderTests.m",
+          "project": "SDWebImage"
+        },
+        {
+          "path": "instrumentation/src/androidTest/java/com/bumptech/glide/WideGamutTest.java",
+          "project": "Glide"
+        },
+        {
+          "path": "coil-core/src/androidInstrumentedTest/kotlin/coil3/decode/AndroidDecoderTest.kt",
+          "project": "Coil"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "memory cache resists one-hit scan pollution while preserving recurrent objects",
+      "foveaEvidence": [
+        "Tests/FoveaTests/MemoryCacheTests.swift"
+      ],
+      "id": "CH-MEMORY-SCAN-006",
+      "sources": [
+        {
+          "path": "Tests/LRUCacheTests.swift",
+          "project": "LRUCache"
+        },
+        {
+          "path": "Tests/PINCacheTests.m",
+          "project": "PINCache"
+        },
+        {
+          "path": "coil-core/src/commonTest/kotlin/coil3/memory/RealMemoryCacheTest.kt",
+          "project": "Coil"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "linearizable concurrent memory-cache reads, writes, replacement, and purge",
+      "foveaEvidence": [
+        "Tests/FoveaTests/MemoryCacheTests.swift"
+      ],
+      "id": "CH-MEMORY-CONCURRENCY-007",
+      "sources": [
+        {
+          "path": "Tests/LRUPerformanceTests.swift",
+          "project": "LRUCache"
+        },
+        {
+          "path": "Tests/PINCacheTests.m",
+          "project": "PINCache"
+        },
+        {
+          "path": "Tests/KingfisherTests/MemoryStorageTests.swift",
+          "project": "Kingfisher"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "disk corruption is detected, quarantined, and cannot be served",
+      "foveaEvidence": [
+        "Tests/FoveaTests/StagingAndStorageTests.swift"
+      ],
+      "id": "CH-DISK-INTEGRITY-008",
+      "sources": [
+        {
+          "path": "Tests/KingfisherTests/DiskStorageTests.swift",
+          "project": "Kingfisher"
+        },
+        {
+          "path": "coil-core/src/commonTest/kotlin/coil3/disk/DiskLruCacheTest.kt",
+          "project": "Coil"
+        },
+        {
+          "path": "imagepipeline-base/src/test/java/com/facebook/cache/disk/DefaultDiskStorageTest.java",
+          "project": "Fresco"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "external deletion of disk-cache files converges to a clean miss without crash or stale index",
+      "foveaEvidence": [
+        "Tests/FoveaTests/StagingAndStorageTests.swift"
+      ],
+      "id": "CH-EXTERNAL-DELETION-009",
+      "sources": [
+        {
+          "path": "instrumentation/src/androidTest/java/com/bumptech/glide/ExternallyClearedDiskCacheTest.java",
+          "project": "Glide"
+        },
+        {
+          "path": "Tests/KingfisherTests/DiskStorageTests.swift",
+          "project": "Kingfisher"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "crash-safe atomic publication and bootstrap reconciliation",
+      "foveaEvidence": [
+        "Tests/FoveaTests/StagingAndStorageTests.swift",
+        "Tests/FoveaTests/StoreGenerationTests.swift"
+      ],
+      "id": "CH-DISK-ATOMICITY-010",
+      "sources": [
+        {
+          "path": "Tests/PINDiskCache+PINCacheTests.m",
+          "project": "PINCache"
+        },
+        {
+          "path": "coil-core/src/commonTest/kotlin/coil3/disk/DiskCacheTest.kt",
+          "project": "Coil"
+        },
+        {
+          "path": "imagepipeline-base/src/test/java/com/facebook/cache/disk/DiskStorageCacheTest.java",
+          "project": "Fresco"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "expiry and stale metadata are deterministic and do not silently extend freshness",
+      "foveaEvidence": [
+        "Tests/FoveaTests/HTTPCachePolicyTests.swift"
+      ],
+      "id": "CH-EXPIRY-STALE-011",
+      "sources": [
+        {
+          "path": "Tests/KingfisherTests/StaleCacheTests.swift",
+          "project": "Kingfisher"
+        },
+        {
+          "path": "coil-network-cache-control/src/commonTest/kotlin/coil3/network/cachecontrol/CacheControlCacheStrategyTest.kt",
+          "project": "Coil"
+        },
+        {
+          "path": "Tests/PINCacheTests.m",
+          "project": "PINCache"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "Cache-Control no-store never creates a reusable memory or disk entry",
+      "foveaEvidence": [
+        "Tests/FoveaTests/PipelineTests.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/OtherWorkloads.swift"
+      ],
+      "id": "CH-NO-STORE-012",
+      "sources": [
+        {
+          "path": "coil-network-cache-control/src/commonTest/kotlin/coil3/network/cachecontrol/CacheControlCacheStrategyTest.kt",
+          "project": "Coil"
+        },
+        {
+          "path": "Tests/NukeTests/ImagePipelineTests/ImagePipelineDataCacheTests.swift",
+          "project": "Nuke"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "namespace logout removes reusable state and commit-after-revoke cannot resurrect it",
+      "foveaEvidence": [
+        "Tests/FoveaTests/PipelineTests.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/OtherWorkloads.swift"
+      ],
+      "id": "CH-NAMESPACE-REVOKE-013",
+      "sources": [
+        {
+          "path": "imagepipeline/src/test/java/com/facebook/imagepipeline/cache/BufferedDiskCacheTest.java",
+          "project": "Fresco"
+        },
+        {
+          "path": "Tests/KingfisherTests/ImageCacheTests.swift",
+          "project": "Kingfisher"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "credential headers are stripped at cross-origin redirect boundaries",
+      "foveaEvidence": [
+        "Tests/FoveaTests/URLSessionTransportTests.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/OtherWorkloads.swift"
+      ],
+      "id": "CH-AUTH-REDIRECT-014",
+      "sources": [
+        {
+          "path": "Tests/ImageDownloaderTests.swift",
+          "project": "AlamofireImage"
+        },
+        {
+          "path": "coil-network-core/src/commonTest/kotlin/coil3/network/NetworkFetcherTest.kt",
+          "project": "Coil"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "prefetch cancellation, replacement, and lifecycle reset do not let obsolete completions remove new tasks",
+      "foveaEvidence": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests"
+      ],
+      "id": "CH-PREFETCH-LIFECYCLE-015",
+      "sources": [
+        {
+          "path": "Tests/NukeTests/ImagePrefetcherTests.swift",
+          "project": "Nuke"
+        },
+        {
+          "path": "Tests/KingfisherTests/ImagePrefetcherTests.swift",
+          "project": "Kingfisher"
+        },
+        {
+          "path": "Tests/Tests/SDWebImagePrefetcherTests.m",
+          "project": "SDWebImage"
+        },
+        {
+          "path": "library/test/src/test/java/com/bumptech/glide/ListPreloaderTest.java",
+          "project": "Glide"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "bounded concurrency, priority changes, FIFO ties, and starvation prevention",
+      "foveaEvidence": [
+        "Tests/FoveaTests/PrioritySchedulingTests.swift"
+      ],
+      "id": "CH-QUEUE-FAIRNESS-016",
+      "sources": [
+        {
+          "path": "Tests/NukeTests/TaskQueueTests.swift",
+          "project": "Nuke"
+        },
+        {
+          "path": "Tests/ImageDownloaderTests.swift",
+          "project": "AlamofireImage"
+        },
+        {
+          "path": "picasso/src/test/java/com/squareup/picasso/DispatcherTest.java",
+          "project": "Picasso"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "identical transform work executes once while distinct transform identities remain isolated",
+      "foveaEvidence": [
+        "Tests/FoveaTests/PipelineTests.swift"
+      ],
+      "id": "CH-TRANSFORM-DEDUPE-017",
+      "sources": [
+        {
+          "path": "Tests/ImageDownloaderTests.swift",
+          "project": "AlamofireImage"
+        },
+        {
+          "path": "Tests/NukeTests/ImagePipelineTests/ImagePipelineProcessorTests.swift",
+          "project": "Nuke"
+        },
+        {
+          "path": "Tests/KingfisherTests/ImageProcessorTests.swift",
+          "project": "Kingfisher"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "success, failure, and cancellation complete every subscriber exactly once",
+      "foveaEvidence": [
+        "Tests/FoveaTests/PipelineTests.swift"
+      ],
+      "id": "CH-CALLBACK-ONCE-018",
+      "sources": [
+        {
+          "path": "Tests/Tests/SDWebImageDownloaderTests.m",
+          "project": "SDWebImage"
+        },
+        {
+          "path": "Tests/ImageDownloaderTests.swift",
+          "project": "AlamofireImage"
+        },
+        {
+          "path": "Tests/KingfisherTests/ImageDataProviderCancellationTests.swift",
+          "project": "Kingfisher"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "memory pressure clears eligible rendered state and reports entries and bytes",
+      "foveaEvidence": [
+        "Tests/FoveaTests/FoveaSystemPipelineTests.swift"
+      ],
+      "id": "CH-MEMORY-PRESSURE-019",
+      "sources": [
+        {
+          "path": "Tests/LRUCacheTests.swift",
+          "project": "LRUCache"
+        },
+        {
+          "path": "Tests/PINCacheTests.m",
+          "project": "PINCache"
+        },
+        {
+          "path": "coil-core/src/androidUnitTest/kotlin/coil3/memory/MemoryCacheServiceTest.kt",
+          "project": "Coil"
+        }
+      ],
+      "status": "implemented-and-required"
+    },
+    {
+      "capability": "progressive JPEG partial decoding and refresh throttling",
+      "foveaEvidence": [],
+      "id": "CH-PROGRESSIVE-020",
+      "sources": [
+        {
+          "path": "Tests/NukeTests/ImagePipelineTests/ImagePipelineProgressiveDecodingTests.swift",
+          "project": "Nuke"
+        },
+        {
+          "path": "Tests/Tests/SDWebImageDownloaderTests.m",
+          "project": "SDWebImage"
+        },
+        {
+          "path": "imagepipeline/src/test/java/com/facebook/imagepipeline/decoder/ProgressiveJpegParserTest.java",
+          "project": "Fresco"
+        }
+      ],
+      "status": "capability-gap"
+    },
+    {
+      "capability": "animated GIF/APNG/WebP decode, frame cache, timing, and cancellation",
+      "foveaEvidence": [],
+      "id": "CH-ANIMATED-021",
+      "sources": [
+        {
+          "path": "Tests/Tests/SDAnimatedImageTest.m",
+          "project": "SDWebImage"
+        },
+        {
+          "path": "Tests/KingfisherTests/ImageDrawingTests.swift",
+          "project": "Kingfisher"
+        },
+        {
+          "path": "animated-drawable/src/test/java/com/facebook/fresco/animation/frame/DropFramesFrameSchedulerTest.java",
+          "project": "Fresco"
+        },
+        {
+          "path": "coil-gif/src/androidTest/java/coil3/gif/AnimationCallbacksTest.kt",
+          "project": "Coil"
+        }
+      ],
+      "status": "capability-gap"
+    },
+    {
+      "capability": "partial transfer persistence and correct resumable range semantics",
+      "foveaEvidence": [],
+      "id": "CH-RESUMABLE-022",
+      "sources": [
+        {
+          "path": "Tests/NukeTests/ImagePipelineTests/ImagePipelineResumableDataTests.swift",
+          "project": "Nuke"
+        },
+        {
+          "path": "Tests/NukeTests/ResumableDataTests.swift",
+          "project": "Nuke"
+        }
+      ],
+      "status": "capability-gap"
+    },
+    {
+      "capability": "animated WebP, SVG, PDF, Live Photo, HDR gain map, and broad coder registry",
+      "foveaEvidence": [],
+      "id": "CH-EXOTIC-FORMATS-023",
+      "sources": [
+        {
+          "path": "Tests/Tests/SDImageCoderTests.m",
+          "project": "SDWebImage"
+        },
+        {
+          "path": "Tests/KingfisherTests/LivePhotoSourceTests.swift",
+          "project": "Kingfisher"
+        },
+        {
+          "path": "coil-svg/src/commonTest/kotlin/coil3/svg/SvgDecoderTest.kt",
+          "project": "Coil"
+        }
+      ],
+      "status": "capability-gap"
+    }
+  ],
+  "claimPolicy": {
+    "correctness": "Fovea must pass every applicable hard check for capabilities it implements.",
+    "performance": "Fovea must rank first or be statistically tied for first on every applicable preregistered primary metric.",
+    "unsupported": "Unsupported capabilities remain explicit gaps and cannot be represented as passes.",
+    "upstreamTests": "Original upstream tests remain independent required evidence and are not replaced by semantic ports."
+  },
+  "reviewedOn": "2026-07-25",
+  "schemaVersion": 1,
+  "suiteID": "FOVEA-CROSS-LIBRARY-CHALLENGE-V1"
+}

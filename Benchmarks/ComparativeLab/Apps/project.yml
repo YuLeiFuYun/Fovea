@@ -1,0 +1,196 @@
+name: FoveaComparativeApps
+options:
+  bundleIdPrefix: dev.fovea.comparative
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+packages:
+  ComparativeLab:
+    path: ..
+  FoveaRoot:
+    path: ../../..
+  AppleNativeAdapter:
+    path: ../Adapters/AppleNativeAdapterPackage
+  FoveaAdapter:
+    path: ../Adapters/FoveaAdapterPackage
+  NukeAdapter:
+    path: ../Adapters/NukeAdapterPackage
+  KingfisherAdapter:
+    path: ../Adapters/KingfisherAdapterPackage
+  SDWebImageAdapter:
+    path: ../Adapters/SDWebImageAdapterPackage
+  AlamofireImageAdapter:
+    path: ../Adapters/AlamofireImageAdapterPackage
+  PINRemoteImageAdapter:
+    path: ../Adapters/PINRemoteImageAdapterPackage
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    GCC_TREAT_WARNINGS_AS_ERRORS: YES
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1"
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+    INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
+    INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
+    SUPPORTS_MACCATALYST: NO
+    ENABLE_PREVIEWS: NO
+    SWIFT_COMPILATION_MODE: wholemodule
+    OTHER_SWIFT_FLAGS: "-Xfrontend -warn-concurrency"
+targetTemplates:
+  BenchmarkApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Shared
+      - path: GeneratedResources
+        buildPhase: resources
+    dependencies:
+      - package: ComparativeLab
+        product: ComparativeLabCore
+    settings:
+      base:
+        PRODUCT_NAME: $(TARGET_NAME)
+        SKIP_INSTALL: NO
+targets:
+  AsyncImageComparatorBench:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AsyncImage
+      - path: Shared/BenchmarkModels.swift
+      - path: Shared/BenchmarkSampling.swift
+      - path: Shared/LoopbackBenchmarkOriginServer.swift
+      - path: GeneratedResources
+        buildPhase: resources
+    dependencies:
+      - package: ComparativeLab
+        product: ComparativeLabCore
+    settings:
+      base:
+        PRODUCT_NAME: $(TARGET_NAME)
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.asyncimage
+        INFOPLIST_KEY_CFBundleDisplayName: AsyncImage Bench
+        INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
+        BENCHMARK_COMPARATOR_NAME: Apple AsyncImage
+        SKIP_INSTALL: NO
+
+  FoveaSwiftUIComparatorBench:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AsyncImage
+      - path: Shared/BenchmarkModels.swift
+      - path: Shared/BenchmarkSampling.swift
+      - path: Shared/LoopbackBenchmarkOriginServer.swift
+      - path: GeneratedResources
+        buildPhase: resources
+    dependencies:
+      - package: ComparativeLab
+        product: ComparativeLabCore
+      - package: FoveaRoot
+        product: Fovea
+    settings:
+      base:
+        PRODUCT_NAME: $(TARGET_NAME)
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.foveaswiftui
+        INFOPLIST_KEY_CFBundleDisplayName: Fovea SwiftUI Bench
+        INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
+        BENCHMARK_COMPARATOR_NAME: Fovea
+        OTHER_SWIFT_FLAGS: "$(inherited) -D FOVEA_SWIFTUI_SURFACE"
+        SKIP_INSTALL: NO
+
+  AppleNativeComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: AppleNative
+    dependencies:
+      - package: AppleNativeAdapter
+        product: AppleNativeComparatorAdapter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.applenative
+        INFOPLIST_KEY_CFBundleDisplayName: Apple Native Bench
+        BENCHMARK_COMPARATOR_NAME: Apple URLSession + URLCache + ImageIO
+  FoveaComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: Fovea
+    dependencies:
+      - package: FoveaAdapter
+        product: FoveaComparatorAdapter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.fovea
+        INFOPLIST_KEY_CFBundleDisplayName: Fovea Bench
+        BENCHMARK_COMPARATOR_NAME: Fovea
+  NukeComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: Nuke
+    dependencies:
+      - package: NukeAdapter
+        product: NukeComparatorAdapter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.nuke
+        INFOPLIST_KEY_CFBundleDisplayName: Nuke Bench
+        BENCHMARK_COMPARATOR_NAME: Nuke
+  KingfisherComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: Kingfisher
+    dependencies:
+      - package: KingfisherAdapter
+        product: KingfisherComparatorAdapter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.kingfisher
+        INFOPLIST_KEY_CFBundleDisplayName: Kingfisher Bench
+        BENCHMARK_COMPARATOR_NAME: Kingfisher
+
+  SDWebImageComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: SDWebImage
+    dependencies:
+      - package: SDWebImageAdapter
+        product: SDWebImageComparatorAdapter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.sdwebimage
+        INFOPLIST_KEY_CFBundleDisplayName: SDWebImage Bench
+        BENCHMARK_COMPARATOR_NAME: SDWebImage
+  AlamofireImageComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: AlamofireImage
+    dependencies:
+      - package: AlamofireImageAdapter
+        product: AlamofireImageComparatorAdapter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.alamofireimage
+        INFOPLIST_KEY_CFBundleDisplayName: AlamofireImage Bench
+        BENCHMARK_COMPARATOR_NAME: AlamofireImage
+
+  PINRemoteImageComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: PINRemoteImage
+    dependencies:
+      - package: PINRemoteImageAdapter
+        product: PINRemoteImageComparatorAdapter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.pinremoteimage
+        INFOPLIST_KEY_CFBundleDisplayName: PINRemoteImage Bench
+        BENCHMARK_COMPARATOR_NAME: PINRemoteImage
