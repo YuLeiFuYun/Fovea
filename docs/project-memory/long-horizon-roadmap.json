@@ -58,7 +58,7 @@
       "id": "P4-DISK-001",
       "phase": "P4",
       "status": "public-xcode27-ci-green-alpha3-required-check-fault-rebind-device-pending",
-      "summary": "Akashic e138b4425688cb0ce32fba7788adcc944c936b53 is public under MIT, xcode-27 CI-green, tagged 0.1.0-alpha.3 and protected by a required core check. Fovea alpha.3 clean-copy and alpha.2 rollback/forward pass; historical full fault evidence is retained at alpha.2 and must be rebound before stronger alpha.3 fault claims."
+      "summary": "Akashic 50e7032b155187b993b5a82f613c3a0410d32976 is public under MIT, xcode-27 CI-green in run 30741724985, tagged 0.1.0-alpha.4, and protected by a required core check. Fovea public-pin clean-copy passes 478/478 and CacheLab V4 is bound to clean source-control resolution; physical power-loss and stable-device resource qualification remain open."
     },
     {
       "id": "P4-EVIDENCE-001",
@@ -70,7 +70,7 @@
       "id": "P5-AKASHIC-ADAPTER-001",
       "phase": "P5",
       "status": "public-alpha3-pin-478-dual-schema-v1-v2-tested",
-      "summary": "Fovea consumes public Akashic e138b4425688cb0ce32fba7788adcc944c936b53 by exact revision and passes 478/478. Manifest semantic/fault fixtures now operate against both schema 1 snapshots and schema 2 checkpoint-plus-record layouts. A temporary local edit validated the v2 migration path, then the main package was restored to the public checkout so clean builds and DocC do not depend on unpublished symbols."
+      "summary": "Fovea consumes public Akashic 50e7032b155187b993b5a82f613c3a0410d32976 (0.1.0-alpha.4) by exact revision and passes 478/478. Manifest schema 2, resource V2 and fault V5 evidence are bound to the published source identity; physical qualification remains open."
     },
     {
       "id": "P4-MANIFEST-001",

@@ -130,7 +130,7 @@
     "retiredLegacyOriginalEncodedSchemaVersion": 4
   },
   "extractionBlockers": [
-    "Retain the active required core check and immutable 0.1.0-alpha.3 Swift 6.4 tag on the protected Akashic main branch.",
+    "Retain the active required core check and immutable 0.1.0-alpha.4 cache-v4 tag on the protected Akashic main branch.",
     "Complete physical-device resource and energy evidence, multi-hour kill campaigns and physical power-loss/F_FULLFSYNC qualification.",
     "Replay broader W8/W13 host workloads and retained crash/fault programs against the external typed default path.",
     "Publish and protect the Fovea repository, then bind host evidence to the public source identity.",
@@ -209,15 +209,15 @@
     "domainContractModule": "FoveaStorage",
     "domainLeakGate": "zero-in-Akashic-production-source",
     "embeddedAkashicSwiftFileCount": 0,
-    "externalRevisionHostTestsPassed": 475,
+    "externalRevisionHostTestsPassed": 478,
     "externalRevisionRehearsal": "superseded-by-public-exact-pin-clean-copy",
     "externalRevisionRehearsalArtifactSHA256": "a4639cf7b4979cf02280e69b27df26b5fff5acb40ca07543cb56793db5439fbd",
     "externalRevisionTestLogSHA256": "1a1b753184c549c567ab2996b67dae2601a5000fe883213fb51a14476eb80935",
-    "hostTestsPassed": 475,
+    "hostTestsPassed": 478,
     "legacyOriginalEncodedStoreRemoved": true,
     "legacyOverlay": "removed-typed-store-is-the-only-production-original-encoded-implementation",
     "legacyRemovalMainSynchronizationStatus": "passed-57-paths-zero-conflicts",
-    "mainHostTestCount": 475,
+    "mainHostTestCount": 478,
     "mainReleaseBuild": "passed",
     "obligations": {
       "AKASHIC-CT-022": "implemented-host-local",
@@ -228,20 +228,20 @@
     },
     "publicAPISymbolCount": 723,
     "publicEncodedCapability": "OriginalEncodedMaintaining & AnyObject",
-    "serialExternalRevisionHostTestsPassed": 475,
+    "serialExternalRevisionHostTestsPassed": 478,
     "sourceLock": "docs/project-memory/component-pins.json",
     "sourceTreeSHA256": "34bca8103cd8112676c9489e42ad6aeb7b14854f7726417608f02ce7d40613a3",
     "externalDependencyRepository": "https://github.com/YuLeiFuYun/Akashic.git",
-    "externalDependencyRevision": "e138b4425688cb0ce32fba7788adcc944c936b53",
+    "externalDependencyRevision": "50e7032b155187b993b5a82f613c3a0410d32976",
     "externalDependencyMode": "public-exact-revision-no-embedded-source",
-    "cleanCopyHostTestsPassed": 475,
+    "cleanCopyHostTestsPassed": 478,
     "documentationScope": "Fovea-owned-nine-public-production-modules",
-    "previousCompatibleRollbackHostTestsPassed": 475,
-    "forwardCurrentRecoveryHostTestsPassed": 475,
-    "rollbackArtifactSHA256": "81039fe4fef6a541bd9d856524f2617169d8a84c953659c0f6590d9448f3d5d4",
-    "rollbackCombinedLogSHA256": "43730412f4aefec1b47184ed137f975e712631416da6b9d9fb9fde679934f303",
-    "cleanCopySourceDigest": "4d92d7a96cf7840eb82d8704220fd62c9bd190901c60128db3ac341773d65d75",
-    "cleanCopyArtifactSHA256": "872071d5970b8c13f895e4839681d672f8c7c6e31bbba1791597fcd667a4eed8",
+    "previousCompatibleRollbackHostTestsPassed": 478,
+    "forwardCurrentRecoveryHostTestsPassed": 478,
+    "rollbackArtifactSHA256": "07df59f1dacfb1e6ea1d38d4b9f25611e77b45381deea4975fa700c4f1d44d2e",
+    "rollbackCombinedLogSHA256": "e7f395ab3f02cae85a997fad770c869b8f65a5334bbb58c6bf3dc2f6fb8d84d0",
+    "cleanCopySourceDigest": "a8e2da06e42d5e6d35398e839f04e8bfcb3b0003fef0c4f02147be37cb0034f2",
+    "cleanCopyArtifactSHA256": "a6b4815a0a230d842b057211cb9db65ffb913f7dd3654dff3729dd691a689492",
     "cleanCopyLogSHA256": "2b4855ed6c49e014442fed17be2aaffd9f7c7a085b85b9d75efbfedceaec1e34"
   },
   "independentEvidence": "docs/research/akashic-independent-local-evidence-2026-07.json",
@@ -251,14 +251,14 @@
     "sourceIdentitySHA256": "34bca8103cd8112676c9489e42ad6aeb7b14854f7726417608f02ce7d40613a3"
   },
   "independentPackage": {
-    "commit": "e138b4425688cb0ce32fba7788adcc944c936b53",
-    "faultInjectionArtifactSHA256": "d553eed78fdd50827c3c4f4d3df2dadaa4b6ac8f565b7df62860134ef3fd6780",
-    "localTestsPassed": 41,
+    "commit": "50e7032b155187b993b5a82f613c3a0410d32976",
+    "faultInjectionArtifactSHA256": "b2966b616dd49221b4a05c26cc9686e8cd8fcc1f5a100c3ce2a9d62f11bd1be5",
+    "localTestsPassed": 55,
     "path": null,
-    "platformMatrixArtifactSHA256": "a1912709d8cef7d22e0f44832ebd35efd483fc0e517c6aa418880b2421457951",
+    "platformMatrixArtifactSHA256": "d14677a678d6349390ef12d4c392bc2c003c2adb6b31688cc8bcb070ffa10d5a",
     "remoteConfigured": true,
     "sourceIdentityArtifactSHA256": "f0273568069c89f61b1648e1aa7ee2548a806a41fa9937be67c537e9e1c9689a",
-    "sourceIdentitySHA256": "eb271ce584a799a6753019b5ce6a7edab38c8e9260289c2f29fc2ed848f4ed61",
+    "sourceIdentitySHA256": "91608c55745b333bf28b923bf0bf64744541b5e81344f061a251adea483bdb92",
     "tagged": true,
     "workingTree": "clean",
     "repositoryURL": "https://github.com/YuLeiFuYun/Akashic.git",
@@ -266,19 +266,21 @@
       "status": "passed",
       "scope": "main-current-pin",
       "runner": "xcode-27",
-      "runID": 30687922484,
-      "commit": "e138b4425688cb0ce32fba7788adcc944c936b53"
+      "runID": 30741724985,
+      "commit": "50e7032b155187b993b5a82f613c3a0410d32976"
     },
-    "tag": "0.1.0-alpha.3",
+    "tag": "0.1.0-alpha.4",
     "previousRelease": {
-      "commit": "07d43af89014eaa266390f21cbc9a6c481627cfb",
-      "tag": "0.1.0-alpha.2",
+      "commit": "e138b4425688cb0ce32fba7788adcc944c936b53",
+      "tag": "0.1.0-alpha.3",
       "status": "public-ci-green-rollback-baseline"
     },
     "fullFaultCampaignBinding": {
-      "revision": "07d43af89014eaa266390f21cbc9a6c481627cfb",
-      "status": "historical-alpha2-evidence-retained-alpha3-full-rebind-pending"
-    }
+      "revision": "50e7032b155187b993b5a82f613c3a0410d32976",
+      "sourceIdentitySHA256": "91608c55745b333bf28b923bf0bf64744541b5e81344f061a251adea483bdb92",
+      "status": "current-alpha4-local-release-readiness-v5-passed-physical-powerloss-and-stable-device-resource-pending"
+    },
+    "sourceIdentityArtifactRole": "historical-alpha3-artifact-retained-current-alpha4-identity-bound-by-release-handoff"
   },
   "migrationID": "FOVEA-AKASHIC-DOMAIN-NEUTRAL-MIGRATION-V1",
   "packageInternalMoves": [
@@ -427,9 +429,9 @@
     "targetForFirstIndependentRelease": "single active writer per store generation; concurrent readers are supported only inside that process/store instance"
   },
   "rollback": {
-    "status": "passed-alpha3-current-alpha2-previous-forward-alpha3-475-each",
-    "previousPublicRevision": "07d43af89014eaa266390f21cbc9a6c481627cfb",
-    "currentPublicRevision": "e138b4425688cb0ce32fba7788adcc944c936b53",
+    "status": "passed-alpha4-current-alpha3-previous-forward-alpha4-478-each",
+    "previousPublicRevision": "e138b4425688cb0ce32fba7788adcc944c936b53",
+    "currentPublicRevision": "50e7032b155187b993b5a82f613c3a0410d32976",
     "requiredEvidence": [
       "clean-copy host tests",
       "store reopen",
@@ -437,5 +439,6 @@
       "W13",
       "forward recovery"
     ]
-  }
+  },
+  "currentPublicRevision": "50e7032b155187b993b5a82f613c3a0410d32976"
 }

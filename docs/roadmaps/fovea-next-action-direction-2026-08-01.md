@@ -42,7 +42,7 @@ ImageCraft 当前公共提交 `4507da936ef348fa198652c2e4314a1f393b2c90` 已通�
 - `AkashicMemory`：SIEVE 内存缓存；
 - `AkashicDisk`：stage/publish/discard、单 writer、恢复、损坏隔离和文件系统防御。
 
-Akashic 当前公共提交 `e138b4425688cb0ce32fba7788adcc944c936b53` 已通过 GitHub Hosted `xcode-27` required CI，并以 `0.1.0-alpha.3` 标记。Fovea 通过 typed adapter 和公共 exact revision 使用它，内嵌 target/source 已删除；alpha.3 clean-copy、alpha.2 previous-green rollback 与 forward alpha.3 各通过 475 项宿主测试。历史完整 fault campaign 仍绑定 alpha.2；alpha.3 重绑、物理断电和真机资源/能耗证据仍待完成。
+Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 已通过 GitHub Hosted `xcode-27` required `core` CI（run `30741724985`），并以 `0.1.0-alpha.4` 标记。Fovea 通过 typed adapter 和公共 exact revision 使用它，内嵌 target/source 已删除；alpha.4 clean-copy、alpha.3 previous-green rollback 与 forward alpha.4 均通过 478 项宿主测试。当前源码身份已绑定 fault V5、resource V2 与六项平台构建；物理断电和稳定真机资源/能耗证据仍待完成。
 
 ### 2.3 “整体帕累托优势”不能作为一个无条件目标
 
@@ -132,7 +132,7 @@ Akashic 当前公共提交 `e138b4425688cb0ce32fba7788adcc944c936b53` 已通过 
 
 状态：**本地与公共迁移完成。**
 
-- 公共 MIT 仓库、`0.1.0-alpha.3`、Hosted `xcode-27` required `core` check 已建立；
+- 公共 MIT 仓库、`0.1.0-alpha.4`、Hosted `xcode-27` required `core` check 已建立；
 - 公共 API、consumer、兼容与组件门在 GitHub CI 通过；
 - Fovea 固定到 `4507da936ef348fa198652c2e4314a1f393b2c90`，并以 alpha.2 `a26d49f20796ce93539dd497c9a81f58fbfc02af` 作为 previous-green rollback；
 - 内嵌源码已删除，宿主与 clean-copy 均为 475/475。
@@ -143,12 +143,12 @@ Akashic 当前公共提交 `e138b4425688cb0ce32fba7788adcc944c936b53` 已通过 
 
 状态：**本地与公共迁移完成。**
 
-- 公共 MIT 仓库、`0.1.0-alpha.3`、Hosted `xcode-27` required `core` check 已建立；
-- 41 项组件测试、故障/崩溃/quota/contention/platform/resource 门和 GitHub CI 通过；
-- Fovea 固定到 `e138b4425688cb0ce32fba7788adcc944c936b53`，并以 alpha.2 `07d43af89014eaa266390f21cbc9a6c481627cfb` 作为 previous-green rollback；
-- typed adapter 是唯一原编码持久化路径，内嵌源码已删除，宿主与 clean-copy 均为 475/475。
+- 公共 MIT 仓库、`0.1.0-alpha.4`、Hosted `xcode-27` required `core` check 已建立；
+- 55 项组件测试、fault V5、resource V2、崩溃/quota/contention/六项平台门和 GitHub CI 通过；
+- Fovea 固定到 `50e7032b155187b993b5a82f613c3a0410d32976`，并以 alpha.3 `e138b4425688cb0ce32fba7788adcc944c936b53` 作为 previous-green rollback；
+- typed adapter 是唯一原编码持久化路径，内嵌源码已删除，宿主、clean-copy、rollback 与 forward recovery 均为 478/478。
 
-剩余：一次 pin 回滚、跨仓 storage conformance、flat-manifest 写放大方案、物理断电和稳定真机 I/O/能耗。
+剩余：跨仓 storage conformance、物理断电和稳定真机 I/O/能耗；flat-manifest 写放大已由 manifest v2 增量记录方案替代。
 
 ### Workstream C：跨仓 conformance 与 compatibility（P6）
 

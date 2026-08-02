@@ -318,20 +318,20 @@
     "akashicConformanceStatus": "30-obligations-22-component-local-2-partial-6-planned-host-ct022-ct026-open",
     "akashicContractStatus": "adr-0014-accepted-independent-three-product-local-implementation",
     "akashicDiskStatus": "independent-local-41-tests-3-full-volume-3-quota-11-exact-process-crash-3-round-78-random-sigkill-12-process-generation-contention-6-platform-3-resource-clean-copy-passed-nonrelease",
-    "akashicFaultInjectionArtifactSHA256": "d553eed78fdd50827c3c4f4d3df2dadaa4b6ac8f565b7df62860134ef3fd6780",
-    "akashicFaultInjectionStatus": "v5-passed-syscall8-permission1-switch11-random78-full3-quota3",
-    "akashicFoveaIntegrationStatus": "git-free-candidate-478-of-478-passed-public-pin-switch-pending",
+    "akashicFaultInjectionArtifactSHA256": "b2966b616dd49221b4a05c26cc9686e8cd8fcc1f5a100c3ce2a9d62f11bd1be5",
+    "akashicFaultInjectionStatus": "v5-passed-syscall8-permission1-switch11-random78-full3-quota3-current-alpha4-source",
+    "akashicFoveaIntegrationStatus": "public-alpha4-clean-copy-478-of-478-cachelab-v4-trusted-clean-source-passed",
     "akashicGenerationContentionArtifactSHA256": "f5f46b2392df4e584f0cc9c46b52e56087580a33cd36708fe3b64330cb562f49",
     "akashicIndependentEvidence": "docs/research/akashic-independent-local-evidence-2026-07.json",
-    "akashicIndependentPackageStatus": "git-free-81-file-candidate-release-readiness-passed-publication-pending",
-    "akashicLocalResourceEnvelopeStatus": "schema2-three-of-three-passed-payload-metadata-separated",
+    "akashicIndependentPackageStatus": "public-alpha4-81-file-release-readiness-v5-ci-green-tagged-physical-qualification-pending",
+    "akashicLocalResourceEnvelopeStatus": "schema2-three-of-three-passed-payload-metadata-separated-current-alpha4-source",
     "akashicNeutralContractADR": "docs/adr/0014-domain-neutral-akashic-contract.md",
     "akashicNeutralContractStatus": "adr-0014-accepted",
-    "akashicPinnedCommit": "e138b4425688cb0ce32fba7788adcc944c936b53",
-    "akashicPlatformMatrixArtifactSHA256": "a1912709d8cef7d22e0f44832ebd35efd483fc0e517c6aa418880b2421457951",
-    "akashicRealAPFSQuotaArtifactSHA256": "51f939460ee80cab25110d21b86173d9092240ecd3edf7a13882ce01879f1e6a",
-    "akashicRealAPFSQuotaStatus": "3-real-quota-cases-passed-2-kernel-enospc-1-foundation-metadata-prewrite-container-not-full",
-    "akashicRealFullVolumeArtifactSHA256": "37c27e22436892131f1900f3b8deda57e5e508d2deadc6db6d1e36e464fbc2df",
+    "akashicPinnedCommit": "50e7032b155187b993b5a82f613c3a0410d32976",
+    "akashicPlatformMatrixArtifactSHA256": "d14677a678d6349390ef12d4c392bc2c003c2adb6b31688cc8bcb070ffa10d5a",
+    "akashicRealAPFSQuotaArtifactSHA256": "19c215ac52b6cfd8d5c5c6ffce3f065e5128c73e7cf91b80234c83e7a1428d4d",
+    "akashicRealAPFSQuotaStatus": "3-real-quota-cases-passed-all-kernel-enospc-current-alpha4-source",
+    "akashicRealFullVolumeArtifactSHA256": "9509b2191f4d6400bf36e769c9b82106137d2250c845a874633e5d6129027594",
     "akashicRealFullVolumeStatus": "3-mounted-apfs-sparse-image-kernel-enospc-cases-passed-quota-physical-device-powerloss-false",
     "appleAsyncImageComparatorStatus": "required-independent-paired-swiftui-surface-w1-w2-w10-plan-passed",
     "appleNativeHeadlessComparator": "Apple URLSession + URLCache + ImageIO",
@@ -343,13 +343,13 @@
     "bTierRetainedComparators": [
       "AlamofireImage 4.4.0"
     ],
-    "cacheLabStatus": "v4-local-formal-thirteen-of-thirteen-dominance-publication-and-trusted-ci-blocked",
+    "cacheLabStatus": "v4-local-formal-thirteen-of-thirteen-dominance-public-pin-trusted-clean-source-best-claim-eligible-hosted-fovea-ci-pending",
     "canonicalActionPlan": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
     "codecConformanceKitStatus": "in-repository-package-internal-baseline-cross-repository-neutral-kit-pending",
     "codecContractStatus": "implemented-local-package-internal-imageio-reference-only",
     "codecContractVersion": 1,
     "codecDefaultSelectionPermitted": false,
-    "componentCleanCopyStatus": "passed-alpha3-public-https-exact-revision-475-tests-no-sibling-required",
+    "componentCleanCopyStatus": "passed-akashic-alpha4-public-https-exact-revision-478-tests-no-sibling-required",
     "componentPins": "docs/project-memory/component-pins.json",
     "criticalMutationHarnessStatus": "exact-component-checkouts-representative-4-killed-application-audit-101-of-101-full-protected-ci-pending",
     "crossPlatformMechanismAudit": {
@@ -405,20 +405,20 @@
       "status": "watchdog-verified-bounded-host-environment-failure-final-report-pending",
       "totalTimeoutSeconds": 900
     },
-    "externalComponentIntegrationStatus": "swift64-alpha3-public-ci-green-exact-pins-clean-copy-and-alpha2-rollback-forward-475-each",
+    "externalComponentIntegrationStatus": "imagecraft-alpha3-akashic-alpha4-public-ci-green-exact-pins-clean-copy-and-rollback-forward-478-each",
     "externalComponentValidation": {
       "akashicPreviousRevision": "07d43af89014eaa266390f21cbc9a6c481627cfb",
-      "akashicRevision": "e138b4425688cb0ce32fba7788adcc944c936b53",
-      "cleanCopyArtifactSHA256": "872071d5970b8c13f895e4839681d672f8c7c6e31bbba1791597fcd667a4eed8",
+      "akashicRevision": "50e7032b155187b993b5a82f613c3a0410d32976",
+      "cleanCopyArtifactSHA256": "a6b4815a0a230d842b057211cb9db65ffb913f7dd3654dff3729dd691a689492",
       "cleanCopyLogSHA256": "2b4855ed6c49e014442fed17be2aaffd9f7c7a085b85b9d75efbfedceaec1e34",
-      "cleanCopySourceDigest": "4d92d7a96cf7840eb82d8704220fd62c9bd190901c60128db3ac341773d65d75",
-      "hostTestsPerScenario": 475,
+      "cleanCopySourceDigest": "a8e2da06e42d5e6d35398e839f04e8bfcb3b0003fef0c4f02147be37cb0034f2",
+      "hostTestsPerScenario": 478,
       "imageCraftPreviousRevision": "a26d49f20796ce93539dd497c9a81f58fbfc02af",
       "imageCraftRevision": "4507da936ef348fa198652c2e4314a1f393b2c90",
-      "rollbackArtifactSHA256": "81039fe4fef6a541bd9d856524f2617169d8a84c953659c0f6590d9448f3d5d4",
-      "rollbackCombinedLogSHA256": "43730412f4aefec1b47184ed137f975e712631416da6b9d9fb9fde679934f303",
+      "rollbackArtifactSHA256": "07df59f1dacfb1e6ea1d38d4b9f25611e77b45381deea4975fa700c4f1d44d2e",
+      "rollbackCombinedLogSHA256": "e7f395ab3f02cae85a997fad770c869b8f65a5334bbb58c6bf3dc2f6fb8d84d0",
       "rollbackScenarioCount": 3,
-      "status": "alpha3-current-pins-clean-copy-alpha2-previous-and-forward-alpha3-passed"
+      "status": "imagecraft-alpha3-akashic-alpha4-current-pins-clean-copy-alpha2-imagecraft-alpha3-akashic-rollback-and-forward-alpha4-passed"
     },
     "finalATierHeadlessAggregateStatus": "pending-new-plan-real-loopback-rerun-host-quiescence-gate-blocked",
     "finalSwiftUISurfaceAggregateStatus": "pending-new-plan-real-loopback-rerun-host-quiescence-gate-blocked",
@@ -444,14 +444,14 @@
     "latestCacheLabInferiorMetrics": 0,
     "latestCacheLabRunCount": 20,
     "latestCacheLabStatisticalGatePassed": true,
-    "latestCacheLabTrustedCleanSource": false,
+    "latestCacheLabTrustedCleanSource": true,
     "latestComparativePlanCanonicalSHA256": "078206a957e4a44e4b5126543011d61a2746384ce6f87e693cee67c6ab5df8d3",
     "latestComparatorVerificationArtifact": ".artifacts/comparators/verification.json",
     "latestComparatorVerificationArtifactSHA256": "02ab9db195c1b41bac33235cf12ce73d47134931740654d2a7be70506d0e3d47",
     "latestComparatorVerificationStatus": "passed-apple-native-urlcache-fovea-visible-latency-core-contracts",
     "latestFiveLibrarySimulatorAggregateHistorical": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
     "latestRootReleaseBuildStatus": "passed-local",
-    "latestRootSwiftTestCount": 475,
+    "latestRootSwiftTestCount": 478,
     "latestSimulatorAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
     "latestSimulatorAggregateRunCount": 25,
     "latestSimulatorAggregateTrust": "historical-only-plan-digest-mismatch-no-current-ranking",
@@ -553,17 +553,17 @@
         "adaptiveWarmupAdmission": "original-top-level-admission-propagated-to-replacement-warmup",
         "adaptiveWarmupOracle": "exact-final-request-handoff-and-no-visible-refetch",
         "adaptiveWarmupReplay": "20-of-20-passed",
-        "cacheLab": "7-of-7-passed",
+        "cacheLab": "7-of-7-tests-and-v4-20-block-13-of-13-dominance-best-claim-eligible",
         "comparativeCore": "passed",
         "documentationBuildCounterexample": "complete rerun failed closed at 180 seconds after macOS DocC success marker because xcodebuild remained in ?NE exit state; no documentation report was accepted",
-        "hostTests": "476-of-476-passed-after-adaptive-warmup-and-nonpromoting-query-tests",
+        "hostTests": "478-of-478-public-akashic-alpha4-pin",
         "mathematicalAndModelGates": "passed-through-delayed-hit-cache",
         "mutationApplications": "101-of-101-valid",
         "privacyAndStructure": "passed",
         "resolvedBy": "streamed per-platform DocC runner with 900-second total, 180-second inactivity, isolated process group, and bounded cleanup",
         "simulator": "environment-blocked-unhealthy-CoreSimulator-host-reboot-required",
         "staticGates": "passed",
-        "status": "post-docc-non-xcode-gates-in-progress-host-recovery-required-for-docs-and-simulator"
+        "status": "full-local-admission-rerun-in-progress-after-machine-contract-rebind"
       },
       "ninthRootCommit": "ee598df0eec15a97fbc7dc4fffff7e51f49fa25e",
       "ninthRunID": 30689046903,
@@ -635,7 +635,7 @@
         "resolvedBy": "move orientation setup and defer restoration into the @MainActor visual test method plus a static lifecycle guard",
         "status": "failed-after-docc-cachelab-static-http-and-demo-gates-at-workbench-visual-build"
       },
-      "status": "actions-budget-exhausted-workflows-disabled-twelfth-local-candidate-in-progress",
+      "status": "actions-budget-state-unconfirmed-final-alpha4-local-admission-rerun-in-progress",
       "tenthRootCommit": "36b764d225da474ee13ac6105e87963b3385fcde",
       "tenthRunID": 30689587302,
       "tenthRunResult": {
@@ -655,7 +655,8 @@
       },
       "thirdRootCommit": "fe75e6cc745e59611e1152de1ca992c2c3217bb8",
       "thirdRunID": 30678211984,
-      "visibility": "private-until-green"
+      "visibility": "private-until-green",
+      "localCandidateCommit": "339fcf1cf1bb1ccc8c6681f087cdab652e3b0f83"
     },
     "qualifiedCompositionStatus": "codec-entry-and-persistent-store-bundle-specified-implementation-pending",
     "releaseClaimPermitted": false,
@@ -739,8 +740,8 @@
       "componentReleases": {
         "Akashic": {
           "ci": "passed-xcode27-main",
-          "commit": "e138b4425688cb0ce32fba7788adcc944c936b53",
-          "tag": "0.1.0-alpha.3"
+          "commit": "50e7032b155187b993b5a82f613c3a0410d32976",
+          "tag": "0.1.0-alpha.4"
         },
         "ImageCraft": {
           "ci": "passed-xcode27-main",
@@ -790,7 +791,11 @@
     "w2NetworkOriginStatus": "shared-real-loopback-http-nwlistener-all-headless-and-swiftui-surfaces",
     "w7V6Status": "archived-calibration-observable-bound-invalid",
     "w7V7Status": "preregistered-same-trace-derived-origin-bound-final-six-comparator-calibration-pending",
-    "workloadRegistry": "Benchmarks/workload-registry.json"
+    "workloadRegistry": "Benchmarks/workload-registry.json",
+    "latestCacheLabBestClaimEligible": true,
+    "latestCacheLabFormalAnalysisSHA256": "5a694305d2bd98ea8647910509143cb56b1885a2a5f688ae333e76e9c5127d6f",
+    "latestCacheLabFormalRawSHA256": "5e2d498cc64cbe13706730067d03b19067d709dce2004eef0e80f6bbfb1683cb",
+    "latestCacheLabFormalHostExecutionSHA256": "bac9306f33a66217dc98c1510c5b7968ee893a6a3e4515577eeda8e333638742"
   },
   "mandatoryTaskProtocol": {
     "afterWork": [
@@ -887,7 +892,7 @@
       "id": "OPEN-AKASHIC-INDEPENDENT-PACKAGE",
       "priority": 1,
       "status": "public-ci-green-alpha3-exact-pin-clean-copy-alpha2-rollback-fault-rebind-powerloss-device-pending",
-      "summary": "Akashic e138b4425688cb0ce32fba7788adcc944c936b53 is public under MIT, tagged 0.1.0-alpha.3 and green on required xcode-27 core checks. Fovea alpha.3 clean-copy and alpha.2 rollback/forward each pass 475 tests. The historical full fault campaign remains bound to alpha.2; alpha.3 full campaign rebind, true power-loss and physical-device qualification remain open."
+      "summary": "Akashic 50e7032b155187b993b5a82f613c3a0410d32976 is public under MIT, tagged 0.1.0-alpha.4 and green on required xcode-27 core run 30741724985. Fovea public-pin clean-copy and CacheLab V4 trusted-clean-source qualification pass at 478 tests and 13/13 scoped comparisons. Physical power-loss and stable-device resource qualification remain open."
     },
     {
       "id": "OPEN-DECODE-RESOURCE-CONTRACT-AUDIT",

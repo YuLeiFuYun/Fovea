@@ -257,13 +257,24 @@ def main() -> int:
         errors.append("legacy OriginalEncodedStore removal must remain recorded")
     if host.get("embeddedAkashicSwiftFileCount") != 0:
         errors.append("embedded Akashic Swift file count must remain zero")
+    rollback_plan_path = ROOT / "docs/project-memory/component-rollback-plan.json"
+    try:
+        rollback_plan = json.loads(rollback_plan_path.read_text())
+        expected_host_test_count = rollback_plan.get("expectedHostTestCount")
+    except (OSError, json.JSONDecodeError):
+        expected_host_test_count = None
+    if not isinstance(expected_host_test_count, int) or expected_host_test_count <= 0:
+        errors.append("component rollback plan must define a positive expectedHostTestCount")
     for field in (
         "cleanCopyHostTestsPassed",
         "previousCompatibleRollbackHostTestsPassed",
         "forwardCurrentRecoveryHostTestsPassed",
     ):
-        if host.get(field) != 475:
-            errors.append(f"completed Akashic host drill count drifted: {field}")
+        if host.get(field) != expected_host_test_count:
+            errors.append(
+                f"completed Akashic host drill count drifted: {field} "
+                f"expected={expected_host_test_count!r} actual={host.get(field)!r}"
+            )
     for root in AKASHIC_ROOTS:
         if root.exists():
             errors.append(f"embedded Akashic production source returned: {relative(root)}")

@@ -135,20 +135,20 @@
     "custom noncopyable continuation bridges"
   ],
   "validation": {
-    "foveaTests": "475-of-475-strict-zero-owned-warnings-after-hosted-rendering-fix",
+    "foveaTests": "478-of-478-public-akashic-alpha4-pin-zero-failures",
     "imageCraftTests": 64,
-    "akashicTests": 41,
+    "akashicTests": 55,
     "imageCraftReleaseBuild": "passed",
     "minimumDeploymentBuild": "pending-full-three-repository-platform-matrix",
     "hostedCI": "disabled-budget-exhausted-local-candidate-qualification-only",
     "foveaIOS15Compile": "workbench-original-five-test-shard-passed-5-of-5",
-    "foveaLocalComponentCompositionTests": 475,
+    "foveaLocalComponentCompositionTests": 478,
     "foveaReleaseBuild": "passed",
     "foveaCacheLabTests": 7,
     "imageCraftPlatformMatrix": "macOS-12-universal+iOS-15-simulator-universal+iOS-15-device-arm64-passed",
     "akashicPlatformMatrix": "6-cases-macOS-12+iOS-15-simulator+iOS-15-device-passed",
     "foveaOriginalUIShard": "passed-5-of-5-after-explicit-app-teardown",
-    "mutationApplications": "101-of-101-alpha3",
+    "mutationApplications": "pending-final-alpha4-full-admission-rerun",
     "targetedMutants": "AIQA-MUT-039-056-069-killed",
     "foveaIOSPackageTests": "474-of-474-passed-iOS-Simulator",
     "foveaIOSPackageTerminalStatus": "TEST-SUCCEEDED",
@@ -162,7 +162,7 @@
     "x86IdentityBuild": "passed-hosted-xcode27-direct-rosetta-xctest-run-30689587302",
     "componentReleases": {
       "ImageCraft": "4507da936ef348fa198652c2e4314a1f393b2c90@0.1.0-alpha.3",
-      "Akashic": "e138b4425688cb0ce32fba7788adcc944c936b53@0.1.0-alpha.3"
+      "Akashic": "50e7032b155187b993b5a82f613c3a0410d32976@0.1.0-alpha.4"
     },
     "foveaAlpha3CleanCopy": "475-of-475",
     "foveaAlpha2RollbackForward": "3-scenarios-475-each",
@@ -217,6 +217,8 @@
       "oracle": "exact-final-request-handoff-plus-no-new-transport-request",
       "maximumFixtureAttempts": 5,
       "nonPromotingExactQueryTest": "CACHE_PT_053-passed"
-    }
+    },
+    "foveaAlpha4CleanCopy": "478-of-478-public-https-exact-revision",
+    "akashicAlpha4HostedCI": "passed-xcode27-core-run-30741724985"
   }
 }
