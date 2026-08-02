@@ -16,7 +16,7 @@ CURRENT_REQUIRED = ROOT / "docs/current-required-ids.json"
 WPT_MANIFEST = ROOT / "Tests/FoveaTests/Conformance/WPT/manifest.json"
 REPORT = ROOT / ".artifacts/traceability/test-traceability.json"
 ID = re.compile(r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$")
-METHOD = re.compile(r"\bfunc\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(")
+METHOD = re.compile(r"\bfunc\s+(?:([A-Za-z_][A-Za-z0-9_]*)|`([^`]+)`)\s*\(")
 
 
 def sha256(path: Path) -> str:
@@ -30,7 +30,7 @@ def resolve(relative: str) -> Path:
 
 
 def methods(path: Path) -> set[str]:
-    return set(METHOD.findall(path.read_text()))
+    return {plain or display for plain, display in METHOD.findall(path.read_text())}
 
 
 def validate_evidence(requirement: str, evidence: dict[str, Any], wpt_ids: set[str]) -> None:
@@ -44,7 +44,7 @@ def validate_evidence(requirement: str, evidence: dict[str, Any], wpt_ids: set[s
     if kind == "swiftTest":
         method = evidence.get("method")
         if not isinstance(method, str) or method not in methods(path):
-            raise ValueError(f"{requirement}: XCTest method not found: {method}")
+            raise ValueError(f"{requirement}: Swift test function not found: {method}")
     elif kind == "httpConformance":
         method = evidence.get("method")
         case = evidence.get("manifestCase")

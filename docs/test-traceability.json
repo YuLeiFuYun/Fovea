@@ -2247,12 +2247,12 @@
         {
           "file": "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift",
           "kind": "swiftTest",
-          "method": "durablePINProofControlsVisibility"
+          "method": "Durable PIN wrapper hides native objects until a valid proof is published"
         },
         {
           "file": "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift",
           "kind": "swiftTest",
-          "method": "diskSemanticStratification"
+          "method": "Disk contestant roles prevent native PIN writes from entering the D5 ranking"
         }
       ],
       "id": "COMP-PT-018",
