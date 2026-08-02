@@ -32,6 +32,10 @@ WORKBENCH = ROOT / "Examples/FoveaWorkbenchApp/FoveaWorkbench"
 UI_TESTS = ROOT / "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests"
 ARTIFACT_ROOT = ROOT / ".artifacts/ios-example/visual-audit"
 PROJECT = ROOT / "Examples/FoveaWorkbenchApp/FoveaWorkbench.xcodeproj"
+GENERATED_METADATA = (
+    ROOT
+    / "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchBuildMetadata.generated.swift"
+)
 SCHEME = "FoveaWorkbench"
 VISUAL_TEST = "FoveaWorkbenchUITests/FoveaWorkbenchVisualTests"
 
@@ -360,9 +364,16 @@ def capture_visual_family(family: str, identifier: str) -> list[str]:
             output=log,
         )
     except RuntimeError as error:
-        failures.append(f"{family} visual test failed: {error}")
-    if not result.exists():
-        return failures
+        # A timed-out or failed xcodebuild can leave a partial directory at the
+        # result path. Exporting from it obscures the primary failure with a
+        # secondary xcresulttool error, so stop at the retained xcodebuild log.
+        return [f"{family} visual test failed: {error}"]
+    result_info = result / "Info.plist"
+    if not result_info.is_file():
+        return [
+            f"{family} visual test did not produce a complete result bundle: "
+            f"missing {result_info}"
+        ]
     try:
         run(
             [
@@ -390,11 +401,19 @@ def capture_visual_matrix(
     identifiers = [(family, value) for family, value in (("iphone", iphone), ("ipad", ipad)) if value]
     if not identifiers:
         return [], []
-    run([str(ROOT / "scripts/generate-ios-example.sh")], timeout=180)
-    failures: list[str] = []
-    for family, identifier in identifiers:
-        failures.extend(capture_visual_family(family, identifier))
-    return exported_attachment_paths(), failures
+    metadata_existed = GENERATED_METADATA.exists()
+    original_metadata = GENERATED_METADATA.read_bytes() if metadata_existed else None
+    try:
+        run([str(ROOT / "scripts/generate-ios-example.sh")], timeout=180)
+        failures: list[str] = []
+        for family, identifier in identifiers:
+            failures.extend(capture_visual_family(family, identifier))
+        return exported_attachment_paths(), failures
+    finally:
+        if original_metadata is not None:
+            GENERATED_METADATA.write_bytes(original_metadata)
+        elif GENERATED_METADATA.exists():
+            GENERATED_METADATA.unlink()
 
 
 def deduplicate_findings(findings: Sequence[Finding]) -> list[Finding]:

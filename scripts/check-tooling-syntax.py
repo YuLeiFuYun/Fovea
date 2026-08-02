@@ -191,6 +191,8 @@ try:
         "Failed to get matching snapshots: Error getting main window kAXErrorServerNotFound",
         "Failed: Timed out while synthesizing event.",
         "Failed to determine hittability: Activation point invalid and no suggested hit points based on element frame",
+        "visual xcodebuild made no log progress for 240 seconds",
+        "visual xcodebuild exceeded total timeout of 720 seconds",
     ):
         if not verifier.is_simulator_infrastructure_failure(marker):
             errors.append(f"iOS verifier does not classify simulator infrastructure marker: {marker}")
@@ -225,6 +227,8 @@ try:
         'VISUAL_XCODE_INACTIVITY_TIMEOUT_SECONDS = 240': "visual xcodebuild must fail on bounded log inactivity",
         '"-collect-test-diagnostics", "never"': "visual xcodebuild must disable unbounded automatic diagnostics",
         'run_visual_xcode(': "visual xcodebuild must stream progress to its retained family log",
+        'result_info = result / "Info.plist"': "visual attachment export must require a complete result bundle",
+        'GENERATED_METADATA.write_bytes(original_metadata)': "visual capture must restore ephemeral build metadata",
         'DOC_BUILD_TOTAL_TIMEOUT_SECONDS = 900': "documentation build must have a bounded total timeout",
         'DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = 180': "documentation build must have a bounded inactivity timeout",
         'run_documentation_build(': "documentation xcodebuild must stream progress to its retained log",
@@ -380,6 +384,65 @@ try:
             not in stalled_log.read_text()
         ):
             errors.append("visual watchdog must terminate and retain a bounded inactivity marker")
+
+        original_artifact_root = visual_audit.ARTIFACT_ROOT
+        original_ensure_booted = visual_audit.ensure_booted
+        original_visual_runner = visual_audit.run_visual_xcode
+        original_run = visual_audit.run
+        visual_audit.ARTIFACT_ROOT = root / "artifacts"
+        visual_audit.ensure_booted = lambda _identifier: None
+        export_commands: list[list[str]] = []
+
+        def failed_visual_runner(_command: list[str], *, output: Path) -> str:
+            (visual_audit.ARTIFACT_ROOT / "iphone.xcresult").mkdir(
+                parents=True, exist_ok=True
+            )
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text("partial result")
+            raise RuntimeError("visual xcodebuild made no log progress for 1 seconds")
+
+        visual_audit.run_visual_xcode = failed_visual_runner
+        visual_audit.run = lambda command, **_kwargs: export_commands.append(list(command)) or ""
+        try:
+            incomplete_failures = visual_audit.capture_visual_family("iphone", "test-device")
+        finally:
+            visual_audit.ARTIFACT_ROOT = original_artifact_root
+            visual_audit.ensure_booted = original_ensure_booted
+            visual_audit.run_visual_xcode = original_visual_runner
+            visual_audit.run = original_run
+        if (
+            len(incomplete_failures) != 1
+            or "visual test failed" not in incomplete_failures[0]
+            or export_commands
+        ):
+            errors.append(
+                "failed visual xcodebuild must preserve its primary error and skip attachment export"
+            )
+
+        original_artifact_root = visual_audit.ARTIFACT_ROOT
+        original_metadata_path = visual_audit.GENERATED_METADATA
+        original_run = visual_audit.run
+        original_capture = visual_audit.capture_visual_family
+        metadata = root / "WorkbenchBuildMetadata.generated.swift"
+        metadata.write_text("original metadata")
+        visual_audit.ARTIFACT_ROOT = root / "matrix-artifacts"
+        visual_audit.GENERATED_METADATA = metadata
+
+        def mutate_metadata(_command: list[str], **_kwargs: object) -> str:
+            metadata.write_text("generated metadata")
+            return ""
+
+        visual_audit.run = mutate_metadata
+        visual_audit.capture_visual_family = lambda _family, _identifier: []
+        try:
+            visual_audit.capture_visual_matrix("iphone", None)
+        finally:
+            visual_audit.ARTIFACT_ROOT = original_artifact_root
+            visual_audit.GENERATED_METADATA = original_metadata_path
+            visual_audit.run = original_run
+            visual_audit.capture_visual_family = original_capture
+        if metadata.read_text() != "original metadata":
+            errors.append("visual matrix must restore ephemeral build metadata")
 
     documentation_path = ROOT / "scripts/verify-documentation.py"
     documentation_spec = importlib.util.spec_from_file_location(

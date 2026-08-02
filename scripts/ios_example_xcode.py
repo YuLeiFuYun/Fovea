@@ -185,6 +185,8 @@ def is_simulator_infrastructure_failure(output: str) -> bool:
         "Activation point invalid and no suggested hit points based on element frame",
         "Failed to get list of active applications", "Failed to prepare device",
         "Timed out trying to boot simulator",
+        "visual xcodebuild made no log progress",
+        "visual xcodebuild exceeded total timeout",
     )
     return any(marker in output for marker in markers)
 
