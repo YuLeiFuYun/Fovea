@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "allowlistID": "FOVEA-CONCURRENCY-ESCAPE-ALLOWLIST-V1",
+  "reviewedOn": "2026-07-30",
+  "entries": [
+    {
+      "path": "Sources/FoveaCore/AdaptiveEncodedWarmupCoordinator.swift",
+      "kind": "detached-task",
+      "expectedCount": 1,
+      "reason": "The actor deliberately starts a utility warmup whose lifetime is independent of the foreground caller. The actor owns the Task handle, bounds entries, exposes namespace/global cancellation, removes the entry on completion, and never lets warmup failure alter foreground semantics.",
+      "requiredTokens": [
+        "Task.detached(priority: .utility)",
+        "let task: Task<Void, Never>",
+        "maximumEntryCount",
+        "cancelAll(namespace:",
+        "private func finish(key: Key)"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Tests/FoveaTests/SwiftUIStateTests.swift"
+      ]
+    },
+    {
+      "path": "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "The demonstration URLProtocol is instantiated and called by Foundation across concurrency domains. Its mutable fixture and client-delivery state are serialized by its explicit lock/queue discipline and it is confined to the non-production Workbench example target.",
+      "requiredTokens": [
+        "@unchecked Sendable"
+      ],
+      "evidence": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "The deterministic test clock is shared by concurrent test operations; its only mutable UInt64 is read and advanced under one NSLock, and the type is private to the test file.",
+      "requiredTokens": [
+        "TestMonotonicTimeSource",
+        "private let lock = NSLock()",
+        "defer { lock.unlock() }"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "The credential-refresh test clock contains one mutable UInt64 and every read/write is serialized by one NSLock. It exists only to deterministically advance authentication expiry in tests.",
+      "requiredTokens": [
+        "CredentialTestMonotonicTimeSource",
+        "private let lock = NSLock()",
+        "defer { lock.unlock() }"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/AuthenticationRefreshTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/ImageDecoderTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "The private fake prepared decoder must conform to the Sendable production protocol while exposing deterministic counters to the test. All counter mutation and snapshots are serialized by one NSLock; no real decoder or ImageIO object crosses the boundary.",
+      "requiredTokens": [
+        "ContractTestPreparedDecoder",
+        "private let lock = NSLock()",
+        "func snapshot() -> Snapshot"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ImageDecoderTests.swift"
+      ]
+    }
+  ]
+}

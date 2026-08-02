@@ -132,17 +132,23 @@ def main() -> int:
                 if (worktree / "scripts/check-architecture-boundaries.py").is_file()
                 else "scripts/check-phase0a-surface.py"
             )
+            strict_runner = worktree / "scripts/run-swift-strict.py"
+            if strict_runner.is_file():
+                test_command = ["python3", str(strict_runner), "test"]
+                release_command = ["python3", str(strict_runner), "build", "-c", "release"]
+            else:
+                test_command = ["xcrun", "swift", "test", "-Xswiftc", "-warnings-as-errors"]
+                release_command = [
+                    "xcrun", "swift", "build", "-c", "release", "-Xswiftc", "-warnings-as-errors"
+                ]
             commands = [
                 ("boundaries", ["python3", boundary_script]),
                 (
                     "format",
                     ["xcrun", "swift-format", "lint", "--strict", "-r", "Sources", "Tests", "Package.swift"],
                 ),
-                ("tests", ["xcrun", "swift", "test", "-Xswiftc", "-warnings-as-errors"]),
-                (
-                    "release",
-                    ["xcrun", "swift", "build", "-c", "release", "-Xswiftc", "-warnings-as-errors"],
-                ),
+                ("tests", test_command),
+                ("release", release_command),
             ]
             for identifier, command in commands:
                 code = run(command, worktree, env, log)

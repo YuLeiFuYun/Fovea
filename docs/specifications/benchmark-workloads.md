@@ -1,7 +1,21 @@
 # Canonical Benchmark Workloads
 
-> **状态：Proposed，Phase 0a harness / Phase 0b 存在性门禁规范。**  
+> **状态：Proposed，Phase 0a harness / Phase 0b 存在性门禁规范。**
 > 所有竞品和 Fovea 必须使用相同图片、服务端、目标像素、设备、编译优化、网络条件和缓存状态。
+
+## 当前物理设备与 beta OS 证据政策
+
+当前唯一物理设备是 iPhone 16e / iOS 27 beta，机器角色固定为 `primary-current-mid`，不得重命名为最低性能档。该设备可用于 adapter 等价性、实验噪声、目标像素、取消和 provisional W1/W2/W3 trace，但所有工件必须标记 beta channel 与 `provisional=true`。
+
+Phase 0b 正式毕业仍要求：
+
+- 同一 iPhone 16e 在稳定公开 iOS build 上复跑；
+- 另一台较低性能物理设备复跑；
+- 模拟器不计入任一物理设备槽位；
+- beta 结果不得支持 release 性能声明；
+- 设备工件不得保存 UDID、序列号、用户设备名、主机名或账户标识。
+
+设备与阶段状态见 `../PHASE0B_GRADUATION_AND_PHASE1_ENTRY.md` 和 `../phase0b-status.json`。
 
 ## 通用指标
 
@@ -203,9 +217,226 @@ Authorization 不随跨 origin redirect 泄漏
 logout 与在途 Commit 竞态残留 = 0
 ```
 
-## W4：Adaptive Representation（非 v1 阻塞）
+## W4：渐进 JPEG
 
-用于多尺寸、格式、SDR/HDR 候选选择。只有在 W1-W3 稳定后才用于决定 RepresentationSelector 是否毕业。
+### 目的
+
+验证首个可接受渐进结果、扫描质量演进、最终像素正确性和取消传播。
+
+### 核心判据
+
+```text
+time to first acceptable preview
+preview quality over time
+final pixel correctness
+post-cancel bytes/decode work
+peak buffering memory
+```
+
+当前状态：`capability-gap`。在生产 progressive event 路径、fixture corpus 和统一 adapter 合同完成前，不得从矩阵中删除，也不得以普通 JPEG 最终解码冒充支持。
+
+## W5：GIF/APNG/WebP 动图
+
+### 目的
+
+验证帧调度、帧缓存、掉帧、循环语义和内存边界。
+
+### 核心判据
+
+```text
+startup latency
+frame timing error / dropped frames
+peak frame-cache memory
+decode CPU / energy
+loop and lifecycle correctness
+```
+
+当前状态：`capability-gap`。静态 WebP 或首帧解码不等于动图支持。
+
+## W6：弱网和中断恢复
+
+### 目的
+
+验证 retry、resume、Range、断线重连、取消和流量浪费。
+
+### 核心判据
+
+```text
+recovery success rate
+resume-saved bytes
+duplicate network bytes
+retry amplification
+time to recovery
+```
+
+当前状态：retry 基础设施已存在，完整 resumable transfer 仍为 `capability-gap`。
+
+## W7：1,000 并发请求
+
+### 目的
+
+验证请求合并、线程/任务数量、锁竞争、容量约束、公平性和尾延迟。
+
+### 核心判据
+
+```text
+origin request count
+peak thread/task count
+p99 queue delay
+lock wait
+starvation / fairness gap
+aggregate subscriber wait
+```
+
+当前状态：底层 single-flight、permit 与调度测试存在，统一五库 1,000 请求 runner 尚未完成。
+
+## W8：缓存重启与损坏
+
+### 目的
+
+验证 durability、进程重启恢复、外部删除、损坏隔离和原子发布。
+
+### 核心判据
+
+```text
+restart recovery time
+corruption rejection
+external deletion convergence
+partial publication count
+read/write throughput within the same durability level
+```
+
+当前状态：V2 因热吞吐未过门且计时边界不一致被归档；V3 预生成 corpus，但计划的 20 rounds 未被实现，最终仍有三个支配失败。V4 真正执行 20 个 fresh-cache rounds，磁盘 p99 使用吞吐 pass 后 8 轮、1536 个同步样本，并固定 8 分片；16/32 分片因热集保留失败被拒绝。20 个独立 clean process block 的正式结果通过全部 13 个适用支配比较。Akashic Git-free 候选的 release-readiness 与 Fovea 478/478 组合回归也已通过；公开 revision、精确 pin、trusted CI、真实进程终止矩阵扩展和 held-out corpus 仍缺失。
+
+## W9：敌意图片 corpus
+
+### 目的
+
+验证 crash、OOM、维度/帧数/解压比上限、畸形数据和持续 fuzz。
+
+### 核心判据
+
+```text
+crash / hang / OOM count
+limit violation count
+rejection latency
+false rejection rate
+fuzz throughput and sanitizer findings
+```
+
+当前状态：Fovea 有部分输入检查与测试，但完整 hostile corpus、长期 fuzz 和跨库统一 runner 尚未完成。
+
+## W10：SwiftUI identity churn
+
+### 目的
+
+验证 View identity 快速变化、旧结果闪现、取消、消失/重现和 generation 正确性。
+
+### 核心判据
+
+```text
+wrong-image flash count
+stale result publication count
+cancel latency
+visible blank duration
+live task count
+```
+
+当前状态：Fovea SwiftUI 状态测试存在，统一端到端 churn runner 尚未完成。
+
+## W11：多尺寸同源图片
+
+### 目的
+
+验证相同编码资源的下载共享、不同 target/transform 的变体身份和缓存复用。
+
+### 核心判据
+
+```text
+origin download count
+encoded byte duplication
+variant cache hit rate
+decode/transform count
+peak memory
+```
+
+当前状态：Fovea 已有 encoded/decode sharing 单元证据，专项比较 workload 尚未完成。
+
+## W12：内存警告/后台切换
+
+### 目的
+
+验证资源回收速度、后台/前台状态一致性、缓存清理和旧 generation 抑制。
+
+### 核心判据
+
+```text
+memory release latency
+post-pressure resident memory
+resource leak count
+cache repopulation time
+network refetch bytes
+```
+
+当前状态：Fovea 内存压力机制存在，缺少脚本化 OS 压力和五库物理 runner。
+
+## W13：phase-changing cache trace
+
+### 目的
+
+验证热点、扫描、churn 和大小/成本分布切换下的淘汰策略自适应。
+
+### 核心判据
+
+```text
+dynamic/windowed regret
+object and byte hit regret
+cost-weighted saved work
+p99 operation latency
+metadata/update overhead
+```
+
+当前状态：研究模拟器、单锁 SIEVE 历史 formal 和分片 SIEVE 候选校准均存在，但新的 20% 逐 endpoint 支配规则尚未由当前候选的安静宿主 20-block 完整正式结果满足。分片候选必须先通过全部正确性、平台与 Fovea 回归门，再进入 clean trusted 重跑；held-out 真实图片 trace、large-trace 下界方法和 dynamic-regret 声明族仍需扩展。
+
+## W14：离线/重验证
+
+### 目的
+
+验证 offline、stale、304、过期、Vary 和显式 fallback policy。
+
+### 核心判据
+
+```text
+protocol violation count
+offline success rate
+304/revalidation latency
+revalidation network bytes
+stale serve correctness
+```
+
+当前状态：Fovea conformance 和 stale fallback 测试存在，统一竞品语义 adapter 尚未完成。
+
+## W15：低数据/昂贵网络
+
+### 目的
+
+验证 constrained/expensive network 下的策略切换、优先级和预取抑制。
+
+### 核心判据
+
+```text
+expensive-network bytes
+unnecessary prefetch count
+visible deadline miss rate
+policy switch latency
+quality degradation / user-visible failure
+```
+
+当前状态：完整公开策略控制面和真机网络 profile 尚未完成。
+
+## X1：Adaptive Representation（辅助 workload，非 W1-W15 编号）
+
+用于多尺寸、格式、SDR/HDR 候选选择。该 workload 保留原规范价值，但不再占用 W4。只有在 W2、W4、W5、W11 与网络策略稳定后，才用于决定 RepresentationSelector 是否毕业。
 
 核心指标：下载字节、TTFP、最终质量、错误候选率、fallback 成本和选择器自身开销。
 
@@ -296,4 +527,3 @@ namespace revoke/commit race residue = 0
 5. raw trace、置信区间、不可比指标和 coverage gaps；
 6. 同一门禁中的主收益与护栏必须来自同一 comparator 配置；
 7. 任何无法可靠测量的指标记录为 `unproven`，不能按通过处理。
-

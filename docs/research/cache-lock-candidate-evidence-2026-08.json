@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "evidenceID": "FOVEA-CACHE-LOCK-CANDIDATES-2026-08",
+  "status": "local-dirty-tree-negative-result-evidence",
+  "observedOn": "2026-08-02",
+  "workload": "MEM-CONCURRENT-V2",
+  "comparator": "LRUCache 1.2.1",
+  "repetitionsPerCandidate": 20,
+  "decisionScale": "oriented-ratio-higher-is-better-for-fovea",
+  "candidates": [
+    {
+      "name": "baseline-nslock-sieve",
+      "memoryConcurrentThroughput": {
+        "medianRatio": 1.0810559634296744,
+        "confidenceRatio95": [
+          1.0264349082974304,
+          1.115830678384503
+        ]
+      },
+      "memoryConcurrentP99Latency": {
+        "medianRatio": 1.0084269284182992,
+        "confidenceRatio95": [
+          0.9788156372927825,
+          1.069026718516329
+        ]
+      },
+      "decision": "correctness-preserving-baseline-but-below-twenty-percent-dominance-target"
+    },
+    {
+      "name": "os-unfair-lock-single-critical-section",
+      "memoryConcurrentThroughput": {
+        "medianRatio": 1.602198460864185,
+        "confidenceRatio95": [
+          1.5483622726741852,
+          1.6983261420089926
+        ]
+      },
+      "memoryConcurrentP99Latency": {
+        "medianRatio": 0.8105081036528761,
+        "confidenceRatio95": [
+          0.7531196912531122,
+          0.8866000516639815
+        ]
+      },
+      "decision": "rejected-tail-starvation"
+    },
+    {
+      "name": "pthread-rwlock-read-hit-exclusive-mutation",
+      "memoryConcurrentThroughput": {
+        "medianRatio": 0.4012230809918131,
+        "confidenceRatio95": [
+          0.31500656064983057,
+          0.4651460412639149
+        ]
+      },
+      "memoryConcurrentP99Latency": {
+        "medianRatio": 1.8059613504118839,
+        "confidenceRatio95": [
+          1.3733787974851337,
+          1.9642160926393126
+        ]
+      },
+      "decision": "rejected-write-heavy-transition-overhead"
+    },
+    {
+      "name": "pthread-mutex-single-critical-section",
+      "executionMode": "calibration-nine-run",
+      "memoryConcurrentThroughput": {
+        "medianRatio": 1.3354953005501216,
+        "confidenceRatio95": [
+          1.0842234087222051,
+          1.6235388018698704
+        ]
+      },
+      "memoryConcurrentP99Latency": {
+        "medianRatio": 1.0579880034275921,
+        "confidenceRatio95": [
+          0.8709520467836257,
+          1.3162643674384065
+        ]
+      },
+      "decision": "rejected-insufficient-tail-and-confidence-bound-dominance"
+    },
+    {
+      "name": "optional-struct-contiguous-slots",
+      "executionMode": "calibration-nine-run",
+      "memoryConcurrentThroughput": {
+        "medianRatio": 0.5799992037634296,
+        "confidenceRatio95": [
+          0.48880083290600285,
+          0.6916703423711655
+        ]
+      },
+      "memoryConcurrentP99Latency": {
+        "medianRatio": 0.806122188092377,
+        "confidenceRatio95": [
+          0.4784057041688344,
+          1.149398836607916
+        ]
+      },
+      "decision": "rejected-optional-slot-copy-and-cow-overhead"
+    },
+    {
+      "name": "sharded-read-global-mutation",
+      "executionMode": "calibration-nine-run",
+      "memoryConcurrentThroughput": {
+        "medianRatio": 1.2375059206053973,
+        "confidenceRatio95": [
+          0.9756925973668005,
+          1.4009570328530432
+        ]
+      },
+      "memoryConcurrentP99Latency": {
+        "medianRatio": 0.909345438279684,
+        "confidenceRatio95": [
+          0.7040969323661709,
+          1.0018849021039582
+        ]
+      },
+      "decision": "rejected-writer-tail-regression-and-insufficient-confidence"
+    },
+    {
+      "name": "sharded-read-with-pending-mutation-gate",
+      "executionMode": "calibration-nine-run",
+      "memoryConcurrentThroughput": {
+        "medianRatio": 0.7698907675763899,
+        "confidenceRatio95": [
+          0.744353479877105,
+          0.7985047050127494
+        ]
+      },
+      "memoryConcurrentP99Latency": {
+        "medianRatio": 0.8417805675678913,
+        "confidenceRatio95": [
+          0.8105416420519981,
+          0.8587499686111041
+        ]
+      },
+      "decision": "rejected-gate-overhead-and-global-write-serialization"
+    }
+  ],
+  "interpretation": "The workload exposes a real throughput-tail tradeoff. Replacing the lock primitive or introducing a reader-writer lock cannot satisfy endpoint-by-endpoint dominance. The next candidate must reduce critical-section work or partition contention without weakening the exact cost bound and SIEVE correctness contract."
+}

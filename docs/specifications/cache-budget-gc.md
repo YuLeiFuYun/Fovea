@@ -1,6 +1,6 @@
 # 缓存预算、配额与回收规范
 
-> **状态：Proposed；PhysicalBlobID 与简单 soft cap 自 Phase 0a 生效，完整配额/GC 属于 Core v1 Candidate。**
+> **状态：Active 子集 + Proposed 扩展。** PhysicalBlobID、总量软目标、单 blob 上限、近似持久 LRU、启动 reconcile 与 mark-and-sweep GC 已实现；namespace/category quota、lease ledger 与动态 DiskIOBudget 仍属 Core v1 Candidate。
 
 ## 1. 目标
 
@@ -53,9 +53,9 @@ metadata 在同一 namespace 内维护 `ContentID -> PhysicalBlobID` 索引。�
 
 0a 从第一天使用随机、不透明 `PhysicalBlobID`，不得先用 ContentID/SHA-256 文件名再计划迁移。0a 只实现：
 
-- 单一 store soft cap；
-- 写入前/后检查估算使用量；
-- 超过 soft cap 时按 expired/corrupt 优先，再按保守 FIFO 或近似 LRU 删除未租用记录；
+- `softTotalBytes` 总量软目标与独立 `maximumBlobBytes` 单对象上限；
+- 写入与启动 reopen 时检查并收敛预算；
+- 以 manifest 初始时间、进程内访问时间和 blob mtime 形成近似持久 LRU；
 - 清理失败、ENOSPC 或统计不精确不覆盖成功 final；
 - 清理不得同步全盘扫描或阻塞 UI critical path。
 
@@ -78,6 +78,9 @@ namespace/category quota、持久 lease、精确 ledger reconciliation、mark-an
 ```text
 expired partial/staging
 orphan/corrupt objects
+
+- bootstrap 与运行期 GC 都扫描未被当前 manifest 引用的物理 blob 和暂存文件；即使 manifest 没有 victim，也会重试收敛此前物理删除失败留下的孤儿；
+- representation 语义与存储协议位于 `FoveaHTTP`，具体 JSON manifest actor 位于 `FoveaPersistence` 且保持 package implementation；
 expired Analysis
 DerivedEncoded
 低价值 OriginalEncoded
@@ -94,7 +97,7 @@ DerivedEncoded
 
 ## 7. 访问时间与写放大
 
-每次 cache hit 不同步持久化精确 atime。
+每次 cache hit 不重写全量 manifest。当前实现每个 blob 最多每 5 分钟 best-effort 更新一次 mtime，并在进程内保留更精确的访问时间；mtime 更新失败只降低淘汰精度，不使命中失败。
 
 允许：
 
@@ -135,3 +138,9 @@ DerivedEncoded
 - **GC-PT-009**: revoked namespace 立即不可达；
 - **GC-PT-010**: GC 在 DiskIOBudget 内运行，不阻塞交互任务；
 - **GC-PT-011**: 0a soft cap 触发保守清理，清理失败不阻塞 final，且始终使用 opaque PhysicalBlobID。
+
+## 物理回收证据与插件输入边界
+
+GC 汇总报告实际删除的 regular blob 文件和字节，包括 manifest victim、临时文件与 manifest 外 orphan；已经不存在的文件不计作再次回收。计数使用饱和加法。
+
+自定义 representation maintenance store 返回的 live references 最多 100,000 个；每个 `StoredContentReference` 必须包含规范 `sha256:<digest>:<byteCount>` ContentID。超过上限或非法引用不能阻止物理回收无限扩张。

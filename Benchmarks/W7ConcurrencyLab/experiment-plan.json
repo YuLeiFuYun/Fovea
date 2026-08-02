@@ -1,0 +1,150 @@
+{
+  "bTierSupplemental": {
+    "comparators": [
+      "AlamofireImage"
+    ],
+    "policy": "opt-in calibration and separately reported; excluded from A-tier claim family"
+  },
+  "claimBoundary": "Simulator data are functional calibration only. Formal claims require stable physical iOS, clean source, whole-block thermal validity, held-out repetition, and semantic comparability.",
+  "comparators": [
+    "Apple URLSession + URLCache + ImageIO",
+    "Fovea",
+    "Nuke",
+    "Kingfisher",
+    "SDWebImage",
+    "PINRemoteImage"
+  ],
+  "execution": {
+    "cacheState": "cold",
+    "calibrationRepetitions": 1,
+    "clientConcurrentFetchBudget": 8,
+    "formalOrder": "balanced-cyclic-and-reverse-six-a-tier-headless-blocks",
+    "formalRepetitions": 20,
+    "logicalRequestCount": 1000,
+    "maximumPeakThreads": 256,
+    "networkProfile": "NET-CONSTRAINED-V1",
+    "originConcurrentServiceLimit": 8,
+    "thermalRule": "physical formal blocks require nominal throughout and rerun the entire comparator block after drift",
+    "timeoutSecondsPerComparatorRun": 240
+  },
+  "hardChecks": [
+    "logical-request-count-exact",
+    "observation-count-exact",
+    "single-flight-origin-request-bound",
+    "cancelled-subscriber-count-exact",
+    "survivor-completion-count-exact",
+    "priority-burst-no-starvation",
+    "failed-load-count-zero",
+    "target-pixel-invariant",
+    "peak-thread-count-bounded",
+    "origin-peak-concurrency-bounded",
+    "background-probe-bypass-bound"
+  ],
+  "methodologyRevision": "V6 conflated internal permit-grant order with URLSession/origin start order. V7 preserves the internal eight-bypass proof and uses the concurrency-derived black-box bound 8 + (8 - 1) = 15 without changing the trace, client budget, origin limit, endpoints, or formal claim boundary.",
+  "notApplicable": {
+    "Apple AsyncImage": "view API does not expose W7 headless load, priority, subscriber and cancellation contract"
+  },
+  "planID": "FOVEA-W7-CONCURRENCY-V7",
+  "primaryEndpoints": {
+    "immediate-to-background-p95-ratio": {
+      "direction": "lower",
+      "equivalenceRelative": 0.05,
+      "interpretation": "Round-robin arrivals bound arrival-order skew; values below one indicate useful priority differentiation while starvation checks remain hard gates.",
+      "unit": "ratio"
+    },
+    "p99-logical-latency": {
+      "direction": "lower",
+      "equivalenceRelative": 0.05,
+      "unit": "nanoseconds"
+    },
+    "peak-thread-count": {
+      "direction": "lower",
+      "equivalenceAbsolute": 4,
+      "unit": "threads"
+    },
+    "single-flight-origin-request-count": {
+      "direction": "lower",
+      "equivalenceAbsolute": 1,
+      "unit": "requests"
+    }
+  },
+  "schemaVersion": 7,
+  "secondaryEndpoints": [
+    "throughput",
+    "stopped-origin-request-count",
+    "completed-origin-request-count",
+    "cancelled-outcome-count",
+    "failed-outcome-count",
+    "peak-physical-footprint",
+    "main-thread-hitch-time",
+    "priority-class-p50-p95-p99",
+    "origin-peak-concurrency",
+    "baseline-thread-count",
+    "absolute-peak-thread-count",
+    "peak-thread-delta",
+    "background-probe-newer-bypass-count"
+  ],
+  "statistics": {
+    "bootstrapIterations": 10000,
+    "confidenceLevel": 0.95,
+    "equivalenceMethod": "TOST-on-preregistered-margin",
+    "multipleComparisonCorrection": "holm-within-claim-family",
+    "resamplingUnit": "comparator-run-within-balanced-block"
+  },
+  "status": "preregistered-after-v6-calibration-before-formal-results",
+  "subtraces": {
+    "priorityScheduling": {
+      "balancedRoundRobin": {
+        "logicalRequests": 448,
+        "requestsPerPriority": 112,
+        "submissionOrder": "round-robin-background-utility-visible-immediate"
+      },
+      "blockerDelayMilliseconds": 1500,
+      "blockerRequests": 8,
+      "expectedCompletedSubscribers": 488,
+      "logicalRequests": 488,
+      "starvationProbe": {
+        "internalMaximumGrantBypasses": 8,
+        "interpretation": "The client scheduler admits the background request after at most eight newer grants. With eight concurrent client slots, up to seven already-admitted newer requests may still reach the black-box origin first; origin start order therefore has a derived bound of fifteen.",
+        "maximumObservableOriginStartBypasses": 15,
+        "newerImmediateRequests": 31,
+        "observableBoundDerivation": "internalMaximumGrantBypasses + clientConcurrentFetchBudget - 1",
+        "olderBackgroundRequests": 1
+      },
+      "uniqueNoStoreRequests": true
+    },
+    "singleFlightCancellation": {
+      "allCancelGroups": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cancelDelayMilliseconds": 20,
+      "expectedCancelledSubscribers": 256,
+      "expectedCompletedSubscribers": 256,
+      "groups": 16,
+      "halfCancelGroups": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "logicalRequests": 512,
+      "maximumEligibleOriginRequests": 16,
+      "noCancelGroups": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "subscribersPerGroup": 32
+    }
+  },
+  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v6.json",
+  "workloadID": "W7-THOUSAND-CONCURRENT-V1"
+}

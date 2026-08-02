@@ -1,7 +1,7 @@
 # Source 身份、变体与失效规范
 
-> **状态：Proposed，Core v1 Candidate 规格。**  
-> 本规范定义 URL 之外的 File/Data/Asset/Photos/Custom source 如何形成稳定身份、检测变化并参与缓存。
+> **状态：URLSource 活动实现；File/Data/Asset/Photos/Custom source 为 Proposed / Core v1 Candidate。**
+> 当前生产管线只实现 URLSource。其余章节定义候选能力，不构成已交付 API。
 
 ## 1. 通用模型
 
@@ -24,8 +24,9 @@ ResolvedLocator      本次读取位置或句柄
 
 ## 2. URLSource
 
-- LogicalSourceID 使用调用者业务 asset ID 或规范化稳定 URL；
-- 临时签名/凭证不进入稳定身份；
+- 默认 LogicalSourceID 使用规范化完整 URL（保留 query、移除 fragment），这是保守且无歧义的默认；
+- 轮换签名、凭证或过期时间不得依赖默认 URL 身份，调用者必须显式传入稳定业务 asset ID；
+- Fovea 不自动剥离常见签名字段，因为未知 query 可能真实改变资源，错误剥离会造成身份别名；
 - 完整 resolved request 只进入 FetchExecutionKey；
 - HTTP freshness/validator/Vary 由 RepresentationRecord 管理。
 

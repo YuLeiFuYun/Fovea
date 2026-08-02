@@ -1,0 +1,104 @@
+{
+  "entries": [
+    {
+      "evidence": [
+        "Tests/FoveaTests/ImageDecoderTests.swift",
+        "Tests/FoveaTests/ImageCodecConformanceTests.swift",
+        "Tests/FoveaTests/ResourceLimitTests.swift",
+        "scripts/verify-component-clean-copy.py",
+        "docs/research/swift-6.4-adoption-audit-2026-08.md"
+      ],
+      "path": "Sources/FoveaCore/DecodeStage.swift",
+      "reason": "DecodeStage remains the Fovea host owner of probe revalidation, codec capability negotiation, generic-plus-backend working-set admission, prepared-state lifecycle, blocking execution, cancellation and aggregate diagnostics. Swift 6.4 async defer now makes subscription release, preparation discard and priority-control completion structurally unavoidable without adding mutable state or a new responsibility. These operations still form one permit, prepared-state and failure transaction; splitting before a second production backend demonstrates a stable collaborator would duplicate admission ordering, cancellation mapping or prepared-state cleanup.",
+      "responsibilities": [
+        "host-owned bounded probe validation and preparation",
+        "public codec capability and conservative resource admission",
+        "decode executor, permit and prepared-state lifecycle",
+        "aggregate diagnostics, failure mapping and cancellation"
+      ],
+      "reviewedLineCount": 688,
+      "sha256": "5f28c296500eaf2efa4d5fac241cdd78f09420670d63e42adce566f0ba19b96b",
+      "splitTriggers": [
+        "a stable responsibility can move without sharing mutable state or transaction ordering",
+        "the file changes after this frozen review",
+        "a second production backend or workload demonstrates a better boundary"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/HTTPConformanceTests.swift",
+        "Tests/FoveaTests/HTTPCachePolicyTests.swift",
+        "Tests/FoveaTests/PipelineTests.swift"
+      ],
+      "path": "Sources/FoveaCore/HTTPImageResponseProcessor.swift",
+      "reason": "HTTPImageResponseProcessor owns one protocol transaction: validating a response, applying cache semantics, committing representations and handing verified bytes to delivery. Its branches are coupled by RFC cache and authorization invariants; extraction is deferred until a collaborator can own a complete state transition without duplicating commit barriers.",
+      "responsibilities": [
+        "response and validator interpretation",
+        "authorization-aware cache decisions",
+        "representation commit barriers",
+        "verified-byte delivery handoff"
+      ],
+      "reviewedLineCount": 627,
+      "sha256": "3b90646987db61c75f3246d76a3cb833ff103ea1f5479a92e706539552c9aa20",
+      "splitTriggers": [
+        "a stable responsibility can move without sharing mutable state or transaction ordering",
+        "the file changes after this frozen review",
+        "a second production backend or workload demonstrates a better boundary"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/SharedTaskTests.swift",
+        "scripts/run-critical-mutants.py",
+        "docs/specifications/concurrency-contracts.md",
+        "scripts/model-check-shared-task-registry.py"
+      ],
+      "path": "Sources/FoveaCore/SharedTaskRegistry.swift",
+      "reason": "SharedTaskRegistry is one actor state machine covering subscription cohorts, effective priority, orphan handoff leases and cancellation tombstones. The cancellation lease now stores an absolute monotonic expiry and performs lazy expiry on subscribe, so timer scheduling is only a cleanup optimization rather than a correctness dependency. Keeping entry, tombstone, lease identity, completion and join transitions in one actor preserves a reviewable linearization boundary; splitting storage from transitions would weaken the proof and make ABA prevention harder to audit.",
+      "responsibilities": [
+        "subscription cohort state machine",
+        "priority aggregation",
+        "orphan handoff lease expiry",
+        "absolute cancellation tombstone admission and retention"
+      ],
+      "reviewedLineCount": 556,
+      "sha256": "f9a73f3821335ecdcdd6c18abfcd83d380c1344efc133e33a14bb088106b1dbf",
+      "splitTriggers": [
+        "a stable responsibility can move without sharing mutable state or transaction ordering",
+        "the file changes after this frozen review",
+        "a second production backend or workload demonstrates a better boundary"
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "evidence": [
+        "docs/ARCHITECTURE.md",
+        "docs/research/fovea-codec-readiness-audit-2026-07.md",
+        "scripts/analyze-architecture.py",
+        "Tests/FoveaTests/PluggableComponentTests.swift",
+        "scripts/verify-component-clean-copy.py"
+      ],
+      "fileSetSha256": "c2c427beae15c303f20a00f8bd10ca5692cb5bc3ec187d3eac9115bab21c99a0",
+      "maximumReviewedSourceShare": 0.6,
+      "module": "FoveaCore",
+      "reason": "FoveaCore remains the Fovea-owned policy and orchestration layer for request identity, geometry, resource admission, fetch/decode execution, namespace lifecycle, shared work and diagnostics. PipelineCache was split into four files after its frozen oversized-file review triggered, reducing local review scope without changing the module boundary. The cache base, rendered aliases, transport-verified handoffs and original-publication transaction still share FoveaCore identities, namespace authority, diagnostics and mutation ordering; extracting them would either import FoveaCore back into the new module or duplicate host-owned authority. The 57-file set preserves one-way package dependencies and remains below the reviewed 0.60 source-share ceiling.",
+      "responsibilities": [
+        "request, geometry and execution identity",
+        "pipeline orchestration and resource admission",
+        "cache, transient handoff and namespace transaction coordination",
+        "codec host compatibility, shared-work lifecycle and diagnostics"
+      ],
+      "reviewedFileCount": 57,
+      "splitTriggers": [
+        "the reviewed file set changes",
+        "source share exceeds the reviewed 0.60 ceiling",
+        "a stable policy family can move without importing FoveaCore back into the new module",
+        "a responsibility acquires an independent public lifecycle or release cadence"
+      ]
+    }
+  ],
+  "reviewID": "FOVEA-PRODUCTION-COHESION-REVIEWS-V1",
+  "reviewedOn": "2026-08-02",
+  "schemaVersion": 1
+}

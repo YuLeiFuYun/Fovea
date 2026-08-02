@@ -1,6 +1,6 @@
 # 诊断、事件与隐私契约
 
-> **状态：Active Phase 0a 子集 / Core v1 Candidate 规格。**
+> **状态：Active Phase 0b 子集 / Core v1 Candidate 扩展。**
 
 ## 1. 目标
 
@@ -21,7 +21,7 @@ DiagnosticEvent
 └── build/config fingerprint（非秘密）
 ```
 
-- Phase 0a 的 `keyDigest` 字段语义是每 Pipeline 随机加盐的短期 correlation digest，不是持久 key digest；
+- Phase 0a 的 `keyDigest` 字段语义是每 Pipeline 随机加盐的短期 correlation digest，不是持久 key digest；事件构造与 Codable 解码只接受 64 位小写 SHA-256 形式，任意 URL、token、自由文本或非规范摘要在进入 sink 前统一删除；
 - 同一 Pipeline 内可关联阶段，跨 Pipeline/进程不可稳定关联；
 - `RequestTraceID`、`SharedTaskID` 使用随机、进程或 trace 局部 ID；
 - 不使用 ContentID、FetchVariantKey/FetchExecutionKey 原始 digest、URL hash、账户 ID 或 PhysicalBlobID 作为 trace ID；
@@ -55,11 +55,11 @@ ContentID / AnalysisKey / PhysicalBlobID
 
 ## 4. OSLog 与 signpost
 
-- 动态值默认使用 private privacy；
+- 所有动态 log/signpost payload 强制使用 private privacy；不得因为字段已做 schema 清洗就降级为 public；
 - signpost name/category 使用静态低基数字符串；
 - 不把 URL、key 或错误自由文本作为 signpost name；
 - signpost interval 必须成对完成，取消/错误也输出终止事件；
-- production 日志级别与采样由配置决定，不影响请求 key；
+- production 日志级别与采样由 `OSLogDiagnosticsConfiguration` 决定，不影响请求 key、调度、重试或缓存；
 - Unified Logging 可写入内存和磁盘，因此仍按持久化敏感数据处理。
 
 ## 5. Sink 与背压
@@ -68,7 +68,7 @@ ContentID / AnalysisKey / PhysicalBlobID
 
 - 不在 actor/锁内调用；
 - 不得阻塞网络、解码、UI 或 Commit；
-- 内置 ring buffer 固定容量；外部 sink 自动经过单消费者 `bufferingOldest` relay；
+- 内置 ring buffer 容量最大 65,536；sequence 达到 `UInt64.max` 时只对当前有界可见 ring 重新编号，不回绕；外部 sink 自动经过单消费者 `bufferingOldest` relay；
 - 队列满时丢弃新事件，累计 dropped count，并在容量恢复后输出聚合 `diagnosticsDropped`；
 - sink 崩溃、超时或写失败不能改变图片请求结果；
 - 用户提供的 sink 明确 `@Sendable` 和执行器，不允许回调进入 pipeline 修改状态。
@@ -76,16 +76,28 @@ ContentID / AnalysisKey / PhysicalBlobID
 
 ## 6. Phase 0a 已实现子集
 
-- `DiagnosticEvent.schemaVersion = 3`；旧 reader 可忽略新增可选字段；
-- fetch/decode 的 queued、started、completed/cancelled 事件可区分 permit 等待与实际工作；
+- `DiagnosticEvent.schemaVersion = 7`；当前 reader 对未知 schema 失败关闭，schema 迁移必须显式设计；
+- fetch/decode 的 queued、started、completed/failed/cancelled 事件可区分 permit 等待与实际工作，并为 signpost 提供相关终止事件；
 - decode working-set reservation 与 admission rejection 记录脱敏字节估算和有限 reason code；
-- 官方 URLSession transport 汇总 task duration、transaction count、协商协议、连接复用、系统代理、cellular/expensive/constrained 标记；不输出 URL、IP、header 或原始 metrics 对象；
+- 官方 URLSession transport 汇总 task duration、transaction count、协商协议、连接复用、系统代理、cellular/expensive/constrained 标记；不输出 URL、IP、header 或原始 metrics 对象；`TransportNetworkMetrics` 的直接构造与 Codable 解码共享硬上限：计数最多 4,096，时长最多 24 小时，解码协议候选最多 64 个且最终最多保留 8 个合法唯一值；
 - `PipelineFailure` 的 category/stage/disposition/reasonCode 进入结构化失败事件；
-- cache read/write degradation、missing Content-Type、namespace revoke 与 diagnostics drop 均有有限 reason code；
+- cache read/write degradation、missing Content-Type、namespace revoke 与 diagnostics drop 均有有限 reason code；`reason` 仅接受 1–96 字节的小写 ASCII 字母、数字和连字符，其他输入统一收敛为 `invalid-reason-code`；
 - 任意外部 sink 被有界 relay 隔离，阻塞或缓慢消费不延迟图片 final；
-- 每 Pipeline 随机盐重写所有稳定 key digest，原始 URL、token、ContentID、namespace 与持久 digest 不离开 pipeline。
+- 每 Pipeline 随机盐重写所有稳定 key digest，原始 URL、token、ContentID、namespace 与持久 digest 不离开 pipeline；`DiagnosticEvent` 对 byte/item/pixel/dimension/attempt/network count/duration 使用领域上限，构造与反序列化不能制造极值遥测或无界协议数组。
 
-OSLog/OSSignposter、生产采样配置与跨进程 trace export 仍属于后续阶段。
+`FoveaObservability` 已提供 OSLog/OSSignpost 生产出口和 correlation-stable 采样；跨进程 trace backend、retention 与上传仍属于宿主或后续阶段。
+
+
+### 6.1 官方 OSLog 适配器
+
+`FoveaObservability` 独立依赖 `FoveaCore`，Core 不直接导入 OSLog。适配器遵循：
+
+- subsystem/category 必须是 1–128 / 1–64 字节的静态 ASCII 标识符，拒绝 path、空格和动态主体值；
+- event message 只由显式白名单字段组装，correlation digest 只输出 16 位短期前缀；短期前缀、尺寸、状态码、网络属性与时序组合仍视为行为指纹并保持 private；
+- negotiated protocol 再次做长度和字符集收敛，未知值归并为 `other`；
+- fetch/decode 使用静态 `FoveaFetch` / `FoveaDecode` interval；没有对应 begin 的 terminal 只发 event，绝不制造孤立 end；
+- `.oneIn(n)` 对同一 correlation 的普通事件做一致决定，关键失败与取消绕过采样；
+- signpost 和 OSLog 仅观察，不上传、不持有业务 retention 策略。
 
 ## 7. 采样与导出
 
@@ -135,3 +147,8 @@ previewDroppedBackpressure
 - **DIAG-PT-009**: production 采样配置不改变请求身份或调度结果；
 - **DIAG-PT-010**: diagnostics retention/upload 不由 Fovea 隐式执行。
 - **DIAG-PT-011**: 官方 transport 通过真实 URLSession delegate 路径产生脱敏事务摘要，摘要不改变请求结果或身份。
+- **DIAG-PT-013**: `DiagnosticEvent` 直接构造和 Codable 解码共享同一清洗边界；只接受当前 schema，`keyDigest` 只接受规范 SHA-256，非法 HTTP 状态、负数、超大正数、零像素、自由文本 reason、异常协议名与超过 64 项的协议候选不得进入 sink。数量使用 `itemCount`，字节使用 `byteCount`，不得混用。
+
+## 长期运行序列收敛
+
+诊断 ring、permit waiter 和 OSLog 活动 interval 都不得使用可观察的无符号回绕。达到 `UInt64.max` 时只对当前有界可观察集合重新编号，并保持原始年龄顺序；OSLog fetch/decode interval 共用一个全局序列，容量淘汰不会因回绕误关刚开始的区间。

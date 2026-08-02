@@ -125,6 +125,58 @@
     {
       "evidence": [
         {
+          "file": "scripts/check-tooling-syntax.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/verify.sh",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-GATE-012",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-reference-provenance.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-GATE-013",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-process-group-cleanup.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-GATE-014",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/verify-ios-example.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/check-tooling-syntax.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/audit-workbench-visuals.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-GATE-015",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "scripts/run-critical-mutants.py",
           "kind": "script"
         }
@@ -565,6 +617,556 @@
     {
       "evidence": [
         {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-045",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-046",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-047",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-048",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-049",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-050",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-051",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-052",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-053",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-054",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-055",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-056",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-057",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-058",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-059",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-060",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-061",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-062",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-063",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-064",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-065",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-066",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-067",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-068",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-069",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-070",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-071",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-072",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-073",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-074",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-075",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-076",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-077",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-078",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-079",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-080",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-081",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-082",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-083",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-084",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-085",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-086",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-087",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-088",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-089",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-090",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-091",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-092",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-093",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-094",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-095",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-096",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-097",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-098",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-099",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Tests/FoveaTests/IdentityTests.swift",
           "kind": "swiftTest",
           "method": "testCredentialRefreshChangesExecutionButNotBaseOrVariant_AUTH_PT_001"
@@ -724,6 +1326,11 @@
           "file": "Tests/FoveaTests/PipelineTests.swift",
           "kind": "swiftTest",
           "method": "testCustomCredentialHeaderWithoutContextFailsBeforeNetwork_AUTH_PT_012"
+        },
+        {
+          "file": "Tests/FoveaTests/VaryCacheTests.swift",
+          "kind": "swiftTest",
+          "method": "testAuthLikeCustomVaryHeaderFailsClosedWithoutDeclaration_AUTH_PT_012"
         }
       ],
       "id": "AUTH-PT-012",
@@ -735,6 +1342,11 @@
           "file": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
           "kind": "swiftTest",
           "method": "testCredentialReplacementPreservesRequestSemantics_AUTH_PT_013"
+        },
+        {
+          "file": "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+          "kind": "swiftTest",
+          "method": "testRefreshingLoaderPreservesProgressiveEventsAcross401_AUTH_PT_013"
         }
       ],
       "id": "AUTH-PT-013",
@@ -769,6 +1381,102 @@
         }
       ],
       "id": "AUTH-PT-014",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+          "kind": "swiftTest",
+          "method": "testLastCancelledRefreshSubscriberCancelsOrphanAfterGrace_AUTH_PT_015"
+        },
+        {
+          "file": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+          "kind": "swiftTest",
+          "method": "testLateRefreshSubscriberWithinGraceReusesInFlightTask_AUTH_PT_015"
+        }
+      ],
+      "id": "AUTH-PT-015",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/NamespaceRegistryTests.swift",
+          "kind": "swiftTest",
+          "method": "testNamespaceGenerationExhaustionFailsClosedWithoutWraparound_AUTH_PT_016"
+        }
+      ],
+      "id": "AUTH-PT-016",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ProfileAccessPolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testDestinationPolicyRejectsBeforeCacheAndNetwork_AUTH_PT_017"
+        },
+        {
+          "file": "Tests/FoveaTests/FoveaSystemPipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testSystemCompositionAppliesDestinationPolicyBeforeCache_AUTH_PT_017"
+        }
+      ],
+      "id": "AUTH-PT-017",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+          "kind": "swiftTest",
+          "method": "testCancelledCallerCannotReplayRememberedCredentials_AUTH_PT_018"
+        }
+      ],
+      "id": "AUTH-PT-018",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/NamespaceRegistryTests.swift",
+          "kind": "swiftTest",
+          "method": "testRevocationBarrierRejectsNewGenerationUntilEveryCleanupLeaseFinishes_AUTH_PT_019"
+        },
+        {
+          "file": "Tests/FoveaTests/PipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testPipelineRejectsRequestsUntilNamespaceCleanupCompletes_AUTH_PT_019"
+        }
+      ],
+      "id": "AUTH-PT-019",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/NamespaceGenerationPersistenceTests.swift",
+          "kind": "swiftTest",
+          "method": "testDurableAdvancePreventsStaleGenerationAfterRegistryRecreation_AUTH_PT_020"
+        },
+        {
+          "file": "Tests/FoveaTests/NamespaceGenerationPersistenceTests.swift",
+          "kind": "swiftTest",
+          "method": "testConcurrentRevocationsShareOneDurableAdvance_AUTH_PT_020"
+        },
+        {
+          "file": "Tests/FoveaTests/NamespaceGenerationPersistenceTests.swift",
+          "kind": "swiftTest",
+          "method": "testPersistenceFailureLeavesPreviousGenerationActive_AUTH_PT_020"
+        },
+        {
+          "file": "Tests/FoveaTests/FoveaSystemPipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testSystemCompositionNormalizesInvalidNamespaceGenerationManifest_AUTH_PT_020"
+        }
+      ],
+      "id": "AUTH-PT-020",
       "status": "implemented"
     },
     {
@@ -832,6 +1540,16 @@
           "file": "Tests/FoveaTests/PipelineTests.swift",
           "kind": "swiftTest",
           "method": "testFreshRecordAvoidsNetwork_CACHE_PT_006"
+        },
+        {
+          "file": "Tests/FoveaTests/DiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testPipelineDiagnosticsDistinguishFetchDecodeAndMemoryHit"
+        },
+        {
+          "file": "Tests/FoveaTests/IdentityTests.swift",
+          "kind": "swiftTest",
+          "method": "testContentIDPersistentDescriptionRequiresCanonicalMatchingLength"
         }
       ],
       "id": "CACHE-PT-006",
@@ -950,16 +1668,22 @@
       "status": "implemented"
     },
     {
-      "evidence": [],
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/IdentityTests.swift",
+          "kind": "swiftTest",
+          "method": "testPersistentIdentityGoldenVectorsAreArchitectureStable_CACHE_PT_017"
+        }
+      ],
       "id": "CACHE-PT-017",
-      "status": "missing"
+      "status": "implemented"
     },
     {
       "evidence": [
         {
           "file": "Tests/FoveaTests/StagingAndStorageTests.swift",
           "kind": "swiftTest",
-          "method": "testLegacyRecordSchemaReturnsStableMissWithoutRewritingFile_CACHE_PT_018"
+          "method": "testPreReleaseRecordSchemaFailsWithoutRewritingFile_CACHE_PT_018"
         }
       ],
       "id": "CACHE-PT-018",
@@ -970,15 +1694,14 @@
         {
           "file": "Tests/FoveaTests/StoreGenerationTests.swift",
           "kind": "swiftTest",
-          "method": "testEveryGenerationSwitchCrashPointRecoversToCompleteGeneration_CACHE_PT_019"
-        },
-        {
-          "file": "Tests/FoveaTests/StoreGenerationTests.swift",
-          "kind": "swiftTest",
           "method": "testPersistentStoreBundleReusesCompatibleGenerationAndIsolatesIncompatibleOne_CACHE_PT_019"
         },
         {
           "file": "scripts/run-store-generation-contention.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/verify-component-clean-copy.py",
           "kind": "script"
         }
       ],
@@ -991,6 +1714,11 @@
           "file": "Tests/FoveaTests/StagingAndStorageTests.swift",
           "kind": "swiftTest",
           "method": "testUnknownRecordSchemaFailsWithoutRewritingFile"
+        },
+        {
+          "file": "Tests/FoveaTests/NamespaceGenerationPersistenceTests.swift",
+          "kind": "swiftTest",
+          "method": "testFutureNamespaceGenerationManifestFailsClosedWithoutRewrite_CACHE_PT_021"
         }
       ],
       "id": "CACHE-PT-021",
@@ -1124,8 +1852,514 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/HTTPMetadataBoundaryTests.swift",
+          "kind": "swiftTest",
+          "method": "testRepresentationIndexesStayConsistentAcrossReplacementAndReopen_CACHE_PT_040"
+        }
+      ],
+      "id": "CACHE-PT-040",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/StagingAndStorageTests.swift",
+          "kind": "swiftTest",
+          "method": "testOriginalEncodedStageIsInvisibleUntilPublish_CACHE_PT_041"
+        },
+        {
+          "file": "Tests/FoveaTests/StagingAndStorageTests.swift",
+          "kind": "swiftTest",
+          "method": "testOriginalEncodedDiscardRemovesUnpublishedStage_CACHE_PT_041"
+        },
+        {
+          "file": "Tests/FoveaTests/StagingAndStorageTests.swift",
+          "kind": "swiftTest",
+          "method": "testGarbageCollectionDoesNotDeleteInFlightOriginalStage_CACHE_PT_041"
+        }
+      ],
+      "id": "CACHE-PT-041",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+          "kind": "swiftTest",
+          "method": "testFoveaPipelinePublishesFullQualityPreviewBeforeDurableFinal_UI_PT_024_CACHE_PT_042"
+        }
+      ],
+      "id": "CACHE-PT-042",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PluggableComponentTests.swift",
+          "kind": "swiftTest",
+          "method": "testCustomRenderedCacheOwnsHitsInsertionAndPurge_CACHE_PT_043"
+        }
+      ],
+      "id": "CACHE-PT-043",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/model-check-image-codec-contract.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/check-mathematical-proof-obligations.py",
+          "kind": "script"
+        }
+      ],
+      "id": "CODEC-MATH-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageDecoderTests.swift",
+          "kind": "swiftTest",
+          "method": "testImageIOCodecDescriptorAdvertisesOnlyCurrentSemantics"
+        }
+      ],
+      "id": "CODEC-PT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageDecoderTests.swift",
+          "kind": "swiftTest",
+          "method": "testDecodeStageRejectsUnsupportedCapabilityAndDiscardsPreparation"
+        }
+      ],
+      "id": "CODEC-PT-002",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageDecoderTests.swift",
+          "kind": "swiftTest",
+          "method": "testBackendWorkingSetUnderreportCannotBypassGenericAdmission"
+        }
+      ],
+      "id": "CODEC-PT-003",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testFiniteCapabilityDomainMatchesIndependentMembershipOracle"
+        }
+      ],
+      "id": "CODEC-PT-004",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testFailurePrecedenceIsStableWhenSeveralCapabilitiesAreMissing"
+        }
+      ],
+      "id": "CODEC-PT-005",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testImageIOProbeFormatsAreContainedInAdvertisedCapabilities"
+        }
+      ],
+      "id": "CODEC-PT-006",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testImageIOFailsClosedForReservedFutureSemantics"
+        }
+      ],
+      "id": "CODEC-PT-007",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ResourceLimitTests.swift",
+          "kind": "swiftTest",
+          "method": "testInvalidBackendResourceEstimateFailsClosedBeforeDecode"
+        }
+      ],
+      "id": "CODEC-PT-008",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PluggableComponentTests.swift",
+          "kind": "swiftTest",
+          "method": "testPublicCodecContractCanDriveThePipeline_CODEC_PT_010"
+        }
+      ],
+      "id": "CODEC-PT-010",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PluggableComponentTests.swift",
+          "kind": "swiftTest",
+          "method": "testSystemCompositionAcceptsCustomCodecAndRenderedCache_CODEC_PT_011"
+        }
+      ],
+      "id": "CODEC-PT-011",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
+          "kind": "swiftTest",
+          "method": "comparatorIdentityRequiresExactCommit_COMP_PT_001"
+        }
+      ],
+      "id": "COMP-PT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
+          "kind": "swiftTest",
+          "method": "dirtyComparatorIdentityRequiresTreeDigest_COMP_PT_002"
+        }
+      ],
+      "id": "COMP-PT-002",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
+          "kind": "swiftTest",
+          "method": "betaDeviceArtifactsRemainProvisionalAndRedacted_COMP_PT_003"
+        }
+      ],
+      "id": "COMP-PT-003",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
+          "kind": "swiftTest",
+          "method": "observationsMustUseDenseDeterministicSequence_COMP_PT_004"
+        }
+      ],
+      "id": "COMP-PT-004",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-phase0b-entry.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/test-phase0b-entry.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/capture-ios-device-profile.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-005",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comparative-plan.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/prepare-comparative-dataset.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-006",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/verify-comparative-lab.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/prepare-comparator-sources.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-007",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
+          "kind": "swiftTest",
+          "method": "requestScopeAndHeadersAreExplicit_COMP_PT_008"
+        }
+      ],
+      "id": "COMP-PT-008",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/capture-comparative-dataset.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/prepare-comparative-app-resources.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-009",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-comparative-device-lab.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/verify-comparative-lab.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-010",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comparative-plan.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-011",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/prepare-comparative-app-resources.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-012",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/prepare-comparative-app-resources.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/run-comparative-simulator-lab.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-013",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-comparative-simulator-lab.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/verify-comparative-lab.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-014",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-upstream-image-loader-tests.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-015",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comparative-challenge-suite.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-016",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comparison-governance.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-017",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-cache-lab-plan.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/analyze-cache-lab.py",
+          "kind": "script"
+        },
+        {
+          "file": "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift",
+          "kind": "swiftTest",
+          "method": "durablePINProofControlsVisibility"
+        },
+        {
+          "file": "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift",
+          "kind": "swiftTest",
+          "method": "diskSemanticStratification"
+        }
+      ],
+      "id": "COMP-PT-018",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comparison-governance.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/check-comparative-plan.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-019",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-w7-concurrency-plan.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/run-w7-concurrency-lab.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-020",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
+          "kind": "swiftTest",
+          "method": "platformComparatorIdentityBindsBuildAndDevice_COMP_PT_021"
+        }
+      ],
+      "id": "COMP-PT-021",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
+          "kind": "swiftTest",
+          "method": "platformComparatorIdentityRejectsMissingBuild_COMP_PT_022"
+        }
+      ],
+      "id": "COMP-PT-022",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comparison-governance.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/check-phase0b-entry.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/check-comparative-plan.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-023",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-asyncimage-lab-plan.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/run-asyncimage-simulator-lab.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-024",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-upstream-image-loader-tests.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-025",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "scripts/run-live-network-lab.py",
           "kind": "script"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchLiveTests/FoveaWorkbenchLiveNetworkTests.swift",
+          "kind": "swiftTest",
+          "method": "testRealHTTPSMatrix_DEMO_PT_001"
         }
       ],
       "id": "DEMO-PT-001",
@@ -1154,12 +2388,458 @@
     {
       "evidence": [
         {
+          "file": "scripts/run-loopback-network-lab.py",
+          "kind": "script"
+        }
+      ],
+      "id": "DEMO-PT-004",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/verify-ios-example.py",
+          "kind": "script"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testScenarioCatalogHasStableUniqueIdentifiers_DEMO_PT_005"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testInteractiveDefaultsUseRealNetworkWhileDeterministicModeStaysOffline_DEMO_PT_005"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testRealMediaCatalogIsLargeLicensedEthicallyReviewedAndReadable"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testRemoteAssetIdentityUsesStableAssetAndWidthBucket"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testBundledAssetNeverEntersNetworkRequestFactory"
+        }
+      ],
+      "id": "DEMO-PT-005",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testDeterministicImageTraversesProductionPipelineAndHitsMemory_DEMO_PT_006"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testETagScenarioPerforms304Revalidation_DEMO_PT_006"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testConcurrentBurstProducesSingleFlightJoin"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testExpectedFailureScenariosProduceStableReasonCodes"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testNoStoreRefetchesAndMissingContentTypeEmitsAnomaly"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testServerFailureUsesBoundedRetryBudget"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testCancellationStopsSlowRequest"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testNamespaceRevocationInvalidatesPrivateReusableState"
+        }
+      ],
+      "id": "DEMO-PT-006",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/verify-ios-example.py",
+          "kind": "script"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testLaunchShowsEcologicalAtlasAndOpensFeaturedEditorialStory_DEMO_PT_023"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testUITestingUsesDeterministicNetworkingByDefault"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testScenarioStudioExposesSourceLayoutPrefetchAndCacheControls"
+        }
+      ],
+      "id": "DEMO-PT-007",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testCustomURLIsSessionOnlyAndNeverPersisted"
+        }
+      ],
+      "id": "DEMO-PT-008",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testFeedRequestsShareByAssetInsteadOfCellIdentity"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testSingleImageLabPublishesExpectedActualEvidence"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testFailureMatrixValidatesStableReasonCode"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testFeedRunsScriptAndExercisesUIKitReuseHost"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testFeedUsesHundredsOfRealAssetsInteractivelyAndStableSyntheticOriginOffline"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+          "kind": "swiftTest",
+          "method": "testRemoteAssetReentryAvoidsOriginAndRelaunchRestoresFromDisk"
+        }
+      ],
+      "id": "DEMO-PT-009",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testEcologicalAtlasHasCurrentSchemaCompleteTopologyAndRealMedia_DEMO_PT_021"
+        }
+      ],
+      "id": "DEMO-PT-021",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testEcologicalAtlasSeparatesEvidenceTheoryDebateAndNormativeClaims_DEMO_PT_022"
+        }
+      ],
+      "id": "DEMO-PT-022",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testLaunchShowsEcologicalAtlasAndOpensFeaturedEditorialStory_DEMO_PT_023"
+        }
+      ],
+      "id": "DEMO-PT-023",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testEcologicalAtlasOpensLibraryCasesMapGlossaryAndMethodology_DEMO_PT_024"
+        }
+      ],
+      "id": "DEMO-PT-024",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testEcologicalSearchReachesEveryMediaSurface_DEMO_PT_025"
+        }
+      ],
+      "id": "DEMO-PT-025",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testEcologicalStoryExercisesFitFillReloadPurgeAndContract_DEMO_PT_026"
+        }
+      ],
+      "id": "DEMO-PT-026",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchIPadUITests.swift",
+          "kind": "swiftTest",
+          "method": "testIPadLaunchShowsResponsiveEcologicalAtlas_DEMO_PT_027"
+        }
+      ],
+      "id": "DEMO-PT-027",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testEveryEcologicalStoryBuildsItsDeclaredMediaSurface_DEMO_PT_028"
+        }
+      ],
+      "id": "DEMO-PT-028",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testPrefetchCompletionCannotRemoveReplacementTaskAfterReset_DEMO_PT_029"
+        }
+      ],
+      "id": "DEMO-PT-029",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testPrefetchIdentityIncludesBothTargetDimensions_DEMO_PT_030"
+        }
+      ],
+      "id": "DEMO-PT-030",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testEvidenceBundleMinimizesCorrelationAndDeviceFingerprint_DEMO_PT_031"
+        }
+      ],
+      "id": "DEMO-PT-031",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testStorageMaintenancePrunesOldProfilesWithoutFollowingSymlinks_DEMO_PT_032"
+        }
+      ],
+      "id": "DEMO-PT-032",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testStorageMaintenanceTreatsMissingRootAsEmpty_DEMO_PT_033"
+        }
+      ],
+      "id": "DEMO-PT-033",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testPipelineRebuildCancelsAndDrainsEvidenceRuntime_DEMO_PT_034"
+        }
+      ],
+      "id": "DEMO-PT-034",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testEcologicalStoryExercisesFitFillReloadPurgeAndContract_DEMO_PT_026"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testScenarioStudioExposesSourceLayoutPrefetchAndCacheControls"
+        },
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+          "kind": "swiftTest",
+          "method": "testUITestingUsesDeterministicNetworkingByDefault"
+        }
+      ],
+      "id": "DEMO-PT-035",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchIPadUITests.swift",
+          "kind": "swiftTest",
+          "method": "testIPadFeedExercisesGridDensityPerformanceAndUIKitHost"
+        }
+      ],
+      "id": "DEMO-PT-036",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/OSLogDiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testConfigurationRejectsDynamicOrHighCardinalityIdentifiers_DIAG_PT_001"
+        },
+        {
+          "file": "Tests/FoveaTests/OSLogDiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testOSLogMessageRevalidatesDynamicFieldsAndNeverExportsFreeFormText_DIAG_PT_001"
+        }
+      ],
+      "id": "DIAG-PT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/DiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testFetchFailurePublishesCorrelatedTerminalEvent_DIAG_PT_005"
+        },
+        {
+          "file": "Tests/FoveaTests/DiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testDecodeFailurePublishesCorrelatedTerminalEvent_DIAG_PT_005"
+        },
+        {
+          "file": "Tests/FoveaTests/OSLogDiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testIntervalsCloseOnSuccessFailureAndCancellation_DIAG_PT_005"
+        },
+        {
+          "file": "Tests/FoveaTests/OSLogDiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testTerminalWithoutStartEmitsPointInsteadOfUnbalancedEnd_DIAG_PT_005"
+        }
+      ],
+      "id": "DIAG-PT-005",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/OSLogDiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testCorrelationSamplingIsStableAndCriticalFailuresBypassSampling_DIAG_PT_009"
+        }
+      ],
+      "id": "DIAG-PT-009",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
           "kind": "swiftTest",
           "method": "testDelegateTransportCollectsSanitizedTaskMetrics_DIAG_PT_011"
         }
       ],
       "id": "DIAG-PT-011",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/DiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testDecodedDiagnosticEventReappliesSanitizationAndRejectsUnknownSchema"
+        },
+        {
+          "file": "Tests/FoveaTests/DiagnosticsTests.swift",
+          "kind": "swiftTest",
+          "method": "testDiagnosticEventRejectsInvalidNumericAndProtocolFields"
+        }
+      ],
+      "id": "DIAG-PT-013",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/verify-documentation.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/validate-documentation-report.py",
+          "kind": "script"
+        }
+      ],
+      "id": "DOCS-PT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/verify-documentation.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/validate-documentation-report.py",
+          "kind": "script"
+        }
+      ],
+      "id": "DOCS-PT-002",
       "status": "implemented"
     },
     {
@@ -1318,19 +2998,9 @@
     {
       "evidence": [
         {
-          "file": "Tests/FoveaTests/PlatformUIFailurePolicyTests.swift",
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
           "kind": "swiftTest",
-          "method": "testSwiftUIUsesCoreRecoveryMatrix_ERR_PT_014"
-        },
-        {
-          "file": "Tests/FoveaTests/PlatformUIFailurePolicyTests.swift",
-          "kind": "swiftTest",
-          "method": "testAppKitAndSwiftUIUseSameRecoveryMatrix_ERR_PT_014"
-        },
-        {
-          "file": "Tests/FoveaTests/PlatformUIFailurePolicyTests.swift",
-          "kind": "swiftTest",
-          "method": "testUIKitAndSwiftUIUseSameRecoveryMatrix_ERR_PT_014"
+          "method": "testRecoveryActionUsesCentralFailureMatrixUiPt014"
         }
       ],
       "id": "ERR-PT-014",
@@ -1918,7 +3588,7 @@
         {
           "file": "Tests/FoveaTests/ImageDecoderTests.swift",
           "kind": "swiftTest",
-          "method": "testFullyDecodedImageDisplayPreparationIsIdempotent_IMG_PT_008"
+          "method": "testPreparedDecodeMatchesDirectDecodeDiagPt014"
         }
       ],
       "id": "IMG-PT-008",
@@ -1944,6 +3614,280 @@
         }
       ],
       "id": "KEY-GV-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/analyze-mathematical-architecture.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/model-check-cache-transactions.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-002",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-cache-decision-domain.py",
+          "kind": "script"
+        },
+        {
+          "file": "Tests/FoveaTests/HTTPCachePolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testCacheDecisionTableExhaustsFiniteInteractionDomain_MATH_PT_003"
+        }
+      ],
+      "id": "MATH-PT-003",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/analyze-cache-policies.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-004",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+          "kind": "swiftTest",
+          "method": "testDistributionQuantilePrefetchPlannerAdaptsAndRemainsBounded_MATH_PT_006"
+        }
+      ],
+      "id": "MATH-PT-006",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/MemoryCacheTests.swift",
+          "kind": "swiftTest",
+          "method": "testSIEVEHitProtectsEntryForOneEvictionCycle_MATH_PT_007"
+        },
+        {
+          "file": "Tests/FoveaTests/MemoryCacheTests.swift",
+          "kind": "swiftTest",
+          "method": "testSIEVEProtectsVisitedHotSetFromSequentialScan_MATH_PT_007"
+        }
+      ],
+      "id": "MATH-PT-007",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/MemoryCacheTests.swift",
+          "kind": "swiftTest",
+          "method": "testSeededSIEVEMatchesIndependentClockModel_MATH_PT_008"
+        }
+      ],
+      "id": "MATH-PT-008",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/TargetGeometryTests.swift",
+          "kind": "swiftTest",
+          "method": "testGeometryPolicyCodableRejectsUnknownSchemaAndInvalidLimits_MATH_PT_009"
+        }
+      ],
+      "id": "MATH-PT-009",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/TargetGeometryTests.swift",
+          "kind": "swiftTest",
+          "method": "testGeometricBucketsBoundRelativeOversamplingAndReduceVariants_MATH_PT_010"
+        }
+      ],
+      "id": "MATH-PT-010",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/model-check-shared-task-registry.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-011",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/RetryPolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testFullJitterUsesEntireWindowAndNeverUndercutsRetryAfter_MATH_PT_012"
+        }
+      ],
+      "id": "MATH-PT-012",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/analyze-retry-jitter.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-013",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/analyze-multi-resource-fairness.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-014",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-mathematical-research.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-015",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comparison-governance.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-016",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/analyze-cache-policies.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/analyze-cache-lab.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-017",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comparison-governance.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/check-comparative-plan.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/check-cache-lab-plan.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-018",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/analyze-latency-distributions.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/check-latency-distribution-analysis.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-019",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/analyze-delayed-hit-cache.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-020",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comparative-plan.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/check-comparison-governance.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MATH-PT-021",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-project-memory.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MEM-PT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-workload-registry.py",
+          "kind": "script"
+        }
+      ],
+      "id": "MEM-PT-002",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/render-project-context.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/project-session-bootstrap.sh",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/verify.sh",
+          "kind": "script"
+        }
+      ],
+      "id": "MEM-PT-003",
       "status": "implemented"
     },
     {
@@ -2170,6 +4114,92 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
+          "kind": "swiftTest",
+          "method": "testProxyTrustPolicyIsExplicitAndFailsClosedWhenVerificationIsRequired_RES_PT_015"
+        }
+      ],
+      "id": "RES-PT-015",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/IdentityTests.swift",
+          "kind": "swiftTest",
+          "method": "testImageRequestBoundsIdentityComponentsBeforePipelineUse_RES_PT_016"
+        }
+      ],
+      "id": "RES-PT-016",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/HTTPDestinationPolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testExactOriginAllowlistNormalizesSchemeHostAndDefaultPort_RES_PT_017"
+        },
+        {
+          "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
+          "kind": "swiftTest",
+          "method": "testDestinationPolicyRejectsInitialRequestAndCrossOriginRedirect_RES_PT_017"
+        }
+      ],
+      "id": "RES-PT-017",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ResourceLimitTests.swift",
+          "kind": "swiftTest",
+          "method": "testNamespaceCapacityRejectsBeforeNetwork_RES_PT_018"
+        },
+        {
+          "file": "Tests/FoveaTests/NamespaceRegistryTests.swift",
+          "kind": "swiftTest",
+          "method": "testNamespaceCapacityRejectsNewEntriesWithoutDisturbingTrackedState"
+        },
+        {
+          "file": "Tests/FoveaTests/NamespaceRegistryTests.swift",
+          "kind": "swiftTest",
+          "method": "testRevokingUnknownNamespaceAtCapacityFailsClosed"
+        }
+      ],
+      "id": "RES-PT-018",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/FoveaSystemPipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testMemoryPressureMonitorIsRetainedByPipelineInsteadOfWrapper"
+        },
+        {
+          "file": "Tests/FoveaTests/FoveaSystemPipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testMemoryPressurePurgesRenderedMemoryWithoutRefetch_RES_PT_011"
+        }
+      ],
+      "id": "RES-PT-019",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
+          "kind": "swiftTest",
+          "method": "testStagingMaintenanceLockTimesOutInsteadOfBlockingForever_RES_PT_020"
+        }
+      ],
+      "id": "RES-PT-020",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Tests/FoveaTests/PriorityPropagationTests.swift",
           "kind": "swiftTest",
           "method": "testJoinedSubscriberRaisesAndThenLowersTransportPriority_SCHED_PT_003"
@@ -2313,6 +4343,101 @@
         }
       ],
       "id": "SCHED-PT-015",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SharedTaskTests.swift",
+          "kind": "swiftTest",
+          "method": "testDetachedTaskIsCancelledAfterBoundedHandoffLease_SCHED_PT_016"
+        }
+      ],
+      "id": "SCHED-PT-016",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testConcurrentEquivalentRequestsShareOneTransform_SCHED_PT_017"
+        }
+      ],
+      "id": "SCHED-PT-017",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PrioritySchedulingTests.swift",
+          "kind": "swiftTest",
+          "method": "testEqualPriorityPrefersSmallerEstimatedWork_SCHED_PT_018"
+        },
+        {
+          "file": "Tests/FoveaTests/PrioritySchedulingTests.swift",
+          "kind": "swiftTest",
+          "method": "testEqualPriorityEqualEstimatePreservesFIFO_SCHED_PT_018"
+        }
+      ],
+      "id": "SCHED-PT-018",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PrioritySchedulingTests.swift",
+          "kind": "swiftTest",
+          "method": "testLargeEqualPriorityWorkCannotStarveBeyondBypassLimit_SCHED_PT_019"
+        },
+        {
+          "file": "Tests/FoveaTests/PrioritySchedulingTests.swift",
+          "kind": "swiftTest",
+          "method": "testStarvedCohortIsFIFOAndBlocksNonstarvedShortWork_SCHED_PT_019"
+        }
+      ],
+      "id": "SCHED-PT-019",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PrioritySchedulingTests.swift",
+          "kind": "swiftTest",
+          "method": "testWeightedStarvedWaiterReservesCapacityAndDrainsFragments_SCHED_PT_020"
+        },
+        {
+          "file": "scripts/model-check-permit-scheduler.py",
+          "kind": "script"
+        }
+      ],
+      "id": "SCHED-PT-020",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SharedTaskTests.swift",
+          "kind": "swiftTest",
+          "method": "testCancellationTombstonePreventsLateSubscriberFromRestartingOperation_SCHED_PT_021"
+        },
+        {
+          "file": "scripts/model-check-shared-task-registry.py",
+          "kind": "script"
+        }
+      ],
+      "id": "SCHED-PT-021",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SharedTaskTests.swift",
+          "kind": "swiftTest",
+          "method": "testPreCancellationAdmissionCanJoinReplacementCohortWithoutAllowingFreshRestart_SCHED_PT_022"
+        }
+      ],
+      "id": "SCHED-PT-022",
       "status": "implemented"
     },
     {
@@ -2532,7 +4657,7 @@
         {
           "file": "Tests/FoveaTests/ManifestSemanticValidationTests.swift",
           "kind": "swiftTest",
-          "method": "testOriginalManifestCannotDeclareBlobAboveConfiguredLimit_SEC_CASE_030"
+          "method": "testOriginalManifestEntryAboveRuntimeLimitIsReconciled_SEC_CASE_030"
         }
       ],
       "id": "SEC-CASE-030",
@@ -2548,7 +4673,7 @@
         {
           "file": "Tests/FoveaTests/FilesystemLinkDefenseTests.swift",
           "kind": "swiftTest",
-          "method": "testGenerationAndWriterLocksRejectSymbolicLinks_SEC_CASE_031"
+          "method": "testWriterLockRejectsSymbolicLink_SEC_CASE_031"
         },
         {
           "file": "Tests/FoveaTests/FilesystemLinkDefenseTests.swift",
@@ -2574,12 +4699,11 @@
         {
           "file": "Tests/FoveaTests/BoundedMetadataReadTests.swift",
           "kind": "swiftTest",
-          "method": "testOversizedGenerationPointerFailsWithoutRewrite_SEC_CASE_032"
+          "method": "testOversizedBlobIsRejectedBeforeAllocationAndQuarantined_SEC_CASE_032"
         },
         {
-          "file": "Tests/FoveaTests/BoundedMetadataReadTests.swift",
-          "kind": "swiftTest",
-          "method": "testOversizedBlobIsRejectedBeforeAllocationAndQuarantined_SEC_CASE_032"
+          "file": "scripts/verify-component-clean-copy.py",
+          "kind": "script"
         }
       ],
       "id": "SEC-CASE-032",
@@ -2604,6 +4728,179 @@
         }
       ],
       "id": "SEC-CASE-033",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
+          "kind": "swiftTest",
+          "method": "testConfigurationIsSanitizedBeforeSessionCreation_AUTH_PT_008"
+        }
+      ],
+      "id": "SEC-CASE-034",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
+          "kind": "swiftTest",
+          "method": "testProxyTrustPolicyIsExplicitAndFailsClosedWhenVerificationIsRequired_RES_PT_015"
+        }
+      ],
+      "id": "SEC-CASE-035",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/NamespaceRegistryTests.swift",
+          "kind": "swiftTest",
+          "method": "testNamespaceGenerationExhaustionFailsClosedWithoutWraparound_AUTH_PT_016"
+        }
+      ],
+      "id": "SEC-CASE-036",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ProfileAccessPolicyTests.swift",
+          "kind": "swiftTest",
+          "method": "testDestinationPolicyRejectsBeforeCacheAndNetwork_AUTH_PT_017"
+        },
+        {
+          "file": "Tests/FoveaTests/FoveaSystemPipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testSystemCompositionAppliesDestinationPolicyBeforeCache_AUTH_PT_017"
+        }
+      ],
+      "id": "SEC-CASE-037",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/URLSessionTransportTests.swift",
+          "kind": "swiftTest",
+          "method": "testDestinationPolicyRejectsInitialRequestAndCrossOriginRedirect_RES_PT_017"
+        }
+      ],
+      "id": "SEC-CASE-038",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-loopback-network-lab.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/validate-live-network-report.py",
+          "kind": "script"
+        }
+      ],
+      "id": "SEC-CASE-039",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-sensitive-material.py",
+          "kind": "script"
+        }
+      ],
+      "id": "SEC-CASE-040",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-supply-chain.py",
+          "kind": "script"
+        }
+      ],
+      "id": "SEC-CASE-041",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/HTTPMetadataBoundaryTests.swift",
+          "kind": "swiftTest",
+          "method": "testResponseHeadRejectsUnboundedOrUnsafeMetadata_SEC_CASE_042"
+        },
+        {
+          "file": "Tests/FoveaTests/HTTPMetadataBoundaryTests.swift",
+          "kind": "swiftTest",
+          "method": "testVarySelectionRejectsNoncanonicalAndUnboundedMetadata_SEC_CASE_042"
+        },
+        {
+          "file": "Tests/FoveaTests/HTTPMetadataBoundaryTests.swift",
+          "kind": "swiftTest",
+          "method": "testOversizedRecordMetadataIsRejectedWithoutMutatingPublishedIndex_SEC_CASE_042"
+        }
+      ],
+      "id": "SEC-CASE-042",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-privacy-manifests.py",
+          "kind": "script"
+        }
+      ],
+      "id": "SEC-CASE-043",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-sensitive-material.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/generate-workbench-media-catalog.py",
+          "kind": "script"
+        },
+        {
+          "file": "scripts/test-image-metadata.py",
+          "kind": "script"
+        }
+      ],
+      "id": "SEC-CASE-044",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/verify-ios-example.py",
+          "kind": "script"
+        }
+      ],
+      "id": "SEC-CASE-045",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/verify.sh",
+          "kind": "script"
+        }
+      ],
+      "id": "STYLE-PT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/check-comment-quality.py",
+          "kind": "script"
+        }
+      ],
+      "id": "STYLE-PT-002",
       "status": "implemented"
     },
     {
@@ -2837,11 +5134,89 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/SwiftUIViewRenderingTests.swift",
+          "kind": "swiftTest",
+          "method": "testPhaseContentDefersPlaceholderUntilLoading_UI_PT_019"
+        },
+        {
+          "file": "Tests/FoveaTests/SwiftUIViewRenderingTests.swift",
+          "kind": "swiftTest",
+          "method": "testPhaseContentBuildsDecorativeAndLabeledImages_UI_PT_019"
+        },
+        {
+          "file": "Tests/FoveaTests/SwiftUIViewRenderingTests.swift",
+          "kind": "swiftTest",
+          "method": "testPhaseContentBuildsFailureContextAndRetryAction_UI_PT_019"
+        },
+        {
+          "file": "Tests/FoveaTests/SwiftUIViewRenderingTests.swift",
+          "kind": "swiftTest",
+          "method": "testPublicFoveaImageBodyBuildsLifecycleModifiers_UI_PT_019"
+        },
+        {
+          "file": "Tests/FoveaTests/SwiftUIViewRenderingTests.swift",
+          "kind": "swiftTest",
+          "method": "testResponsiveImageBodyBuildsGeometryLifecycle_UI_PT_019"
+        },
+        {
           "file": "scripts/check-architecture-boundaries.py",
           "kind": "script"
         }
       ],
       "id": "UI-PT-019",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIStateTests.swift",
+          "kind": "swiftTest",
+          "method": "testChangingLoadTokenForcesSameIdentityRetry_UI_PT_020"
+        }
+      ],
+      "id": "UI-PT-020",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SwiftUIViewRenderingTests.swift",
+          "kind": "swiftTest",
+          "method": "testPhaseContentPreservesFitAndFillAspectSemantics_UI_PT_021"
+        }
+      ],
+      "id": "UI-PT-021",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+          "kind": "swiftTest",
+          "method": "testFoveaPipelinePublishesFullQualityPreviewBeforeDurableFinal_UI_PT_024_CACHE_PT_042"
+        },
+        {
+          "file": "Tests/FoveaTests/SwiftUIViewRenderingTests.swift",
+          "kind": "swiftTest",
+          "method": "testPreviewAndFinalVisibilityCallbacksRemainDistinct_UI_PT_024"
+        }
+      ],
+      "id": "UI-PT-024",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchVisualTests.swift",
+          "kind": "swiftTest",
+          "method": "testCaptureProductVisualMatrix_VISUAL_PT_001"
+        },
+        {
+          "file": "scripts/audit-workbench-visuals.py",
+          "kind": "script"
+        }
+      ],
+      "id": "VISUAL-PT-001",
       "status": "implemented"
     },
     {

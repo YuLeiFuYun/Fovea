@@ -1,0 +1,51 @@
+{
+  "families": [
+    {
+      "certificateLevel": "L1-hard",
+      "hardChecks": [
+        "logical-request-count-exact",
+        "observation-count-exact",
+        "single-flight-origin-request-bound",
+        "cancelled-subscriber-count-exact",
+        "survivor-completion-count-exact",
+        "priority-burst-no-starvation",
+        "failed-load-count-zero",
+        "target-pixel-invariant",
+        "peak-thread-count-bounded",
+        "origin-peak-concurrency-bounded",
+        "background-probe-bypass-bound"
+      ],
+      "id": "W7.ConcurrencyCorrectness",
+      "multiplicity": "none-hard-gate",
+      "primaryEndpoints": [],
+      "workloadIDs": [
+        "W7-THOUSAND-CONCURRENT-V1"
+      ]
+    },
+    {
+      "certificateLevel": "L2-primary-portfolio",
+      "claimRule": "all primary endpoints noninferior/equivalent/superior and at least one practically superior",
+      "comparators": [
+        "Nuke",
+        "Kingfisher",
+        "SDWebImage",
+        "AlamofireImage"
+      ],
+      "id": "W7.ConcurrentEfficiency",
+      "multiplicity": "holm",
+      "primaryEndpoints": [
+        "single-flight-origin-request-count",
+        "p99-logical-latency",
+        "peak-thread-count",
+        "immediate-to-background-p95-ratio"
+      ],
+      "workloadIDs": [
+        "W7-THOUSAND-CONCURRENT-V1"
+      ]
+    }
+  ],
+  "registryID": "FOVEA-W7-CONCURRENCY-CLAIMS-V5",
+  "schemaVersion": 5,
+  "status": "preregistered-after-v4-calibration-before-formal-results",
+  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/claim-families-v4.json"
+}

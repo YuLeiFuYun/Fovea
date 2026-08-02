@@ -1,0 +1,94 @@
+{
+  "allowlistID": "FOVEA-UNCHECKED-SENDABLE-ALLOWLIST-V1",
+  "entries": [
+    {
+      "evidence": [
+        "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift",
+        "Tests/FoveaTests/SwiftUIStateTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/AdaptiveImageLoadAdmission.swift",
+      "reason": "The adaptive cancellation controller is called synchronously from unrelated tasks and cannot become an actor without changing admission latency and call semantics. Its only mutable dictionary is bounded and every read, trim, cancellation observation and ticket update is linearized by one private NSLock atomic helper.",
+      "requiredTokens": [
+        "package final class AdaptiveImageLoadAdmission: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var states: [Key: State] = [:]",
+        "private func atomic<Result>",
+        "defer { lock.unlock() }"
+      ],
+      "type": "AdaptiveImageLoadAdmission"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/PipelineTests.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Tests/FoveaTests/SwiftUIStateTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/FoveaPipeline+Operations.swift",
+      "reason": "AsyncThrowingStream termination and the producer task may race while deciding whether cancellation diagnostics are emitted. The helper contains only two Boolean fields and all compound observations and transitions are serialized by a private NSLock; no reference to mutable pipeline state is stored.",
+      "requiredTokens": [
+        "private final class ImageEventStreamTerminalState: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "func markCompleted()",
+        "func claimCancellationIfIncomplete() -> Bool",
+        "defer { lock.unlock() }"
+      ],
+      "type": "ImageEventStreamTerminalState"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift",
+        "Tests/FoveaTests/StagingAndStorageTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/TransportVerifiedHandoffDiskStore.swift",
+      "reason": "The transient handoff store coordinates asynchronous file preparation with synchronous bounded-index publication. Invalidated state and in-flight counters are protected by stateLock, the index has its own audited lock, and blocking filesystem work is isolated on DispatchWorkExecutor; no mutable field is accessed outside its owning synchronization boundary.",
+      "requiredTokens": [
+        "final class TransportVerifiedHandoffDiskStore: @unchecked Sendable",
+        "private let stateLock = NSLock()",
+        "private var isInvalidated = false",
+        "private func withStateLock",
+        "DispatchWorkExecutor("
+      ],
+      "type": "TransportVerifiedHandoffDiskStore"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift",
+        "Tests/FoveaTests/StagingAndStorageTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaHTTP/StagingDirectoryLease.swift",
+      "reason": "A staged body lease can be read, cloned and released by different subscribers. The ownership bit and all file operations that depend on it are serialized by one private NSLock; deinitialization atomically claims deletion before touching the filesystem, while the immutable session lease keeps the directory alive.",
+      "requiredTokens": [
+        "package final class TransportStagedFileLease: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var ownsFile = true",
+        "package func mappedData() throws -> Data",
+        "package func cloneContents(to destination: URL) throws"
+      ],
+      "type": "TransportStagedFileLease"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/MemoryCacheTests.swift",
+        "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift",
+        "Tests/FoveaTests/StagingAndStorageTests.swift",
+        "scripts/verify-component-clean-copy.py"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/FoveaCompactSieveCache.swift",
+      "reason": "The Fovea-owned compact SIEVE index is synchronously shared by transport handoff operations after the external Akashic boundary is enforced. Every mutable slot, key index, free-list, SIEVE hand, epoch and cost counter is accessed only through one private NSLock-backed atomic helper; generic keys and values are constrained to Sendable, while actor isolation would change the synchronous cache hot path.",
+      "requiredTokens": [
+        "package final class FoveaCompactSieveCache<Key: Hashable & Sendable, Value: Sendable>",
+        "@unchecked Sendable",
+        "private let lock = NSLock()",
+        "private func atomic<T>",
+        "defer { lock.unlock() }"
+      ],
+      "type": "FoveaCompactSieveCache"
+    }
+  ],
+  "schemaVersion": 1
+}

@@ -123,6 +123,23 @@ AND at least one eligible subscriber or approved encoded-only completion
 
 `no-store` 和 namespace revocation 拥有全局否决权。某个订阅者选择 memory-only 不得阻止同一安全域中另一个明确允许持久化的订阅者，但不能扩大 source response 的权限。
 
+
+### 取消静默墓碑
+
+Fetch single-flight 的最后订阅者取消时，底层任务必须立即取消；但 registry 不能立即删除同键 entry。否则同批尚未执行到 `subscribe` 的迟到调用会在旧任务终止期间创建第二个 transport，形成取消路径 ABA。
+
+Fovea 使用与 orphan handoff 不同的 `cancellation tombstone`，并显式区分顶层调用的 admission cohort：
+
+- 每个顶层加载调用在进入管线时记录单调 admission 时间；
+- 最后一个已登记订阅者取消时，底层 task 立即取消，独立 tombstone 保存取消终态和 cutoff；
+- cutoff 之后才创建的真正新调用不注册为活跃 subscriber，只观察已取消 Task 的终态，不能复活底层工作；
+- cutoff 之前已经开始、但因缓存查询或 actor 调度而更晚到达 registry 的调用可以进入唯一 replacement cohort；
+- replacement cohort 完成后，其结果保留到 tombstone 到期，使同批更晚到达者复用同一结果而不会再次启动；
+- task completion 不得提前删除 tombstone；tombstone 不参与 priority 更新；250ms 租约到期后才恢复普通新任务创建。
+- tombstone 保存绝对单调过期时刻；`subscribe` 在 admission 线性化点惰性清理已过期墓碑，后台 sleep 任务只负责主动回收，调度延迟不得延长语义租约。
+
+这与 credential refresh 的 orphan handoff 不同：后者在有界窗口内允许原任务继续，以复用昂贵刷新；取消墓碑始终终止原任务，只为取消前已存在的调用保留一次有界 replacement 机会。
+
 ## 8. Namespace revocation fence
 
 每个任务捕获 `NamespaceGeneration`。登出/清理时：
@@ -160,4 +177,8 @@ v1 只对幂等 GET 的明确瞬态 transport error 做有限重试；统一 dis
 - **SCHED-PT-012**: 同级任务和不同 pipeline/namespace 不永久饥饿；
 - **SCHED-PT-013**: 某 subscriber 取消后立即结束自身等待，不等待共享底层任务完成；其他 subscriber 和底层任务不受影响；
 - **SCHED-PT-014**: 固定种子生成的多订阅者退出序列中，subscriber count、effective priority、底层 operation 次数与最终 cancellation 次数始终满足不变量，并可由 seed 重放；
-- **SCHED-PT-015**: 底层共享任务完成后，registry entry 必须先按 taskID 清理，再向订阅者发布结果；后续订阅不得加入已完成任务。
+- **SCHED-PT-015**: 底层共享任务完成后，registry entry 必须先按 taskID 清理，再向订阅者发布结果；后续订阅不得加入已完成任务；
+- **SCHED-PT-016**: 允许 late handoff 的共享任务必须绑定有界 lease；lease token 失效、任务完成、新订阅加入或租约到期的任意竞态都不能误取消活跃任务，也不能留下永久零订阅者条目。
+- **SCHED-PT-017**: 相同 namespace generation 与 RenderKey 的并发请求必须共享 transform task；namespace revoke 必须取消对应 transform，不得发布迟到 RenderedMemory。
+- **SCHED-PT-021**: 最后订阅者取消后，底层任务立即取消且进入有界 cancellation tombstone；窗口内迟到订阅不得启动第二个 operation，completion 不得提前删除墓碑，租约到期后新请求才可创建任务。
+- **SCHED-PT-022**: cancellation tombstone 以顶层 admission cutoff 区分取消前已开始的调用与取消后新调用；前者只允许形成一个 replacement cohort 并复用其终态，后者仍不得复活已取消任务。

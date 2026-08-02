@@ -1,0 +1,628 @@
+{
+  "comparators": [
+    {
+      "applicableLabs": [
+        "transport",
+        "scheduler",
+        "cache",
+        "codec",
+        "transform",
+        "lifecycle",
+        "security",
+        "physical-experience"
+      ],
+      "capabilities": [
+        "transport",
+        "http-cache",
+        "request-coalescing",
+        "scheduling",
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "prefetch",
+        "ui-lifecycle",
+        "security",
+        "observability"
+      ],
+      "claimEligibility": "eligible-after-evidence",
+      "executionMode": "harness-app",
+      "id": "CMP-FOVEA",
+      "name": "Fovea",
+      "role": "system-under-test",
+      "sourceIdentity": {
+        "require": [
+          "commit",
+          "sourceTreeDigest",
+          "includesWorkingTreeChanges"
+        ],
+        "type": "dynamic-harness"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "adapter": "Benchmarks/ComparativeLab/Adapters/AppleNativeAdapterPackage",
+      "appTarget": "AppleNativeComparatorBench",
+      "applicableLabs": [
+        "transport",
+        "codec",
+        "transform",
+        "physical-experience"
+      ],
+      "capabilities": [
+        "transport",
+        "http-cache",
+        "target-decode",
+        "transform",
+        "format-coverage"
+      ],
+      "claimEligibility": "eligible-after-evidence",
+      "executionMode": "harness-app",
+      "id": "CMP-APPLE-NATIVE",
+      "name": "Apple URLSession + URLCache + ImageIO",
+      "researchTier": "A",
+      "role": "required-platform-baseline",
+      "sourceIdentity": {
+        "bind": [
+          "xcodeBuild",
+          "osBuild",
+          "deviceProfileID"
+        ],
+        "type": "platform-build"
+      },
+      "systemClass": "platform-baseline"
+    },
+    {
+      "appTarget": "AsyncImageComparatorBench",
+      "applicability": "Benchmarks/AsyncImageLab/applicability.json",
+      "applicableLabs": [
+        "lifecycle",
+        "physical-experience"
+      ],
+      "capabilities": [
+        "transport",
+        "ui-lifecycle"
+      ],
+      "claimEligibility": "eligible-after-evidence",
+      "executionMode": "independent-swiftui-surface",
+      "experimentPlan": "Benchmarks/AsyncImageLab/experiment-plan.json",
+      "id": "CMP-APPLE-ASYNCIMAGE",
+      "name": "Apple AsyncImage",
+      "researchTier": "A",
+      "role": "required-platform-baseline",
+      "sourceIdentity": {
+        "bind": [
+          "xcodeBuild",
+          "osBuild",
+          "deviceProfileID"
+        ],
+        "type": "platform-build"
+      },
+      "systemClass": "platform-baseline"
+    },
+    {
+      "applicableLabs": [
+        "transport",
+        "scheduler",
+        "cache",
+        "codec",
+        "transform",
+        "lifecycle",
+        "security",
+        "physical-experience"
+      ],
+      "capabilities": [
+        "transport",
+        "request-coalescing",
+        "scheduling",
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "progressive",
+        "resumable-transfer",
+        "prefetch",
+        "ui-lifecycle"
+      ],
+      "claimEligibility": "eligible-after-evidence",
+      "executionMode": "harness-app",
+      "id": "CMP-NUKE",
+      "name": "Nuke",
+      "researchTier": "A",
+      "role": "required-direct",
+      "sourceIdentity": {
+        "name": "Nuke",
+        "registry": "docs/research/comparator-lock.json",
+        "type": "comparator-lock"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "applicableLabs": [
+        "transport",
+        "scheduler",
+        "cache",
+        "codec",
+        "transform",
+        "lifecycle",
+        "security",
+        "physical-experience"
+      ],
+      "capabilities": [
+        "transport",
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "progressive",
+        "animated",
+        "prefetch",
+        "ui-lifecycle",
+        "format-coverage"
+      ],
+      "claimEligibility": "eligible-after-evidence",
+      "executionMode": "harness-app",
+      "id": "CMP-KINGFISHER",
+      "name": "Kingfisher",
+      "researchTier": "A",
+      "role": "required-direct",
+      "sourceIdentity": {
+        "name": "Kingfisher",
+        "registry": "docs/research/comparator-lock.json",
+        "type": "comparator-lock"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "applicableLabs": [
+        "transport",
+        "scheduler",
+        "cache",
+        "codec",
+        "transform",
+        "lifecycle",
+        "security",
+        "physical-experience"
+      ],
+      "capabilities": [
+        "transport",
+        "request-coalescing",
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "progressive",
+        "animated",
+        "prefetch",
+        "ui-lifecycle",
+        "format-coverage"
+      ],
+      "claimEligibility": "eligible-after-evidence",
+      "executionMode": "harness-app",
+      "id": "CMP-SDWEBIMAGE",
+      "name": "SDWebImage",
+      "researchTier": "A",
+      "role": "required-direct",
+      "sourceIdentity": {
+        "name": "SDWebImage",
+        "registry": "docs/research/comparator-lock.json",
+        "type": "comparator-lock"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "applicableLabs": [
+        "transport",
+        "scheduler",
+        "cache",
+        "codec",
+        "transform",
+        "lifecycle",
+        "security",
+        "physical-experience"
+      ],
+      "capabilities": [
+        "transport",
+        "request-coalescing",
+        "scheduling",
+        "memory-cache",
+        "transform",
+        "ui-lifecycle"
+      ],
+      "claimEligibility": "eligible-after-evidence",
+      "executionMode": "harness-app",
+      "id": "CMP-ALAMOFIREIMAGE",
+      "name": "AlamofireImage",
+      "researchTier": "B",
+      "role": "secondary-direct",
+      "sourceIdentity": {
+        "name": "AlamofireImage",
+        "registry": "docs/research/comparator-lock.json",
+        "type": "comparator-lock"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "adapter": "Benchmarks/ComparativeLab/Adapters/PINRemoteImageAdapterPackage",
+      "appTarget": "PINRemoteImageComparatorBench",
+      "applicableLabs": [
+        "scheduler",
+        "cache",
+        "codec",
+        "lifecycle",
+        "physical-experience"
+      ],
+      "capabilities": [
+        "transport",
+        "request-coalescing",
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "progressive",
+        "animated",
+        "prefetch",
+        "ui-lifecycle"
+      ],
+      "claimEligibility": "eligible-after-evidence",
+      "executionMode": "harness-app",
+      "id": "CMP-PINREMOTEIMAGE",
+      "name": "PINRemoteImage",
+      "researchTier": "A",
+      "role": "required-direct",
+      "sourceIdentity": {
+        "name": "PINRemoteImage",
+        "registry": "docs/research/comparator-lock.json",
+        "type": "comparator-lock"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "applicableLabs": [
+        "scheduler",
+        "cache",
+        "codec",
+        "lifecycle",
+        "security"
+      ],
+      "capabilities": [
+        "request-coalescing",
+        "scheduling",
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "progressive",
+        "animated",
+        "prefetch",
+        "ui-lifecycle",
+        "observability"
+      ],
+      "claimEligibility": "challenge-only",
+      "executionMode": "native-tests-and-challenge-mining",
+      "id": "CMP-GLIDE",
+      "name": "Glide",
+      "role": "challenge-source",
+      "sourceIdentity": {
+        "name": "Glide",
+        "registry": "docs/research/network-image-loader-test-sources.json",
+        "type": "research-source-lock"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "applicableLabs": [
+        "scheduler",
+        "cache",
+        "codec",
+        "lifecycle",
+        "security"
+      ],
+      "capabilities": [
+        "request-coalescing",
+        "scheduling",
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "progressive",
+        "animated",
+        "prefetch",
+        "ui-lifecycle",
+        "observability"
+      ],
+      "claimEligibility": "challenge-only",
+      "executionMode": "native-tests-and-challenge-mining",
+      "id": "CMP-COIL",
+      "name": "Coil",
+      "role": "challenge-source",
+      "sourceIdentity": {
+        "name": "Coil",
+        "registry": "docs/research/network-image-loader-test-sources.json",
+        "type": "research-source-lock"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "applicableLabs": [
+        "scheduler",
+        "cache",
+        "codec",
+        "lifecycle",
+        "security"
+      ],
+      "capabilities": [
+        "request-coalescing",
+        "scheduling",
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "progressive",
+        "animated",
+        "prefetch",
+        "ui-lifecycle",
+        "observability"
+      ],
+      "claimEligibility": "challenge-only",
+      "executionMode": "native-tests-and-challenge-mining",
+      "id": "CMP-FRESCO",
+      "name": "Fresco",
+      "role": "challenge-source",
+      "sourceIdentity": {
+        "name": "Fresco",
+        "registry": "docs/research/network-image-loader-test-sources.json",
+        "type": "research-source-lock"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "applicableLabs": [
+        "scheduler",
+        "cache",
+        "codec",
+        "lifecycle",
+        "security"
+      ],
+      "capabilities": [
+        "request-coalescing",
+        "scheduling",
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "progressive",
+        "animated",
+        "prefetch",
+        "ui-lifecycle",
+        "observability"
+      ],
+      "claimEligibility": "challenge-only",
+      "executionMode": "native-tests-and-challenge-mining",
+      "id": "CMP-PICASSO",
+      "name": "Picasso",
+      "role": "challenge-source",
+      "sourceIdentity": {
+        "name": "Picasso",
+        "registry": "docs/research/network-image-loader-test-sources.json",
+        "type": "research-source-lock"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "applicableLabs": [
+        "cache",
+        "codec",
+        "transform",
+        "lifecycle"
+      ],
+      "capabilities": [
+        "target-decode",
+        "memory-cache",
+        "disk-cache",
+        "transform",
+        "progressive",
+        "animated",
+        "format-coverage"
+      ],
+      "claimEligibility": "reference-only",
+      "executionMode": "source-review",
+      "id": "CMP-YYWEBIMAGE",
+      "name": "YYWebImage",
+      "role": "historical-reference",
+      "sourceIdentity": {
+        "repository": "https://github.com/ibireme/YYWebImage.git",
+        "type": "unlocked-research"
+      },
+      "systemClass": "client-pipeline"
+    },
+    {
+      "applicableLabs": [
+        "cache"
+      ],
+      "capabilities": [
+        "memory-cache"
+      ],
+      "claimEligibility": "component-only",
+      "executionMode": "component-benchmark",
+      "id": "CMP-LRUCACHE",
+      "name": "LRUCache",
+      "role": "component-direct",
+      "sourceIdentity": {
+        "name": "LRUCache",
+        "registry": "docs/research/cache-comparator-lock.json",
+        "type": "cache-comparator-lock"
+      },
+      "systemClass": "cache-system"
+    },
+    {
+      "applicableLabs": [
+        "cache"
+      ],
+      "capabilities": [
+        "memory-cache",
+        "disk-cache"
+      ],
+      "claimEligibility": "component-only",
+      "executionMode": "component-benchmark",
+      "id": "CMP-PINCACHE",
+      "name": "PINCache",
+      "role": "component-direct",
+      "sourceIdentity": {
+        "name": "PINCache",
+        "registry": "docs/research/cache-comparator-lock.json",
+        "type": "cache-comparator-lock"
+      },
+      "systemClass": "cache-system"
+    },
+    {
+      "applicableLabs": [
+        "cache"
+      ],
+      "capabilities": [
+        "memory-cache",
+        "scheduling",
+        "observability"
+      ],
+      "claimEligibility": "reference-only",
+      "executionMode": "source-review-and-trace-replay",
+      "id": "CMP-CAFFEINE",
+      "name": "Caffeine",
+      "role": "algorithm-reference",
+      "sourceIdentity": {
+        "repository": "https://github.com/ben-manes/caffeine.git",
+        "type": "unlocked-research"
+      },
+      "systemClass": "cache-system"
+    },
+    {
+      "applicableLabs": [
+        "cache"
+      ],
+      "capabilities": [
+        "memory-cache",
+        "scheduling",
+        "observability"
+      ],
+      "claimEligibility": "reference-only",
+      "executionMode": "source-review-and-trace-replay",
+      "id": "CMP-MOKA",
+      "name": "Moka",
+      "role": "algorithm-reference",
+      "sourceIdentity": {
+        "repository": "https://github.com/moka-rs/moka.git",
+        "type": "unlocked-research"
+      },
+      "systemClass": "cache-system"
+    },
+    {
+      "applicableLabs": [
+        "cache"
+      ],
+      "capabilities": [
+        "memory-cache",
+        "scheduling",
+        "observability"
+      ],
+      "claimEligibility": "reference-only",
+      "executionMode": "source-review-and-trace-replay",
+      "id": "CMP-RISTRETTO",
+      "name": "Ristretto",
+      "role": "algorithm-reference",
+      "sourceIdentity": {
+        "repository": "https://github.com/dgraph-io/ristretto.git",
+        "type": "unlocked-research"
+      },
+      "systemClass": "cache-system"
+    },
+    {
+      "applicableLabs": [
+        "cache"
+      ],
+      "capabilities": [
+        "memory-cache",
+        "scheduling",
+        "observability"
+      ],
+      "claimEligibility": "reference-only",
+      "executionMode": "source-review-and-trace-replay",
+      "id": "CMP-CACHELIB",
+      "name": "CacheLib",
+      "role": "algorithm-reference",
+      "sourceIdentity": {
+        "repository": "https://github.com/facebook/CacheLib.git",
+        "type": "unlocked-research"
+      },
+      "systemClass": "cache-system"
+    },
+    {
+      "applicableLabs": [
+        "codec",
+        "transform"
+      ],
+      "capabilities": [
+        "target-decode",
+        "transform",
+        "format-coverage"
+      ],
+      "claimEligibility": "reference-only",
+      "executionMode": "component-benchmark",
+      "id": "CMP-LIBVIPS",
+      "name": "libvips",
+      "role": "algorithm-reference",
+      "sourceIdentity": {
+        "repository": "https://github.com/libvips/libvips.git",
+        "type": "unlocked-research"
+      },
+      "systemClass": "codec-engine"
+    },
+    {
+      "applicableLabs": [
+        "codec",
+        "transform"
+      ],
+      "capabilities": [
+        "target-decode",
+        "transform",
+        "format-coverage"
+      ],
+      "claimEligibility": "reference-only",
+      "executionMode": "component-benchmark",
+      "id": "CMP-IMAGE-RS",
+      "name": "image-rs",
+      "role": "algorithm-reference",
+      "sourceIdentity": {
+        "repository": "https://github.com/image-rs/image.git",
+        "type": "unlocked-research"
+      },
+      "systemClass": "codec-engine"
+    },
+    {
+      "applicableLabs": [
+        "cache"
+      ],
+      "capabilities": [
+        "memory-cache"
+      ],
+      "claimEligibility": "reference-only",
+      "executionMode": "source-review-and-trace-replay",
+      "id": "CMP-LIBCACHESIM",
+      "name": "libCacheSim",
+      "role": "algorithm-reference",
+      "sourceIdentity": {
+        "repository": "https://github.com/1a1a11a/libCacheSim.git",
+        "type": "unlocked-research"
+      },
+      "systemClass": "algorithm-simulator"
+    }
+  ],
+  "policy": {
+    "challengeOnlyMayEnterEndToEndRanking": false,
+    "directRankingRequiresSemanticProfile": true,
+    "sourceIdentityMustBeExactForExecutedExternalCode": true,
+    "unlockedResearchMaySupportBestClaim": false
+  },
+  "registryID": "FOVEA-COMPARATOR-REGISTRY-V1",
+  "reviewedOn": "2026-07-25",
+  "schemaVersion": 1
+}

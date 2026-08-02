@@ -2,388 +2,236 @@ import AkashicCore
 import AkashicMemory
 import Foundation
 import FoveaHTTP
+import FoveaStorage
 import ImageCraftCore
 
+/// 协调渲染内存、原始编码数据块与 HTTP 表征记录的事务边界。
+/// 任何跨存储写入都必须在取消或撤销时恢复到可解释状态，禁止半提交可见。
 final class PipelineCache: Sendable {
-  private let encodedStore: any OriginalEncodedStoring
-  private let recordStore: any RepresentationRecordStoring
-  private let memory: MemoryCache<ScopedRenderKey, DecodedImage>
-  private let mutationPermits: AsyncPermitPool
-  private let namespaceRegistry: NamespaceRegistry
-  private let diagnostics: any DiagnosticsSink
+    static let maximumGarbageCollectionReferenceCount = 100_000
+    let encodedStore: any OriginalEncodedStoring
+    let recordStore: any RepresentationRecordStoring
+    let memory: any RenderedImageCaching
+    let renderedAliases:
+        MemoryCache<
+            ScopedRenderedRequestAliasKey,
+            RenderedRequestAlias
+        >
+    let transportVerifiedHandoffs: TransportVerifiedHandoffDiskStore
+    let transportVerifiedEncodedHandoffCostLimit: Int
+    let mutationPermits: AsyncPermitPool
+    let namespaceRegistry: NamespaceRegistry
+    let diagnostics: any DiagnosticsSink
 
-  init(
-    encodedStore: any OriginalEncodedStoring,
-    recordStore: any RepresentationRecordStoring,
-    memoryCostLimit: Int,
-    mutationQueueLimit: Int,
-    namespaceRegistry: NamespaceRegistry,
-    diagnostics: any DiagnosticsSink
-  ) {
-    self.encodedStore = encodedStore
-    self.recordStore = recordStore
-    self.memory = MemoryCache(costLimit: memoryCostLimit)
-    self.mutationPermits = AsyncPermitPool(limit: 1, queueLimit: max(1, mutationQueueLimit))
-    self.namespaceRegistry = namespaceRegistry
-    self.diagnostics = diagnostics
-  }
-
-  func records(
-    for baseKeyDigest: String,
-    namespace: SecurityNamespaceID,
-    generation: NamespaceGeneration
-  ) async -> [RepresentationRecord] {
-    await recordStore.records(
-      for: baseKeyDigest,
-      namespace: namespace.value,
-      namespaceGeneration: generation.value
-    )
-  }
-
-  func read(_ record: RepresentationRecord, namespace: SecurityNamespaceID) async throws -> Data {
-    try await encodedStore.read(contentID: record.contentID, namespace: namespace.value)
-  }
-
-  func removeRecord(
-    _ variantDigest: String,
-    namespace: SecurityNamespaceID,
-    generation: NamespaceGeneration
-  ) async {
-    do {
-      try await recordStore.remove(
-        variantDigest,
-        namespace: namespace.value,
-        namespaceGeneration: generation.value
-      )
-    } catch {
-      await recordCacheCleanupFailure(
-        keyDigest: variantDigest,
-        reason: "record-removal-failed"
-      )
-    }
-  }
-
-  func refresh(
-    replacing oldRecord: RepresentationRecord,
-    with newRecord: RepresentationRecord,
-    namespace: SecurityNamespaceID,
-    generation: NamespaceGeneration
-  ) async throws {
-    try Task.checkCancellation()
-    try await recordStore.put(newRecord)
-    do {
-      try Task.checkCancellation()
-      try await requireActive(generation, for: namespace)
-      if oldRecord.variantKeyDigest != newRecord.variantKeyDigest {
-        try await recordStore.remove(
-          oldRecord.variantKeyDigest,
-          namespace: namespace.value,
-          namespaceGeneration: generation.value
+    init(
+        encodedStore: any OriginalEncodedStoring,
+        recordStore: any RepresentationRecordStoring,
+        memoryCostLimit: Int,
+        renderedImageCache: (any RenderedImageCaching)? = nil,
+        transportVerifiedEncodedHandoffCostLimit: Int,
+        mutationQueueLimit: Int,
+        namespaceRegistry: NamespaceRegistry,
+        diagnostics: any DiagnosticsSink
+    ) {
+        self.encodedStore = encodedStore
+        self.recordStore = recordStore
+        self.memory = renderedImageCache ?? DefaultRenderedImageCache(costLimit: memoryCostLimit)
+        let aliasLimit = max(64, min(100_000, memoryCostLimit / 4_096))
+        self.renderedAliases = MemoryCache(costLimit: aliasLimit)
+        self.transportVerifiedEncodedHandoffCostLimit = max(
+            1, transportVerifiedEncodedHandoffCostLimit)
+        self.transportVerifiedHandoffs = TransportVerifiedHandoffDiskStore(
+            costLimit: self.transportVerifiedEncodedHandoffCostLimit
         )
-      }
-    } catch {
-      let originalError = error
-      let namespaceIsActive = await namespaceRegistry.isActive(generation, for: namespace)
-      await rollbackRefresh(
-        replacing: oldRecord,
-        with: newRecord,
-        namespace: namespace,
-        generation: generation,
-        restoreOverwrittenRecord: namespaceIsActive
-      )
-      throw originalError
-    }
-  }
-
-  private func rollbackRefresh(
-    replacing oldRecord: RepresentationRecord,
-    with newRecord: RepresentationRecord,
-    namespace: SecurityNamespaceID,
-    generation: NamespaceGeneration,
-    restoreOverwrittenRecord: Bool
-  ) async {
-    do {
-      if restoreOverwrittenRecord,
-        oldRecord.variantKeyDigest == newRecord.variantKeyDigest
-      {
-        try await recordStore.put(oldRecord)
-      } else {
-        try await recordStore.remove(
-          newRecord.variantKeyDigest,
-          namespace: namespace.value,
-          namespaceGeneration: generation.value
+        self.mutationPermits = AsyncPermitPool(
+            limit: 1,
+            queueLimit: max(1, mutationQueueLimit)
         )
-      }
-    } catch {
-      await recordCacheCleanupFailure(
-        keyDigest: newRecord.variantKeyDigest,
-        reason: restoreOverwrittenRecord
-          ? "record-refresh-restore-failed"
-          : "record-refresh-rollback-failed"
-      )
+        self.namespaceRegistry = namespaceRegistry
+        self.diagnostics = diagnostics
     }
-  }
 
-  func renderedImage(for key: ScopedRenderKey) async -> DecodedImage? {
-    await memory.value(for: key)
-  }
-
-  func insertRendered(_ image: DecodedImage, for key: ScopedRenderKey) async {
-    await memory.insert(image, for: key, cost: image.estimatedByteCost)
-  }
-
-  func removeRendered(_ key: ScopedRenderKey) async {
-    await memory.remove(key)
-  }
-
-  func purgeRendered() async -> Int {
-    let removed = await memory.count
-    await memory.removeAll()
-    return removed
-  }
-
-  func cleanup(namespace: SecurityNamespaceID) async -> Bool {
-    await memory.removeAll { $0.namespace == namespace }
-
-    var failed = false
-    do {
-      try await recordStore.removeAll(namespace: namespace.value)
-    } catch {
-      failed = true
-    }
-    do {
-      try await encodedStore.removeAll(namespace: namespace.value)
-    } catch {
-      failed = true
-    }
-    return failed
-  }
-
-  func discardReusableState(
-    record: RepresentationRecord,
-    namespace: SecurityNamespaceID,
-    generation: NamespaceGeneration
-  ) async {
-    await memory.removeAll {
-      $0.namespace == namespace && $0.generation == generation
-    }
-    do {
-      try await recordStore.remove(
-        record.variantKeyDigest,
-        namespace: namespace.value,
-        namespaceGeneration: generation.value
-      )
-    } catch {
-      await recordCacheCleanupFailure(
-        keyDigest: record.variantKeyDigest,
-        reason: "no-store-record-removal-failed"
-      )
-    }
-    let stillReferenced = await recordStore.containsReference(
-      to: record.contentID,
-      namespace: namespace.value,
-      excludingVariantDigest: nil
-    )
-    if !stillReferenced {
-      do {
-        try await encodedStore.remove(
-          contentID: record.contentID,
-          namespace: namespace.value
+    func records(
+        for baseKeyDigest: String,
+        namespace: SecurityNamespaceID,
+        generation: NamespaceGeneration
+    ) async -> [RepresentationRecord] {
+        let candidates = await recordStore.records(
+            for: baseKeyDigest,
+            namespace: namespace.value,
+            namespaceGeneration: generation.value
         )
-      } catch {
-        await recordCacheCleanupFailure(
-          keyDigest: record.variantKeyDigest,
-          reason: "no-store-blob-removal-failed"
-        )
-      }
-    }
-  }
-
-  func commitOriginal(
-    data: Data,
-    contentID: ContentID,
-    record: RepresentationRecord,
-    namespace: SecurityNamespaceID,
-    generation: NamespaceGeneration
-  ) async throws {
-    let permit: AsyncPermitPool.Permit
-    do {
-      permit = try await mutationPermits.acquire()
-    } catch is CancellationError {
-      throw CancellationError()
-    } catch PermitPoolError.queueLimitExceeded {
-      await diagnostics.record(
-        DiagnosticEvent(
-          kind: .cacheWriteFailed,
-          keyDigest: record.variantKeyDigest,
-          reason: "cache-mutation-queue-limit"
-        )
-      )
-      return
-    }
-
-    do {
-      try await commitOriginalWhileHoldingMutationPermit(
-        data: data,
-        contentID: contentID,
-        record: record,
-        namespace: namespace,
-        generation: generation
-      )
-      await permit.release()
-    } catch {
-      await permit.release()
-      throw error
-    }
-  }
-
-  func garbageCollect() async throws -> GarbageCollectionResult {
-    guard let recordMaintenance = recordStore as? any RepresentationRecordMaintaining,
-      let encodedMaintenance = encodedStore as? any OriginalEncodedMaintaining
-    else {
-      throw PipelineFailure.cacheMaintenanceUnavailable
-    }
-
-    let permit = try await mutationPermits.acquire()
-    do {
-      let references = await recordMaintenance.contentReferences()
-      let result = try await encodedMaintenance.garbageCollect(retaining: references)
-      await permit.release()
-      return result
-    } catch {
-      await permit.release()
-      throw error
-    }
-  }
-
-  private func commitOriginalWhileHoldingMutationPermit(
-    data: Data,
-    contentID: ContentID,
-    record: RepresentationRecord,
-    namespace: SecurityNamespaceID,
-    generation: NamespaceGeneration
-  ) async throws {
-    var createdBlob = false
-    var recordCommitted = false
-
-    do {
-      try Task.checkCancellation()
-      let stored = try await encodedStore.commit(
-        data: data,
-        contentID: contentID.description,
-        namespace: namespace.value
-      )
-      createdBlob = stored.wasCreated
-      try Task.checkCancellation()
-      try await requireActive(generation, for: namespace)
-
-      try await recordStore.put(record)
-      recordCommitted = true
-      try Task.checkCancellation()
-      try await requireActive(generation, for: namespace)
-
-    } catch let failure as PipelineFailure where failure.category == .namespaceRevoked {
-      await rollback(
-        createdBlob: createdBlob,
-        recordCommitted: recordCommitted,
-        contentID: contentID,
-        variantDigest: record.variantKeyDigest,
-        generation: generation,
-        namespace: namespace
-      )
-      throw PipelineFailure.namespaceRevoked
-    } catch is CancellationError {
-      await rollback(
-        createdBlob: createdBlob,
-        recordCommitted: recordCommitted,
-        contentID: contentID,
-        variantDigest: record.variantKeyDigest,
-        generation: generation,
-        namespace: namespace
-      )
-      throw CancellationError()
-    } catch {
-      await rollback(
-        createdBlob: createdBlob,
-        recordCommitted: recordCommitted,
-        contentID: contentID,
-        variantDigest: record.variantKeyDigest,
-        generation: generation,
-        namespace: namespace
-      )
-      await diagnostics.record(
-        DiagnosticEvent(
-          kind: .cacheWriteFailed,
-          keyDigest: record.variantKeyDigest,
-          reason: "encoded-or-record-write"
-        )
-      )
-    }
-  }
-
-  private func rollback(
-    createdBlob: Bool,
-    recordCommitted: Bool,
-    contentID: ContentID,
-    variantDigest: String,
-    generation: NamespaceGeneration,
-    namespace: SecurityNamespaceID
-  ) async {
-    if recordCommitted {
-      do {
-        try await recordStore.remove(
-          variantDigest,
-          namespace: namespace.value,
-          namespaceGeneration: generation.value
-        )
-      } catch {
-        await recordCacheCleanupFailure(
-          keyDigest: variantDigest,
-          reason: "commit-rollback-record-removal-failed"
-        )
-      }
-    }
-    if createdBlob {
-      let stillReferenced = await recordStore.containsReference(
-        to: contentID.description,
-        namespace: namespace.value,
-        excludingVariantDigest: nil
-      )
-      if !stillReferenced {
-        do {
-          try await encodedStore.remove(
-            contentID: contentID.description,
-            namespace: namespace.value
-          )
-        } catch {
-          await recordCacheCleanupFailure(
-            keyDigest: variantDigest,
-            reason: "commit-rollback-blob-removal-failed"
-          )
+        guard candidates.count <= HTTPMetadataLimits.maximumRepresentationCandidateCount else {
+            await diagnostics.record(
+                DiagnosticEvent(
+                    kind: .cacheReadFailed,
+                    reason: "representation-candidate-limit-exceeded"
+                )
+            )
+            return []
         }
-      }
-    }
-  }
 
-  private func recordCacheCleanupFailure(
-    keyDigest: String,
-    reason: String
-  ) async {
-    await diagnostics.record(
-      DiagnosticEvent(
-        kind: .cacheWriteFailed,
-        keyDigest: keyDigest,
-        reason: reason
-      )
-    )
-  }
-
-  private func requireActive(
-    _ generation: NamespaceGeneration,
-    for namespace: SecurityNamespaceID
-  ) async throws {
-    guard await namespaceRegistry.isActive(generation, for: namespace) else {
-      throw PipelineFailure.namespaceRevoked
+        let namespaceFingerprint = StorageNamespaceFingerprint(namespace: namespace.value)
+        var validatedByVariant: [String: RepresentationRecord] = [:]
+        var ambiguousVariants: Set<String> = []
+        for record in candidates {
+            guard record.isValidPersistentRecord(),
+                record.baseKeyDigest == baseKeyDigest,
+                record.securityNamespaceFingerprint == namespaceFingerprint,
+                record.namespaceGeneration == generation.value
+            else {
+                await diagnostics.record(
+                    DiagnosticEvent(
+                        kind: .cacheReadFailed,
+                        reason: "invalid-representation-store-result"
+                    )
+                )
+                continue
+            }
+            guard !ambiguousVariants.contains(record.variantKeyDigest) else { continue }
+            if let existing = validatedByVariant[record.variantKeyDigest] {
+                guard existing == record else {
+                    validatedByVariant.removeValue(forKey: record.variantKeyDigest)
+                    ambiguousVariants.insert(record.variantKeyDigest)
+                    await diagnostics.record(
+                        DiagnosticEvent(
+                            kind: .cacheReadFailed,
+                            reason: "ambiguous-representation-store-result"
+                        )
+                    )
+                    continue
+                }
+            } else {
+                validatedByVariant[record.variantKeyDigest] = record
+            }
+        }
+        return validatedByVariant.values.sorted { lhs, rhs in
+            lhs.variantKeyDigest < rhs.variantKeyDigest
+        }
     }
-  }
+
+    func read(_ record: RepresentationRecord, namespace: SecurityNamespaceID) async throws -> Data {
+        try await encodedStore.read(contentID: record.contentID, namespace: namespace.value)
+    }
+
+    func removeRecord(
+        _ variantDigest: String,
+        namespace: SecurityNamespaceID,
+        generation: NamespaceGeneration
+    ) async {
+        do {
+            try await recordStore.remove(
+                variantDigest,
+                namespace: namespace.value,
+                namespaceGeneration: generation.value
+            )
+        } catch {
+            await recordCacheCleanupFailure(
+                keyDigest: variantDigest,
+                reason: "record-removal-failed"
+            )
+        }
+    }
+
+    func refresh(
+        replacing oldRecord: RepresentationRecord,
+        with newRecord: RepresentationRecord,
+        namespace: SecurityNamespaceID,
+        generation: NamespaceGeneration
+    ) async throws {
+        try Task.checkCancellation()
+        try await recordStore.put(newRecord)
+        do {
+            try Task.checkCancellation()
+            try await requireActive(generation, for: namespace)
+            if oldRecord.variantKeyDigest != newRecord.variantKeyDigest {
+                try await recordStore.remove(
+                    oldRecord.variantKeyDigest,
+                    namespace: namespace.value,
+                    namespaceGeneration: generation.value
+                )
+            }
+        } catch {
+            let originalError = error
+            let namespaceIsActive = await namespaceRegistry.isActive(generation, for: namespace)
+            await rollbackRefresh(
+                replacing: oldRecord,
+                with: newRecord,
+                namespace: namespace,
+                generation: generation,
+                restoreOverwrittenRecord: namespaceIsActive
+            )
+            throw originalError
+        }
+    }
+
+    private func rollbackRefresh(
+        replacing oldRecord: RepresentationRecord,
+        with newRecord: RepresentationRecord,
+        namespace: SecurityNamespaceID,
+        generation: NamespaceGeneration,
+        restoreOverwrittenRecord: Bool
+    ) async {
+        do {
+            if restoreOverwrittenRecord,
+                oldRecord.variantKeyDigest == newRecord.variantKeyDigest
+            {
+                try await recordStore.put(oldRecord)
+            } else {
+                try await recordStore.remove(
+                    newRecord.variantKeyDigest,
+                    namespace: namespace.value,
+                    namespaceGeneration: generation.value
+                )
+            }
+        } catch {
+            await recordCacheCleanupFailure(
+                keyDigest: newRecord.variantKeyDigest,
+                reason: restoreOverwrittenRecord
+                    ? "record-refresh-restore-failed"
+                    : "record-refresh-rollback-failed"
+            )
+        }
+    }
+
+    func cleanup(namespace: SecurityNamespaceID) async -> Bool {
+        memory.removeAll { $0.namespace == namespace }
+        await transportVerifiedHandoffs.removeAll(namespace: namespace)
+        renderedAliases.removeAll { $0.namespace == namespace }
+
+        var failed = false
+        do {
+            try await recordStore.removeAll(namespace: namespace.value)
+        } catch {
+            failed = true
+        }
+        do {
+            try await encodedStore.removeAll(namespace: namespace.value)
+        } catch {
+            failed = true
+        }
+        return failed
+    }
+
+    func recordCacheCleanupFailure(
+        keyDigest: String,
+        reason: String
+    ) async {
+        await diagnostics.record(
+            DiagnosticEvent(
+                kind: .cacheWriteFailed,
+                keyDigest: keyDigest,
+                reason: reason
+            )
+        )
+    }
+
+    func requireActive(
+        _ generation: NamespaceGeneration,
+        for namespace: SecurityNamespaceID
+    ) async throws {
+        guard await namespaceRegistry.isActive(generation, for: namespace) else {
+            throw PipelineFailure.namespaceRevoked
+        }
+    }
 }

@@ -1,13 +1,13 @@
 import Foundation
 
 package protocol WallClock: Sendable {
-  func now() async -> Date
+    func now() async -> Date
 }
 
 package struct SystemWallClock: WallClock {
-  package init() {}
+    package init() {}
 
-  package func now() -> Date {
-    Date()
-  }
+    package func now() -> Date {
+        Date()
+    }
 }

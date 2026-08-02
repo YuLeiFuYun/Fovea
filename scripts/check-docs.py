@@ -14,7 +14,14 @@ TEST_DEFINITION = re.compile(r"\*\*([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+-\d{3})\*\*")
 HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 
 errors: list[str] = []
-markdown_files = sorted([ROOT / "README.md", *DOCS.rglob("*.md")])
+markdown_files = sorted(
+    {
+        *ROOT.glob("*.md"),
+        *DOCS.rglob("*.md"),
+        *(ROOT / "Examples").rglob("*.md"),
+        *(ROOT / "evidence").rglob("*.md"),
+    }
+)
 
 for obsolete in (DOCS / "archive", DOCS / "ARCHITECTURE_V2.md"):
     if obsolete.exists():

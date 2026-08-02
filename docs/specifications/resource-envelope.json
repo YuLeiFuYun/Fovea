@@ -1,0 +1,277 @@
+{
+  "bounds": [
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumSupportedEncodedBytes = 1024 * 1024 * 1024",
+          "codePath": "component://ImageCraft/Sources/ImageCraftCore/ImageTypes.swift"
+        },
+        {
+          "codeFragment": "maximumTransportByteLimit = 1024 * 1024 * 1024",
+          "codePath": "Sources/FoveaCore/PipelineConfiguration.swift"
+        },
+        {
+          "codeFragment": "maximumSupportedResponseBytes = 1024 * 1024 * 1024",
+          "codePath": "Sources/FoveaHTTP/HTTPTypes.swift"
+        },
+        {
+          "codeFragment": "maximumSupportedBlobBytes = 1024 * 1024 * 1024",
+          "codePath": "component://Akashic/Sources/AkashicDisk/FileBlobStore.swift"
+        },
+        {
+          "codeFragment": "maximumSupportedBlobBytes = 1024 * 1024 * 1024",
+          "codePath": "Sources/FoveaPersistence/OriginalEncodedStoreLimits.swift"
+        },
+        {
+          "codeFragment": "maximumByteCount = 1024 * 1024 * 1024",
+          "codePath": "Sources/FoveaCore/Diagnostics.swift"
+        },
+        {
+          "codeFragment": "maximumAdditionalResponseByteLimit = 1024 * 1024 * 1024",
+          "codePath": "Sources/FoveaCore/TransportRetryPolicy.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u4efb\u4e00\u5c42\u63a5\u53d7\u8d85\u8fc7 1 GiB \u7684\u5355\u5bf9\u8c61",
+        "\u8de8\u5c42\u4e0a\u9650\u503c\u4e0d\u4e00\u81f4",
+        "\u9ed8\u8ba4\u914d\u7f6e\u9759\u9ed8\u5206\u914d\u7edd\u5bf9\u4e0a\u9650\u89c4\u6a21\u5185\u5b58"
+      ],
+      "id": "RESOURCE-ENCODED-OBJECT-MAX",
+      "rationale": "\u5355\u4e2a\u4e0d\u53ef\u4fe1\u7f16\u7801\u5bf9\u8c61\u5728\u4f20\u8f93\u3001\u89e3\u7801\u3001\u539f\u7f16\u7801\u6301\u4e45\u5316\u548c\u8bca\u65ad\u6295\u5f71\u4e2d\u5171\u4eab 1 GiB \u7edd\u5bf9\u4e0a\u754c\uff0c\u9632\u6b62\u4e00\u5c42\u63a5\u53d7\u53e6\u4e00\u5c42\u65e0\u6cd5\u8868\u793a\u6216\u9694\u79bb\u7684\u5bf9\u8c61\u3002\u8be5\u503c\u662f\u652f\u6301\u57df\u4e0a\u754c\uff0c\u4e0d\u662f\u9ed8\u8ba4\u5206\u914d\u3002",
+      "status": "approved",
+      "unit": "bytes",
+      "valueExpression": "1024 * 1024 * 1024"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumSupportedDimension = 65_536",
+          "codePath": "component://ImageCraft/Sources/ImageCraftCore/ImageTypes.swift"
+        },
+        {
+          "codeFragment": "maximumDimension = 65_536",
+          "codePath": "Sources/FoveaCore/Diagnostics.swift"
+        },
+        {
+          "codeFragment": "maximumSupportedDimension = 65_536",
+          "codePath": "Sources/FoveaCore/TargetGeometry.swift"
+        },
+        {
+          "codeFragment": "maximumBucketStep = 65_536",
+          "codePath": "Sources/FoveaCore/TargetGeometry.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u8bca\u65ad\u5c42\u622a\u65ad\u5408\u6cd5\u89e3\u7801\u7ef4\u5ea6",
+        "\u8bca\u65ad\u5c42\u63a5\u53d7\u89e3\u7801\u5c42\u62d2\u7edd\u7684\u7ef4\u5ea6",
+        "\u7ef4\u5ea6\u4e58\u6cd5\u7ed5\u8fc7\u50cf\u7d20\u603b\u6570\u68c0\u67e5"
+      ],
+      "id": "RESOURCE-IMAGE-DIMENSION-MAX",
+      "rationale": "\u89e3\u7801\u8f93\u5165\u4e0e\u8bca\u65ad\u6295\u5f71\u4f7f\u7528\u76f8\u540c\u7684\u5355\u8f74\u6709\u9650\u57df\uff1b\u50cf\u7d20\u603b\u6570\u53e6\u53d7\u72ec\u7acb\u7ea6\u675f\uff0c\u56e0\u6b64\u8be5\u503c\u4e0d\u610f\u5473\u7740\u5141\u8bb8 65,536 \u7684\u5e73\u65b9\u56fe\u50cf\u3002",
+      "status": "approved",
+      "unit": "pixels-per-axis",
+      "valueExpression": "65_536"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumSupportedPixelCount = 1_000_000_000",
+          "codePath": "component://ImageCraft/Sources/ImageCraftCore/ImageTypes.swift"
+        },
+        {
+          "codeFragment": "maximumPixelCount = 1_000_000_000",
+          "codePath": "Sources/FoveaCore/Diagnostics.swift"
+        },
+        {
+          "codeFragment": "maximumSupportedPixelCount = 1_000_000_000",
+          "codePath": "Sources/FoveaCore/TargetGeometry.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u50cf\u7d20\u4e58\u6cd5\u6ea2\u51fa\u540e\u88ab\u63a5\u53d7",
+        "\u8bca\u65ad\u50cf\u7d20\u57df\u4e0e\u89e3\u7801\u50cf\u7d20\u57df\u6f02\u79fb",
+        "\u5de5\u4f5c\u96c6\u8bb8\u53ef\u88ab\u8be5\u7edd\u5bf9\u4e0a\u754c\u7ed5\u8fc7"
+      ],
+      "id": "RESOURCE-IMAGE-PIXEL-COUNT-MAX",
+      "rationale": "\u89e3\u7801\u63a2\u6d4b\u4e0e\u8bca\u65ad\u4f7f\u7528\u540c\u4e00\u6709\u9650\u50cf\u7d20\u57df\uff1b\u6267\u884c\u671f\u4ecd\u5fc5\u987b\u901a\u8fc7\u66f4\u5c0f\u7684\u5de5\u4f5c\u96c6\u9884\u7b97\u8bb8\u53ef\uff0c\u56e0\u6b64\u8be5\u4e0a\u754c\u4e0d\u627f\u8bfa\u5b9e\u9645\u89e3\u7801 10 \u4ebf\u50cf\u7d20\u3002",
+      "status": "approved",
+      "unit": "pixels",
+      "valueExpression": "1_000_000_000"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumSupportedFrameCount = 4_096",
+          "codePath": "component://ImageCraft/Sources/ImageCraftCore/ImageTypes.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u5bb9\u5668\u62a5\u544a\u5e27\u6570\u8d85\u8fc7\u4e0a\u754c\u4ecd\u88ab\u63a5\u53d7",
+        "\u5e27\u6570\u68c0\u67e5\u53d1\u751f\u5728\u6602\u8d35\u9010\u5e27\u5206\u914d\u4e4b\u540e"
+      ],
+      "id": "RESOURCE-IMAGE-FRAME-COUNT-MAX",
+      "rationale": "\u5bb9\u5668\u63a2\u6d4b\u7684\u7edd\u5bf9\u5e27\u6570\u6709\u9650\u57df\uff1b\u5f53\u524d\u9759\u6001\u56fe\u9ed8\u8ba4\u4ecd\u4e3a 1 \u5e27\uff0c\u8f83\u5927\u7684\u652f\u6301\u57df\u5fc5\u987b\u540c\u65f6\u53d7\u89e3\u7801\u5de5\u4f5c\u96c6\u548c\u683c\u5f0f\u7b56\u7565\u7ea6\u675f\u3002",
+      "status": "approved",
+      "unit": "frames",
+      "valueExpression": "4_096"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumSupportedMetadataBytes = 64 * 1024 * 1024",
+          "codePath": "component://ImageCraft/Sources/ImageCraftCore/ImageTypes.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u5143\u6570\u636e\u5728\u8fb9\u754c\u68c0\u67e5\u524d\u5b8c\u6574\u7269\u5316",
+        "\u9ed8\u8ba4\u914d\u7f6e\u7b49\u4e8e\u7edd\u5bf9\u652f\u6301\u4e0a\u9650\u4e14\u65e0\u8c03\u7528\u65b9\u63a7\u5236"
+      ],
+      "id": "RESOURCE-IMAGE-METADATA-MAX",
+      "rationale": "\u56fe\u50cf\u5143\u6570\u636e\u7684\u7edd\u5bf9\u89e3\u6790\u57df\u4e3a 64 MiB\uff1b\u9ed8\u8ba4\u914d\u7f6e\u66f4\u5c0f\uff0c\u4e14\u8bfb\u53d6\u5668\u5fc5\u987b\u5728\u89e3\u7801\u6216\u5bf9\u8c61\u6784\u9020\u524d\u6267\u884c\u6709\u754c\u8bfb\u53d6\u3002",
+      "status": "approved",
+      "unit": "bytes",
+      "valueExpression": "64 * 1024 * 1024"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumSupportedAuxiliaryAttachments = 1_024",
+          "codePath": "component://ImageCraft/Sources/ImageCraftCore/ImageTypes.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u9644\u4ef6\u679a\u4e3e\u5728\u8ba1\u6570\u68c0\u67e5\u524d\u65e0\u9650\u589e\u957f",
+        "\u9644\u4ef6\u603b\u5143\u6570\u636e\u7ed5\u8fc7\u5b57\u8282\u9884\u7b97"
+      ],
+      "id": "RESOURCE-AUXILIARY-ATTACHMENT-MAX",
+      "rationale": "\u8f85\u52a9\u56fe\u50cf\u9644\u4ef6\u6570\u91cf\u8fdb\u5165\u6709\u9650\u6574\u6570\u57df\uff1b\u9ed8\u8ba4\u914d\u7f6e\u4e3a\u96f6\uff0c\u53ea\u6709\u663e\u5f0f\u7b56\u7565\u624d\u80fd\u6269\u5927\uff0c\u540c\u65f6\u6bcf\u9879\u4ecd\u53d7\u5143\u6570\u636e\u4e0e\u5b57\u8282\u4e0a\u9650\u3002",
+      "status": "approved",
+      "unit": "attachments",
+      "valueExpression": "1_024"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumManifestBytes = 64 * 1024 * 1024",
+          "codePath": "component://Akashic/Sources/AkashicDisk/FileBlobStore.swift"
+        },
+        {
+          "codeFragment": "maximumManifestBytes = 64 * 1024 * 1024",
+          "codePath": "Sources/FoveaPersistence/RepresentationRecordStore.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u4efb\u4e00\u6e05\u5355\u4f7f\u7528\u65e0\u754c Data(contentsOf:)",
+        "\u4e24\u4e2a\u6e05\u5355\u7684\u8bfb\u53d6\u57df\u6f02\u79fb",
+        "\u89e3\u7801\u540e\u5bf9\u8c61\u56fe\u53ef\u7ed5\u8fc7\u6761\u76ee\u4e0a\u9650"
+      ],
+      "id": "RESOURCE-MANIFEST-BYTES-MAX",
+      "rationale": "\u539f\u7f16\u7801\u6e05\u5355\u4e0e HTTP \u8868\u5f81\u6e05\u5355\u5171\u4eab\u6709\u754c\u6587\u4ef6\u8bfb\u53d6\u4e0a\u9650\uff0c\u4fdd\u8bc1\u4efb\u4e00\u6301\u4e45\u5316\u7d22\u5f15\u5747\u4e0d\u80fd\u5728 bootstrap \u65f6\u65e0\u754c\u5206\u914d\u3002",
+      "status": "approved",
+      "unit": "bytes",
+      "valueExpression": "64 * 1024 * 1024"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumManifestEntryCount = 100_000",
+          "codePath": "component://Akashic/Sources/AkashicDisk/FileBlobStore.swift"
+        },
+        {
+          "codeFragment": "maximumManifestEntryCount = 100_000",
+          "codePath": "Sources/FoveaPersistence/RepresentationRecordStore.swift"
+        },
+        {
+          "codeFragment": "maximumGarbageCollectionReferenceCount = 100_000",
+          "codePath": "Sources/FoveaCore/PipelineCache.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u89e3\u7801\u6e05\u5355\u8d85\u8fc7\u6761\u76ee\u6570\u4ecd\u8fdb\u5165\u7d22\u5f15",
+        "\u5199\u5165\u8def\u5f84\u53ef\u8d8a\u8fc7\u6761\u76ee\u6570\u4e0a\u9650",
+        "\u6761\u76ee\u8ba1\u6570\u53d1\u751f\u6574\u6570\u6ea2\u51fa"
+      ],
+      "id": "RESOURCE-MANIFEST-ENTRY-COUNT-MAX",
+      "rationale": "\u539f\u7f16\u7801\u548c\u8868\u5f81\u6e05\u5355\u5171\u4eab\u6761\u76ee\u6709\u9650\u57df\uff1b\u5b57\u8282\u4e0a\u9650\u4e0e\u6761\u76ee\u4e0a\u9650\u540c\u65f6\u6210\u7acb\uff0c\u9632\u6b62\u6781\u5c0f\u952e\u6784\u9020\u5bfc\u81f4\u5bf9\u8c61\u6570\u91cf\u7206\u70b8\u3002",
+      "status": "approved",
+      "unit": "entries",
+      "valueExpression": "100_000"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumSoftTotalBytes = 1024 * 1024 * 1024 * 1024",
+          "codePath": "Sources/FoveaPersistence/OriginalEncodedStoreLimits.swift"
+        }
+      ],
+      "falsifiers": [
+        "maximumBlobBytes \u5927\u4e8e softTotalBytes",
+        "\u603b\u91cf\u52a0\u6cd5\u6ea2\u51fa",
+        "\u7edd\u5bf9\u4e0a\u9650\u88ab\u5f53\u4f5c\u9884\u5206\u914d\u5c3a\u5bf8"
+      ],
+      "id": "RESOURCE-STORE-TOTAL-MAX",
+      "rationale": "\u6301\u4e45\u539f\u7f16\u7801\u8f6f\u603b\u91cf\u7684\u6784\u9020\u57df\u4e0a\u754c\u4e3a 1 TiB\uff0c\u5e76\u59cb\u7ec8\u6ee1\u8db3\u5355 blob \u4e0a\u9650\u4e0d\u5927\u4e8e\u603b\u91cf\uff1b\u8fd9\u662f\u914d\u7f6e\u8868\u793a\u57df\uff0c\u4e0d\u662f\u9ed8\u8ba4\u78c1\u76d8\u5360\u7528\u3002",
+      "status": "approved",
+      "unit": "bytes",
+      "valueExpression": "1024 * 1024 * 1024 * 1024"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumURLBytes = 16 * 1024",
+          "codePath": "Sources/FoveaCore/ImageRequestValidation.swift"
+        },
+        {
+          "codeFragment": "maximumURLBytes = 16 * 1024",
+          "codePath": "Sources/FoveaHTTP/HTTPMetadataLimits.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u8bf7\u6c42\u8eab\u4efd\u5c42\u4e0e HTTP \u5143\u6570\u636e\u5c42 URL \u4e0a\u9650\u6f02\u79fb",
+        "\u957f\u5ea6\u68c0\u67e5\u53d1\u751f\u5728\u5b8c\u6574\u6602\u8d35\u8d44\u6e90\u521b\u5efa\u4e4b\u540e",
+        "URL \u5b57\u8282\u8ba1\u6570\u4f7f\u7528\u5b57\u7b26\u6570\u800c\u975e UTF-8 \u5b57\u8282\u6570"
+      ],
+      "id": "RESOURCE-URL-BYTES-MAX",
+      "rationale": "\u8bf7\u6c42\u8eab\u4efd\u89c4\u8303\u5316\u4e0e HTTP \u5143\u6570\u636e\u6301\u4e45\u5316\u5fc5\u987b\u63a5\u53d7\u5b8c\u5168\u76f8\u540c\u7684 URL \u6709\u9650\u57df\uff1b\u5426\u5219\u7f13\u5b58\u952e\u5c42\u53ef\u80fd\u6784\u9020\u4f20\u8f93\u5c42\u6216\u6301\u4e45\u5316\u5c42\u65e0\u6cd5\u8868\u793a\u7684\u5b9a\u4f4d\u7b26\u300216 KiB \u662f\u652f\u6301\u57df\u4e0a\u754c\uff0c\u4e0d\u662f\u7f13\u51b2\u533a\u9884\u5206\u914d\u3002",
+      "status": "approved",
+      "unit": "utf8-bytes",
+      "valueExpression": "16 * 1024"
+    },
+    {
+      "bindings": [
+        {
+          "codeFragment": "maximumLogicalSourceBytes = 16 * 1024",
+          "codePath": "Sources/FoveaCore/ImageRequestValidation.swift"
+        }
+      ],
+      "falsifiers": [
+        "\u5408\u6cd5\u6700\u5927 URL \u65e0\u6cd5\u4f5c\u4e3a\u9ed8\u8ba4\u903b\u8f91\u6765\u6e90",
+        "\u903b\u8f91\u6765\u6e90\u5b57\u8282\u57df\u5c0f\u4e8e URL \u5b57\u8282\u57df",
+        "\u5b57\u7b26\u4e32\u6309\u5b57\u7b26\u6570\u800c\u4e0d\u662f UTF-8 \u5b57\u8282\u6570\u9650\u5236"
+      ],
+      "id": "RESOURCE-LOGICAL-SOURCE-BYTES-MAX",
+      "rationale": "\u672a\u663e\u5f0f\u63d0\u4f9b\u4e1a\u52a1\u903b\u8f91\u6765\u6e90\u65f6\uff0cImageRequest \u4f7f\u7528\u89c4\u8303\u5316\u5b8c\u6574 URL \u4f5c\u4e3a\u903b\u8f91\u6765\u6e90\uff1b\u56e0\u6b64\u903b\u8f91\u6765\u6e90\u652f\u6301\u57df\u5fc5\u987b\u81f3\u5c11\u8986\u76d6 URL \u652f\u6301\u57df\u3002\u4e24\u8005\u53d6\u540c\u4e00 16 KiB \u4e0a\u754c\uff0c\u907f\u514d\u4e00\u4e2a\u5df2\u901a\u8fc7 URL \u9a8c\u8bc1\u7684\u9ed8\u8ba4\u8bf7\u6c42\u968f\u540e\u5728\u8eab\u4efd\u5c42\u5931\u8d25\u3002",
+      "status": "approved",
+      "unit": "utf8-bytes",
+      "valueExpression": "16 * 1024"
+    }
+  ],
+  "relations": [
+    {
+      "left": "RESOURCE-ENCODED-OBJECT-MAX",
+      "operator": "<=",
+      "right": "RESOURCE-STORE-TOTAL-MAX"
+    },
+    {
+      "left": "RESOURCE-IMAGE-PIXEL-COUNT-MAX",
+      "operator": "<=",
+      "rightExpression": "65_536 * 65_536"
+    },
+    {
+      "left": "RESOURCE-LOGICAL-SOURCE-BYTES-MAX",
+      "operator": "==",
+      "right": "RESOURCE-URL-BYTES-MAX"
+    }
+  ],
+  "schemaVersion": 1
+}

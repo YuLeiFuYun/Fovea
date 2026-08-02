@@ -1,20 +1,90 @@
 name: Fovea Verification
 
 on:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Verification profile; use full only for a locally qualified release candidate.
+        required: true
+        type: choice
+        default: identity
+        options:
+          - identity
+          - full
+      budget_approved:
+        description: Confirm that the current GitHub Actions budget can fund this run.
+        required: true
+        type: boolean
+        default: false
+      base_commit:
+        description: Optional exact base commit for rollback and differential evidence.
+        required: false
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: verify-${{ github.ref }}
+  group: verify-${{ github.ref }}-${{ inputs.profile }}
   cancel-in-progress: true
 
 jobs:
+  identity-golden-vectors:
+    if: ${{ inputs.budget_approved && inputs.profile == 'identity' }}
+    name: Identity golden vectors (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+          - arch: x86_64
+    runs-on: xcode-27
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact verified commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          VERIFIED_COMMIT: ${{ github.sha }}
+        run: |
+          set -eu
+          git init .
+          git remote add origin "https://github.com/${REPOSITORY}.git"
+          basic=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64)
+          git -c http.extraHeader="AUTHORIZATION: basic $basic" \
+            fetch --no-tags --depth=1 origin "$VERIFIED_COMMIT"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$VERIFIED_COMMIT"
+
+      - name: Prepare x86_64 execution
+        if: matrix.arch == 'x86_64'
+        run: |
+          set -eu
+          if ! /usr/bin/arch -x86_64 /usr/bin/true >/dev/null 2>&1; then
+            sudo /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+          fi
+          /usr/bin/arch -x86_64 /usr/bin/true
+
+      - name: Verify target architecture and persistent identity vectors
+        env:
+          FOVEA_EXPECTED_TEST_ARCH: ${{ matrix.arch }}
+        run: |
+          set -eu
+          test "$(uname -m)" = "arm64"
+          DEVELOPER_DIR=$(scripts/select-xcode.sh)
+          export DEVELOPER_DIR
+          xcodebuild -version
+          xcrun swift --version
+          python3 scripts/check-swift-toolchain.py
+          if test "$FOVEA_EXPECTED_TEST_ARCH" = "x86_64"; then
+            python3 scripts/run-x86-identity-test.py
+          else
+            python3 scripts/run-swift-strict.py test --filter CACHE_PT_017
+          fi
+
   verify:
-    runs-on: macos-15
+    if: ${{ inputs.budget_approved && inputs.profile == 'full' }}
+    runs-on: xcode-27
     timeout-minutes: 60
     steps:
       - name: Checkout exact verified and base commits
@@ -22,7 +92,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           VERIFIED_COMMIT: ${{ github.sha }}
-          RAW_BASE_COMMIT: ${{ github.event.pull_request.base.sha || github.event.before }}
+          RAW_BASE_COMMIT: ${{ inputs.base_commit }}
         run: |
           set -eu
           git init .
@@ -34,33 +104,61 @@ jobs:
           test "$(git rev-parse HEAD)" = "$VERIFIED_COMMIT"
 
           BASE_COMMIT=$RAW_BASE_COMMIT
+          INITIAL_ROOT=0
           case "$BASE_COMMIT" in
             ""|0000000000000000000000000000000000000000)
               BASE_COMMIT=$(git cat-file -p HEAD | awk '/^parent / { print $2; exit }')
+              if test -z "$BASE_COMMIT"; then
+                BASE_COMMIT=$VERIFIED_COMMIT
+                INITIAL_ROOT=1
+              fi
               ;;
           esac
           printf '%s' "$BASE_COMMIT" | grep -Eq '^[0-9a-fA-F]{40,64}$'
-          git -c http.extraHeader="AUTHORIZATION: basic $basic" \
-            fetch --no-tags --depth=1 origin "$BASE_COMMIT"
-          git cat-file -e "${BASE_COMMIT}^{commit}"
+          if test "$INITIAL_ROOT" = 0; then
+            git -c http.extraHeader="AUTHORIZATION: basic $basic" \
+              fetch --no-tags --depth=1 origin "$BASE_COMMIT"
+            git cat-file -e "${BASE_COMMIT}^{commit}"
+          fi
           printf 'FOVEA_BASE_COMMIT=%s\n' "$BASE_COMMIT" >> "$GITHUB_ENV"
+          printf 'FOVEA_INITIAL_ROOT=%s\n' "$INITIAL_ROOT" >> "$GITHUB_ENV"
+
+      - name: Verify project continuity memory
+        run: |
+          set -eu
+          python3 scripts/check-project-memory.py
+          python3 scripts/check-workload-registry.py
+          python3 scripts/render-project-context.py
+          cat .artifacts/project-memory/current-context.md
+
+      - name: Install pinned XcodeGen
+        run: |
+          set -eu
+          brew install xcodegen
+          actual=$(xcodegen --version | sed 's/^Version:[[:space:]]*//')
+          expected=$(cat Examples/FoveaWorkbenchApp/.xcodegen-version)
+          test "$actual" = "$expected"
 
       - name: Verify current product gates
         env:
           RUN_IOS_SIMULATOR: "1"
           RUN_CRITICAL_MUTANTS: "1"
+          RUN_LIVE_NETWORK: "0"
+          RUN_COMPONENT_CLEAN_COPY: "1"
         run: |
           set -o pipefail
           mkdir -p .artifacts/logs
           scripts/verify.sh 2>&1 | tee .artifacts/logs/verify.log
 
       - name: Verify rollback
+        if: env.FOVEA_INITIAL_ROOT != '1'
         run: |
           scripts/verify-rollback.py \
             --base "$FOVEA_BASE_COMMIT" \
             --head "$GITHUB_SHA"
 
       - name: Generate trusted CI evidence
+        if: env.FOVEA_INITIAL_ROOT != '1'
         run: |
           evidence=.artifacts/evidence/fovea-ci-evidence.json
           scripts/generate-ci-evidence.py \
@@ -73,13 +171,26 @@ jobs:
           scripts/validate-evidence.py "$evidence"
 
           digest=$(shasum -a 256 "$evidence" | awk '{ print $1 }')
+          verification_count=$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["verification"]))' "$evidence")
+          changed_file_count=$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["changedFiles"]))' "$evidence")
           {
             printf '## Fovea Verification Evidence\n\n'
             printf -- '- Assurance stage: `0b-in-progress`\n'
             printf -- '- Verified commit: `%s`\n' "$GITHUB_SHA"
             printf -- '- Base commit: `%s`\n' "$FOVEA_BASE_COMMIT"
-            printf -- '- Evidence SHA-256: `%s`\n\n' "$digest"
-            printf '<details><summary>Evidence Bundle</summary>\n\n```json\n'
-            cat "$evidence"
-            printf '```\n</details>\n'
+            printf -- '- Verification records: `%s`\n' "$verification_count"
+            printf -- '- Changed files: `%s`\n' "$changed_file_count"
+            printf -- '- Evidence SHA-256: `%s`\n' "$digest"
+            printf -- '- Full bundle retained only as runner-local validated evidence; it is not copied into the public step summary.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record initial public baseline
+        if: env.FOVEA_INITIAL_ROOT == '1'
+        run: |
+          {
+            printf '## Fovea Initial Public Baseline\n\n'
+            printf -- '- Verified root commit: `%s`\n' "$GITHUB_SHA"
+            printf -- '- Product, component clean-copy, simulator and mutation gates ran on the root snapshot.\n'
+            printf -- '- Rollback and changed-file evidence are intentionally unavailable because a root commit has no ancestor.\n'
+            printf -- '- Every subsequent verified commit must restore the rollback and trusted differential-evidence gates.\n'
           } >> "$GITHUB_STEP_SUMMARY"

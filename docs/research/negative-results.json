@@ -1,0 +1,1069 @@
+{
+  "entries": [
+    {
+      "area": "cache-policy",
+      "artifactReproduction": "python3 scripts/analyze-cache-policies.py",
+      "claimRejected": "frequency-times-miss-cost-per-byte is a sufficient online admission value for image caches.",
+      "counterexample": "The cost/size-aware TinyLFU candidate approaches the finite oracle on mixed-cost traces but has catastrophic regret on cyclic and phase-shift traces.",
+      "decision": "research-only-requires-robust-fallback",
+      "evidencePaths": [
+        "scripts/analyze-cache-policies.py",
+        "Benchmarks/CacheLab/plans/cache-plan-v1.json",
+        "docs/specifications/cache-semantics.md"
+      ],
+      "exitCondition": "A preregistered fallback bound prevents regret materially worse than SIEVE under distribution shifts.",
+      "historicalArtifactSHA256": "bc321883c823cb426f727038654393d8202aa310a2fd538d38a26903c4f11446",
+      "id": "NEG-CACHE-COST-SIZE-001"
+    },
+    {
+      "area": "cache-policy",
+      "artifactReproduction": "python3 scripts/analyze-cache-policies.py",
+      "claimRejected": "The byte-adapted S3-FIFO candidate universally dominates production SIEVE.",
+      "counterexample": "The built-in hot-set-plus-large-scan and phase-shift traces contain cases where the candidate loses to SIEVE.",
+      "decision": "research-only-no-production-replacement",
+      "evidencePaths": [
+        "scripts/analyze-cache-policies.py",
+        "Benchmarks/CacheLab/plans/cache-plan-v1.json",
+        "docs/specifications/cache-semantics.md"
+      ],
+      "exitCondition": "Independent sanitized image traces show robust benefit without regression after overhead and phase-shift tests.",
+      "historicalArtifactSHA256": "bc321883c823cb426f727038654393d8202aa310a2fd538d38a26903c4f11446",
+      "id": "NEG-CACHE-S3FIFO-001"
+    },
+    {
+      "area": "statistical-claims",
+      "claimRejected": "One universal all-capability all-workload all-comparator all-metric noninferiority predicate is an appropriate world-best gate.",
+      "counterexample": "Multiplicity, finite power and genuine Pareto tradeoffs can make a truthful global predicate nearly always inconclusive or nonexistent.",
+      "decision": "replace-with-hierarchical-best-within-scope-certificates",
+      "evidencePaths": [
+        "Benchmarks/claim-policy.json",
+        "Benchmarks/statistical-claim-families.json",
+        "docs/specifications/comparability-contract.md"
+      ],
+      "exitCondition": "No exit: global unbounded marketing claims remain prohibited; only a newly bounded scope may be certified.",
+      "id": "NEG-CLAIM-GLOBAL-001"
+    },
+    {
+      "area": "tail-statistics",
+      "claimRejected": "Fitting a generalized Pareto tail automatically produces narrow and noise-free p99.9 confidence bounds.",
+      "counterexample": "Threshold selection trades model bias against sparse-tail variance and its uncertainty can dominate the reported return-level interval.",
+      "decision": "research-sensitivity-analysis-only",
+      "evidencePaths": [
+        "docs/specifications/mathematical-assurance.md",
+        "docs/research/mathematical-theory-registry.json"
+      ],
+      "exitCondition": "Threshold selection, dependence, fit diagnostics and threshold uncertainty are preregistered and validated on held-out device traces.",
+      "id": "NEG-EVT-TAIL-001"
+    },
+    {
+      "area": "redirect-credential-security",
+      "claimRejected": "A PINRemoteImage manager created from a sanitized URLSessionConfiguration necessarily strips authorization on every cross-origin redirect.",
+      "counterexample": "The deterministic W3 redirect observed one Authorization header at the target origin, and the locked public manager construction surface did not provide a redirect-delegate injection point for enforcing the stricter contract.",
+      "decision": "Retain cross-origin-authorization-leak-zero as a failed W3 semantic invariant for PINRemoteImage and exclude it from security-equivalent performance ranking; do not conceal the gap with private hooks or an external proxy.",
+      "evidencePaths": [
+        "docs/research/pinremoteimage-adapter-findings-2026-07.md",
+        "Benchmarks/ComparativeLab/Adapters/PINRemoteImageAdapterPackage/Sources/PINRemoteImageComparatorAdapter/PINRemoteImageComparatorAdapter.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkOrigin.swift"
+      ],
+      "exitCondition": "A future public API or locked upstream release permits redirect-policy enforcement and passes the unchanged cross-origin authorization probe with zero leakage.",
+      "id": "NEG-PINREMOTEIMAGE-CROSS-ORIGIN-AUTH-001"
+    },
+    {
+      "area": "image-orientation-and-target-geometry",
+      "claimRejected": "PINRemoteImage eager EXIF normalization always preserves exact oriented dimensions and reference pixels before target-size processing.",
+      "counterexample": "The orientation-6 fixture normalized to 120 by 81 instead of 120 by 80 because a floating-point rotated rectangle was rounded upward by UIGraphicsImageRenderer, producing five reference-sample mismatches.",
+      "decision": "Use the public skip-decode option and apply EXIF orientation together with the final target-size render; retain exact orientation, color and target-pixel probes in W2.",
+      "evidencePaths": [
+        "docs/research/pinremoteimage-adapter-findings-2026-07.md",
+        "Benchmarks/ComparativeLab/Adapters/PINRemoteImageAdapterPackage/Sources/PINRemoteImageComparatorAdapter/PINRemoteImageComparatorAdapter.swift",
+        "Benchmarks/ComparativeLab/Fixtures/correctness-probes.json"
+      ],
+      "exitCondition": "A future locked upstream release passes the unchanged orientation-6 pixel-reference probe with exact normalized dimensions without requiring skip-decode adapter handling.",
+      "id": "NEG-PINREMOTEIMAGE-ORIENTATION-ROUNDING-001"
+    },
+    {
+      "area": "http-cache-adapter-semantics",
+      "claimRejected": "PINRemoteImage processed-image variants automatically inherit and enforce the origin response no-store directive.",
+      "counterexample": "In deterministic W3 calibration, a no-store authenticated response was not reusable through the original TTL cache but its processor-derived image remained reusable because the response max-age was not carried into the processed-cache write.",
+      "decision": "Use the original download path for authenticated W3 requests, normalize only the returned output image, and retain no-store-reusable-write-zero as a hard semantic check rather than crediting processed-cache reuse.",
+      "evidencePaths": [
+        "docs/research/pinremoteimage-adapter-findings-2026-07.md",
+        "Benchmarks/ComparativeLab/Adapters/PINRemoteImageAdapterPackage/Sources/PINRemoteImageComparatorAdapter/PINRemoteImageComparatorAdapter.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/OtherWorkloads.swift"
+      ],
+      "exitCondition": "A future locked upstream release demonstrably propagates response cache directives to processed variants and passes the unchanged W3 no-store probe without adapter bypass logic.",
+      "id": "NEG-PINREMOTEIMAGE-PROCESSED-NOSTORE-001"
+    },
+    {
+      "area": "shared-task-cancellation-semantics",
+      "claimRejected": "A single bounded cancellation tombstone keyed only by shared operation identity can simultaneously prevent ABA restart and preserve every subscriber that began before cancellation.",
+      "counterexample": "W7 V6 created sixteen cancelling and sixteen surviving callers for one shared key. The cancelling callers reached the fetch registry first and created a tombstone before already-started survivors arrived, causing all sixteen survivors to inherit cancellation and reducing origin groups from sixteen to fifteen.",
+      "decision": "Propagate a top-level monotonic admission timestamp, keep cancellation tombstones separate from active entries, allow only pre-cutoff admissions into one bounded replacement cohort, and keep truly post-cutoff callers attached to the cancelled terminal task.",
+      "evidencePaths": [
+        "Sources/FoveaCore/SharedTaskRegistry.swift",
+        "Tests/FoveaTests/SharedTaskTests.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift"
+      ],
+      "exitCondition": "No exit for the distinction itself: future implementations may replace the mechanism only if SCHED-PT-021, SCHED-PT-022 and the unchanged W7 mixed-subscriber trace all pass.",
+      "id": "NEG-SHARED-TOMBSTONE-COHORT-001"
+    },
+    {
+      "area": "swiftui-comparative-methodology",
+      "claimRejected": "Apple AsyncImage success-view latency and Fovea durable-final-view latency are the same display endpoint.",
+      "counterexample": "V4 required Fovea to finish validated target decode, durable OriginalEncoded publication and RepresentationRecord publication before the success view appeared, while AsyncImage exposed only a display success phase with no equivalent durable-cache boundary. The comparison charged Fovea cache durability to display latency and could not attribute the difference to visible pixels.",
+      "decision": "Archive V4. V5 ranks the first full-quality rendered frame for both surfaces. Fovea emits only a fully validated, target-decoded, transformed and namespace-fenced UInt16.max preview before durable publication; durable final latency remains separately visible and is not represented as an AsyncImage durability measurement.",
+      "evidencePaths": [
+        "Benchmarks/AsyncImageLab/plans/experiment-plan-v4.json",
+        "Benchmarks/AsyncImageLab/experiment-plan.json",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Sources/FoveaCore/HTTPImageResponseProcessor.swift",
+        "Sources/FoveaCore/FoveaPipeline.swift"
+      ],
+      "exitCondition": "Apple exposes an equivalent durable cache publication boundary, or the comparison is explicitly scoped to a storage durability endpoint rather than first full-quality display.",
+      "id": "NEG-SWIFTUI-DISPLAY-DURABILITY-CONFOUND-001"
+    },
+    {
+      "area": "benchmark-resource-equivalence",
+      "claimRejected": "An origin-only concurrency cap and absolute process thread peak are sufficient for equal-resource W7 comparison.",
+      "counterexample": "W7 V3 observed configurable clients using six fetch slots while Kingfisher used all eight origin slots; absolute thread peaks also included different pre-workload baseline threads.",
+      "decision": "Archive V3. W7 V4 injects a common eight-fetch client budget where the library exposes one and promotes peak-minus-baseline thread delta to the primary resource endpoint while retaining absolute counts descriptively.",
+      "evidencePaths": [
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v3.json",
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
+        "Benchmarks/W7ConcurrencyLab/calibration-history.json"
+      ],
+      "exitCondition": "Every configurable adapter records the common budget, origin peak remains bounded by eight, and baseline/peak/delta thread measurements are emitted before formal data.",
+      "id": "NEG-W7-CLIENT-BUDGET-BASELINE-001"
+    },
+    {
+      "area": "black-box-scheduler-observability",
+      "claimRejected": "An internal maximum of eight newer permit grants implies at most eight newer request starts at a concurrent black-box origin.",
+      "counterexample": "Under W7 V6, Fovea admitted the background probe at the internal eight-bypass threshold, yet nine newer immediate requests appeared first in origin service-start order because up to seven already-admitted requests can reorder during concurrent URLSession task creation and scheduling.",
+      "decision": "Archive V6 and preregister V7. Keep the internal grant-order bound at eight in the permit model and unit tests; derive the cross-library origin-start bound as eight plus client concurrency minus one, equal to fifteen for the fixed eight-slot budget.",
+      "evidencePaths": [
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v6.json",
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
+        "Benchmarks/W7ConcurrencyLab/calibration-history.json",
+        "Sources/FoveaCore/AsyncPermitPool.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift"
+      ],
+      "exitCondition": "A future cross-library harness exposes a semantically equivalent client-admission event for every comparator, allowing grant-order fairness to be observed directly instead of inferred from downstream origin order.",
+      "id": "NEG-W7-ORIGIN-ORDER-BOUND-001"
+    },
+    {
+      "area": "scheduling-measurement",
+      "claimRejected": "A grouped background-to-immediate submission burst is a valid isolated measure of priority differentiation.",
+      "counterexample": "In W7 V1 Simulator calibration, Fovea passed every hard concurrency invariant and used only 14 peak threads, but immediate/background p95 was about 3.78 because 122 background requests arrived first and became starvation-reserved before immediate requests entered the queue.",
+      "decision": "Archive W7 V1, preserve its artifact as calibration-only, and preregister W7 V2 with round-robin priority arrivals before any formal result. Do not change the production anti-starvation bound based on this confounded metric.",
+      "evidencePaths": [
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v1.json",
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
+        "Benchmarks/W7ConcurrencyLab/calibration-history.json"
+      ],
+      "exitCondition": "Use a versioned round-robin arrival trace, retain anti-starvation hard checks, and preregister the new plan before formal data.",
+      "finding": "Grouping all background requests before higher priorities made the measured priority p95 ratio primarily reflect arrival age and the intentional eight-bypass anti-starvation reservation, not pure priority differentiation.",
+      "id": "NEG-W7-PRIORITY-ARRIVAL-CONFOUND-001",
+      "status": "retained-design-counterexample"
+    },
+    {
+      "area": "benchmark-resource-and-fairness-semantics",
+      "claimRejected": "Peak-minus-baseline thread delta and finite completion are sufficient primary evidence for resource use and starvation freedom.",
+      "counterexample": "W7 V4 reported AlamofireImage baseline 33/peak 34 (delta 1) while Fovea baseline 9/peak 14 (delta 5), so delta rewarded eager thread creation. The same trace could not distinguish bounded priority aging from strict priority that completes low work only at the tail.",
+      "decision": "Archive V4. V5 restores absolute peak threads as primary, retains baseline/delta descriptively, and adds an origin-observed older-background/newer-immediate bypass probe with bound eight.",
+      "evidencePaths": [
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v4.json",
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
+        "Benchmarks/W7ConcurrencyLab/calibration-history.json"
+      ],
+      "exitCondition": "The absolute peak, baseline, delta and origin-observed bypass count are all emitted and the bypass hard bound is enforced before formal data.",
+      "id": "NEG-W7-THREAD-DELTA-FAIRNESS-001"
+    },
+    {
+      "area": "benchmark-service-curve",
+      "claimRejected": "Setting URLSessionConfiguration.httpMaximumConnectionsPerHost is sufficient to equalize origin concurrency in a custom URLProtocol benchmark.",
+      "counterexample": "W7 V2 Kingfisher calibration completed the 488-request priority burst in roughly 0.3 seconds while bounded pipelines took about 12 seconds, because custom URLProtocol instances delivered concurrently outside the real HTTP connection pool.",
+      "decision": "Archive W7 V2. In W7 V3, the deterministic origin owns an eight-slot asynchronous service gate, exports peak service concurrency, and hard-fails if the limit is exceeded.",
+      "evidencePaths": [
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v2.json",
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
+        "Benchmarks/W7ConcurrencyLab/calibration-history.json"
+      ],
+      "exitCondition": "All W7 participants execute under the origin-owned service limit and the emitted peak-concurrency check passes before formal data.",
+      "id": "NEG-W7-URLPROTOCOL-CONCURRENCY-001"
+    },
+    {
+      "area": "codec-host-architecture",
+      "claimRejected": "A future more capable codec should directly replace ImageIO throughout Fovea as soon as its decoder works.",
+      "counterexample": "The old pipeline hard-coded decoderVersion 1 and inferred backend abilities through runtime casts. Direct replacement would couple codec maturity to fetch, cache, admission, identity, UI and persistence while allowing different pixel semantics to collide in shared decode/render identities.",
+      "decision": "Introduce a versioned finite codec descriptor, conservative resource join and backend fingerprint first. Keep ImageIO as reference; integrate any candidate through opt-in conformance, shadow, canary and rollback stages.",
+      "evidencePaths": [
+        "docs/project-memory/component-pins.json",
+        "Sources/FoveaCore/DecodeStage.swift",
+        "Sources/FoveaCore/Identity.swift",
+        "docs/adr/0011-codec-capability-contract.md"
+      ],
+      "exitCondition": "No exit for the separation itself; a future contract may supersede it only with explicit migration, identity and rollback evidence.",
+      "id": "NEG-CODEC-DIRECT-REPLACEMENT-001"
+    },
+    {
+      "area": "capability-governance",
+      "claimRejected": "Adding progressive-generation, animation-track, frame-timing, HDR and output-representation types means Fovea supports those production capabilities.",
+      "counterexample": "The current ImageIO adapter only implements complete primary-frame SDR CGImage output with operation-boundary cancellation; no production incremental stream, animation clock/cache, HDR surface or planar ownership exists.",
+      "decision": "Keep W4/W5/W9 and HDR/output gaps open. Types freeze vocabulary and invariants only; capability status requires implementation, conformance and workload evidence.",
+      "evidencePaths": [
+        "docs/project-memory/component-pins.json",
+        "Tests/FoveaTests/ImageCodecContractTests.swift",
+        "Tests/FoveaTests/ImageDecoderTests.swift",
+        "docs/project-memory/project-memory.json",
+        "docs/roadmaps/fovea-codec-parallel-roadmap.md"
+      ],
+      "exitCondition": "Close each gap separately only after its production pipeline, corpus, workload, physical-device and rollback gates pass.",
+      "id": "NEG-CODEC-TYPE-EQUALS-CAPABILITY-001"
+    },
+    {
+      "area": "ai-workflow-semantic-traceability",
+      "claimRejected": "A task DAG is semantically valid whenever every requirement ID appears in at least one task and structural schema validation passes.",
+      "counterexample": "The first automatically generated DAG covered all IDs but mapped the codec-independent boundary to persistence tests and mapped the research/parallel-roadmap requirements to unrelated file-writer and verification-script work.",
+      "decision": "Stop the run before any Fovea patch, archive the DAG through objective amendment, and replace it with an explicit requirement-to-artifact plan. workflow-bundle must add semantic satisfaction constraints rather than treating ID coverage as sufficient.",
+      "evidencePaths": [
+        "docs/research/fovea-codec-readiness-audit-2026-07.md",
+        "docs/roadmaps/fovea-codec-parallel-roadmap.md"
+      ],
+      "exitCondition": "A workflow-bundle regression test rejects a structurally complete DAG whose objective/read/write sets are semantically unrelated to the requirement text.",
+      "id": "NEG-WORKFLOW-MECHANICAL-TRACEABILITY-001"
+    },
+    {
+      "area": "public-api-governance",
+      "claimRejected": "The complete codec capability algebra should be public immediately so an external future codec can conform directly.",
+      "counterexample": "With only ImageIO as a production backend, publishing reserved progressive, animation, HDR, output and cancellation types raised total public symbols from the protected-tree level to 937 and froze speculative semantics before a second implementation existed.",
+      "decision": "Keep the codec contract package-internal, preserve the minimal public ImageDecoding protocol, use a technology-neutral cross-repository conformance kit, and introduce any public bridge only after a second backend and a separate API ADR.",
+      "evidencePaths": [
+        "docs/project-memory/component-pins.json",
+        "docs/adr/0011-codec-capability-contract.md",
+        "docs/research/public-api-budget-review-2026-07.md"
+      ],
+      "exitCondition": "A second production backend passes conformance and rollout gates, and an independent public-API review proves a smaller stable bridge with migration and versioning policy.",
+      "id": "NEG-CODEC-PUBLIC-API-001"
+    },
+    {
+      "area": "image-color-management",
+      "claimRejected": "An unlabeled grayscale raster can be interpreted as sRGB by replacing its color space without changing the pixel representation.",
+      "counterexample": "ImageIO produced a monochrome gray-plus-alpha CGImage for the loopback PNG. Reconstructing that 16-bit monochrome image with an RGB sRGB color space returned nil, so every nominally successful loopback request failed after probe with decode-failed.",
+      "decision": "Retag only when source and desired color-space models match. When models differ, render into a bounded RGB context in the desired color space. Keep a valid unlabeled grayscale PNG as a direct decoder and loopback regression fixture.",
+      "evidencePaths": [
+        "docs/project-memory/component-pins.json",
+        "Tests/FoveaTests/ImageDecoderTests.swift",
+        "scripts/run-loopback-network-lab.py"
+      ],
+      "exitCondition": "Revisit only if Core Graphics documents and tests a lossless cross-model CGImage color-space reassignment contract; otherwise conversion remains mandatory.",
+      "id": "NEG-COLOR-CROSS-MODEL-RETAG-001"
+    },
+    {
+      "area": "evidence-identity-and-continuity",
+      "artifactRetention": "local-only because the historical envelope contains absolute workstation paths and obsolete embedded-source topology",
+      "claimRejected": "Including project-memory and roadmap files inside a migration baseline always strengthens source provenance.",
+      "counterexample": "The baseline digest was written back into project-memory and the roadmap queue while those same files were included in the baseline input set. Each evidence update changed an input digest, so recapturing produced a new baseline digest indefinitely.",
+      "decision": "Exclude self-referential continuity files from the pluggable-stack migration baseline. Keep their canonical digests in the independently rendered task context, while the migration baseline covers package, production source, storage schema and non-self-referential plan inputs.",
+      "evidencePaths": [
+        "docs/project-memory/source-manifest.json",
+        "docs/project-memory/long-horizon-roadmap.json",
+        "scripts/check-project-memory.py",
+        "scripts/check-component-pins.py"
+      ],
+      "exitCondition": "This separation is permanent unless a future content-addressed envelope can bind continuity metadata without including a field that contains the envelope digest itself.",
+      "finding": "A baseline that contains files which store that baseline digest is self-referential and cannot stabilize under ordinary recapture.",
+      "historicalArtifactSHA256": "9f854acffadaaac368e450e9bacd9770925a55685d2c41314f5842eaeee1248b",
+      "historicalGeneratorRemoved": "scripts/capture-pluggable-stack-baseline.py was deleted after public exact-pin migration because it emitted obsolete embedded topology and absolute local paths.",
+      "id": "NEG-BASELINE-SELF-REFERENCE-001",
+      "status": "retained-governance-counterexample"
+    },
+    {
+      "area": "evidence-identity-and-reproducibility",
+      "artifactRetention": "local-only because the historical envelope contains absolute workstation paths and obsolete embedded-source topology",
+      "claimRejected": "Hashing the complete emitted baseline document is a stable way to identify an unchanged source baseline.",
+      "counterexample": "The first baseline document included generatedAt in the hashed payload. Consecutive captures of unchanged source produced different digests solely because wall-clock metadata changed.",
+      "decision": "Define sourceIdentitySHA256 over the source-relevant repository records only. Keep generatedAt in the envelope for audit chronology, but exclude it from the identity digest used by roadmap gates and migration comparisons.",
+      "evidencePaths": [
+        "docs/project-memory/source-manifest.json",
+        "docs/project-memory/long-horizon-roadmap.json",
+        "scripts/check-project-memory.py",
+        "scripts/check-component-pins.py"
+      ],
+      "exitCondition": "Any future baseline schema must preserve an explicit separation between stable subject identity and volatile envelope metadata such as timestamps or run identifiers.",
+      "finding": "A timestamp-bearing evidence envelope is not itself a stable source identity.",
+      "historicalArtifactSHA256": "9f854acffadaaac368e450e9bacd9770925a55685d2c41314f5842eaeee1248b",
+      "historicalGeneratorRemoved": "scripts/capture-pluggable-stack-baseline.py was deleted after public exact-pin migration because it emitted obsolete embedded topology and absolute local paths.",
+      "id": "NEG-BASELINE-VOLATILE-TIMESTAMP-001",
+      "status": "retained-governance-counterexample"
+    },
+    {
+      "area": "durable-cache-process-crash-recovery",
+      "claimRejected": "A Foundation directory enumerator with skipsSubdirectoryDescendants plus blob-directory reconciliation is sufficient to remove all durable-write temporary files after process exit.",
+      "counterexample": "The first eleven-point independent Akashic child-process crash matrix failed at afterManifestDataWritten and afterManifestFileSynced because a hidden root .durable-tmp file remained after reopen, even though blob reachability correctly became a miss.",
+      "decision": "Retain the two failing switch points, add a POSIX bounded directory reader that includes hidden entries before appending names, and clean root manifest temporary files before blob orphan reconciliation. Do not weaken the zero-temporary-file recovery assertion.",
+      "evidencePaths": [
+        "docs/research/akashic-independent-local-evidence-2026-07.json"
+      ],
+      "exitCondition": "The retained eleven-point real process-crash matrix passes with expected hit/miss, exact blob count and zero temporary files for every point; power-loss remains a separate open claim.",
+      "id": "NEG-AKASHIC-MANIFEST-TEMP-RECOVERY-001"
+    },
+    {
+      "area": "durable-cache-metadata-write-amplification",
+      "claimRejected": "A crash-safe flat manifest rewrite has negligible application-layer write amplification whenever the total retained blob bytes are small.",
+      "counterexample": "The retained independent Akashic local resource envelope measured 64 blobs of 4 KiB each: 262,144 payload bytes caused 734,874 cumulative manifest rewrite bytes, producing a total logical write upper bound of about 3.8033 times payload. The 8 blobs of 1 MiB case was about 1.0016 times, showing object count rather than payload volume dominates this mechanism.",
+      "decision": "Keep the current flat manifest for the first correctness-focused vertical slice, expose object-count-sensitive logical metadata amplification as an explicit metric, and do not claim small-object efficiency. Evaluate batching, segmented manifests or an append/checkpoint design only behind the existing crash and recovery obligations.",
+      "evidencePaths": [
+        "docs/research/akashic-independent-local-evidence-2026-07.json"
+      ],
+      "exitCondition": "A replacement or batching mechanism must materially reduce the retained 64-by-4-KiB logical metadata rewrite ratio while preserving the eleven-point process-crash matrix, future-schema behavior, bounded recovery and partition semantics.",
+      "id": "NEG-AKASHIC-FLAT-MANIFEST-SMALL-BLOB-AMPLIFICATION-001"
+    },
+    {
+      "area": "external-component-rehearsal-resource-isolation",
+      "claimRejected": "A clean-copy external dependency rehearsal can share the machine with another full release compilation without affecting timing-sensitive URLSession tests.",
+      "counterexample": "While the exact-revision 475-test clean-copy suite ran concurrently with the root release full-graph build, the rapid-cancellation warmup URLSession test produced one retryable transport failure. The same test then passed five of five serial replays, and prior isolated exact-revision rehearsals passed the complete suite.",
+      "decision": "Retain the failed run, forbid automatic retry inside the gate, and schedule the external clean-copy rehearsal without another full-graph compiler workload. A passing artifact is valid only from an explicit serial run.",
+      "evidencePaths": [
+        "docs/research/external-component-rehearsal-contention-finding-2026-07.json",
+        "scripts/verify-component-clean-copy.py",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
+      ],
+      "exitCondition": "The loopback transport fixture and timeout budget are stress-qualified under preregistered CPU and filesystem pressure, or the test no longer depends on wall-clock URLSession scheduling while preserving the same cancellation and durability semantics.",
+      "id": "NEG-EXTERNAL-REHEARSAL-CONCURRENT-BUILD-001"
+    },
+    {
+      "area": "shared-task-cancellation-linearization",
+      "claimRejected": "A background sleep-and-cleanup task is sufficient to make a bounded cancellation tombstone expire correctly for new subscriber admission.",
+      "counterexample": "During the privacy-sanitized current-pin clean-copy run, SCHED-PT-021 waited 150 ms for a 100 ms tombstone lease, yet compiler and test load delayed the cleanup task. A genuinely fresh subscriber still joined the cancelled task, so the 475-test suite reported two failures even though the monotonic deadline had elapsed.",
+      "decision": "Store an absolute monotonic expiry in each cancellation tombstone and lazily remove expired tombstones on the subscribe linearization path. Keep the background timer only as a memory-reclamation optimization, return without expiring when its sleep is cancelled, and retain lease-ID checks against ABA cleanup.",
+      "evidencePaths": [
+        "Sources/FoveaCore/SharedTaskRegistry.swift",
+        "Tests/FoveaTests/SharedTaskTests.swift",
+        "scripts/model-check-shared-task-registry.py",
+        "docs/specifications/scheduler-semantics.md"
+      ],
+      "exitCondition": "Every future admission implementation must compare the absolute monotonic deadline before joining a tombstone; the retained SCHED-PT-021 replay, full SharedTaskTests suite, finite-state model and clean-copy host gate must continue to pass under scheduler delay.",
+      "id": "NEG-CANCELLATION-TOMBSTONE-TIMER-001",
+      "status": "resolved-retained-concurrency-counterexample"
+    },
+    {
+      "area": "fresh-clone-verification-ordering",
+      "claimRejected": "A verification script is fresh-clone safe whenever every generator and checker passes in a long-lived developer worktree.",
+      "counterexample": "The first private Fovea root CI reached check-mathematical-research before latency-distribution and delayed-hit generators had emitted their ignored artifacts. Local worktrees masked the ordering defect because stale artifacts already existed, while the clean runner failed FOVEA-MATH-020 and FOVEA-MATH-021.",
+      "decision": "Run all tracked-input mathematical generators before the registry completeness checker, keep generated artifacts ignored, and treat a clean checkout with an empty artifact directory as the authoritative ordering environment.",
+      "evidencePaths": [
+        "scripts/verify.sh",
+        "scripts/check-mathematical-research.py",
+        "scripts/check-latency-distribution-analysis.py",
+        "scripts/analyze-delayed-hit-cache.py",
+        ".github/workflows/verify.yml"
+      ],
+      "exitCondition": "The public CI verify job must generate both artifacts from an empty checkout before checking the mathematical registry, and no implemented registry entry may rely on an artifact produced later in the same workflow.",
+      "id": "NEG-FRESH-CLONE-EVIDENCE-ORDER-001",
+      "status": "resolved-retained-ci-bootstrap-counterexample"
+    },
+    {
+      "area": "swift-executable-entry-portability",
+      "claimRejected": "Using an @main declaration inside a file literally named main.swift is portable across supported Swift 6 and Xcode toolchains.",
+      "counterexample": "The first private Fovea root CI rejected Tools/FoveaNetworkLab/main.swift on both arm64 and x86_64. After that path was renamed, the fourth root advanced into DocC and independently rejected Examples/FoveaGalleryDemo/main.swift for the same reason. A separate CacheLab executable also contained the latent pattern, although it had not yet reached the failing build mode.",
+      "decision": "Rename every @main entry away from the special main.swift filename, including NetworkLab, GalleryDemo and CacheLab. Add a repository-wide architecture gate over all visible Swift files so future targets cannot reintroduce the ambiguous convention.",
+      "evidencePaths": [
+        "Tools/FoveaNetworkLab/FoveaNetworkLabMain.swift",
+        "Examples/FoveaGalleryDemo/FoveaGalleryDemoMain.swift",
+        "Benchmarks/CacheLab/Sources/CacheLabRunner/CacheLabMain.swift",
+        "scripts/check-architecture-boundaries.py",
+        ".github/workflows/verify.yml"
+      ],
+      "exitCondition": "No repository-visible file named main.swift contains @main; architecture, arm64/x86_64 identity, DocC and package builds must pass under the pinned supported Xcode without parse-as-library workarounds.",
+      "id": "NEG-SWIFT-MAIN-FILENAME-001",
+      "status": "resolved-retained-toolchain-portability-counterexample"
+    },
+    {
+      "area": "component-release-identity-governance",
+      "claimRejected": "A conformance checker may hard-code the first alpha tag while exact component revisions are maintained in a separate current-pin registry.",
+      "counterexample": "The second private Fovea root CI resolved Akashic at the current alpha.2 commit and passed the pin gate, but check-akashic-conformance-plan still required the literal tag 0.1.0-alpha.1 and failed after all earlier mathematical and contract models passed.",
+      "decision": "Store releaseTag beside repositoryURL and revision in component-pins.json, validate its prerelease semantic-version shape, and make migration/conformance checks compare against that current registry value rather than a historical literal.",
+      "evidencePaths": [
+        "docs/project-memory/component-pins.json",
+        "docs/project-memory/akashic-contract-migration.json",
+        "scripts/check-component-pins.py",
+        "scripts/check-akashic-conformance-plan.py",
+        ".github/workflows/verify.yml"
+      ],
+      "exitCondition": "Future component alpha/beta/RC updates change one current releaseTag record and all governance checks derive their expected tag from it; no checker contains a historical release literal.",
+      "id": "NEG-HARDCODED-COMPONENT-TAG-001",
+      "status": "resolved-retained-release-governance-counterexample"
+    },
+    {
+      "area": "comparative-challenge-source-materialization",
+      "claimRejected": "A challenge-suite verifier may assume exact upstream source checkouts already exist because adapter builds can prepare them later or a developer worktree usually retains them.",
+      "counterexample": "The third private Fovea root CI passed component governance and mathematical gates, then check-comparative-challenge-suite failed because .artifacts/comparators/sources/Nuke did not exist. The only preparation call was conditional on RUN_COMPARATOR_ADAPTERS and occurred after the unconditional challenge gate; research and cache source locks had no preparation path at all.",
+      "decision": "Materialize all locked Apple comparator and cache source checkouts before every challenge run, include cross-language research sources when requested by the challenge suite, record sourceClass in a schema-2 checkout report, and keep every checkout under ignored artifact roots outside the production dependency graph.",
+      "evidencePaths": [
+        "scripts/prepare-comparator-sources.py",
+        "scripts/verify-comparative-lab.py",
+        "scripts/check-comparative-challenge-suite.py",
+        "docs/research/comparator-lock.json",
+        "docs/research/network-image-loader-test-sources.json",
+        "docs/research/cache-comparator-lock.json"
+      ],
+      "exitCondition": "A clean checkout with no comparator artifacts must prepare and verify every exact upstream source before challenge path checks, while Package.swift and the production dependency allowlist remain unchanged.",
+      "id": "NEG-COMPARATOR-CHECKOUT-ORDER-001",
+      "status": "resolved-retained-fresh-clone-comparator-counterexample"
+    },
+    {
+      "area": "benchmark-component-migration-cohesion",
+      "claimRejected": "Removing a legacy embedded persistence type from production code is complete when the root package and host tests no longer reference it.",
+      "counterexample": "After the external Akashic migration and four 475-test host scenarios passed, the standalone CacheLab package still referenced the deleted OriginalEncodedStore. The main verify path only validated its plan and policy analysis, so the stale benchmark adapter escaped until a proactive standalone package build after the fourth private root.",
+      "decision": "Migrate the Fovea disk contestant to the public FoveaPersistentStores bundle and its OriginalEncodedMaintaining capability, derive corruption-test file locations from the active generation plus the opaque PhysicalBlobID, preserve the configured byte limit across reopen, and add CacheLab package tests to every root verification run after exact comparator preparation.",
+      "evidencePaths": [
+        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheContestants.swift",
+        "Benchmarks/CacheLab/Sources/CacheLabRunner/CacheLabMain.swift",
+        "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift",
+        "scripts/check-cache-lab-plan.py",
+        "scripts/verify.sh"
+      ],
+      "exitCondition": "A fresh checkout must materialize exact cache comparators and pass the standalone CacheLab package tests; no benchmark source may reference removed embedded component types.",
+      "id": "NEG-BENCHMARK-LEGACY-STORE-001",
+      "status": "resolved-retained-component-migration-counterexample"
+    },
+    {
+      "area": "cross-repository-mutation-harness",
+      "claimRejected": "Host mutation coverage remains valid after component extraction when the catalog still addresses the former embedded source paths.",
+      "counterexample": "After Fovea switched to public exact ImageCraft and Akashic pins, the required critical mutation runner still targeted deleted embedded source paths and retired store types. Once exact component checkouts were introduced, SwiftPM read-only checkout permissions, direct execution of a Mach-O XCTest bundle, component-owned test selection, five stale source anchors and a hard-link test whose permissions could mask the link-count invariant each produced invalid or misleading outcomes.",
+      "decision": "Resolve component:// sources inside exact temporary checkouts; temporarily make only the mutated file writable; reset the Fovea snapshot and both component checkouts before every mutant; run component-owned tests in their component package; invoke XCTest bundles through xcrun xctest; and provide a no-Xcode --validate-applications audit that reports every stale mutation without stopping at the first. The hard-link contract now isolates st_nlink by using mode 0600 targets and covers both the Akashic writer lock and manifest.",
+      "evidencePaths": [
+        "scripts/run-critical-mutants.py",
+        "scripts/check-tooling-syntax.py",
+        "scripts/validate-critical-mutation-report.py",
+        "docs/project-memory/component-pins.json",
+        "Sources/FoveaPersistence/FoveaPersistentStores.swift",
+        "Tests/FoveaTests/FilesystemLinkDefenseTests.swift"
+      ],
+      "exitCondition": "The complete catalog must pass 101/101 application validation, representative ImageCraft/Akashic/host-store mutants must be killed from exact checkouts, and protected CI must report no invalid or surviving required mutant.",
+      "id": "NEG-MUTATION-HARNESS-EMBEDDED-COMPONENT-001",
+      "status": "resolved-retained-cross-repository-mutation-counterexample"
+    },
+    {
+      "area": "workbench-sdk-enum-evolution",
+      "claimRejected": "An @unknown default branch is sufficient coverage when an imported Apple enum gains a case that is already known to the supported SDK.",
+      "counterexample": "The fifth private root passed both identity jobs and reached the Workbench visual gate, where Xcode 26.6 rejected WorkbenchEvidenceBundle.deviceFamily because UIUserInterfaceIdiom.vision is a known iOS 17 case. The newer local build path had not compiled that exact Workbench target before the UI test.",
+      "decision": "Map UIUserInterfaceIdiom.vision explicitly, retain @unknown default only for genuinely future cases, expose the pure mapping internally, and cover every currently known idiom in a Workbench unit test before visual capture.",
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Models/WorkbenchEvidenceBundle.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/WorkbenchVisualSystemTests.swift",
+        "scripts/verify-ios-example.py",
+        ".github/workflows/verify.yml"
+      ],
+      "exitCondition": "The Workbench unit target and visual target must compile under the pinned oldest supported CI SDK, with an explicit test for the vision idiom on iOS 17 and later.",
+      "id": "NEG-WORKBENCH-KNOWN-IDIOM-001",
+      "status": "resolved-retained-sdk-evolution-counterexample"
+    },
+    {
+      "area": "swift-ui-test-actor-isolation",
+      "claimRejected": "Annotating an XCTestCase subclass with @MainActor makes every overridden XCTest lifecycle method safe for main-actor-isolated XCUIAutomation mutation.",
+      "counterexample": "The sixth private Fovea root passed both architecture identity jobs, DocC, CacheLab and all static gates, then Xcode 26.6 rejected XCUIDevice.shared.orientation assignments in setUpWithError and tearDownWithError. The class was already @MainActor, but the XCTest lifecycle overrides retained the superclass isolation contract and compiled as nonisolated contexts.",
+      "decision": "Keep lifecycle overrides limited to non-XCUI setup. Perform orientation mutation inside the @MainActor visual test method, restore portrait with defer, and statically reject XCUIDevice orientation mutation from setUpWithError or tearDownWithError.",
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchVisualTests.swift",
+        "scripts/check-tooling-syntax.py",
+        ".github/workflows/verify.yml"
+      ],
+      "exitCondition": "The Workbench visual target must compile and capture its attachment matrix under the pinned Xcode 26.6 CI, while the tooling gate prevents orientation mutation from returning to XCTest lifecycle overrides.",
+      "id": "NEG-XCUI-ORIENTATION-ACTOR-001",
+      "status": "resolved-retained-swift-actor-isolation-counterexample"
+    },
+    {
+      "area": "swift64-rawspan-deployment-and-performance",
+      "claimRejected": "A Swift 6.4 RawSpan rewrite of the ImageCraft metadata scanner can immediately improve safety without affecting the iOS 15 deployment path or hot-loop performance.",
+      "counterexample": "The checked RawSpan scanner passed all 64 ImageCraft tests, but RawSpan integer load APIs were diagnosed as Apple OS 27-only. An interleaved local microbenchmark did not prove non-inferiority, and an unsafe unchecked accessor forced inline produced an order-of-magnitude regression on the tiny JPEG scan workload.",
+      "decision": "Keep the production parser unchanged. Retain RawSpan as an isolated experiment, preserve manual bounded big-endian assembly for iOS 15, and require a quiet-host interleaved A/B plus deployment proof before adoption.",
+      "evidencePaths": [
+        "docs/research/swift-6.4-adoption-audit-2026-08.md",
+        "docs/research/swift-6.4-adoption-matrix.json",
+        "docs/project-memory/component-pins.json"
+      ],
+      "exitCondition": "A future compiler/SDK must provide a back-deployable safe load path or an equivalent bounded implementation, and retained multi-fixture A/B evidence must prove non-inferiority without forced-inline code-size or latency regression.",
+      "id": "NEG-SWIFT64-RAWSPAN-HOTPATH-001",
+      "status": "retained-deployment-and-performance-counterexample"
+    },
+    {
+      "area": "swift64-noncopyable-cross-executor-composition",
+      "claimRejected": "Making ImageCraft decode preparation noncopyable is a component-local API change that can propagate through Fovea without redesigning executor boundaries.",
+      "counterexample": "ImageCraft-local linear preparation could pass component tests, but partial consumption of the diagnostic wrapper triggered a Swift 6.4 compiler-bug diagnostic. Fovea DecodePlan then hit the Copyable result constraint of DispatchWorkExecutor.run; noncopyable Continuation could not be captured by the escaping DispatchQueue closure, while checked continuation restored the Copyable constraint.",
+      "decision": "Do not publish the breaking preparation change or introduce a serial broker solely to satisfy the type. Keep the experiment and first redesign the host-internal lease/executor boundary with resource and concurrency evidence.",
+      "evidencePaths": [
+        "docs/research/swift-6.4-adoption-audit-2026-08.md",
+        "Sources/FoveaCore/DispatchWorkExecutor.swift",
+        "Sources/FoveaCore/DecodeStage.swift",
+        "docs/project-memory/component-pins.json"
+      ],
+      "exitCondition": "The compiler no longer reports the partial-consume bug and the Fovea execution boundary can carry a linear prepared state without serializing decode work, adding unbounded indirection or weakening cancellation cleanup.",
+      "id": "NEG-SWIFT64-NONCOPYABLE-PREPARATION-001",
+      "status": "retained-compiler-and-composition-counterexample"
+    },
+    {
+      "area": "swiftpm64-sbom-release-certification",
+      "claimRejected": "SwiftPM 6.4 SPDX 3 generation is immediately suitable as a release-grade supply-chain certificate for the three repositories.",
+      "counterexample": "Both package and build modes generated JSON while warning that the SwiftPM_SBOMModel schema bundle was missing and validation was skipped. The generated graph omitted declared-license relationships for the MIT root packages and exposed only the generator agent Apache-2.0 relationship.",
+      "decision": "Treat current SBOM output as experimental diagnostics only. Do not make it a required release check or publish it as a complete license/supply-chain statement.",
+      "evidencePaths": [
+        "docs/research/swift-6.4-adoption-audit-2026-08.md",
+        "docs/research/swift-6.4-adoption-matrix.json",
+        "THIRD_PARTY_ASSETS.md"
+      ],
+      "exitCondition": "The tool validates against the bundled SPDX schema, preserves build-condition identity, and semantic validation confirms the root MIT package plus every exact dependency and declared license.",
+      "id": "NEG-SWIFTPM64-SBOM-CERTIFICATE-001",
+      "status": "retained-toolchain-certificate-counterexample"
+    },
+    {
+      "area": "swift64-cancellation-shield-backdeployment",
+      "claimRejected": "Swift 6.4 cancellation shields can directly protect Fovea namespace cleanup while preserving the existing iOS 15/macOS 12 deployment baseline.",
+      "counterexample": "The compiler accepted withTaskCancellationShield semantically but diagnosed the API as macOS/iOS 27-only when Fovea targeted macOS 12. A direct use would raise the runtime availability contract or require a split implementation.",
+      "decision": "Revert the shield experiment. Do not add an availability fork to the security-critical revoke path; retain generation barriers and define a future back-deployable cleanup contract before accepting cancellation-aware custom stores.",
+      "evidencePaths": [
+        "docs/research/swift-6.4-adoption-audit-2026-08.md",
+        "Sources/FoveaCore/FoveaPipeline+Operations.swift",
+        "Sources/FoveaCore/NamespaceRegistry.swift"
+      ],
+      "exitCondition": "A back-deployable shield or equivalent owned cleanup primitive must pass pre-cancelled custom-store cleanup tests on iOS 15/macOS 12 without duplicating revoke semantics.",
+      "id": "NEG-SWIFT64-CANCELLATION-SHIELD-AVAILABILITY-001",
+      "status": "retained-deployment-counterexample"
+    },
+    {
+      "area": "swift64-hosted-ci-availability",
+      "claimRejected": "The existing GitHub macos-26 hosted runners can validate a Swift tools 6.4 migration simply by selecting a newer installed Xcode.",
+      "counterexample": "The public macos-26 image inventory still exposes Xcode 26.x and cannot validate a tools 6.4 package by selecting a newer installed Xcode. GitHub subsequently introduced a distinct xcode-27 public-preview label on 2026-07-16; availability therefore depends on selecting that image explicitly rather than changing DEVELOPER_DIR inside macos-26.",
+      "decision": "Never use macos-26 or macos-latest as implicit Swift 6.4 evidence. Use the explicit xcode-27 preview image, verify Xcode/Swift identity in-repository, retain preview provenance and capacity caveats, and require green component pull requests plus a green private Fovea root before merging, repinning or tagging.",
+      "evidencePaths": [
+        "docs/research/swift-6.4-adoption-audit-2026-08.md",
+        "docs/research/github-xcode27-hosted-runner-evidence-2026-08.json",
+        ".github/workflows/verify.yml",
+        "scripts/check-swift-toolchain.py"
+      ],
+      "exitCondition": "A required clean runner reports Xcode 27+, Apple Swift 6.4, passes the three-repository gates and has documented provenance, isolation and cleanup policy.",
+      "id": "NEG-SWIFT64-HOSTED-CI-AVAILABILITY-001",
+      "status": "mitigated-explicit-xcode27-preview-validation-active"
+    },
+    {
+      "area": "xcode27-swiftpm-warning-policy-composition",
+      "claimRejected": "A root Xcode invocation may enforce warnings-as-errors across the entire Fovea plus external SwiftPM dependency graph without changing dependency compiler policy.",
+      "counterexample": "Under Xcode 27, the Workbench iOS build passed both -warnings-as-errors from the global command setting and -suppress-warnings from SwiftPM to ImageCraft and Akashic targets. The Swift driver rejected the pair as conflicting before any UI test executed.",
+      "decision": "Remove the global SWIFT_TREAT_WARNINGS_AS_ERRORS override from package/simulator verification. Keep Fovea-owned strictness through run-swift-strict source-attributed warning auditing and Workbench-owned target settings; add a tooling gate preventing the global override from returning.",
+      "evidencePaths": [
+        "scripts/verify.sh",
+        "scripts/run-swift-strict.py",
+        "scripts/check-tooling-syntax.py",
+        "Examples/FoveaWorkbenchApp/project.yml",
+        "docs/research/swift-6.4-adoption-audit-2026-08.md"
+      ],
+      "exitCondition": "iOS package and Workbench builds pass on Xcode 27 while any warning attributed to Fovea-owned sources still fails verification and external dependency suppression is not overridden.",
+      "id": "NEG-XCODE27-GLOBAL-WERROR-001",
+      "status": "resolved-retained-toolchain-policy-counterexample"
+    },
+    {
+      "area": "workbench-ui-test-process-lifecycle",
+      "claimRejected": "A new XCUIApplication launched by each UI test is sufficient isolation even when the test never terminates the application explicitly.",
+      "counterexample": "The seventh private Fovea root passed strict visual audit, but product-patterns failed only after four tests in the same shard and passed in an isolated diagnostic run. After every launch helper registered a main-actor teardown termination, the original five-test shard passed 5/5 under Xcode 27; the previously failing test passed in 90.572 seconds.",
+      "decision": "Bind every compact and regular-width XCUIApplication to the current XCTest lifecycle with addTeardownBlock and app.terminate(). Enforce launch-helper coverage in check-tooling-syntax.py; do not classify isolated retry success as product evidence.",
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchNavigationUITests.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchIPadUITests.swift",
+        "scripts/check-tooling-syntax.py",
+        "docs/research/swift-6.4-adoption-audit-2026-08.md"
+      ],
+      "exitCondition": "The exact original five-test shard and full UI matrix pass from a clean private root while each test log records explicit app termination and no isolated retry is needed.",
+      "id": "NEG-WORKBENCH-UI-APP-LIFECYCLE-001",
+      "status": "resolved-local-shard-green-private-root-rerun-pending"
+    },
+    {
+      "area": "asynchronous-diagnostics-test-synchronization",
+      "claimRejected": "Fixed sleeps of 120ms and 180ms are a reliable oracle for when a bounded AsyncStream relay has freed capacity and published its drop summary.",
+      "counterexample": "The first local three-repository Swift 6.4 composition run executed 475 tests and failed only because the diagnostics drop summary was not observed after the fixed delays. No component or production assertion failed. A deadline-bounded semantic wait passed 20/20 and the next full local-component run passed 475/475.",
+      "decision": "Wait for the observable condition under a finite deadline and keep triggering the documented flush operation. Preserve all drop-count and summary-field assertions; never increase arbitrary sleeps to hide scheduler variance.",
+      "evidencePaths": [
+        "Tests/FoveaTests/DiagnosticsTests.swift",
+        "Sources/FoveaCore/DiagnosticsSink.swift",
+        "docs/research/swift-6.4-adoption-audit-2026-08.md"
+      ],
+      "exitCondition": "The condition-based test passes repeated local runs, local-component clean composition and protected CI without extending the semantic deadline.",
+      "id": "NEG-ASYNC-FIXED-SLEEP-ORACLE-001",
+      "status": "resolved-local-20-of-20-and-composition-green"
+    },
+    {
+      "area": "xcode27-simulator-post-test-diagnostics",
+      "claimRejected": "A successful Xcode 27 package Simulator test exits promptly under the default on-failure diagnostic policy.",
+      "counterexample": "Fovea executed 474 iOS Simulator tests with zero failures, then xcodebuild waited in XCTHRunDestinationAllocator while a child simctl diagnose process ran with a 600-second timeout. No xctest process remained. Terminating only the diagnostics child let xcodebuild emit TEST SUCCEEDED and exit 0.",
+      "decision": "Pass -collect-test-diagnostics never for the package Simulator gate and retain bounded logs, xcresult paths, Workbench visual attachments and explicit process-group cleanup. Add a tooling assertion so the option cannot silently disappear.",
+      "evidencePaths": [
+        "scripts/verify.sh",
+        "scripts/check-tooling-syntax.py",
+        "docs/research/swift-6.4-adoption-audit-2026-08.md"
+      ],
+      "exitCondition": "A stable Xcode 27 or later no longer starts unbounded post-success diagnostics, or a replacement bounded diagnostic collector proves equivalent evidence without delaying the required check.",
+      "id": "NEG-XCODE27-SIMULATOR-DIAGNOSTICS-001",
+      "status": "resolved-local-package-474-of-474-terminal-success"
+    },
+    {
+      "area": "swift64-x86-identity-runtime-separation",
+      "claimRejected": "The x86_64 identity test should use the library macOS 12 deployment triple, and a successful cross-build alone proves that the test executed as x86_64.",
+      "counterexample": "The x86_64 test bundle cross-build succeeded on the hosted xcode-27 arm64 runner. Running native SwiftPM caused its arm64 swiftpm-xctest-helper to reject the x86_64 bundle. Attempting to launch the entire SwiftPM process under Rosetta also failed because the Xcode 27 Swift driver is arm64-only. The Xcode xctest runner and platform XCTest/Testing frameworks do contain x86_64 slices.",
+      "decision": "Use the native arm64 Swift driver only to strictly cross-build tests for x86_64-apple-macosx14.0. Discover the product directory with --show-bin-path, verify the test executable is x86_64-only and the XCTest runner contains x86_64, then execute the exact identity selector through /usr/bin/arch -x86_64 xctest with platform framework and library search paths. Keep macOS 12 universal library builds as a separate product deployment gate.",
+      "evidencePaths": [
+        ".github/workflows/verify.yml",
+        "scripts/run-x86-identity-test.py",
+        "scripts/run-swift-strict.py",
+        "scripts/check-tooling-syntax.py",
+        "Tests/FoveaTests/IdentityTests.swift",
+        "docs/research/swift-6.4-adoption-audit-2026-08.md",
+        "docs/research/swift-6.4-adoption-matrix.json"
+      ],
+      "exitCondition": "Satisfied by GitHub Actions run 30689587302: the xcode-27 x86_64 job installed Rosetta, strictly cross-built the x86_64/macOS 14 test bundle, executed the exact CACHE_PT_017 XCTest selector under the x86_64 xctest slice, observed the compile-time architecture assertion and reported one test with zero failures. The independent macOS 12 product platform matrix remains green.",
+      "hostedEvidence": {
+        "commit": "36b764d225da474ee13ac6105e87963b3385fcde",
+        "failures": 0,
+        "jobID": 91341807599,
+        "logSHA256": "ea1ea74f2bc0e372acf6b8e7a5e3e7ea11b13d02559366d840cd379adf748c1d",
+        "runID": 30689587302,
+        "runner": "xcode-27",
+        "testCount": 1,
+        "testDurationSeconds": 0.032
+      },
+      "id": "NEG-SWIFT64-X86-IDENTITY-RUNTIME-001",
+      "status": "resolved-hosted-direct-rosetta-xctest-run-30689587302"
+    },
+    {
+      "area": "release-governance-ci-identity",
+      "claimRejected": "A free-form publicCI success string is sufficient to bind component release evidence to the current commit and runner.",
+      "counterexample": "After Akashic alpha.3 passed on xcode-27, the conformance checker rejected the new success label because it hard-coded the prior passed-current-pin string; merely widening the accepted string would still leave commit, runner and run identity implicit.",
+      "decision": "Represent current component CI as a structured record containing status, scope, explicit runner, run ID and exact commit. The conformance checker validates every field against the component pin instead of accepting an evolving free-form label.",
+      "evidencePaths": [
+        "docs/project-memory/akashic-contract-migration.json",
+        "scripts/check-akashic-conformance-plan.py",
+        "docs/project-memory/component-pins.json"
+      ],
+      "exitCondition": "The checker accepts the structured alpha.3 xcode-27 main-current-pin record and rejects records with failed status, wrong runner, missing run ID or mismatched commit.",
+      "id": "NEG-COMPONENT-CI-FREEFORM-STATUS-001",
+      "status": "resolved-structured-current-pin-ci-record"
+    },
+    {
+      "area": "repository-continuity-isolation",
+      "claimRejected": "A repository continuity ledger may use sibling working-tree paths as mandatory repository targets because the related component repositories are normally present locally.",
+      "counterexample": "The privacy-sanitized private Fovea root had no sibling ImageCraft or Akashic checkout. check-project-memory.py failed before all product gates because the Swift 6.4 discussion entry required ../ImageCraft/Package.swift, ../Akashic/Package.swift and StoreWriterLease.swift.",
+      "decision": "repositoryTargets must contain only paths owned by and present in the current repository. External component code is represented by exact pins, source IDs, public URLs and local Fovea audit artifacts; it is not a mandatory sibling filesystem target.",
+      "evidencePaths": [
+        "docs/project-memory/discussion-ledger.json",
+        "docs/project-memory/component-pins.json",
+        "scripts/check-project-memory.py",
+        "docs/research/swift-6.4-adoption-audit-2026-08.md"
+      ],
+      "exitCondition": "check-project-memory.py passes in an isolated 639-file Fovea root with no sibling component directories.",
+      "id": "NEG-CONTINUITY-SIBLING-REPOSITORY-TARGET-001",
+      "status": "resolved-repository-local-targets-only"
+    },
+    {
+      "area": "swiftui-test-lifecycle-installation",
+      "claimRejected": "Reading a SwiftUI view body directly is an adequate structural test for lifecycle modifiers on a view containing StateObject and Environment properties.",
+      "counterexample": "The complete 475-test suite passed semantically, but the strict warning gate observed SwiftUI runtime warnings because testPublicFoveaImageBodyBuildsLifecycleModifiers accessed FoveaImage.body before the view was installed. StateObject was recreated and Environment read default values, so the test exercised an invalid lifecycle context.",
+      "decision": "Do not directly inspect the body of public views that own SwiftUI dynamic properties. Install them through ImageRenderer or a hosting controller and drive rendering; direct body access remains acceptable only for stateless internal phase-content builders whose construction behavior is the explicit subject of the test.",
+      "evidencePaths": [
+        "Tests/FoveaTests/SwiftUIViewRenderingTests.swift",
+        "Sources/FoveaSwiftUI/FoveaImage.swift",
+        "scripts/run-swift-strict.py"
+      ],
+      "exitCondition": "The complete strict host test suite passes 475 tests with no Fovea-owned SwiftUI lifecycle warning, and iOS Simulator rendering tests remain green.",
+      "id": "NEG-SWIFTUI-DETACHED-BODY-ACCESS-001",
+      "status": "resolved-hosted-rendering-context-required"
+    },
+    {
+      "area": "coresimulator-terminal-readiness",
+      "claimRejected": "Repeated simctl list device-state snapshots are a sufficient terminal boot oracle after simctl boot returns success.",
+      "counterexample": "On the hosted xcode-27 cold runner, simulator selection found a Shutdown device and simctl boot returned exit 0, but every later list snapshot failed to recover the selected UDID and was collapsed to last_state=unknown for 180 seconds. No Workbench build or test had started.",
+      "decision": "Use bounded simctl bootstatus <UDID> -b -d as the authoritative cold-boot completion signal. Retain simctl list snapshots only as a fast already-Booted short circuit and as failure diagnostics. The bootstatus process uses the existing isolated process-group timeout and cleanup path.",
+      "evidencePaths": [
+        "scripts/ios_example_xcode.py",
+        "scripts/ios_example_process.py",
+        "scripts/check-tooling-syntax.py",
+        ".github/workflows/verify.yml"
+      ],
+      "exitCondition": "Satisfied by private GitHub Actions run 30690150522: the xcode-27 verify job passed simulator cold readiness and all pre-Workbench gates, then ran until the independent iPad visual-family watchdog failed. The boot oracle was no longer the blocker.",
+      "hostedEvidence": {
+        "commit": "49c34224fd354578e3ea5c3e1b07bb26fd30d4ba",
+        "jobID": 91343300967,
+        "progress": "passed-cold-boot-and-entered-workbench-visual-matrix",
+        "runID": 30690150522,
+        "runner": "xcode-27"
+      },
+      "id": "NEG-SIMULATOR-LIST-STATE-AS-BOOT-ORACLE-001",
+      "status": "resolved-hosted-cold-boot-proceeded-run-30690150522"
+    },
+    {
+      "area": "bounded-subprocess-timeout-reaping",
+      "claimRejected": "After a timed-out child receives bounded process-group cleanup, an unconditional second process.wait() is harmless because the child must already be reapable.",
+      "counterexample": "A Workbench UI shard correctly detected 240 seconds of log inactivity. Its recovery then launched simctl shutdown, which entered an uninterruptible/exiting kernel state. The shared runner completed its bounded terminate/kill attempts but immediately called process.wait() again without a timeout, leaving the verifier blocked indefinitely.",
+      "decision": "A timeout path may invoke only bounded cleanup. After that cleanup returns, report returncode -1 and retain captured output without a second unbounded wait. A regression uses an unreapable fake process and rejects any second wait call.",
+      "evidencePaths": [
+        "scripts/ios_example_process.py",
+        "scripts/ios_example_xcode.py",
+        "scripts/check-tooling-syntax.py"
+      ],
+      "exitCondition": "The unreapable-process regression observes exactly one bounded wait, one cleanup call, and a returned timeout result; the next private root must preserve this behavior in CI.",
+      "id": "NEG-PROCESS-TIMEOUT-SECOND-WAIT-001",
+      "status": "resolved-local-regression-private-root-validation-pending"
+    },
+    {
+      "area": "workbench-visual-nested-watchdogs",
+      "claimRejected": "A 600-second outer visual-family timeout can safely wrap a 2700-second inner xcodebuild timeout even when the inner process buffers its entire stdout until completion.",
+      "counterexample": "Private run 30690150522 passed both identity jobs and every pre-Workbench product gate, then the iPad visual family timed out twice at the outer 600-second boundary. The inner xcodebuild allowed 2700 seconds and wrote its capture log only after completion, so the outer watchdog killed the evidence producer before its own progress or diagnostic state could be retained. Visual xcodebuild also omitted -collect-test-diagnostics never.",
+      "decision": "Stream each visual xcodebuild directly into its retained family log. The inner evidence producer owns a 720-second total bound and a 240-second log-inactivity bound, disables automatic Xcode diagnostics, and performs bounded process-group cleanup. The outer family process is only a wider 1200-second fallback and cannot pre-empt the inner oracle.",
+      "evidencePaths": [
+        "scripts/audit-workbench-visuals.py",
+        "scripts/ios_example_visual.py",
+        "scripts/ios_example_process.py",
+        "scripts/check-tooling-syntax.py",
+        ".github/workflows/verify.yml"
+      ],
+      "exitCondition": "The visual watchdog regression retains successful streamed output, terminates a silent process at the inactivity bound with an explicit log marker, and a private xcode-27 root passes both visual families without the outer watchdog firing first.",
+      "hostedCounterexample": {
+        "commit": "49c34224fd354578e3ea5c3e1b07bb26fd30d4ba",
+        "failure": "ipad-visual-family-timed-out-after-600-seconds-twice",
+        "jobID": 91343300967,
+        "runID": 30690150522,
+        "runner": "xcode-27"
+      },
+      "id": "NEG-VISUAL-NESTED-WATCHDOG-001",
+      "status": "resolved-local-watchdog-private-root-validation-pending"
+    },
+    {
+      "area": "hosted-ci-budget-governance",
+      "claimRejected": "A private prerelease repository can repeatedly force-push speculative candidates and run the complete hosted verification matrix after each fix without treating runner minutes as a bounded project resource.",
+      "counterexample": "Successive private Fovea root candidates repeatedly invoked the xcode-27 identity and full verification jobs while diagnosing independent continuity, compiler, Simulator, UI lifecycle, cold-boot, and visual-watchdog failures. The account exhausted its configured $100 GitHub Actions usage budget before Fovea reached a green publication root.",
+      "decision": "Hosted CI is release evidence, not an exploratory loop. During private publication all workflows remain disabled remotely and repository workflows are manual-only. Every dispatch defaults budget_approved to false; identity is the default low-cost profile with two 15-minute jobs, full verification is mutually exclusive and requires an explicit profile and approval, and Live Network has no schedule. A full run is admitted only after one exact sanitized candidate passes local static, mutation-application, component, Workbench, and source-set gates.",
+      "evidencePaths": [
+        ".github/workflows/verify.yml",
+        ".github/workflows/live-network-lab.yml",
+        "docs/governance/github-actions-budget-policy.md",
+        "scripts/check-actions-budget-governance.py",
+        "scripts/verify.sh",
+        "docs/project-memory/project-memory.json"
+      ],
+      "exitCondition": "The owner confirms budget restoration, the exact local candidate remains unchanged, identity is dispatched once and reviewed, sufficient headroom remains, and full is dispatched once. Automatic triggers remain forbidden until private publication ends.",
+      "id": "NEG-HOSTED-ACTIONS-BUDGET-001",
+      "observedOn": "2026-08-01",
+      "status": "active-budget-exhausted-workflows-disabled-local-candidate-only"
+    },
+    {
+      "area": "documentation-build-process-lifecycle",
+      "boundedRerunEvidence": {
+        "cliExitCode": 124,
+        "finalReportProduced": false,
+        "inactivityBoundarySeconds": 180,
+        "marker": "macOS documentation build made no log progress for 180 seconds",
+        "platform": "macOS",
+        "result": "failed-closed",
+        "successMarkerObserved": true
+      },
+      "claimRejected": "A successful xcodebuild docbuild always exits promptly, so an unbounded subprocess.run is a safe documentation-verification boundary.",
+      "counterexample": "During local qualification of the budget-governed Fovea candidate, the macOS DocC log ended with BUILD DOCUMENTATION SUCCEEDED and retained 17 symbol graphs and 17 archives. The xcodebuild child nevertheless remained in ?NE exit state for more than five minutes while verify-documentation.py blocked in waitpid. After the parent was terminated, the following iOS docbuild became an orphan, demonstrating that a success marker does not prove process completion.",
+      "decision": "Run each DocC xcodebuild in its own process group while streaming directly to the retained documentation log. Enforce a 900-second total limit and a 180-second no-log-progress limit. On either bound, perform bounded process-group cleanup, append an explicit marker, return failure, and never wait again without a timeout. A tooling regression exercises normal and silent child processes.",
+      "evidencePaths": [
+        "scripts/verify-documentation.py",
+        "scripts/ios_example_process.py",
+        "scripts/check-tooling-syntax.py",
+        "docs/research/swift-6.4-adoption-audit-2026-08.md"
+      ],
+      "exitCondition": "The normal and silent-child watchdog regressions pass. A complete candidate rerun reproduced the stuck post-success xcodebuild and exited at the exact 180-second inactivity boundary with an explicit marker instead of hanging. A valid final documentation report still requires a recovered host on which both platform docbuild processes terminate normally.",
+      "id": "NEG-DOCC-XCODEBUILD-EXIT-WAIT-001",
+      "localCounterexample": {
+        "archiveCount": 17,
+        "childPID": 93247,
+        "childState": "?NE",
+        "parentPID": 92995,
+        "parentStack": "os_waitpid->__wait4",
+        "successMarker": "BUILD DOCUMENTATION SUCCEEDED",
+        "symbolGraphCount": 17
+      },
+      "observedOn": "2026-08-01",
+      "status": "resolved-watchdog-bounded-failure-observed-host-recovery-pending"
+    },
+    {
+      "area": "adaptive-warmup-admission-lineage",
+      "claimRejected": "A cancellation-triggered adaptive warmup is a fresh top-level request and may create a new SharedTaskAdmission after the cancelled consumer has installed its tombstone.",
+      "counterexample": "events(for:) recorded the cancellation, then startCancelledRequestWarmup created SharedTaskAdmission.now(). Depending on actor/task scheduling, the warmup either subscribed before the cancelled fetch released or arrived after the tombstone cutoff. In the latter order it was classified as a post-cancellation caller, joined the cancelled task, and silently produced no transport-verified handoff.",
+      "decision": "Create one admission at events(for:) entry and propagate it through the visible load and any cancellation-triggered warmup. The warmup is a replacement-cohort continuation of that top-level call, not an unrelated fresh caller. Keep the tombstone rule unchanged for genuinely new calls whose admission starts after the cutoff.",
+      "evidencePaths": [
+        "Sources/FoveaCore/FoveaPipeline+Operations.swift",
+        "Sources/FoveaCore/SharedTaskRegistry.swift",
+        "Tests/FoveaTests/SharedTaskTests.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
+      ],
+      "exitCondition": "The exact final-request handoff test passes 20/20 and the full 476-test host suite passes while SCHED_PT_021 still rejects fresh post-cancellation restarts and SCHED_PT_022 still admits only the pre-cancellation replacement cohort.",
+      "id": "NEG-ADAPTIVE-WARMUP-FRESH-ADMISSION-001",
+      "observedOn": "2026-08-01",
+      "status": "resolved-local-20-of-20-and-host-476-green"
+    },
+    {
+      "area": "adaptive-warmup-test-oracle",
+      "claimRejected": "Three rapidly cancelled presentation requests must produce exactly three transport executions, so three FakeHTTPTransport stubs and capturedRequests.count == 3 prove that the final cancellation warmup completed.",
+      "counterexample": "Structured diagnostics captured the valid sequence warmup-0, warmup-1, warmup-1, warmup-2, warmup-2: three foreground attempts plus independent replacement warmups for the second and third cancellations. The three-stub fixture was exhausted before the final handoff could be stored, causing a retryable url-session-transport failure. Other schedules produced only two or three requests, so a fixed aggregate count was neither necessary nor sufficient.",
+      "decision": "Provision the fixture for the legal five-attempt worst case. Wait for a non-consuming exact namespace/generation/execution handoff query for finalRequest, then assert that the visible consumer leaves the complete captured URL sequence unchanged. Do not use aggregate request count, sleep duration, or stub exhaustion as a completion oracle.",
+      "diagnosticSequence": [
+        "warmup-0",
+        "warmup-1",
+        "warmup-1",
+        "warmup-2",
+        "warmup-2"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Sources/FoveaCore/FoveaCompactSieveCache.swift",
+        "Sources/FoveaCore/TransportVerifiedHandoffDiskStore.swift",
+        "Sources/FoveaCore/PipelineCache.swift",
+        "Sources/FoveaCore/FoveaPipeline+Operations.swift"
+      ],
+      "exitCondition": "The semantic test passes 20/20 and the complete host suite passes 476/476 without adding arbitrary sleeps or allowing a visible-consumer refetch.",
+      "id": "NEG-ASYNC-REQUEST-COUNT-WARMUP-ORACLE-001",
+      "observedOn": "2026-08-01",
+      "status": "resolved-local-20-of-20-and-host-476-green"
+    },
+    {
+      "area": "akashic-memory-cache-concurrency",
+      "claimRejected": "Replacing NSLock with os_unfair_lock can deliver a substantial concurrent throughput lead without harming tail latency.",
+      "counterexample": "Across twenty paired MEM-CONCURRENT-V2 runs, the oriented throughput ratio versus LRUCache rose to about 1.60, but the p99 latency ratio fell to about 0.81 with a 95% interval entirely below one. The unfair lock improved aggregate work while starving some operations.",
+      "decision": "Reject the candidate. Aggregate throughput cannot compensate for a materially inferior primary p99 endpoint under the endpoint-by-endpoint dominance policy.",
+      "evidencePaths": [
+        "docs/research/cache-lock-candidate-evidence-2026-08.json",
+        "Benchmarks/CacheLab/cache-plan.json",
+        "scripts/analyze-cache-lab.py"
+      ],
+      "exitCondition": "A replacement passes correctness and places the lower confidence bound above the preregistered dominance margin for both concurrent throughput and p99 latency.",
+      "id": "NEG-AKASHIC-UNFAIR-LOCK-TAIL-001",
+      "observedOn": "2026-08-02",
+      "status": "rejected-local-twenty-run-counterexample"
+    },
+    {
+      "area": "akashic-memory-cache-concurrency",
+      "claimRejected": "Separating cache hits onto a pthread reader lock will improve both concurrency throughput and p99 latency for the mixed workload.",
+      "counterexample": "Across twenty paired MEM-CONCURRENT-V2 runs, p99 latency improved to about 1.81 times the LRUCache reference, but throughput collapsed to about 0.40. The workload contains enough insertions and removals that reader-writer lock transitions and writer coordination dominate.",
+      "decision": "Reject the candidate. Preserve the single linearization model until critical-section work can be reduced or contention can be partitioned without losing the exact global cost bound.",
+      "evidencePaths": [
+        "docs/research/cache-lock-candidate-evidence-2026-08.json",
+        "Benchmarks/CacheLab/cache-plan.json",
+        "scripts/analyze-cache-lab.py"
+      ],
+      "exitCondition": "A replacement passes correctness and places the lower confidence bound above the preregistered dominance margin for both concurrent throughput and p99 latency.",
+      "id": "NEG-AKASHIC-RWLOCK-WRITE-MIX-001",
+      "observedOn": "2026-08-02",
+      "status": "rejected-local-twenty-run-counterexample"
+    },
+    {
+      "area": "akashic-memory-cache-layout",
+      "claimRejected": "Replacing reference nodes with optional struct slots and a free-list will reduce allocation and pointer overhead in the generic cache.",
+      "counterexample": "Nine paired calibration runs reduced concurrent throughput to about 0.58 of LRUCache and hot-scan throughput to about 0.50. Optional generic slots introduced structure copying and value/reference bookkeeping on the hit and mutation paths.",
+      "decision": "Reject the generic optional-slot representation. The specialized Fovea handoff slot cache result does not transfer to arbitrary generic values.",
+      "evidencePaths": [
+        "docs/research/cache-lock-candidate-evidence-2026-08.json"
+      ],
+      "exitCondition": "A layout candidate preserves the differential model and clears the dominance margin on both throughput and p99.",
+      "id": "NEG-AKASHIC-CONTIGUOUS-OPTIONAL-SLOTS-001",
+      "observedOn": "2026-08-02",
+      "status": "rejected-local-nine-run-calibration"
+    },
+    {
+      "area": "akashic-memory-cache-concurrency",
+      "claimRejected": "Sharding hit lookups while retaining one global mutation sequence will improve throughput without harming mutation tails.",
+      "counterexample": "The ungated sharded candidate reached a concurrent throughput point estimate near 1.24 but p99 near 0.91 with confidence crossing inferiority. Adding a pending-mutation gate then reduced throughput to about 0.77 and p99 to about 0.84 of LRUCache.",
+      "decision": "Reject both variants. Exact global SIEVE mutation plus per-shard coordination adds enough lock traffic that writer fairness and throughput cannot both dominate in this design.",
+      "evidencePaths": [
+        "docs/research/cache-lock-candidate-evidence-2026-08.json"
+      ],
+      "exitCondition": "A partitioned design must specify and prove a lower-cost global budget/eviction protocol before implementation.",
+      "id": "NEG-AKASHIC-SHARDED-SIEVE-WRITER-TAIL-001",
+      "observedOn": "2026-08-02",
+      "status": "rejected-local-nine-run-calibration"
+    },
+    {
+      "area": "akashic-memory-cache-concurrency",
+      "claimRejected": "A direct pthread mutex substitution is sufficient to clear the twenty-percent endpoint-by-endpoint dominance target.",
+      "counterexample": "Nine paired calibration runs produced a concurrent throughput point estimate around 1.34, but its lower confidence bound was only about 1.08 and p99 remained inconclusive with a lower bound below one.",
+      "decision": "Reject the substitution. A favorable point estimate is not a dominance certificate; both corrected superiority and the confidence lower bound must clear the preregistered margin.",
+      "evidencePaths": [
+        "docs/research/cache-lock-candidate-evidence-2026-08.json"
+      ],
+      "exitCondition": "A candidate clears the dominance lower bound for every primary endpoint in a formal run.",
+      "id": "NEG-AKASHIC-PTHREAD-MUTEX-DOMINANCE-001",
+      "observedOn": "2026-08-02",
+      "status": "rejected-local-nine-run-calibration"
+    },
+    {
+      "area": "memory-cache-concurrency-and-eviction",
+      "claimRejected": "A faster lock primitive, an O(1) replacement policy, or fixed independent shard budgets are individually sufficient to make every comparable memory-cache endpoint materially dominate LRUCache.",
+      "counterexample": "Global unfair locking improved throughput while worsening p99; read/write locking improved p99 while cutting throughput; several O(1) FIFO variants regressed mixed concurrency; an exact-SIEVE cold chain failed the independent model; and fixed shard budgets rejected values that fit the global budget.",
+      "decision": "Retain exact single-lock SIEVE as the reference implementation. Continue only with independent sharded SIEVE plus prehashed buckets, victim-node recycling, and a rare all-shard global-budget slow path. Delete rejected experimental implementations instead of publishing them.",
+      "evidencePaths": [
+        "docs/research/cache-memory-candidate-negative-results-2026-08.md",
+        "Benchmarks/CacheLab/cache-plan.json",
+        "scripts/analyze-cache-lab.py"
+      ],
+      "exitCondition": "Met for local research by the sharded SIEVE schema 4 campaign: model/global-budget tests, Akashic and Fovea regressions, Apple platform builds, and every applicable primary comparison cleared the dominance rule. Release exit still requires a published Akashic revision, updated Fovea exact pin, and clean trusted-CI repetition.",
+      "id": "NEG-CACHE-MEMORY-CANDIDATES-001",
+      "status": "local-research-exit-met-release-exit-pending"
+    },
+    {
+      "area": "akashic-memory-cache-layout",
+      "claimRejected": "Adding a reverse collision link and stored bucket index will make steady-state victim removal faster without harming cache locality.",
+      "counterexample": "The O(1) unlink variant passed all eight sharded-cache correctness tests but reduced the clean 20-block hot-scan throughput ratio from about 1.25x to about 1.21x versus LRUCache. The larger node footprint and extra pointer writes outweighed the eliminated short-chain traversal; the 95% lower bound fell to roughly 1.20x.",
+      "decision": "Reject the reverse collision-link fields and retain compact singly linked collision chains. With eight-times bucket density and about sixteen resident entries per shard, collision unlink traversal is cheaper than enlarging every node.",
+      "evidencePaths": [
+        "docs/research/cache-memory-candidate-negative-results-2026-08.md",
+        "docs/research/cache-lock-candidate-evidence-2026-08.json",
+        "Benchmarks/CacheLab/cache-plan.json"
+      ],
+      "exitCondition": "Reconsider only if a measured workload has materially longer collision chains or a compact non-pointer predecessor representation improves the full primary endpoint portfolio.",
+      "id": "NEG-AKASHIC-BUCKET-BACKLINK-001",
+      "observedOn": "2026-08-02",
+      "status": "rejected-clean-local-twenty-run-calibration"
+    },
+    {
+      "area": "benchmark-statistical-independence",
+      "claimRejected": "Twenty loop iterations inside one CacheLabRunner process are valid process-run resampling units.",
+      "counterexample": "The preregistered plan and claim-family registry define the bootstrap unit as a process-run after within-run median aggregation. The former runner reused one process for all twenty repetitions, shared allocator/runtime state across units, and required one continuous host-clean window, contradicting that unit definition.",
+      "decision": "Reject monolithic formal repetition. Execute correctness separately and launch one fresh monitored runner process per statistical block; discard only contaminated attempts and retain previously accepted clean blocks.",
+      "evidencePaths": [
+        "Benchmarks/CacheLab/cache-plan.json",
+        "Benchmarks/CacheLab/Sources/CacheLabRunner/CacheLabMain.swift",
+        "scripts/run-cache-lab.py",
+        "scripts/test-cache-lab-formal-process-model.py",
+        "scripts/cache_lab_host_monitor.py"
+      ],
+      "exitCondition": "A future model may replace independent process blocks only after preregistration changes the resampling unit and validates equivalent isolation of allocator, runtime, comparator queues, and host contamination.",
+      "id": "NEG-CACHELAB-MONOLITHIC-PROCESS-UNIT-001"
+    },
+    {
+      "area": "benchmark-comparator-completion-boundary",
+      "claimRejected": "A synchronous PINDiskCache read or write return is sufficient to mark the benchmark operation batch complete.",
+      "counterexample": "PINDiskCache queues metadata updates after reads. Immediate clear/root deletion allowed those operations to access removed files and continue into later contestant windows, producing repeated PINDiskCache errors and unaccounted background work.",
+      "decision": "Give every PIN disk contestant a private PINOperationQueue, include queue quiescence in write/read batch durations, and drain before clear, reopen, removal, or the next contestant window. Keep the deliberate missing-file correctness probe outside statistical blocks.",
+      "evidencePaths": [
+        "Benchmarks/CacheLab/Sources/PINCacheBridge/CacheLabPINCacheBridge.m",
+        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheContestants.swift",
+        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheWorkloads.swift",
+        "Benchmarks/CacheLab/cache-plan.json",
+        "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift"
+      ],
+      "exitCondition": "A different comparator boundary is acceptable only if all deferred work is either included in the measured batch or proven unable to execute after the block completes.",
+      "id": "NEG-PINCACHE-ASYNC-TAIL-CROSS-WINDOW-001"
+    },
+    {
+      "area": "benchmark-measurement-boundary",
+      "claimRejected": "Cache Lab V2 hot-scan throughput and p99 measured the same cache-operation boundary.",
+      "counterexample": "V2 generated scan payloads and interpolated scan keys inside the total throughput interval while starting each p99 sample only immediately before the cache call. Concurrent V2 also generated keys and insert payloads inside the worker timing loop. Common construction cost diluted cache effects and made throughput and p99 non-coextensive.",
+      "decision": "Archive V2. V3 precomputes all memory keys and payloads before timing and assigns new workload identities; throughput and p99 now cover cache calls plus required loop, timestamp, and task-scheduling overhead only.",
+      "evidencePaths": [
+        "Benchmarks/CacheLab/plans/cache-plan-v2.json",
+        "Benchmarks/CacheLab/cache-plan.json",
+        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheWorkloads.swift",
+        "Benchmarks/CacheLab/README.md"
+      ],
+      "exitCondition": "Met by V3 workload identities and verifier-enforced corpusGenerationBoundary fields.",
+      "id": "NEG-CACHELAB-V2-CORPUS-IN-TIMER-001"
+    },
+    {
+      "area": "memory-cache-shard-topology",
+      "claimRejected": "Increasing ShardedMemoryCache from sixteen to thirty-two shards improves hot-scan speed without changing observable retention semantics.",
+      "counterexample": "At global cost limit 128 and a 32-object hot set, the thirty-two-shard diagnostic retained exactly 21/32 hot objects in every run because several static shard budgets overflowed even though global capacity remained available.",
+      "decision": "Reject thirty-two shards for the Fovea V3 configuration. Pre-register sixteen shards, which retained 32/32 hot objects while materially improving throughput and p99.",
+      "evidencePaths": [
+        "Benchmarks/CacheLab/cache-plan.json",
+        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheContestants.swift",
+        "docs/research/cache-memory-candidate-negative-results-2026-08.md"
+      ],
+      "exitCondition": "Reconsider only with a placement/rebalancing design that preserves all globally feasible hot entries and passes the same hit-rate contract.",
+      "id": "NEG-AKASHIC-SHARD32-HOT-RETENTION-001"
+    },
+    {
+      "area": "benchmark-plan-implementation-conformance",
+      "claimRejected": "Cache Lab V3 hot-scan evidence implemented its preregistered twenty-round workload.",
+      "counterexample": "The V3 plan declared rounds=20, but runHotScan executed one scan and one hot-read pass. A source search found no implementation reference to the rounds field; the formal report therefore represented one round per inner trial.",
+      "decision": "Archive V3. V4 adds an explicit rounds parameter defaulting to twenty, creates a fresh cache per round, reports multiplied operation counts, and makes the verifier inspect implementation markers.",
+      "evidencePaths": [
+        "Benchmarks/CacheLab/plans/cache-plan-v3.json",
+        "Benchmarks/CacheLab/cache-plan.json",
+        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheWorkloads.swift",
+        "scripts/check-cache-lab-plan.py",
+        "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift"
+      ],
+      "exitCondition": "Met when V4 tests verify 640 hot probes, 81920 scan inserts and 82560 total operations per inner trial.",
+      "id": "NEG-CACHELAB-V3-ROUND-COUNT-001"
+    },
+    {
+      "area": "memory-cache-shard-topology",
+      "claimRejected": "Sixteen static shards preserve every globally feasible 32-entry hot set across fresh key distributions.",
+      "counterexample": "The implemented V4 twenty-round workload retained 619 of 640 hot probes with sixteen shards even though the global capacity was 128. Different round-specific keys exposed local shard overpopulation that single-round calibration missed.",
+      "decision": "Reject sixteen shards for the V4 Fovea configuration. Select eight shards only after five independent processes completed one twenty-round workload each with all 3200 hot probes retained.",
+      "evidencePaths": [
+        "Benchmarks/CacheLab/cache-plan.json",
+        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheContestants.swift",
+        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheWorkloads.swift",
+        "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift",
+        "docs/research/cache-memory-candidate-negative-results-2026-08.md"
+      ],
+      "exitCondition": "Reconsider sixteen or more shards only with a budget/placement design that preserves every globally feasible hot set across repeated independent key distributions.",
+      "id": "NEG-AKASHIC-SHARD16-FRESH-ROUND-RETENTION-001"
+    },
+    {
+      "area": "benchmark-tail-latency-sampling",
+      "claimRejected": "One 192-read mixed-size pass per process block provides a stable disk p99 comparison.",
+      "counterexample": "V3 per-block D5 disk p99 ratios ranged from about 0.20x to 10.93x. At 192 observations, p99 depends on roughly the third-slowest operation and was dominated by process/filesystem tail variation.",
+      "decision": "V4 keeps the one-pass throughput boundary but estimates synchronous p99 from eight additional deterministic full-corpus passes, 1536 observations per contestant block, with quiescence after every pass.",
+      "evidencePaths": [
+        "Benchmarks/CacheLab/plans/cache-plan-v3.json",
+        "Benchmarks/CacheLab/cache-plan.json",
+        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheWorkloads.swift",
+        "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift"
+      ],
+      "exitCondition": "A smaller sample design is acceptable only after preregistered evidence demonstrates comparable tail-estimate stability.",
+      "id": "NEG-CACHELAB-V3-DISK-P99-SPARSITY-001"
+    },
+    {
+      "area": "release-governance",
+      "claimRejected": "A compound release-verification shell command can omit fail-fast behavior because the final subcommand exit code represents the whole campaign.",
+      "counterexample": "A custom Akashic release-mechanics wrapper observed failures in fault injection and resource-envelope validation, continued into the platform matrix, and returned zero because the last platform command passed.",
+      "decision": "Every release orchestration entry point must enable fail-fast semantics or aggregate explicit per-gate statuses. Final-command success cannot overwrite earlier failures.",
+      "evidencePaths": [
+        "scripts/verify-component-candidate-clean-copy.py",
+        "../Akashic/scripts/verify-release-readiness.sh"
+      ],
+      "exitCondition": "All compound release entry points are machine-checked for fail-fast or explicit per-gate aggregation, with a regression that injects an early failure and requires a nonzero final result.",
+      "id": "NEG-CACHE-RELEASE-GATE-NON-FAIL-FAST-001"
+    },
+    {
+      "area": "cache-resource-accounting",
+      "claimRejected": "Every regular file directly under the blobs directory is payload data.",
+      "counterexample": "Manifest v2 stores UUID payloads and .manifest-entry-*.json incremental records in the same directory. The old resource probe counted both as blob bytes, reporting 130 blob files for a 64-object workload and inflating payload footprint by 26479 bytes.",
+      "decision": "Resource schema 2 recognizes payload only when the filename is a UUID and classifies all sidecars, pointer files and locks as metadata. It records separate payload and metadata file/byte counts.",
+      "evidencePaths": [
+        "../Akashic/Sources/AkashicResourceProbe/AkashicResourceProbe.swift",
+        "../Akashic/Tools/Resource/verify_local_resource_envelope.py"
+      ],
+      "exitCondition": "Resource schema 2 is replaced only by a newer version that retains exact payload-versus-metadata classification and passes retained mixed-layout regression fixtures.",
+      "id": "NEG-AKASHIC-RESOURCE-SIDECAR-PAYLOAD-001"
+    },
+    {
+      "area": "cache-fault-injection",
+      "claimRejected": "The real APFS quota contract should permanently require two kernel ENOSPC cases and one Foundation NSCocoaErrorDomain 512 metadata-prewrite failure.",
+      "counterexample": "After manifest-v2 persistence changes, durable replacement, blob staging and manifest publication all preserved direct kernel ENOSPC while maintaining recovery invariants. The old aggregate rejected the stronger and more direct error surface.",
+      "decision": "Quota schema 2 requires all three cases to preserve errno 28 and fault aggregate V5 binds that evidence, while retaining old-state, cleanup and container-free-space invariants.",
+      "evidencePaths": [
+        "../Akashic/Tools/Fault/verify_real_quota.py",
+        "../Akashic/Tools/Crash/verify_fault_injection_report.py",
+        "../Akashic/docs/FAULT_INJECTION.md"
+      ],
+      "exitCondition": "A newer persistence implementation may revise the observed surface only after a versioned real-APFS matrix records the new behavior and preserves all recovery invariants.",
+      "id": "NEG-AKASHIC-QUOTA-ERROR-SURFACE-FROZEN-001"
+    }
+  ],
+  "registryID": "FOVEA-NEGATIVE-RESULTS-V1",
+  "reviewedOn": "2026-08-02",
+  "schemaVersion": 1
+}

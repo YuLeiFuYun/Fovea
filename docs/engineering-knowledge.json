@@ -1,0 +1,1672 @@
+{
+  "discoveries": [
+    {
+      "artifactPaths": [
+        "Sources/FoveaStorage/FoveaBlockingIOExecutor.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/BlockingIOExecutorTests.swift"
+      ],
+      "evidenceTestIDs": [],
+      "extractedAsset": "Fovea-owned BlockingIOExecutor for host persistence boundaries; the exact-pinned Akashic package independently maintains its own equivalent storage execution boundary.",
+      "id": "FOVEA-EGG-001",
+      "observation": "多个存储 actor 都需要保持串行事务语义，同时把阻塞工作移出协作式执行器。",
+      "overgeneralizationRisk": "把所有异步网络或 CPU 工作也放入串行队列会制造队头阻塞和优先级反转。",
+      "principleIDs": [
+        "FOVEA-LAW-002",
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "阻塞 I/O 执行隔离器",
+      "transferBoundary": "适用于必须保持 actor 串行事务、但底层 API 是同步阻塞 I/O 的内部实现。",
+      "triggerProblem": "同步文件系统调用会占用 Swift cooperative executor，并把 actor 事务与线程阻塞混在一起。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaCore/AsyncPermitPool.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/PrioritySchedulingTests.swift",
+        "Tests/FoveaTests/ResourceLimitTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "RES-PT-001",
+        "RES-PT-002"
+      ],
+      "extractedAsset": "使用 Swift ~Copyable 和 consuming 操作表达一次性许可。",
+      "id": "FOVEA-EGG-002",
+      "observation": "资源许可本质是线性所有权，不是普通值。",
+      "overgeneralizationRisk": "对普通不可变值滥用不可复制语义会增加调用复杂度而无安全收益。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-002"
+      ],
+      "status": "promoted",
+      "title": "不可复制资源许可",
+      "transferBoundary": "适用于容量、锁票据、事务 lease 等必须恰好消费一次的内部能力值。",
+      "triggerProblem": "可复制 Permit 允许同一逻辑容量被复制后并发消费。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaPersistence/FoveaManagedFileMetadata.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/FilesystemLinkDefenseTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "SEC-CASE-031"
+      ],
+      "extractedAsset": "FoveaManagedFileMetadata centralizes secure host-side metadata validation; Akashic storage internals remain independently versioned behind the exact component pin.",
+      "id": "FOVEA-EGG-003",
+      "observation": "所有受管文件读取都需要同一组 O_NOFOLLOW、类型、属主和链接数不变量。",
+      "overgeneralizationRisk": "不能把单链接普通文件策略直接用于用户文档、共享 inode 或需要 symlink 语义的目录。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "受管文件元数据验证器",
+      "transferBoundary": "适用于应用容器内由 Akashic 管理的普通单链接文件。",
+      "triggerProblem": "FileManager 时间戳读取会跟随 symlink，使外部 inode 影响缓存淘汰。"
+    },
+    {
+      "artifactPaths": [
+        "Tests/FoveaTests/TestSupport.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/ResourceLimitTests.swift",
+        "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+        "Tests/FoveaTests/SharedTaskTests.swift",
+        "Tests/FoveaTests/FoveaSystemPipelineTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "RES-PT-002"
+      ],
+      "extractedAsset": "TestSupport.waitUntil 提供有截止时间、可取消、调用点失败定位的条件等待；测试以 transport 计数、诊断事件和 actor gate 表达阶段到达。",
+      "id": "FOVEA-EGG-004",
+      "observation": "并发测试应等待可观察状态，而不是等待推测时间。",
+      "overgeneralizationRisk": "忙轮询本身仍可能形成脆弱测试；优先使用 continuation、actor gate 或事件流。",
+      "principleIDs": [
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-006",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "确定性阶段同步替代固定睡眠",
+      "transferBoundary": "适用于需要证明任务已进入特定阶段的并发测试。",
+      "triggerProblem": "ASan 和覆盖插桩改变启动速度后，依赖 20ms 固定睡眠的并发测试偶发失败。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaHTTP/HTTPVary.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/VaryCacheTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "CACHE-PT-004"
+      ],
+      "extractedAsset": "HTTPVarySelection 构造、选择和 Codable 解码共享唯一规范化实现。",
+      "id": "FOVEA-EGG-005",
+      "observation": "同一缓存身份语义存在多个规范化入口时会产生同义多键。",
+      "overgeneralizationRisk": "通用逗号拆分会破坏带引号或自定义字段语义。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-010",
+        "FOVEA-LAW-012"
+      ],
+      "status": "promoted",
+      "title": "Vary 唯一规范化来源",
+      "transferBoundary": "适用于已知可安全规范化的 HTTP 列表字段；自定义字段只去除 OWS。",
+      "triggerProblem": "公开构造器与管线内部对 Accept-Language/Accept-Encoding 使用不同规范化规则。"
+    },
+    {
+      "artifactPaths": [
+        "docs/project-memory/component-pins.json",
+        "Tests/FoveaTests/ImageDecoderTests.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/ImageDecoderTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "SEC-CASE-004"
+      ],
+      "extractedAsset": "The exact-pinned ImageCraftImageIO backend provides complete bounded container scanning, while Fovea retains host-level decoder and security integration tests.",
+      "id": "FOVEA-EGG-006",
+      "observation": "安全预算必须覆盖整个容器生命周期，而非只覆盖第一段可解码前缀。",
+      "overgeneralizationRisk": "手写容器解析若扩展到更多格式而无 corpus/fuzz，会扩大攻击面。",
+      "principleIDs": [
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-008"
+      ],
+      "status": "promoted",
+      "title": "完整容器扫描而非首标记早退",
+      "transferBoundary": "适用于当前静态 JPEG/PNG 安全预检，不等价于通用媒体解析器。",
+      "triggerProblem": "JPEG 解析在首个 SOS 返回，使后续扫描间 APP 元数据绕过预算；PNG IEND 后尾随数据被接受。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaCore/PipelineCache.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/CacheRefreshTransactionTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "CACHE-PT-039"
+      ],
+      "extractedAsset": "写前捕获旧 snapshot，并按 generation 活性选择恢复或删除。",
+      "id": "FOVEA-EGG-007",
+      "observation": "覆盖事务与首次插入事务需要不同回滚信息。",
+      "overgeneralizationRisk": "namespace 已撤销时恢复旧 snapshot 会复活无权限数据。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-002",
+        "FOVEA-LAW-008"
+      ],
+      "status": "promoted",
+      "title": "同 variant 覆盖事务快照",
+      "transferBoundary": "适用于同 key 覆盖且失败时允许恢复旧值的事务。",
+      "triggerProblem": "200 覆盖旧 record 后取消，回滚删除新 record 却未恢复旧 record。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaCore/Diagnostics.swift",
+        "Sources/FoveaHTTP/TransportNetworkMetrics.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/DiagnosticsTests.swift",
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "DIAG-PT-013"
+      ],
+      "extractedAsset": "DiagnosticEvent 构造与 Codable 解码共享摘要、数值、时长和协议集合上界。",
+      "id": "FOVEA-EGG-008",
+      "observation": "隐私清洗应在结构化事件构造边界完成，而不是依赖每个 exporter 补救。",
+      "overgeneralizationRisk": "过度清洗可能损失调试价值；新增字段需明确有限词汇和单位。",
+      "principleIDs": [
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-006",
+        "FOVEA-LAW-011"
+      ],
+      "status": "promoted",
+      "title": "诊断边界前移",
+      "transferBoundary": "适用于 Fovea 公共诊断模型，不替代宿主对额外日志字段的治理。",
+      "triggerProblem": "OSLog 出口会过滤非法 keyDigest，但内存 sink 和自定义出口仍可能接触原始自由文本。"
+    },
+    {
+      "artifactPaths": [
+        "scripts/run-critical-mutants.py",
+        "scripts/validate-critical-mutation-report.py"
+      ],
+      "evidencePaths": [
+        "docs/schemas/critical-mutation-report.schema.json"
+      ],
+      "evidenceTestIDs": [
+        "AIQA-GATE-010"
+      ],
+      "extractedAsset": "树绑定 checkpoint、源码定位更新、invalid 硬失败和报告摘要校验。",
+      "id": "FOVEA-EGG-009",
+      "observation": "变异测试工具本身会随架构腐化，invalid 不能被当作 killed。",
+      "overgeneralizationRisk": "只追求 mutant 数量会鼓励低价值或等价变异。",
+      "principleIDs": [
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "变异目录自校准",
+      "transferBoundary": "适用于当前 curated critical mutants；不替代通用 mutation engine。",
+      "triggerProblem": "职责拆分后 13 个关键 mutant 因源码定位过时而变成 invalid。"
+    },
+    {
+      "artifactPaths": [
+        "scripts/check-structural-quality.py"
+      ],
+      "evidencePaths": [
+        "docs/specifications/pipeline-configuration.md"
+      ],
+      "evidenceTestIDs": [
+        "PIPE-PT-010"
+      ],
+      "extractedAsset": "结构门同时约束文件规模、函数复杂度、类型规模、模块文件数和依赖环。",
+      "id": "FOVEA-EGG-010",
+      "observation": "降低单文件复杂度可能把认知成本迁移为文件和依赖碎片。",
+      "overgeneralizationRisk": "固定阈值不能替代对领域内聚和调用图的人工判断。",
+      "principleIDs": [
+        "FOVEA-LAW-010",
+        "FOVEA-LAW-012"
+      ],
+      "status": "promoted",
+      "title": "职责拆分必须同时限制碎片化",
+      "transferBoundary": "适用于当前 Swift 模块规模的启发式门禁。",
+      "triggerProblem": "拆分 PipelineFailure 和 FetchStage 后，FoveaCore 文件数超过模块上限。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/WorkbenchRootView.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Models/EcologicalAtlas.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Resources/ecological-atlas.json",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/EcologicalAtlasHomeView.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/EcologicalStoryView.swift"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchIPadUITests.swift"
+      ],
+      "evidenceTestIDs": [
+        "DEMO-PT-021",
+        "DEMO-PT-022",
+        "DEMO-PT-023",
+        "DEMO-PT-024",
+        "DEMO-PT-025",
+        "DEMO-PT-026",
+        "DEMO-PT-027",
+        "DEMO-PT-028"
+      ],
+      "extractedAsset": "理解、验证、证据、设置四层信息架构；理解层由 8 卷、32 专题、8 种媒体表面和 160 个媒体身份组成，并以机制—分配—争议—综合判断组织内容，完整图片实验场仍从二级入口可达。",
+      "id": "FOVEA-EGG-011",
+      "observation": "系统内部领域分类适合实现所有权，不等于用户心智模型。公共叙事只有在内容 schema、证据标签、争议结构和图片负载契约都可执行时，才是真实宿主而不是议题包装。",
+      "overgeneralizationRisk": "专题数量和页面样式不等于内容深度；若来源闭包、反方论证、图片身份或 UI 自动化缺失，复杂界面仍可能只是装饰。",
+      "principleIDs": [
+        "FOVEA-LAW-010",
+        "FOVEA-LAW-012",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "叙事任务优先且证据分层的信息架构",
+      "transferBoundary": "适用于示例、诊断和开发者工具的信息架构；生产 App 仍应依据自己的核心任务、用户研究和平台习惯设计。",
+      "triggerProblem": "旧九章入口覆盖议题和图片场景不足，且详情页高度同构，无法承担生态超载的系统性叙事和真实宿主压力。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Models/WorkbenchRemoteAsset.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/WorkbenchRemoteAssetViews.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/WorkbenchRequestFactory.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchLiveTests/FoveaWorkbenchLiveNetworkTests.swift"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift"
+      ],
+      "evidenceTestIDs": [
+        "DEMO-PT-001",
+        "DEMO-PT-005",
+        "DEMO-PT-006",
+        "DEMO-PT-009",
+        "DIAG-PT-011"
+      ],
+      "extractedAsset": "带作者、许可、原始尺寸和来源页的真实素材目录；普通交互默认真实 HTTPS；UI/集成测试使用 deterministicDefaults；Live XCTest 通过官方管线验证重定向、协议指标、目标像素和缓存复用。",
+      "id": "FOVEA-EGG-012",
+      "observation": "确定性 origin 能证明协议和状态机语义，却不能证明真实网络集成；真实公网能暴露环境路径，却不能替代稳定回归。两类证据互补且必须互不冒充。",
+      "overgeneralizationRisk": "把真实网络默认扩展到 CI、后台任务或隐式遥测会产生不可控副作用；把确定性替身当作用户体验又会隐藏真实集成缺陷。",
+      "principleIDs": [
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-006",
+        "FOVEA-LAW-011",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "真实与确定性双证据通道",
+      "transferBoundary": "真实公网只提供环境证据；第三方可用性、限流和代理状态不能成为确定性合并门。许可目录仅覆盖已登记素材，不能授权任意远程图片。",
+      "triggerProblem": "Workbench 的主要图片体验长期只使用 fovea-demo.test 合成色块，真实网络被藏在末级页面，导致 Demo 无法证明 DNS、TLS、重定向、CDN、真实照片几何和产品组合。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/WorkbenchLabComponents.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift"
+      ],
+      "evidenceTestIDs": [
+        "DEMO-PT-009",
+        "UI-PT-019"
+      ],
+      "extractedAsset": "所有证据 metric 使用独立稳定 ID；中文标题只负责显示。UI 测试按稳定 ID 定位，再对可访问值和用户文案分别断言。",
+      "id": "FOVEA-EGG-013",
+      "observation": "用户文案属于可翻译、可重写的表现层；测试、导航、深链和证据引用属于稳定语义身份。由文案派生身份会让可读性改进与自动化稳定性互相冲突。",
+      "overgeneralizationRisk": "无边界地冻结所有内部标识会形成兼容负担；只有跨版本、跨语言或外部证据真正引用的身份才应稳定。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-012",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "本地化文案与稳定自动化身份解耦",
+      "transferBoundary": "适用于 accessibility identifier、自动化 selector、深链和证据 schema；普通临时布局元素不必全部获得公共稳定 ID。",
+      "triggerProblem": "证据指标从英文改为中文后，accessibility identifier 由显示标题动态生成，导致缓存 UI 测试无法定位原有 origin 指标。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/project.yml",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchLiveTests/Info.plist",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchLiveTests/FoveaWorkbenchLiveNetworkTests.swift",
+        "scripts/verify-ios-example.py"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchLiveTests/FoveaWorkbenchLiveNetworkTests.swift",
+        "scripts/verify-ios-example.py"
+      ],
+      "evidenceTestIDs": [
+        "DEMO-PT-001",
+        "DEMO-PT-005",
+        "DIAG-PT-011"
+      ],
+      "extractedAsset": "Live target 纳入共享 scheme；显式 XCTest Info.plist 接收构建授权；验证器注入 build setting 并拒绝 skipped；Live 矩阵区分核心不变量与瞬时环境不可用，同时要求至少三个独立 origin 成功。",
+      "id": "FOVEA-EGG-014",
+      "observation": "环境测试是否存在、是否被选择、授权是否进入测试进程、是否真实执行、如何分类第三方故障是五个不同条件；任何一环缺失都不能形成环境证据。",
+      "overgeneralizationRisk": "把所有 HTTP 错误都归类为环境故障会掩盖 fixture 漂移和产品缺陷；只允许明确瞬态状态与可重试 transport 进入环境不可用集合，并要求最低成功 origin 数。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-006",
+        "FOVEA-LAW-011",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "可执行的环境证据授权链",
+      "transferBoundary": "适用于依赖公网、真机、外部服务或硬件的环境证据；确定性单元测试不应引入同样的外部可用性容错。",
+      "triggerProblem": "完整验证脚本宣称运行 Live XCTest，但 target 不在 scheme；加入 scheme 后 shell 环境又没有进入测试进程，最终出现“0 失败、实际全部 skipped”的假绿灯。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaCore/Identity.swift",
+        "Sources/FoveaCore/ImageLoadCoordinator.swift",
+        "Sources/FoveaCore/ImageDeliveryCoordinator.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/DiagnosticsTests.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchIntegrationTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "CACHE-PT-006",
+        "DEMO-PT-009"
+      ],
+      "extractedAsset": "ContentID 可从持久规范描述重新验证并恢复；fresh record 先构造 RenderKey 查询 rendered-memory，未命中才读取原编码磁盘。诊断分别证明 memory hit 不伴随 originalEncodedHit，管线重开仍可从磁盘恢复且不回源。",
+      "id": "FOVEA-EGG-015",
+      "observation": "经过验证的 RepresentationRecord 已持有规范 ContentID；RenderKey 所需信息在读取 payload 前已经完整。先读磁盘只是历史执行顺序，不是正确性前提。",
+      "overgeneralizationRisk": "若把未经验证的摘要直接转成 RenderKey，会把持久元数据损坏或跨代身份污染带入内存缓存；优化不能绕过记录与 generation 校验。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-007",
+        "FOVEA-LAW-010",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "持久内容身份驱动内存先于磁盘",
+      "transferBoundary": "只适用于持久记录中的 ContentID、payloadLength 和 generation 已通过 schema 与边界验证的 fresh reusable state；stale、no-store、损坏记录和 generation 不匹配仍必须走原有验证路径。",
+      "triggerProblem": "滚动回屏即使最终命中 rendered-memory，旧路径仍先读取完整原编码文件并重算 ContentID，导致磁盘 I/O 进入可见延迟。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaSwiftUI/FoveaImagePhaseContent.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/SwiftUIViewRenderingTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "UI-PT-019",
+        "DEMO-PT-007"
+      ],
+      "extractedAsset": "`.empty` 保持透明；只有 placeholder delay 到期并进入 `.loading` 后才构造骨架。对应渲染测试证明 empty 不调用 placeholder，loading/cancelled 才调用。",
+      "id": "FOVEA-EGG-016",
+      "observation": "占位是“等待超过感知阈值”的反馈，不是所有尚未发布图片状态的同义词。初始空状态、延迟加载状态和取消状态具有不同用户语义。",
+      "overgeneralizationRisk": "无条件隐藏所有初始反馈会让真实慢网络出现空白；透明 empty 必须与延迟后可见 loading、失败和无障碍状态共同设计。",
+      "principleIDs": [
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-012",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "空状态不等于加载占位",
+      "transferBoundary": "适用于具有明确 placeholder delay 的声明式图片视图；首屏必须立即展示固定占位图的产品可以显式把延迟设为零或在宿主外层提供静态背景。",
+      "triggerProblem": "SwiftUI Cell 每次重新创建都会先进入 `.empty`；旧 phase renderer 立即构造 placeholder，导致几毫秒内完成的内存命中仍先闪一次 loading。"
+    },
+    {
+      "artifactPaths": [
+        "scripts/generate-workbench-media-catalog.py",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Resources/workbench-media-catalog.json",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Resources/ecological-atlas.json",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/EcologicalMethodologyView.swift",
+        "scripts/check-architecture-boundaries.py"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+        "Examples/FoveaWorkbenchApp/README.md"
+      ],
+      "evidenceTestIDs": [
+        "DEMO-PT-005",
+        "DEMO-PT-021",
+        "DEMO-PT-022"
+      ],
+      "extractedAsset": "通用图库保留严格默认准入；生态图谱另有版本化情境审查，覆盖肉食、未成年人、战争、疾病、伤害、贫困与迁徙，并要求必要性、来源、尊严、年龄适宜性、非猎奇、替代文本和避免污名化。",
+      "id": "FOVEA-EGG-017",
+      "observation": "版权许可只回答能否依法使用，题材关键词也不能独自回答是否应该展示。肉食、未成年人、战争、疾病或伤害既不应自动通过，也不应自动拒绝；目的、上下文、权力关系和可避免伤害必须共同进入决定。",
+      "overgeneralizationRisk": "情境审查不能退化为“价值观正向即可使用”的宽免；敏感素材仍需逐项来源、尊严、受众与必要性记录。自动关键词只适合发现候选风险，不能替代人工判断。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-011",
+        "FOVEA-LAW-012",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "许可、默认准入与情境伦理三层治理",
+      "transferBoundary": "适用于项目维护并分发的示例和教育素材。普通图库可采用更严格默认规则；有明确公共利益的叙事可以进入情境审查，但不得绕过合法性、隐私、尊严和年龄适宜性。",
+      "triggerProblem": "旧素材治理把敏感关键词一律当作伦理结论，既会漏掉隐晦伤害，也会阻止必要的公共教育图像，无法表达“为什么展示”和“怎样展示”。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Models/WorkbenchRemoteAsset.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchPrefetchCoordinator.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/WorkbenchDiscoverView.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/WorkbenchScenarioStudioView.swift"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchUITests.swift"
+      ],
+      "evidenceTestIDs": [
+        "DEMO-PT-005",
+        "DEMO-PT-007",
+        "DEMO-PT-009"
+      ],
+      "extractedAsset": "静态 448 项目录使用稳定素材 ID；首页每批 48 项并预取有限窗口；场景工坊按任务选择 8–200 项；Feed 支持 2,000 Cell 但最多 300 个唯一网络资源；预取成功才记账，管线代际改变时重置完成集。",
+      "id": "FOVEA-EGG-018",
+      "observation": "素材数量、可见视图数量、并发请求数量和缓存身份是四个独立维度。真实目录可以很大，但任何时刻的 UI 与网络工作集必须有界且可解释。",
+      "overgeneralizationRisk": "把预取窗口写成固定常数会忽略设备、网络和容器差异；当前数字是示例工作负载边界，不是公共 API 或全局最佳值。",
+      "principleIDs": [
+        "FOVEA-LAW-002",
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-010",
+        "FOVEA-LAW-011",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "大规模媒体目录需要稳定身份、分页与有界预取",
+      "transferBoundary": "适用于静态或可分页的图片目录；无限服务端 Feed 还需要游标、请求背压、磁盘配额和服务端失效策略，不能仅依赖本地静态清单。",
+      "triggerProblem": "把 9 张图片扩展到数百张后，若一次性构造全部 SwiftUI Cell、把视图刷新 UUID 放进资源身份或无界预取，会把真实性改进转化为内存、网络和缓存抖动。"
+    },
+    {
+      "artifactPaths": [
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "evidencePaths": [
+        "scripts/analyze-mathematical-architecture.py",
+        "scripts/model-check-cache-transactions.py",
+        "scripts/analyze-cache-policies.py"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-001",
+        "MATH-PT-002",
+        "MATH-PT-004"
+      ],
+      "extractedAsset": "建立数学保证规范，要求每项结论同时记录状态域、输入域、假设、反例条件、工件和不能外推的范围。",
+      "id": "FOVEA-EGG-019",
+      "observation": "定理、有限穷举、精确离线 oracle、模型式差分和经验测量具有不同量词与外推边界；压缩成一个分数会丢失最重要的真实性信息。",
+      "overgeneralizationRisk": "若把证据等级变成繁琐审批表，会增加文档成本而不提高正确性；只对高风险或带强结论的变更要求完整证明义务。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "数学证据分层而非单一总分",
+      "transferBoundary": "适用于需要声称正确性、最优性或覆盖完整性的工程结论；普通局部重构不必引入形式模型，但仍应避免无边界的绝对措辞。",
+      "triggerProblem": "数学术语很容易被用于装饰经验结论，把合成基准、有限模型和定理假设混成“已证明最佳”。"
+    },
+    {
+      "artifactPaths": [
+        "scripts/analyze-mathematical-architecture.py",
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "evidencePaths": [
+        ".swift-format",
+        "Package.swift"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-001"
+      ],
+      "extractedAsset": "树绑定架构图分析器计算 SCC、拓扑层级、传递依赖、Brandes 介数中心性、HHI 和稳定依赖方向，并对硬不变量失败关闭。",
+      "id": "FOVEA-EGG-020",
+      "observation": "Package 声明与源码 import 可以组成可执行有向图；环、隐藏边和扇出是硬不变量，中心性与不稳定度则是审查信号而非自动裁决。",
+      "overgeneralizationRisk": "机械追求最低边数会制造巨型模块；图指标只定位需要解释的热点，不能替代职责语义。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-010",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "架构作为有向图持续验证",
+      "transferBoundary": "适用于静态模块依赖；运行时回调、协议注入和数据流耦合仍需其他分析，中心性高也不自动意味着架构错误。",
+      "triggerProblem": "模块边界过去主要依赖人工审查，无法持续发现隐藏 import、依赖环、扇出增长和核心枢纽继续集中。"
+    },
+    {
+      "artifactPaths": [
+        "scripts/analyze-cache-policies.py",
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "evidencePaths": [
+        ".artifacts/mathematics/cache-policies.json"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-004"
+      ],
+      "extractedAsset": "缓存策略分析器对 LRU、SIEVE、GDSF 和频率密度准入运行多类 trace，并用动态规划 oracle 校验结果上界。",
+      "id": "FOVEA-EGG-021",
+      "observation": "有限 trace 可以枚举所有可行缓存集合并得到精确离线最优值；在线策略应按避免代价、字节命中、元数据开销和 regret 多维比较。",
+      "overgeneralizationRisk": "针对合成 trace 调参会过拟合；oracle 只能评价给定未来请求序列，不能在在线环境直接实现。",
+      "principleIDs": [
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-006",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "缓存策略用精确 oracle 与 regret 比较",
+      "transferBoundary": "精确性只覆盖有限离散 trace；生产策略切换还必须依赖真实负载、CPU 开销、内存压力和可回滚实验。",
+      "triggerProblem": "仅凭命中率或流行算法名称选择缓存策略，无法处理对象尺寸、重取代价、阶段切换和扫描污染。"
+    },
+    {
+      "artifactPaths": [
+        "scripts/model-check-cache-transactions.py"
+      ],
+      "evidencePaths": [
+        ".artifacts/mathematics/cache-state-model.json"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-002"
+      ],
+      "extractedAsset": "缓存事务模型穷举 generation、record、blob、rendered 与覆盖事务状态，并内置五个错误模型，全部必须被杀死。",
+      "id": "FOVEA-EGG-022",
+      "observation": "除验证规范模型外，还应注入已知错误转移并要求产生最短反例；这相当于对形式模型执行变异测试。",
+      "overgeneralizationRisk": "错误模型集合本身不完整；杀死内置 mutant 不能证明所有规范缺陷都可检测。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-003",
+        "FOVEA-LAW-008",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "有限模型必须自证能发现错误",
+      "transferBoundary": "适用于能够抽象为有限状态的高风险协议；模型与 Swift 实现之间仍需事件映射、集成测试和实现级变异门。",
+      "triggerProblem": "一个始终通过的模型检查器可能只是模型过弱或不变量遗漏，无法证明其对真实错误敏感。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaCore/AsyncPermitPool.swift",
+        "Sources/FoveaCore/DecodeStage.swift",
+        "scripts/model-check-permit-scheduler.py"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/PrioritySchedulingTests.swift",
+        "scripts/model-check-permit-scheduler.py"
+      ],
+      "evidenceTestIDs": [
+        "SCHED-PT-018",
+        "SCHED-PT-019",
+        "SCHED-PT-020"
+      ],
+      "extractedAsset": "AsyncPermitPool 在普通状态按优先级、较小 workEstimate 和 FIFO 排序；八次普通绕过后为最老饥饿 waiter 保留未来足量容量并排空碎片，新到请求不能通过立即获取快路径穿透保留。",
+      "id": "FOVEA-EGG-023",
+      "observation": "同优先级短工作优先可降低局部平均完成时间，但带权资源的活性不能只靠“可装入请求中的优先排序”。容量碎片会使已老化的大请求永久不适配当前空闲量，必须把未来容量保留纳入状态机。",
+      "overgeneralizationRisk": "容量保留会暂时降低利用率，且仍依赖已授予任务最终释放；若工作估计极差或任务挂死，需由超时、租约和观测补充，不能宣称任意负载下全局最优。",
+      "principleIDs": [
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-010",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "最短工作优先、容量保留与有限饥饿",
+      "transferBoundary": "适用于单一可加总许可资源且每个请求单位数不超过总容量的调度；八次是进入容量保留的普通绕过上限，不是所有任务的总完成名次或时间上界。",
+      "triggerProblem": "旧算法只在请求能装入当前空闲容量时提升饥饿 waiter；持续的一单位小请求可利用碎片让需要全部容量的大请求无限等待。"
+    },
+    {
+      "artifactPaths": [
+        "Tests/FoveaTests/Conformance/Mathematics/cache-decision-domain.json",
+        "scripts/check-cache-decision-domain.py"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/HTTPCachePolicyTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-003"
+      ],
+      "extractedAsset": "同一 JSON 规范驱动 128 个实际 HTTPCachePolicy 组合和独立 Python MC/DC 见证检查。",
+      "id": "FOVEA-EGG-024",
+      "observation": "对显式有限因子域可以执行完整笛卡尔积；MC/DC 再验证每个条件在其他条件固定时能够独立改变决策。",
+      "overgeneralizationRisk": "因子划分遗漏语义类别时，完整笛卡尔积仍可能漏错；每次协议扩展都必须审查因子模型。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "有限决策域全枚举与 MC/DC 双证据",
+      "transferBoundary": "只对声明的离散因素和取值完整；任意 HTTP 字符串仍需语法一致性、边界与模糊测试。",
+      "triggerProblem": "单个 happy-path 测试无法证明缓存准入条件之间的交互，也无法说明每个布尔条件是否独立影响结果。"
+    },
+    {
+      "artifactPaths": [
+        "docs/project-memory/component-pins.json",
+        "Tests/FoveaTests/MemoryCacheTests.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/MemoryCacheTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-007",
+        "MATH-PT-008"
+      ],
+      "extractedAsset": "The exact-pinned AkashicMemory SIEVE implementation is continuously compared with the Fovea host reference and integration histories.",
+      "id": "FOVEA-EGG-025",
+      "observation": "固定种子状态机可以把链表实现与不同数据结构的参考模型逐步比较；扫描污染回归还必须用独立最小场景表达，而不能只依赖随机序列。",
+      "overgeneralizationRisk": "真实实现与参考模型可能共享同一误解；随机序列也不保证覆盖所有边界，因此最小反例仍需固化。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "SIEVE 真实实现与独立参考模型持续差分",
+      "transferBoundary": "适用于存在可独立实现小型参考模型的数据结构；并发线性化仍需专门历史检查或模型。",
+      "triggerProblem": "少量手写缓存示例不能覆盖 visited 清位、循环指针、删除当前指针、更新、超限和清空之间的长序列交互。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchPrefetchPlanner.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchPrefetchCoordinator.swift"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-006"
+      ],
+      "extractedAsset": "WorkbenchPrefetchPlanner 保存最近 128 个延迟样本，以经验分布分位数和 DKW–Massart 置信带调整目标尾部，再结合消费速率、静态回退、发布余量与硬窗口计算建议预取数。",
+      "id": "FOVEA-EGG-026",
+      "observation": "有限样本均值和方差直接代入 Cantelli 不保留原定理保证；经验分布一致置信带能让样本量、置信水平和目标尾部之间保持更直接的可审计关系。",
+      "overgeneralizationRisk": "DKW 的严格覆盖率要求固定 i.i.d. 样本；滚动窗口、相关请求和网络非平稳会破坏该解释，因此结果仍是有界风险调节，不是生产漏载概率 SLA。",
+      "principleIDs": [
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-006",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "经验分布置信带驱动有界预取",
+      "transferBoundary": "适用于可估计消费速度、样本可观测且预取可取消的滚动场景；必须保留样本窗口、静态回退、硬上限和关闭选项，并单独监控分布漂移。",
+      "triggerProblem": "固定窗口不能适应延迟，而有限样本 Cantelli 插件既没有原定理概率保证，又因历史最大值钳制常使风险参数失效。"
+    },
+    {
+      "artifactPaths": [
+        "docs/project-memory/component-pins.json",
+        "Sources/FoveaCore/PipelineCache.swift",
+        "scripts/analyze-cache-policies.py"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/MemoryCacheTests.swift",
+        "scripts/analyze-cache-policies.py"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-004",
+        "MATH-PT-007",
+        "MATH-PT-008"
+      ],
+      "extractedAsset": "The default composition uses exact-pinned AkashicMemory SIEVE; alternative policies remain in offline comparison and are admitted only through trace and cost evidence.",
+      "id": "FOVEA-EGG-027",
+      "observation": "离线 oracle 与 NSDI 2024 大规模 trace 的方向一致：惰性访问位能降低命中路径维护和扫描污染，但不存在对所有 trace 的无条件支配。",
+      "overgeneralizationRisk": "SIEVE 不利用对象大小和 miss cost，真实工作负载若由高代价稀有对象主导，可能被价值密度或学习增强策略击败。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "SIEVE 单一生产状态机与离线策略竞争",
+      "transferBoundary": "适用于成本有界、热点与扫描混合的进程内对象缓存；磁盘 GC 的持久 recency、CDN 和数据库缓存具有不同写放大与一致性约束。",
+      "triggerProblem": "RenderedMemory 的逐命中 LRU 改链表增加 actor 热路径写操作，并在混合成本、循环画廊和真实回屏 trace 上出现显著 regret。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaCore/SharedTaskRegistry.swift",
+        "scripts/model-check-shared-task-registry.py"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/SharedTaskTests.swift",
+        "scripts/model-check-shared-task-registry.py"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-011",
+        "SCHED-PT-010",
+        "SCHED-PT-015",
+        "SCHED-PT-016"
+      ],
+      "extractedAsset": "single-flight 状态机显式绑定 taskID/leaseID，并用有限模型生成旧完成、旧租约和未清租约的最短 ABA 反例。",
+      "id": "FOVEA-EGG-028",
+      "observation": "有限历史显示最小安全条件是 completion 检查 taskID、lease expiry 检查 leaseID、join 清除 orphan lease；subscriber-empty 检查在这些不变量下属于防御性冗余。",
+      "overgeneralizationRisk": "有限模型不证明 Swift Task 调度器本身，也不覆盖无限 key、外部存储或任意回调重入。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "任务与租约双版本戳形成最小 ABA 防线",
+      "transferBoundary": "适用于旧异步回调可能晚于对象替换的 actor/注册表；跨进程租约还需要持久世代和崩溃恢复协议。",
+      "triggerProblem": "同 key 任务完成、取消、detach、重新订阅和旧租约到期交错时，旧异步事件可能删除或取消替换后的当前任务。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaCore/TargetGeometry.swift"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/TargetGeometryTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-009",
+        "MATH-PT-010",
+        "GEO-PT-005",
+        "GEO-PT-007"
+      ],
+      "extractedAsset": "当前 schema 2 在阈值前使用线性桶，之后按 6.4% 相对增量量化；全枚举验证尺寸比、面积比和身份数量。",
+      "id": "FOVEA-EGG-029",
+      "observation": "小尺寸需要绝对精度，大尺寸成本更接近相对尺度；混合线性/几何桶能同时保持不欠采样和恒定相对膨胀边界。",
+      "overgeneralizationRisk": "像素面积上界不能替代视觉质量评估，过大的相对步长仍可能造成明显清晰度跳变。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-006",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "目标像素使用相对误差几何量化",
+      "transferBoundary": "适用于向上量化的目标像素身份；感知编码质量、HDR 和缩放核仍需独立率失真研究。",
+      "triggerProblem": "固定 16px 线性桶在大窗口拖动和分屏变化中产生大量近等价 DecodeKey，却只提供绝对误差而没有相对资源膨胀界。"
+    },
+    {
+      "artifactPaths": [
+        "Sources/FoveaCore/TransportRetryPolicy.swift",
+        "Sources/FoveaCore/FetchRetryController.swift",
+        "scripts/analyze-retry-jitter.py"
+      ],
+      "evidencePaths": [
+        "Tests/FoveaTests/RetryPolicyTests.swift",
+        "scripts/analyze-retry-jitter.py"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-012",
+        "MATH-PT-013",
+        "ERR-PT-003",
+        "ERR-PT-004"
+      ],
+      "extractedAsset": "当前 retry schema 2 固定使用 U(0, cap) full jitter，删除 jitterPermille；精确桶模型和 10,000 客户端模拟量化峰值与碰撞下降。",
+      "id": "FOVEA-EGG-030",
+      "observation": "full jitter 扩大定时器占用支持并降低成对碰撞；服务端 Retry-After 必须作为不可下穿下界，同时保留次数、总延迟和额外字节预算。",
+      "overgeneralizationRisk": "full jitter 可产生零延迟样本，若删除尝试/总延迟预算或把可重试分类放宽，仍可能形成请求风暴。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "Full jitter 与 Retry-After 下界共同治理重试同步",
+      "transferBoundary": "适用于有限 HTTP 客户端重试；不能从单轮定时器碰撞推导任意到达过程或服务器队列的全局稳定。",
+      "triggerProblem": "旧 ±20% 抖动支持区间窄，且负抖动可能把实际睡眠降到 Retry-After 以下，既增加同步碰撞又违反服务器节流意图。"
+    },
+    {
+      "artifactPaths": [
+        "docs/research/mathematical-theory-registry.json",
+        "scripts/check-mathematical-research.py",
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "evidencePaths": [
+        "scripts/check-mathematical-research.py",
+        "docs/research/mathematical-theory-registry.json"
+      ],
+      "evidenceTestIDs": [
+        "MATH-PT-015"
+      ],
+      "extractedAsset": "15 项、9 领域的数学理论注册表与门禁；Robust Gittins、在线共形、学习增强缓存和网络演算均有明确状态和进入条件。",
+      "id": "FOVEA-EGG-031",
+      "observation": "把来源、假设、机制映射、反例、代码路径和结论边界机器化后，前沿研究可以触发实现，也可以明确阻止不适用的“先进算法”进入生产。",
+      "overgeneralizationRisk": "条目数量和来源年份可能再次变成表面指标；若不持续更新反例和代码映射，注册表会退化为文献清单。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-010",
+        "FOVEA-LAW-013",
+        "FOVEA-LAW-014"
+      ],
+      "status": "promoted",
+      "title": "数学理论必须登记采用、研究、候选或拒绝状态",
+      "transferBoundary": "适用于需要把外部理论转为工程决策的项目；注册表不能替代阅读论文、复现实验和实现级验证。",
+      "triggerProblem": "仅搜集前沿定理容易形成术语目录，却不说明假设是否匹配、为什么采用、何时拒绝或什么证据能推翻当前决定。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchPrefetchCoordinator.swift"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "DEMO-PT-029",
+        "DEMO-PT-030"
+      ],
+      "extractedAsset": "WorkbenchPrefetchCoordinator 使用 assetID+targetWidth+targetHeight+contentMode 作为完成身份，并用 task UUID 防止迟到 completion 删除替换任务。",
+      "id": "FOVEA-EGG-032",
+      "observation": "异步任务表的 key 只表达业务身份，不能区分同 key 的不同生命周期；完成回调还必须携带创建时版本。图片目标身份必须包含实际影响解码结果的宽高和 content mode。",
+      "overgeneralizationRisk": "增加版本戳不能替代业务 key 的完整性；若未来引入 scale、transform 或 quality，它们仍必须进入身份。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "预取任务身份必须同时版本化任务与完整目标几何",
+      "transferBoundary": "适用于 reset、替换或取消后仍可能收到迟到回调的内存任务表；跨进程任务还需要持久 generation 或租约。",
+      "triggerProblem": "reset 后同 key 新任务可被旧 completion 按 key 删除；只记录宽度还会把不同高度的 Decode/Render 目标误认为同一完成身份。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Models/WorkbenchEvidenceBundle.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchEvidenceExport.swift"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "DEMO-PT-031"
+      ],
+      "extractedAsset": "Evidence Bundle schema 3 使用小时粒度时间、设备家族/系统大版本、包内顺序号和每次导出加盐的 generation token，并删除 locale、时区、精确型号、运行/性能 UUID 与精确起止时间。",
+      "id": "FOVEA-EGG-033",
+      "observation": "复现实验需要 source tree、配置、场景、持续时间与结果，不需要稳定主体标识或精确墙钟。每次导出重新加盐和包内顺序号可保留内部关系而消除跨包关联。",
+      "overgeneralizationRisk": "过度删除可能损害复现；应按具体诊断问题增加粗粒度、非唯一字段，而不是恢复稳定标识。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-007",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-010",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "可分享证据默认采用最小关联能力而非完整运行快照",
+      "transferBoundary": "适用于外发诊断与实验包；本机临时调试仍可在受控 UI 中使用会话内短期 correlation。",
+      "triggerProblem": "精确时区、locale、设备型号、持久 generation、运行 UUID 和精确时间组合后，可在工单、截图和多次导出之间关联同一设备或会话。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Resources/PrivacyInfo.xcprivacy",
+        "scripts/check-privacy-manifests.py",
+        "scripts/image_metadata.py",
+        "scripts/check-sensitive-material.py",
+        "scripts/verify-ios-example.py"
+      ],
+      "evidencePaths": [
+        "scripts/check-privacy-manifests.py",
+        "scripts/check-sensitive-material.py",
+        "scripts/verify-ios-example.py"
+      ],
+      "evidenceTestIDs": [
+        "SEC-CASE-043",
+        "SEC-CASE-044",
+        "SEC-CASE-045"
+      ],
+      "extractedAsset": "App 根 PrivacyInfo、源码反推清单门、JPEG/PNG/WebP 元数据剥离与扫描、Release 字符串/PlugIns/根清单检查组成发布隐私闭环。",
+      "id": "FOVEA-EGG-034",
+      "observation": "源码扫描、资源生成和最终产物是三个不同边界。只检查仓库文本或工程文件无法证明 App 根清单实际打包，也无法发现二进制中的隐藏测试入口或图片元数据。",
+      "overgeneralizationRisk": "元数据清空不证明图片主体匿名；可识别人脸、地标、屏幕内容和文件名仍需独立内容审查。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-007",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "发布隐私边界必须同时覆盖源码声明、资源内容与最终二进制",
+      "transferBoundary": "适用于包含可执行 App 和媒体资源的发布项目；不同平台的隐私清单格式和 Required Reason 类别需单独映射。",
+      "triggerProblem": "库 Privacy Manifest 不能覆盖 App 自身 UserDefaults/文件时间访问；图片可携带 EXIF/XMP/IPTC；DEBUG 测试路由若只靠运行参数保护仍会进入 Release 二进制。"
+    },
+    {
+      "artifactPaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchAppModel.swift",
+        "Sources/FoveaHTTP/StagingDirectoryLease.swift"
+      ],
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift",
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
+      ],
+      "evidenceTestIDs": [
+        "DEMO-PT-034",
+        "RES-PT-020"
+      ],
+      "extractedAsset": "Workbench 重建使用 cancel-and-drain；URLSession staging 维护锁改为 25ms 非阻塞轮询、任务取消检查和 5 秒默认上限。",
+      "id": "FOVEA-EGG-035",
+      "observation": "取消只是请求，不是资源已经释放的证明。替换资源前需等待拥有者完成 finally/invalidation；跨进程互斥必须把取消和超时写入等待协议。",
+      "overgeneralizationRisk": "顺序等待所有任务可能放大重建延迟；若任务本身不响应取消，还需要更高层 deadline 和强制隔离，不能无限延长 drain。",
+      "principleIDs": [
+        "FOVEA-LAW-001",
+        "FOVEA-LAW-004",
+        "FOVEA-LAW-005",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "资源切换必须取消并汇合，跨进程锁必须可取消且有时限",
+      "transferBoundary": "适用于任务拥有独立 runtime、连接或暂存目录的重建流程；共享长生命周期服务可能需要分阶段 drain 和 deadline。",
+      "triggerProblem": "仅发送取消后立即发布新管线，会让旧证据 runtime 继续占用连接或晚到回写；阻塞式文件锁在外部异常持锁时可使首次请求无限等待。"
+    },
+    {
+      "artifactPaths": [
+        "Benchmarks/ComparativeLab/Sources/ComparativeLabCore/ComparativeLabCore.swift",
+        "Benchmarks/ComparativeLab/experiment-plan.json",
+        "Benchmarks/ComparativeLab/dataset-selection.json",
+        "docs/research/comparator-lock.json"
+      ],
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
+        "scripts/check-comparative-plan.py",
+        "scripts/verify-comparative-lab.py"
+      ],
+      "evidenceTestIDs": [
+        "COMP-PT-001",
+        "COMP-PT-002",
+        "COMP-PT-006",
+        "COMP-PT-007"
+      ],
+      "extractedAsset": "精确 comparator commit、Fovea commit/tree/dirty 三元身份、128 项稳定数据集选择、结果前锁定的重复/交错/主指标/cluster-bootstrap 计划，以及单库单 adapter 构建门。",
+      "id": "FOVEA-EGG-036",
+      "observation": "可比较性不是在结果表阶段补出来的。被测源码身份、数据集、配置、运行顺序、主要指标和统计单位若未在结果前冻结，后续即使数字精确也无法排除版本漂移、选择性指标和伪独立样本。",
+      "overgeneralizationRisk": "预注册不能把错误方法永久化；发现工具缺陷或不可比语义时可以版本化修改计划，但旧结果必须失效并公开变更原因，不能静默覆盖。",
+      "principleIDs": [
+        "FOVEA-LAW-006",
+        "FOVEA-LAW-008",
+        "FOVEA-LAW-009",
+        "FOVEA-LAW-012",
+        "FOVEA-LAW-013"
+      ],
+      "status": "promoted",
+      "title": "比较实验必须在结果前锁定身份、数据集与统计计划",
+      "transferBoundary": "适用于性能、正确性 non-inferiority 和多实现对照；探索性调试可以更灵活，但不得直接升级为发布或优越性结论。",
+      "triggerProblem": "旧 benchmark 只有 smoke 工件和项目名称，没有精确竞品版本、dirty tree 身份、固定素材选择、交错顺序或 cluster 统计计划，无法支持 Phase 0b 存在性裁决。"
+    }
+  ],
+  "document": "docs/specifications/interdisciplinary-engineering.md",
+  "principles": [
+    {
+      "applicability": [
+        "identity",
+        "persistence",
+        "concurrency",
+        "lifecycle"
+      ],
+      "claim": "先定义所有合法执行序列中必须保持为真的命题，再选择实现结构。",
+      "disciplines": [
+        "mathematics",
+        "formal-methods",
+        "philosophy-of-science"
+      ],
+      "evidence": {
+        "paths": [
+          "Sources/FoveaCore/PipelineCache.swift",
+          "Sources/FoveaCore/NamespaceRegistry.swift"
+        ],
+        "testIDs": [
+          "CACHE-PT-039",
+          "AUTH-PT-020"
+        ]
+      },
+      "falsifiers": [
+        "存在合法调用序列违反任一不变量",
+        "所谓不变量无法通过公共行为或独立 oracle 观察"
+      ],
+      "id": "FOVEA-LAW-001",
+      "invariants": [
+        "撤销代际不得重新发布状态",
+        "记录不得指向未发布或损坏的数据块",
+        "每个请求只有一个终态"
+      ],
+      "limits": [
+        "不要求低风险代码全部形式化证明",
+        "测试不能替代所有状态空间证明"
+      ],
+      "metrics": [
+        {
+          "name": "critical-mutant-survivors",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "不变量优先于实现"
+    },
+    {
+      "applicability": [
+        "resource-governance",
+        "cache",
+        "diagnostics",
+        "rollback"
+      ],
+      "claim": "每项可控制资源都必须有有界来源、唯一所有权和可验证释放路径。",
+      "disciplines": [
+        "physics",
+        "accounting",
+        "economics"
+      ],
+      "evidence": {
+        "paths": [
+          "Sources/FoveaCore/AsyncPermitPool.swift",
+          "docs/project-memory/component-pins.json",
+          "Tests/FoveaTests/MemoryCacheTests.swift"
+        ],
+        "testIDs": [
+          "RES-PT-001",
+          "RES-PT-002"
+        ]
+      },
+      "falsifiers": [
+        "失败或取消路径泄漏许可",
+        "成本账本与实际对象不同步",
+        "单位混用"
+      ],
+      "id": "FOVEA-LAW-002",
+      "invariants": [
+        "许可不可复制或二次消费",
+        "资源计数不溢出",
+        "删除数据块前保留所有活动引用"
+      ],
+      "limits": [
+        "只覆盖项目可控制的逻辑所有权，不宣称精确描述操作系统全部物理资源"
+      ],
+      "metrics": [
+        {
+          "name": "permit-leaks",
+          "target": "0"
+        },
+        {
+          "name": "resource-counter-overflows",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "资源守恒与显式账本"
+    },
+    {
+      "applicability": [
+        "network",
+        "storage",
+        "ui",
+        "revocation"
+      ],
+      "claim": "副作用只能发生在建立资格的检查之后，晚到结果只能作用于创建它的因果域。",
+      "disciplines": [
+        "physics",
+        "distributed-systems",
+        "temporal-logic"
+      ],
+      "evidence": {
+        "paths": [
+          "Sources/FoveaHTTP/URLSessionTransport.swift",
+          "Sources/FoveaCore/ImageDisplaySession.swift"
+        ],
+        "testIDs": [
+          "UI-PT-001",
+          "CACHE-PT-015"
+        ]
+      },
+      "falsifiers": [
+        "仅改变调度顺序即可让无资格工作产生持久或可见副作用"
+      ],
+      "id": "FOVEA-LAW-003",
+      "invariants": [
+        "预取消请求不产生网络或 staging 副作用",
+        "旧 UI token 不覆盖新 identity",
+        "提交前重新验证 generation"
+      ],
+      "limits": [
+        "因果约束不要求无共享状态阶段全局串行"
+      ],
+      "metrics": [
+        {
+          "name": "prequalification-side-effects",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "因果顺序与局部性"
+    },
+    {
+      "applicability": [
+        "queues",
+        "metadata",
+        "namespaces",
+        "memory"
+      ],
+      "claim": "共享系统中的种群、队列、候选和输入集合必须有硬承载上限，并按不同成本类别分账。",
+      "disciplines": [
+        "ecology",
+        "resource-economics",
+        "computer-science"
+      ],
+      "evidence": {
+        "paths": [
+          "Sources/FoveaHTTP/HTTPMetadataLimits.swift",
+          "Sources/FoveaCore/PipelineConfiguration.swift"
+        ],
+        "testIDs": [
+          "RES-PT-013",
+          "SEC-CASE-042"
+        ]
+      },
+      "falsifiers": [
+        "存在可从公共或 Codable 入口传入的无界集合或数值",
+        "一个请求可永久阻塞所有可容纳请求"
+      ],
+      "id": "FOVEA-LAW-004",
+      "invariants": [
+        "敌意输入不能触发无界分配",
+        "单一主体不能无限占用共享容量",
+        "超大任务在昂贵分配前被拒绝"
+      ],
+      "limits": [
+        "绝对上界不是所有设备的推荐默认值"
+      ],
+      "metrics": [
+        {
+          "name": "unbounded-public-inputs",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "承载力与有界生态位"
+    },
+    {
+      "applicability": [
+        "priority",
+        "geometry",
+        "retry",
+        "pressure-response"
+      ],
+      "claim": "动态策略必须抵抗噪声、延迟和过度增益，优先保证收敛与可解释性。",
+      "disciplines": [
+        "control-theory",
+        "dynamical-systems",
+        "operations-research"
+      ],
+      "evidence": {
+        "paths": [
+          "Sources/FoveaCore/SharedTaskRegistry.swift",
+          "Sources/FoveaCore/TargetGeometry.swift"
+        ],
+        "testIDs": [
+          "SCHED-PT-003",
+          "GEO-PT-008"
+        ]
+      },
+      "falsifiers": [
+        "小幅输入波动导致持续振荡",
+        "取消订阅后优先级永久保持高位",
+        "重试形成风暴"
+      ],
+      "id": "FOVEA-LAW-005",
+      "invariants": [
+        "优先级随活跃订阅者可升可降",
+        "几何微扰不导致无限重建",
+        "重试延迟和总预算有界"
+      ],
+      "limits": [
+        "静态问题不应为类比控制系统而引入额外状态"
+      ],
+      "metrics": [
+        {
+          "name": "unbounded-control-oscillations",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "反馈稳定性高于瞬时最优"
+    },
+    {
+      "applicability": [
+        "diagnostics",
+        "benchmarking",
+        "testing",
+        "adaptive-policy"
+      ],
+      "claim": "优化对象必须同时具有可区分的观测量、可施加的控制变量和可重复基线。",
+      "disciplines": [
+        "cybernetics",
+        "experimental-science",
+        "system-identification"
+      ],
+      "evidence": {
+        "paths": [
+          "Sources/FoveaCore/FetchStageDiagnostics.swift",
+          "Sources/FoveaCore/DiagnosticsSink.swift"
+        ],
+        "testIDs": [
+          "DIAG-PT-005",
+          "DIAG-PT-011"
+        ]
+      },
+      "falsifiers": [
+        "指标把排队误算为执行",
+        "无法构造关闭优化的对照组",
+        "诊断阻塞热路径"
+      ],
+      "id": "FOVEA-LAW-006",
+      "invariants": [
+        "排队时间与执行时间可区分",
+        "优化可关闭",
+        "观测不改变请求结果"
+      ],
+      "limits": [
+        "观测不得泄漏原始资源身份或凭证"
+      ],
+      "metrics": [
+        {
+          "name": "diagnostic-outcome-interference",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "可观测性与可控制性成对设计"
+    },
+    {
+      "applicability": [
+        "image-representation",
+        "cache",
+        "privacy",
+        "transform"
+      ],
+      "claim": "每个不可逆转换都必须有显式边界，可重建来源与派生结果使用不同身份和生命周期。",
+      "disciplines": [
+        "thermodynamics",
+        "information-theory",
+        "image-science"
+      ],
+      "evidence": {
+        "paths": [
+          "Sources/FoveaCore/ImageDeliveryCoordinator.swift",
+          "Sources/FoveaCore/Identity.swift"
+        ],
+        "testIDs": [
+          "CACHE-PT-030",
+          "DIAG-PT-001"
+        ]
+      },
+      "falsifiers": [
+        "不可逆变换后仍错误共享身份",
+        "派生失败导致唯一来源丢失并重复发网"
+      ],
+      "id": "FOVEA-LAW-007",
+      "invariants": [
+        "OriginalEncoded 与 Rendered 使用不同身份",
+        "Transform 失败不删除已验证原编码",
+        "脱敏输出不能被当作原始身份"
+      ],
+      "limits": [
+        "隐私、no-store 和撤销可要求主动删除可重建来源"
+      ],
+      "metrics": [
+        {
+          "name": "unnecessary-refetch-after-transform-failure",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "熵增显式与可重建信息分层"
+    },
+    {
+      "applicability": [
+        "transport",
+        "decode",
+        "commit",
+        "delivery"
+      ],
+      "claim": "中间态可以存在，但只有通过全部资格门的状态才能成为可复用最终产物。",
+      "disciplines": [
+        "chemistry",
+        "transaction-processing",
+        "safety-engineering"
+      ],
+      "evidence": {
+        "paths": [
+          "Sources/FoveaCore/HTTPImageResponseProcessor.swift",
+          "Sources/FoveaCore/PipelineCache.swift"
+        ],
+        "testIDs": [
+          "CACHE-PT-010",
+          "CACHE-PT-029"
+        ]
+      },
+      "falsifiers": [
+        "任一中间态可绕过必要门直接成为 reusable state"
+      ],
+      "id": "FOVEA-LAW-008",
+      "invariants": [
+        "不完整 body 不生成可见 ContentID",
+        "安全验证先于持久发布",
+        "半成品不进入 RenderedMemory"
+      ],
+      "limits": [
+        "阶段门描述语义，不要求每个阶段独立文件或类型"
+      ],
+      "metrics": [
+        {
+          "name": "published-intermediate-states",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "阶段门是反应路径"
+    },
+    {
+      "applicability": [
+        "testing",
+        "architecture",
+        "experimental-features"
+      ],
+      "claim": "测试套件必须能够淘汰故意破坏关键不变量的变异，实现和抽象通过竞争证据保留。",
+      "disciplines": [
+        "evolutionary-biology",
+        "philosophy-of-science",
+        "software-testing"
+      ],
+      "evidence": {
+        "paths": [
+          "scripts/run-critical-mutants.py",
+          "scripts/validate-critical-mutation-report.py"
+        ],
+        "testIDs": [
+          "AIQA-GATE-010"
+        ]
+      },
+      "falsifiers": [
+        "有效 mutant 存活",
+        "mutant 因源码定位腐化而被错误计为通过",
+        "测试只绑定文件布局"
+      ],
+      "id": "FOVEA-LAW-009",
+      "invariants": [
+        "有效关键 mutant 不得存活",
+        "变异目录随架构迁移",
+        "失败原型可删除"
+      ],
+      "limits": [
+        "有限 mutant 集不能证明全部正确性"
+      ],
+      "metrics": [
+        {
+          "name": "critical-mutant-survivors",
+          "target": "0"
+        },
+        {
+          "name": "invalid-critical-mutants",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "演化通过变异与选择"
+    },
+    {
+      "applicability": [
+        "modules",
+        "stages",
+        "api",
+        "documentation"
+      ],
+      "claim": "复杂性只能迁移，不能被命名消除；应减少跨边界传播、共享状态和时间耦合。",
+      "disciplines": [
+        "complexity-science",
+        "network-science",
+        "software-architecture"
+      ],
+      "evidence": {
+        "paths": [
+          "scripts/check-architecture-boundaries.py",
+          "scripts/check-structural-quality.py"
+        ],
+        "testIDs": [
+          "PIPE-PT-010"
+        ]
+      },
+      "falsifiers": [
+        "局部修改需要理解更多模块",
+        "新增抽象增加依赖边而未减少状态空间",
+        "出现第二套事实来源"
+      ],
+      "id": "FOVEA-LAW-010",
+      "invariants": [
+        "领域语义有唯一所有者",
+        "生产依赖图无环",
+        "拆分不以文件碎片化替代职责分离"
+      ],
+      "limits": [
+        "复杂度指标用于发现热点，不单独决定设计"
+      ],
+      "metrics": [
+        {
+          "name": "production-dependency-cycles",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "复杂性预算守恒并优先局部化"
+    },
+    {
+      "applicability": [
+        "public-api",
+        "plugins",
+        "network",
+        "security"
+      ],
+      "claim": "安全路径必须是默认低成本路径，扩大权限或资源消耗的调用方显式承担配置和证据成本。",
+      "disciplines": [
+        "economics",
+        "mechanism-design",
+        "security-engineering"
+      ],
+      "evidence": {
+        "paths": [
+          "Sources/FoveaCore/ProfileAccessPolicy.swift",
+          "Sources/FoveaHTTP/HTTPDestinationPolicy.swift"
+        ],
+        "testIDs": [
+          "AUTH-PT-014",
+          "RES-PT-017"
+        ]
+      },
+      "falsifiers": [
+        "最简单 API 隐式扩大权限",
+        "插件可绕过消费方 hard cap",
+        "局部便利把长期成本转嫁给 Core",
+        "自动化或后台路径在无明确授权时访问公网",
+        "交互式联网体验隐藏其外部依赖或把第三方故障伪装为核心回归"
+      ],
+      "id": "FOVEA-LAW-011",
+      "invariants": [
+        "默认 public-only ACL",
+        "插件输出由消费方重新验证",
+        "凭证、后台联网与自动化公网实验使用显式 opt-in",
+        "用户可见且以联网内容为核心目的的交互式 App 可以默认联网，但必须明确状态、限制目的地并提供确定性离线模式"
+      ],
+      "limits": [
+        "失败关闭必须提供结构化错误和受限逃生口",
+        "网络默认值由用户可见目的、副作用透明度和证据类型决定，不能用单一规则覆盖交互体验、CI 与后台任务"
+      ],
+      "metrics": [
+        {
+          "name": "implicit-privilege-expansions",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "风险外部性由产生者承担"
+    },
+    {
+      "applicability": [
+        "documentation",
+        "naming",
+        "governance",
+        "review"
+      ],
+      "claim": "名称、文档层级和叙事因果会改变维护行为，必须与代码契约共同治理。",
+      "disciplines": [
+        "sociology",
+        "organizational-theory",
+        "literature"
+      ],
+      "evidence": {
+        "paths": [
+          "docs/README.md",
+          "docs/test-traceability.json",
+          "scripts/check-docs.py"
+        ],
+        "testIDs": [
+          "AIQA-GATE-004"
+        ]
+      },
+      "falsifiers": [
+        "两份权威文档对同一行为冲突",
+        "维护者只能阅读实现猜测契约",
+        "注释重复代码而不解释原因"
+      ],
+      "id": "FOVEA-LAW-012",
+      "invariants": [
+        "权威来源优先级明确",
+        "测试 ID 稳定",
+        "实现状态不被候选愿景冒充"
+      ],
+      "limits": [
+        "文档不能冻结错误实现，冲突必须显式修复"
+      ],
+      "metrics": [
+        {
+          "name": "required-test-traceability",
+          "target": "100%"
+        }
+      ],
+      "status": "operational",
+      "title": "可理解性维持社会技术一致"
+    },
+    {
+      "applicability": [
+        "claims",
+        "benchmarks",
+        "release",
+        "research"
+      ],
+      "claim": "事实、推断、假设、愿景和不同强度证据必须分层，结论强度不得超过证据强度。",
+      "disciplines": [
+        "philosophy",
+        "scientific-method",
+        "evidence-based-medicine"
+      ],
+      "evidence": {
+        "paths": [
+          "docs/specifications/ai-development-assurance.md",
+          "docs/specifications/benchmark-workloads.md"
+        ],
+        "testIDs": [
+          "AIQA-GATE-001",
+          "AIQA-GATE-009"
+        ]
+      },
+      "falsifiers": [
+        "总体领先声明没有可比较维度",
+        "单一证据被描述为完整证明",
+        "未知项被省略"
+      ],
+      "id": "FOVEA-LAW-013",
+      "invariants": [
+        "本地测试不冒充可信远程 CI",
+        "性能声明绑定 workload 和环境",
+        "未证明项显式记录"
+      ],
+      "limits": [
+        "证据分级不应成为低风险改进无限延期的借口"
+      ],
+      "metrics": [
+        {
+          "name": "unsupported-stable-claims",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "认识论状态显式"
+    },
+    {
+      "applicability": [
+        "refactoring",
+        "tooling",
+        "testing",
+        "knowledge-management"
+      ],
+      "claim": "重大修复必须检查能否提炼更稳定的模块、工具、不变量或拒绝抽象的边界知识。",
+      "disciplines": [
+        "design-science",
+        "innovation-studies",
+        "evolutionary-biology"
+      ],
+      "evidence": {
+        "paths": [
+          "docs/engineering-knowledge.json",
+          "scripts/check-engineering-knowledge.py"
+        ],
+        "testIDs": [
+          "AIQA-GATE-004"
+        ]
+      },
+      "falsifiers": [
+        "抽象只服务单一调用点",
+        "发现没有测试或资产",
+        "通用名称隐藏领域差异"
+      ],
+      "id": "FOVEA-LAW-014",
+      "invariants": [
+        "promoted 发现具有真实资产",
+        "promoted 发现具有独立证据",
+        "每项发现记录过度推广风险"
+      ],
+      "limits": [
+        "拒绝错误抽象也可作为有价值发现",
+        "不以发现数量衡量创新"
+      ],
+      "metrics": [
+        {
+          "name": "unverified-promoted-discoveries",
+          "target": "0"
+        }
+      ],
+      "status": "operational",
+      "title": "复杂问题产生可复用金蛋"
+    }
+  ],
+  "schemaVersion": 1
+}

@@ -1,0 +1,1056 @@
+{
+  "entries": [
+    {
+      "area": "concurrency",
+      "assumptions": [
+        "操作边界可映射为顺序状态机动作",
+        "actor 隔离覆盖注册表可变状态",
+        "250ms tombstone 是取消静默窗口而非继续传输许可"
+      ],
+      "claimBoundary": "有限单键模型不证明 Swift Task 运行时、墙钟租约精度和无限键空间的完整线性化；W7 只校准当前 250ms 窗口与固定取消 trace。",
+      "codePaths": [
+        "Sources/FoveaCore/SharedTaskRegistry.swift"
+      ],
+      "decision": "实现保留 active、orphan handoff、cancellation tombstone 三态；FetchStage 对最后订阅者取消立即终止 transport，并用 250ms 有界墓碑阻止同批迟到订阅 ABA 重启。",
+      "evidencePaths": [
+        "scripts/model-check-shared-task-registry.py",
+        "Tests/FoveaTests/SharedTaskTests.swift"
+      ],
+      "falsifiers": [
+        "旧 completion 能删除新 taskID",
+        "旧 orphan/cancellation lease 能删除替换任务",
+        "迟到订阅能绕过 cancellation tombstone 启动第二个底层 operation",
+        "已取消底层任务在 tombstone 窗口内继续产生响应字节"
+      ],
+      "id": "FOVEA-MATH-001",
+      "mechanism": "taskID、orphan leaseID 与 cancellation tombstone leaseID 把完成、交接过期和取消静默窗口绑定到创建它们的逻辑任务；迟到订阅只能观察同一已取消 Task，不能在窗口内重启底层操作。",
+      "sources": [
+        {
+          "kind": "foundational-paper",
+          "title": "Linearizability: A Correctness Condition for Concurrent Objects",
+          "url": "https://doi.org/10.1145/78969.78972",
+          "year": 1990
+        },
+        {
+          "kind": "systems-paper",
+          "title": "Anvil: Verifying Liveness of Cluster Management Controllers",
+          "url": "https://www.usenix.org/conference/osdi24/presentation/rao",
+          "year": 2024
+        }
+      ],
+      "status": "implemented",
+      "theory": "线性化与版本戳防 ABA"
+    },
+    {
+      "area": "formal-methods",
+      "assumptions": [
+        "抽象状态包含目标不变量所需变量",
+        "实现事件与模型动作的映射可审查"
+      ],
+      "claimBoundary": "结论只覆盖脚本声明的有限状态域、动作和公平假设。",
+      "codePaths": [
+        "scripts/model-check-cache-transactions.py",
+        "scripts/model-check-permit-scheduler.py",
+        "scripts/model-check-shared-task-registry.py"
+      ],
+      "decision": "模型通过但 mutant 不被杀死时门禁仍失败。",
+      "evidencePaths": [
+        "Tests/FoveaTests/CacheRefreshTransactionTests.swift",
+        "Tests/FoveaTests/PrioritySchedulingTests.swift",
+        "Tests/FoveaTests/SharedTaskTests.swift"
+      ],
+      "falsifiers": [
+        "任一内置错误模型不能产生反例",
+        "模型动作与实现语义发生不可解释漂移"
+      ],
+      "id": "FOVEA-MATH-002",
+      "mechanism": "缓存事务、带权许可池和 single-flight 分别枚举有限状态；single-flight 模型覆盖 active、orphan handoff 和 cancellation tombstone，并要求 6 个已知错误规则产生最短反例。",
+      "sources": [
+        {
+          "kind": "systems-paper",
+          "title": "Anvil: Verifying Liveness of Cluster Management Controllers",
+          "url": "https://www.usenix.org/conference/osdi24/presentation/rao",
+          "year": 2024
+        }
+      ],
+      "status": "implemented",
+      "theory": "有限状态模型检查与 mutant 反例敏感性"
+    },
+    {
+      "area": "caching",
+      "assumptions": [
+        "工作负载包含重复热点和扫描混合",
+        "单比特访问状态足以形成有用近似"
+      ],
+      "claimBoundary": "SIEVE 不保证每条 trace 优于 LRU，也不利用对象 miss cost 或尺寸价值密度。",
+      "codePaths": [
+        "docs/project-memory/component-pins.json",
+        "Sources/FoveaCore/PipelineCache.swift",
+        "Tests/FoveaTests/MemoryCacheTests.swift"
+      ],
+      "decision": "默认内存缓存由 exact-pinned AkashicMemory SIEVE 提供；Fovea 保留宿主组合、独立差分模型和正式尾延迟门，不复制组件实现。",
+      "evidencePaths": [
+        "Tests/FoveaTests/MemoryCacheTests.swift",
+        "scripts/analyze-cache-policies.py",
+        "Benchmarks/CacheLab/cache-plan.json",
+        "Benchmarks/CacheLab/README.md",
+        "scripts/analyze-cache-lab.py"
+      ],
+      "falsifiers": [
+        "独立状态机差分出现偏差",
+        "真实回屏 trace 的避免代价持续显著劣于替代策略",
+        "全访问 epoch 快进与独立经典 SIEVE 模型的 victim 序列出现偏差"
+      ],
+      "id": "FOVEA-MATH-003",
+      "mechanism": "命中记录当前 visit epoch；普通淘汰按 FIFO hand 跳过并逻辑清除已访问项。若全部驻留项均已访问，经典 SIEVE 必然完整绕环并淘汰原 hand，因此实现以 O(1) 推进全局 epoch 得到相同 victim，避免在锁内集中 O(n) 清位。",
+      "sources": [
+        {
+          "kind": "systems-paper",
+          "title": "SIEVE is Simpler than LRU: an Efficient Turn-Key Eviction Algorithm for Web Caches",
+          "url": "https://www.usenix.org/conference/nsdi24/presentation/zhang-yazhuo",
+          "year": 2024
+        }
+      ],
+      "status": "implemented",
+      "theory": "SIEVE 惰性访问位淘汰"
+    },
+    {
+      "area": "caching",
+      "assumptions": [
+        "有限 trace 中对象尺寸和 miss cost 固定",
+        "全部容量可行子集可枚举"
+      ],
+      "claimBoundary": "离线最优知道未来，只是基准，不可部署。",
+      "codePaths": [
+        "scripts/analyze-cache-policies.py"
+      ],
+      "decision": "策略变更必须与 oracle 和多个 trace 比较，不能只看命中率。",
+      "evidencePaths": [
+        "Tests/FoveaTests/MemoryCacheTests.swift"
+      ],
+      "falsifiers": [
+        "在线策略报告超过离线 oracle",
+        "已知微型 trace 的 oracle 自检失败"
+      ],
+      "id": "FOVEA-MATH-004",
+      "mechanism": "动态规划计算有限字节容量下的精确离线 oracle，再报告对象、字节、避免代价和 regret。",
+      "sources": [
+        {
+          "kind": "foundational-paper",
+          "title": "Competitive Analysis of Paging",
+          "url": "https://doi.org/10.1145/800057.808718",
+          "year": 1985
+        }
+      ],
+      "status": "implemented",
+      "theory": "离线最优动态规划与在线策略 regret"
+    },
+    {
+      "area": "caching",
+      "assumptions": [
+        "可获得下一次访问或对象价值预测",
+        "预测误差能在线定义和审计"
+      ],
+      "claimBoundary": "预印本理论和预测 oracle 假设不能直接外推到端侧图片缓存。",
+      "codePaths": [
+        "scripts/analyze-cache-policies.py"
+      ],
+      "decision": "不进入生产；先收集脱敏真实 trace、建立误差指标和 adversarial phase-shift。",
+      "evidencePaths": [
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "falsifiers": [
+        "错误预测使 regret 无界或持续高于 SIEVE",
+        "模型成本超过避免的解码和网络代价"
+      ],
+      "id": "FOVEA-MATH-005",
+      "mechanism": "预测只影响准入或淘汰建议，错误预测时回退到有竞争性上界的基线。",
+      "sources": [
+        {
+          "kind": "research-preprint",
+          "title": "Guard: Robust Learning-Augmented Caching",
+          "url": "https://arxiv.org/abs/2502.20236",
+          "year": 2025
+        },
+        {
+          "kind": "research-preprint",
+          "title": "Towards Optimal Robustness in Learning-Augmented Paging",
+          "url": "https://arxiv.org/abs/2602.00676",
+          "year": 2026
+        }
+      ],
+      "status": "research",
+      "theory": "学习增强分页的 consistency–robustness 权衡"
+    },
+    {
+      "area": "scheduling",
+      "assumptions": [
+        "workEstimate 只在同产品优先级中比较",
+        "已授予任务最终释放许可",
+        "单请求不超过总容量"
+      ],
+      "claimBoundary": "八次是进入保留的绕过阈值，不是墙钟等待上界。",
+      "codePaths": [
+        "Sources/FoveaCore/AsyncPermitPool.swift"
+      ],
+      "decision": "只应用 SPT 的局部启发，不声称满足单机准确处理时间假设。",
+      "evidencePaths": [
+        "Tests/FoveaTests/PrioritySchedulingTests.swift",
+        "scripts/model-check-permit-scheduler.py"
+      ],
+      "falsifiers": [
+        "持续小请求可无限绕过已保留大请求",
+        "产品优先级被工作量估计反转"
+      ],
+      "id": "FOVEA-MATH-006",
+      "mechanism": "普通状态偏好较小工作；达到绕过上限后为最老大请求排空碎片并保留未来容量。",
+      "sources": [
+        {
+          "kind": "foundational-paper",
+          "title": "Sequencing Jobs to Minimize Total Completion Time",
+          "url": "https://doi.org/10.1002/nav.3800030206",
+          "year": 1956
+        }
+      ],
+      "status": "implemented",
+      "theory": "SPT 局部排序与带权容量保留"
+    },
+    {
+      "area": "scheduling",
+      "assumptions": [
+        "服务时间或年龄条件分布可稳定估计",
+        "目标主要是平均响应时间",
+        "抢占成本可忽略或精确建模"
+      ],
+      "claimBoundary": "M/G/1 最优性不覆盖多阶段、多资源、优先级约束的完整图片管线。",
+      "codePaths": [
+        "Sources/FoveaCore/AsyncPermitPool.swift"
+      ],
+      "decision": "当前拒绝替换许可池；Fovea 的任务多资源、部分不可抢占且分布漂移，标准 Gittins 对微小误差可能不鲁棒。",
+      "evidencePaths": [
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "falsifiers": [
+        "未来真实 trace 显示鲁棒 index 在平均和尾部均稳定支配当前策略且维护成本可接受"
+      ],
+      "id": "FOVEA-MATH-007",
+      "mechanism": "理论上按年龄和剩余服务分布计算 index。",
+      "sources": [
+        {
+          "kind": "research-preprint",
+          "title": "Robust Gittins Scheduling",
+          "url": "https://arxiv.org/abs/2502.06739",
+          "year": 2025
+        }
+      ],
+      "status": "rejected",
+      "theory": "Robust Gittins 与未知服务时间调度"
+    },
+    {
+      "area": "fairness",
+      "assumptions": [
+        "资源容量和每任务需求向量可观测",
+        "任务可暂时按连续份额分析"
+      ],
+      "claimBoundary": "连续任务模型不处理不可分割工作、时变估计、抢占与产品优先级。",
+      "codePaths": [
+        "scripts/analyze-multi-resource-fairness.py"
+      ],
+      "decision": "作为 namespace 多资源配额的可执行分析基线，不直接接入生产调度。",
+      "evidencePaths": [
+        "docs/specifications/resource-budgeting.md"
+      ],
+      "falsifiers": [
+        "容量超分配",
+        "共享激励失败",
+        "有限整数误报域出现正收益"
+      ],
+      "id": "FOVEA-MATH-008",
+      "mechanism": "用精确有理数同步提升活动主体的主导份额，资源饱和后冻结相关主体。",
+      "sources": [
+        {
+          "kind": "systems-paper",
+          "title": "Dominant Resource Fairness: Fair Allocation of Multiple Resource Types",
+          "url": "https://www.usenix.org/conference/nsdi11/dominant-resource-fairness-fair-allocation-multiple-resource-types",
+          "year": 2011
+        }
+      ],
+      "status": "implemented",
+      "theory": "主导资源公平 DRF progressive filling"
+    },
+    {
+      "area": "fairness",
+      "assumptions": [
+        "工作可按资源向量分段计费",
+        "跨阶段虚拟时间可以定义"
+      ],
+      "claimBoundary": "包处理队列模型不能直接等同于异步图片任务。",
+      "codePaths": [
+        "docs/specifications/resource-budgeting.md"
+      ],
+      "decision": "未定义跨阶段可加的资源计量前不进入生产。",
+      "evidencePaths": [
+        "scripts/analyze-multi-resource-fairness.py"
+      ],
+      "falsifiers": [
+        "虚拟时间不能在阶段切换和取消时保持守恒",
+        "资源估计误差造成长期份额漂移"
+      ],
+      "id": "FOVEA-MATH-009",
+      "mechanism": "把 fetch、decode、disk I/O 消耗映射为多资源虚拟完成时间。",
+      "sources": [
+        {
+          "kind": "systems-paper",
+          "title": "Multi-Resource Fair Queueing for Packet Processing",
+          "url": "https://doi.org/10.1145/2342356.2342383",
+          "year": 2012
+        },
+        {
+          "kind": "research-paper",
+          "title": "Fair and Efficient Multi-resource Allocation for Cloud Computing: Beyond Dominant Resource Fairness",
+          "url": "https://doi.org/10.1287/moor.2024.0714",
+          "year": 2026
+        }
+      ],
+      "status": "proposed",
+      "theory": "多资源公平排队 DRFQ"
+    },
+    {
+      "area": "statistics",
+      "assumptions": [
+        "严格覆盖解释要求预先固定的 i.i.d. 样本",
+        "延迟样本口径一致"
+      ],
+      "claimBoundary": "相关请求、滚动更新和分布漂移破坏固定 i.i.d. 覆盖解释。",
+      "codePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchPrefetchPlanner.swift"
+      ],
+      "decision": "只作为有界风险旋钮，不称为真实网络漏载概率 SLA。",
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift"
+      ],
+      "falsifiers": [
+        "风险或置信参数单调性失败",
+        "样本窗口、延迟钳制或硬窗口失效"
+      ],
+      "id": "FOVEA-MATH-010",
+      "mechanism": "将目标经验分位数向尾部移动 DKW 半宽，再乘内容消费速度。",
+      "sources": [
+        {
+          "kind": "foundational-paper",
+          "title": "The Tight Constant in the Dvoretzky-Kiefer-Wolfowitz Inequality",
+          "url": "https://doi.org/10.1214/aop/1176990746",
+          "year": 1990
+        }
+      ],
+      "status": "implemented",
+      "theory": "DKW–Massart 经验分布一致置信带"
+    },
+    {
+      "area": "statistics",
+      "assumptions": [
+        "每次预取后能观测漏载或过取损失",
+        "允许长期 regret/覆盖而非逐时条件保证"
+      ],
+      "claimBoundary": "在线平均误覆盖控制不等于每个时间点、用户或条件子群都满足覆盖。",
+      "codePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchPrefetchPlanner.swift"
+      ],
+      "decision": "先在 Workbench phase-shift/chaos trace 与固定 DKW 比较，未建立反馈闭环前不替换。",
+      "evidencePaths": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbenchTests/FoveaWorkbenchTests.swift"
+      ],
+      "falsifiers": [
+        "相位切换后恢复过慢",
+        "窗口振荡和额外流量高于漏载收益"
+      ],
+      "id": "FOVEA-MATH-011",
+      "mechanism": "依据在线误覆盖反馈调节分位数或窗口，不依赖固定交换性样本。",
+      "sources": [
+        {
+          "kind": "research-paper",
+          "title": "Conformal Inference for Online Prediction with Arbitrary Distribution Shifts",
+          "url": "https://jmlr.org/papers/v25/22-1218.html",
+          "year": 2024
+        },
+        {
+          "kind": "research-paper",
+          "title": "Online Conformal Prediction via Online Optimization",
+          "url": "https://proceedings.mlr.press/v267/susmann25a.html",
+          "year": 2025
+        }
+      ],
+      "status": "research",
+      "theory": "任意分布漂移下的在线共形优化"
+    },
+    {
+      "area": "geometry",
+      "assumptions": [
+        "大尺寸资源成本更接近相对尺度",
+        "目标必须向上量化以避免欠采样"
+      ],
+      "claimBoundary": "像素相对误差上界不是感知质量的完整率失真模型。",
+      "codePaths": [
+        "Sources/FoveaCore/TargetGeometry.swift"
+      ],
+      "decision": "当前 schema 只维护混合量化；删除旧纯线性 schema。",
+      "evidencePaths": [
+        "Tests/FoveaTests/TargetGeometryTests.swift"
+      ],
+      "falsifiers": [
+        "任一合法输入被向下量化",
+        "尺寸比或面积膨胀超过测试上界",
+        "桶数量未明显下降"
+      ],
+      "id": "FOVEA-MATH-012",
+      "mechanism": "小尺寸使用固定像素步长，大尺寸按固定相对增量构造几何桶。",
+      "sources": [
+        {
+          "kind": "research-paper",
+          "title": "Scalar Quantization for Relative Error",
+          "url": "https://doi.org/10.1109/TIT.2011.2162264",
+          "year": 2011
+        }
+      ],
+      "status": "implemented",
+      "theory": "相对误差标量量化与几何桶"
+    },
+    {
+      "area": "networking",
+      "assumptions": [
+        "客户端随机源近似独立",
+        "比较同一退避轮次和固定定时器量化"
+      ],
+      "claimBoundary": "单轮占用模型不证明任意服务器队列和多轮反馈下稳定。",
+      "codePaths": [
+        "Sources/FoveaCore/TransportRetryPolicy.swift",
+        "Sources/FoveaCore/FetchRetryController.swift"
+      ],
+      "decision": "删除可配置窄抖动和旧 schema，只保留 full jitter、次数/总延迟/额外字节预算。",
+      "evidencePaths": [
+        "Tests/FoveaTests/RetryPolicyTests.swift",
+        "scripts/analyze-retry-jitter.py"
+      ],
+      "falsifiers": [
+        "抖动低于 Retry-After",
+        "full jitter 精确碰撞概率不低于旧窄支持",
+        "总延迟预算可被绕过"
+      ],
+      "id": "FOVEA-MATH-013",
+      "mechanism": "在 [0, capped exponential] 上均匀采样；Retry-After 作为不可下穿的协议下界。",
+      "sources": [
+        {
+          "kind": "official-guidance",
+          "title": "Exponential Backoff and Jitter",
+          "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/",
+          "year": 2023
+        },
+        {
+          "kind": "official-guidance",
+          "title": "Retry behavior in the AWS SDKs and Tools",
+          "url": "https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html",
+          "year": 2026
+        }
+      ],
+      "status": "implemented",
+      "theory": "指数退避 full jitter 与定时器占用碰撞"
+    },
+    {
+      "area": "networking",
+      "assumptions": [
+        "到达过程和服务过程能获得可信包络",
+        "阶段间依赖可组合"
+      ],
+      "claimBoundary": "独立性和稳态假设若不成立，形式尾界可能比直接测量更误导。",
+      "codePaths": [
+        "docs/specifications/resource-budgeting.md"
+      ],
+      "decision": "缺少真机服务曲线和依赖结构证据，暂不把包络写入生产 SLA。",
+      "evidencePaths": [
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "falsifiers": [
+        "经验过程系统性违反包络",
+        "组合界松到无法指导资源配置"
+      ],
+      "id": "FOVEA-MATH-014",
+      "mechanism": "为 fetch、decode 和 disk I/O 建立到达/服务曲线并推导 backlog 与 delay 尾界。",
+      "sources": [
+        {
+          "kind": "research-monograph",
+          "title": "Stochastic Network Calculus",
+          "url": "https://doi.org/10.1007/978-3-031-55487-2",
+          "year": 2024
+        }
+      ],
+      "status": "proposed",
+      "theory": "随机网络演算与尾延迟包络"
+    },
+    {
+      "area": "retry",
+      "assumptions": [
+        "论文竞争信道模型与到达过程成立"
+      ],
+      "claimBoundary": "竞争信道理论模型不同于有服务器响应、有限尝试和取消的 HTTP 客户端。",
+      "codePaths": [
+        "Sources/FoveaCore/TransportRetryPolicy.swift"
+      ],
+      "decision": "不把该不可能结果机械套到有限 HTTP 重试；只用于禁止无界稳定性表述，并保留硬预算。",
+      "evidencePaths": [
+        "scripts/analyze-retry-jitter.py"
+      ],
+      "falsifiers": [
+        "若未来证明 Fovea 的有限预算 HTTP 模型满足更强稳定定理，可替换当前边界说明"
+      ],
+      "id": "FOVEA-MATH-015",
+      "mechanism": "研究说明不能仅凭“指数退避”宣称任意负载下稳定。",
+      "sources": [
+        {
+          "kind": "research-preprint",
+          "title": "Instability of All Backoff Protocols",
+          "url": "https://arxiv.org/abs/2601.00075",
+          "year": 2026
+        }
+      ],
+      "status": "rejected",
+      "theory": "任意竞争过程下退避协议的普遍稳定性"
+    },
+    {
+      "area": "caching",
+      "assumptions": [
+        "one-hit-wonder 和扫描污染是重要负载成分",
+        "三队列元数据与 ghost 记录开销可接受",
+        "字节容量适配不会破坏 quick-demotion 的主要机制"
+      ],
+      "claimBoundary": "当前 S3-FIFO 模型是图片字节容量适配，不能冒充论文生产实现，也不证明任意 trace 上优于 SIEVE。",
+      "codePaths": [
+        "scripts/analyze-cache-policies.py"
+      ],
+      "decision": "只在离线字节容量适配模型中研究；当前内置 trace 已出现同时优于和劣于 SIEVE 的反例，禁止直接替换生产缓存。",
+      "evidencePaths": [
+        "scripts/analyze-cache-policies.py",
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "falsifiers": [
+        "在真实脱敏图片 trace 上持续被 SIEVE 支配",
+        "按字节容量适配后 small/main 目标导致热点错误降级",
+        "ghost 元数据和并发更新成本抵消命中收益"
+      ],
+      "id": "FOVEA-MATH-016",
+      "mechanism": "新对象先进入 small FIFO，只把被再次访问的对象晋升到 main；ghost 队列为再次出现的对象提供快速晋升信号。",
+      "sources": [
+        {
+          "kind": "systems-paper",
+          "title": "FIFO queues are all you need for cache eviction",
+          "url": "https://doi.org/10.1145/3600006.3613147",
+          "year": 2023
+        },
+        {
+          "kind": "research-preprint",
+          "title": "Clock2Q+: A Simple and Efficient Replacement Algorithm for Metadata Cache in VMware vSAN",
+          "url": "https://arxiv.org/abs/2511.21958",
+          "year": 2025
+        }
+      ],
+      "status": "research",
+      "theory": "S3-FIFO quick demotion 与三队列缓存"
+    },
+    {
+      "area": "caching",
+      "assumptions": [
+        "对象驻留字节、网络代价和解码代价可用同一稳定口径估计",
+        "有界频率 sketch 的碰撞和衰减误差可被 trace 评估",
+        "准入价值密度优于只按最近性或单比特访问状态"
+      ],
+      "claimBoundary": "研究模型组合了 W-TinyLFU、尺寸和 miss cost，不等同于 Caffeine 或任何论文实现，不能据此作生产性能声明。",
+      "codePaths": [
+        "scripts/analyze-cache-policies.py"
+      ],
+      "decision": "保留为离线候选。当前模型在混合成本 trace 接近 oracle，但在循环和 phase-shift trace 出现灾难性 regret，生产采用前必须设计鲁棒回退。",
+      "evidencePaths": [
+        "scripts/analyze-cache-policies.py",
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "falsifiers": [
+        "估计误差或相位切换使 regret 长期高于 SIEVE",
+        "频率 sketch 的 CPU/元数据成本高于避免的网络和解码工作",
+        "价值单位无法在编码数据、解码图和变换图之间保持一致"
+      ],
+      "id": "FOVEA-MATH-017",
+      "mechanism": "短窗口吸收新近突发，Count-Min sketch 估计近期频率，候选按 frequency × missCost / residentBytes 与主区受害者比较。",
+      "sources": [
+        {
+          "kind": "research-paper",
+          "title": "Lightweight Robust Size Aware Cache Management",
+          "url": "https://arxiv.org/abs/2105.08770",
+          "year": 2021
+        },
+        {
+          "kind": "research-paper",
+          "title": "To Cache or Not to Cache",
+          "url": "https://doi.org/10.3390/a17070301",
+          "year": 2024
+        }
+      ],
+      "status": "research",
+      "theory": "尺寸与 miss cost 感知的 TinyLFU 准入"
+    },
+    {
+      "area": "statistics",
+      "assumptions": [
+        "比较前可以声明语义剖面和具有工程意义的等价边界",
+        "run/session 是可配对的实验块",
+        "正式结论只覆盖绑定的设备、系统、数据集和计划"
+      ],
+      "claimBoundary": "TOST 只证明结果落在预先给定的工程等价区间；它不证明两个实现内部机制相同，也不外推到未测设备与 workload。",
+      "codePaths": [
+        "scripts/check-comparison-governance.py",
+        "scripts/check-comparative-plan.py"
+      ],
+      "decision": "比较本体、竞品注册表、D0-D5 持久化等级和每项主指标的等价阈值已进入实验计划硬门。",
+      "evidencePaths": [
+        "Benchmarks/claim-policy.json",
+        "docs/specifications/comparability-contract.md"
+      ],
+      "falsifiers": [
+        "任何排名在语义剖面不等价时仍被接受",
+        "p 值不显著被解释为统计并列",
+        "正式结果未绑定预注册等价阈值或成组重采样单位"
+      ],
+      "id": "FOVEA-MATH-018",
+      "mechanism": "性能排序前检查十一项语义维度；并列必须通过预注册 delta 的 TOST，非显著差异不能自动解释为等价；实验顺序采用平衡交错。",
+      "sources": [
+        {
+          "kind": "systems-paper",
+          "title": "Producing Wrong Data Without Doing Anything Obviously Wrong",
+          "url": "https://doi.org/10.1145/1508244.1508275",
+          "year": 2009
+        },
+        {
+          "kind": "research-paper",
+          "title": "Equivalence Tests: A Practical Primer for t Tests, Correlations, and Meta-Analyses",
+          "url": "https://doi.org/10.1177/1948550617697177",
+          "year": 2017
+        }
+      ],
+      "status": "implemented",
+      "theory": "语义等价、TOST 与实验测量偏差控制"
+    },
+    {
+      "area": "statistics",
+      "assumptions": [
+        "主 endpoint、声明族、margin 和 gate 顺序可在 formal 数据前冻结",
+        "run/session block 是可配对的实验单位",
+        "不同能力与次要 endpoint 不需要共享一个无界全局声明"
+      ],
+      "claimBoundary": "Gatekeeping 的组织思想来自多 endpoint 推断，但 Fovea 的 endpoint、依赖结构和证书语义由本项目预注册；不能把临床试验结果直接外推到系统 benchmark。",
+      "codePaths": [
+        "scripts/check-comparison-governance.py",
+        "scripts/check-comparative-plan.py",
+        "scripts/check-cache-lab-plan.py"
+      ],
+      "decision": "已替换全能力全指标的单一 WorldBest 谓词；全局营销声明被禁止，只允许 best-within-scope、noninferior-within-scope 或 co-frontier 证书。",
+      "evidencePaths": [
+        "Benchmarks/claim-policy.json",
+        "Benchmarks/statistical-claim-families.json",
+        "docs/specifications/comparability-contract.md"
+      ],
+      "falsifiers": [
+        "未打开的次要 endpoint 被用于制造最佳声明",
+        "一个无关族的 inconclusive 使全部作用域自动失败",
+        "formal 结果未绑定声明族摘要却仍获得证书"
+      ],
+      "id": "FOVEA-MATH-019",
+      "mechanism": "把证据分为 L1 硬门、L2 主 endpoint 组合、L3 次要 Pareto 前沿和 L4 研究；先按族 gatekeeping，再在已打开族内做 Holm 校正，并将所有证书绑定完整作用域摘要。",
+      "sources": [
+        {
+          "kind": "research-paper",
+          "title": "Development of gatekeeping strategies in confirmatory clinical trials",
+          "url": "https://doi.org/10.1002/bimj.201100036",
+          "year": 2011
+        },
+        {
+          "kind": "research-paper",
+          "title": "Equivalence Tests: A Practical Primer for t Tests, Correlations, and Meta-Analyses",
+          "url": "https://doi.org/10.1177/1948550617697177",
+          "year": 2017
+        },
+        {
+          "kind": "systems-paper",
+          "title": "Producing Wrong Data Without Doing Anything Obviously Wrong",
+          "url": "https://doi.org/10.1145/1508244.1508275",
+          "year": 2009
+        }
+      ],
+      "status": "implemented",
+      "theory": "分层 gatekeeping 与有限作用域技术证书"
+    },
+    {
+      "area": "statistics",
+      "assumptions": [
+        "run/session block 内允许相关但 block 是正式重采样单位",
+        "指标方向可转换为 lower-is-better loss",
+        "W1 margin 使用原单位或预注册归一化而非事后选择"
+      ],
+      "claimBoundary": "经验 ECDF 无违约不等价于总体 FSD；当前实现给出依赖感知诊断，不宣称完成所有 stochastic-dominance 临界值理论。",
+      "codePaths": [
+        "scripts/analyze-latency-distributions.py",
+        "scripts/check-latency-distribution-analysis.py"
+      ],
+      "decision": "作为 L3 分布诊断落地；只有显式预注册为 L2 时才可能进入声明族，默认不替代用户可解释的主 endpoint。",
+      "evidencePaths": [
+        ".artifacts/mathematics/latency-distribution-verification.json",
+        "docs/specifications/comparability-contract.md"
+      ],
+      "falsifiers": [
+        "交叉分布被提升为总体占优",
+        "请求或帧被当成独立重复",
+        "W1 未声明单位/margin 即被解释为等价"
+      ],
+      "id": "FOVEA-MATH-020",
+      "mechanism": "计算经验 FSD 最大违约量、一维 W1、p50/p95/p99 loss 差，并以成组 bootstrap 给出区间；普通 KS 等分布检验不作为随机占优证明。",
+      "sources": [
+        {
+          "kind": "research-paper",
+          "title": "Consistent Testing for Stochastic Dominance under General Sampling Schemes",
+          "url": "https://doi.org/10.1111/j.1467-937X.2005.00350.x",
+          "year": 2005
+        },
+        {
+          "kind": "research-paper",
+          "title": "On Wasserstein Two-Sample Testing and Related Families of Nonparametric Tests",
+          "url": "https://doi.org/10.3390/e19020047",
+          "year": 2017
+        }
+      ],
+      "status": "implemented",
+      "theory": "依赖感知的分布占优违约量、Wasserstein 距离与分位数区间"
+    },
+    {
+      "area": "caching",
+      "assumptions": [
+        "有限离散 trace、统一对象尺寸和固定 fetch delay",
+        "相同对象在途请求共享一个 fetch",
+        "完成时 oracle 可旁路或缓存并任意淘汰"
+      ],
+      "claimBoundary": "当前 DP 是小型统一尺寸固定时延模型，不是 belatedly 的通用最小费用流实现，也不证明任何生产在线策略最优。",
+      "codePaths": [
+        "scripts/analyze-delayed-hit-cache.py"
+      ],
+      "decision": "已证明命中率导向未来距离策略在 finite delayed-hit 模型中可非延迟最优；进入 oracle/regret 研究，不直接替换生产 SIEVE。",
+      "evidencePaths": [
+        ".artifacts/mathematics/delayed-hit-cache.json",
+        "docs/specifications/mathematical-assurance.md"
+      ],
+      "falsifiers": [
+        "任一在线基线累计等待低于精确 DP",
+        "single-flight delayed hit 被错误计为独立 miss",
+        "模型边界被误述为变长对象或随机时延的一般 belatedly 实现"
+      ],
+      "id": "FOVEA-MATH-021",
+      "mechanism": "动态规划枚举完成事件后的可行缓存集合，最小化所有 miss 与 delayed hit 的累计等待；同时运行 LRU 和未来距离 Belady-like 基线并自动搜索反例。",
+      "sources": [
+        {
+          "kind": "systems-paper",
+          "title": "Caching with Delayed Hits",
+          "url": "https://www.microsoft.com/en-us/research/publication/caching-with-delayed-hits/",
+          "year": 2020
+        },
+        {
+          "kind": "systems-paper",
+          "title": "Latency-Aware Caching with Delayed Hits: From Bursty Traffic to Pipeline Architectures",
+          "url": "https://www.usenix.org/conference/nsdi26/presentation/keren",
+          "year": 2026
+        }
+      ],
+      "status": "implemented",
+      "theory": "Delayed-hit 累计等待的有限精确离线 oracle"
+    },
+    {
+      "area": "statistics",
+      "assumptions": [
+        "p99.9 样本可能重尾且相关",
+        "GPD 近似需要选择足够高的阈值",
+        "阈值选择本身带来模型与推断不确定性"
+      ],
+      "claimBoundary": "拒绝的是无条件自动化发布声明，不是否定 Pickands–Balkema–de Haan 渐近理论在满足条件时的研究价值。",
+      "codePaths": [
+        "Benchmarks/claim-policy.json"
+      ],
+      "decision": "拒绝把 EVT 自动拟合作为当前发布门或宣称其消除 benchmark 噪声；仅保留为 held-out 真机 trace 的敏感性研究候选。",
+      "evidencePaths": [
+        "docs/research/negative-results.json",
+        "docs/specifications/comparability-contract.md"
+      ],
+      "falsifiers": [
+        "未预注册阈值选择却给出发布级 p99.9 外推",
+        "忽略阈值不确定性或序列依赖",
+        "使用 EVT 区间替代原始经验分位数和 block 区间"
+      ],
+      "id": "FOVEA-MATH-022",
+      "mechanism": "将阈值偏差、尾部样本稀疏方差、依赖与拟合优度纳入尾部推断，而不是只拟合一次 GPD 后报告窄区间。",
+      "sources": [
+        {
+          "kind": "review-paper",
+          "title": "A Review of Extreme Value Threshold Estimation and Uncertainty Quantification",
+          "url": "https://doi.org/10.57805/revstat.v10i1.110",
+          "year": 2012
+        },
+        {
+          "kind": "research-preprint",
+          "title": "Choosing the threshold in extreme value analysis",
+          "url": "https://arxiv.org/abs/2606.28540",
+          "year": 2026
+        }
+      ],
+      "status": "rejected",
+      "theory": "EVT 阈值不确定性阻止自动尾部精化声明"
+    },
+    {
+      "area": "formal-methods",
+      "assumptions": [
+        "抽象容量使用离散正整数单位",
+        "执行身份由 namespace、generation 与 execution digest 完整表示",
+        "过期只按离散单调时钟判断"
+      ],
+      "claimBoundary": "结论证明有界驻留、精确身份、过期、撤销和 no-store 准入安全；不证明 SIEVE 驱逐的在线最优性，也不证明 Swift 内存模型与抽象状态自动等价。",
+      "codePaths": [
+        "Sources/FoveaCore/PipelineCache.swift",
+        "Sources/FoveaCore/AdaptiveEncodedWarmupCoordinator.swift"
+      ],
+      "decision": "保留资源预算派生的已验证编码 handoff，并要求五类错误模型均产生最短反例；缓存策略最优性继续作为独立研究义务。",
+      "evidencePaths": [
+        "scripts/model-check-validated-encoded-handoff.py",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
+      ],
+      "falsifiers": [
+        "驻留成本超过预算",
+        "跨 execution 或 generation 命中",
+        "no-store 进入驻留层",
+        "revoke 或 purge 后仍命中",
+        "任一内置 mutant 存活"
+      ],
+      "id": "FOVEA-MATH-023",
+      "mechanism": "有限模型穷举插入、查询、时钟推进、撤销和清空；canonical oracle 独立于 mutant，检查预算、身份与准入不变量。",
+      "sources": [
+        {
+          "kind": "systems-paper",
+          "title": "SIEVE is Simpler than LRU: an Efficient Turn-Key Eviction Algorithm for Web Caches",
+          "url": "https://www.usenix.org/conference/nsdi24/presentation/zhang-yazhuo",
+          "year": 2024
+        },
+        {
+          "kind": "foundational-paper",
+          "title": "On-Line File Caching",
+          "url": "https://arxiv.org/abs/cs/0205033",
+          "year": 2002
+        }
+      ],
+      "status": "implemented",
+      "theory": "已验证编码 handoff 的有界有限状态模型"
+    },
+    {
+      "area": "caching",
+      "assumptions": [
+        "对象大小和取回代价在请求时已知",
+        "缓存容量固定",
+        "在线算法不能预知未来",
+        "过期与安全失效可被建模为强制删除"
+      ],
+      "claimBoundary": "Landlord 的竞争界只覆盖其在线文件缓存模型；Fovea 尚未证明 HTTP 过期、取消 handoff、动态代价和整数实现与该模型构成 refinement。",
+      "codePaths": [
+        "Sources/FoveaCore/PipelineCache.swift",
+        "scripts/analyze-cache-policies.py"
+      ],
+      "decision": "作为已验证编码 handoff 的候选替代策略研究；在 exact oracle、adversarial trace、定点数误差与 Swift 差分模型闭合前不进入生产。",
+      "evidencePaths": [
+        "docs/specifications/mathematical-engineering-standard.md",
+        "scripts/model-check-validated-encoded-handoff.py"
+      ],
+      "falsifiers": [
+        "映射后竞争界假设被 HTTP 过期或动态取回代价破坏",
+        "元数据与算术成本超过避免的 I/O",
+        "真实与对抗 trace 上被更简单策略稳定支配"
+      ],
+      "id": "FOVEA-MATH-024",
+      "mechanism": "为任意大小和取回代价对象维护 credit，按容量压力统一降低 credit 并驱逐归零对象；理论候选是 Landlord/GreedyDual-Size 家族。",
+      "sources": [
+        {
+          "kind": "foundational-paper",
+          "title": "On-Line File Caching",
+          "url": "https://arxiv.org/abs/cs/0205033",
+          "year": 2002
+        },
+        {
+          "kind": "systems-paper",
+          "title": "SIEVE is Simpler than LRU: an Efficient Turn-Key Eviction Algorithm for Web Caches",
+          "url": "https://www.usenix.org/conference/nsdi24/presentation/zhang-yazhuo",
+          "year": 2024
+        }
+      ],
+      "status": "proposed",
+      "theory": "Landlord 任意大小在线文件缓存竞争界"
+    },
+    {
+      "area": "scheduling",
+      "assumptions": [
+        "同一展示类别的短时取消可由相邻单调时钟时间戳表示",
+        "常周期模型只用于一步预测，不作为真实输入分布承诺",
+        "取消 cohort 上界由独立参数门约束"
+      ],
+      "claimBoundary": "证明有限模型中不足两个取消时无稳定延迟/交接、两个取消后稳定窗口精确等于最近周期、周期不超过 cohort、类别隔离、过期重置和状态上界；不证明真实取消过程平稳，也不证明当前 cohort 数值最优。",
+      "codePaths": [
+        "Sources/FoveaCore/AdaptiveImageLoadAdmission.swift",
+        "Sources/FoveaCore/CancellationCohortPolicy.swift"
+      ],
+      "decision": "删除固定毫秒延迟和相位预测；只在两个同类取消后启用最近完整周期稳定门和共享 fetch handoff。",
+      "evidencePaths": [
+        "scripts/model-check-adaptive-image-admission.py",
+        "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift"
+      ],
+      "falsifiers": [
+        "一次取消后启用 handoff 或稳定门",
+        "稳定窗口为零或超过最近周期/cohort",
+        "不同展示类别共享取消历史",
+        "过期状态继续激活",
+        "状态数超过资源派生上限",
+        "任一内置 mutant 存活"
+      ],
+      "id": "FOVEA-MATH-025",
+      "mechanism": "锁线性化取消时间戳；两个同 cohort 取消识别最近周期。后续展示必须存活一个完整周期才进入解码/发布，取消时共享 fetch 使用既有 orphan lease 交给后台验证订阅。有限模型穷举 begin、cancel、tick、过期和容量裁剪。",
+      "sources": [
+        {
+          "kind": "foundational-text",
+          "title": "Prediction, Learning, and Games",
+          "url": "https://www.cambridge.org/core/books/prediction-learning-and-games/9F3D3A36E783618A88132A0D3D19E1D7",
+          "year": 2006
+        },
+        {
+          "kind": "systems-paper",
+          "title": "The Tail at Scale",
+          "url": "https://research.google/pubs/the-tail-at-scale/",
+          "year": 2013
+        }
+      ],
+      "status": "implemented",
+      "theory": "连续取消 cohort、完整周期稳定门与共享 fetch 有界交接"
+    },
+    {
+      "area": "formal-methods",
+      "assumptions": [
+        "输入 header 集合有限且原始字段名精确键不重复",
+        "UTF-8 字节长度与控制字符规则由独立 oracle 定义",
+        "缩小机器整数域用于暴露溢出反例"
+      ],
+      "claimBoundary": "证明参数化元数据规范化算法的有限域安全性质；不证明生产 header 数量和字节上限的具体数值最优。",
+      "codePaths": [
+        "Sources/FoveaHTTP/HTTPMetadataLimits.swift",
+        "Sources/FoveaCore/ImageRequestValidation.swift"
+      ],
+      "decision": "保留计数、字段、总字节、控制字符、大小写重复和 checked-addition 六道独立防线；具体数值全部进入参数审查。",
+      "evidencePaths": [
+        "scripts/model-check-http-metadata-limits.py",
+        "Tests/FoveaTests/HTTPMetadataBoundaryTests.swift"
+      ],
+      "falsifiers": [
+        "任一错误规则在有限域存活",
+        "大小写重复被重复计费或产生两个规范键",
+        "整数回绕后超限输入被接受",
+        "模型和 Swift 对同一输入产生不同结果"
+      ],
+      "id": "FOVEA-MATH-026",
+      "mechanism": "独立 canonical oracle 穷举 2,906 个 dictionary-like header 输入，并对六种删除防线的 mutant 搜索最小反例。",
+      "sources": [
+        {
+          "kind": "standard",
+          "title": "RFC 9110: HTTP Semantics",
+          "url": "https://www.rfc-editor.org/rfc/rfc9110",
+          "year": 2022
+        }
+      ],
+      "status": "implemented",
+      "theory": "HTTP 元数据参数化有限域规范化模型"
+    },
+    {
+      "area": "scheduling",
+      "assumptions": [
+        "失败分类已经映射为 retryable 或 terminal",
+        "Jitter 比例在 0...1000 千分比内",
+        "Retry-After 已按 HTTP 语义解析并截断到单次上界"
+      ],
+      "claimBoundary": "证明参数化重试状态机的尝试、指数封顶、jitter、Retry-After、累计延迟和字节预算性质；不证明生产绝对上限或默认退避参数最优。",
+      "codePaths": [
+        "Sources/FoveaCore/TransportRetryPolicy.swift",
+        "Sources/FoveaCore/FetchRetryController.swift"
+      ],
+      "decision": "保留 capped exponential backoff、full jitter、服务端下界和四重预算；具体数值进入独立 provisional 参数审查。",
+      "evidencePaths": [
+        "scripts/model-check-transport-retry.py",
+        "Tests/FoveaTests/RetryPolicyTests.swift"
+      ],
+      "falsifiers": [
+        "terminal 失败被重试",
+        "304 被重试",
+        "指数超过单次上界",
+        "实际等待低于合法 Retry-After",
+        "累计延迟或字节加法回绕",
+        "任一 mutant 存活"
+      ],
+      "id": "FOVEA-MATH-027",
+      "mechanism": "独立 oracle 穷举 315 个预算状态与 168 类失败/响应事件，共 52,920 组合，检查八种删除边界的错误规则。",
+      "sources": [
+        {
+          "kind": "systems-paper",
+          "title": "Exponential Backoff in Packet Radio Networks",
+          "url": "https://dl.acm.org/doi/10.1145/800194.805843",
+          "year": 1980
+        },
+        {
+          "kind": "engineering-reference",
+          "title": "Exponential Backoff And Jitter",
+          "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/",
+          "year": 2015
+        }
+      ],
+      "status": "implemented",
+      "theory": "有界指数退避与 full-jitter 重试状态机"
+    },
+    {
+      "area": "persistence",
+      "assumptions": [
+        "namespace 指纹是 64 字符小写 SHA-256 十六进制",
+        "generation 为 UInt64 十进制编码",
+        "JSONEncoder 使用非 pretty-printed 规范对象编码"
+      ],
+      "claimBoundary": "证明当前 schema 的线性文件字节预算覆盖所有合法键和值；不证明一百万项的启动性能或最大 namespace 数量最优。",
+      "codePaths": [
+        "Sources/FoveaPersistence/NamespaceGenerationStore.swift",
+        "Sources/FoveaStorage/NamespaceStorageLimits.swift"
+      ],
+      "decision": "批准 4 KiB 固定预算和 112 字节每项预算；最大 namespace 数量保持 provisional 并在 Core/Persistence 间单一来源。",
+      "evidencePaths": [
+        "scripts/prove-namespace-generation-manifest-bound.py",
+        "Tests/FoveaTests/NamespaceGenerationPersistenceTests.swift"
+      ],
+      "falsifiers": [
+        "固定信封或单项规范编码超过预算",
+        "checked arithmetic 被删除",
+        "持久 schema 改变而证明未更新"
+      ],
+      "id": "FOVEA-MATH-028",
+      "mechanism": "从固定字段、64 字节安全键、UInt64 最大 20 位和 JSON 标点精确推导上界，并在最大计数处用任意精度整数复核总预算。",
+      "sources": [
+        {
+          "kind": "standard",
+          "title": "RFC 8259: The JavaScript Object Notation (JSON) Data Interchange Format",
+          "url": "https://www.rfc-editor.org/rfc/rfc8259",
+          "year": 2017
+        }
+      ],
+      "status": "implemented",
+      "theory": "namespace generation 清单线性编码上界证明"
+    }
+  ],
+  "reviewedAt": "2026-07-25",
+  "schemaVersion": 1
+}

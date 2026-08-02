@@ -1,0 +1,16 @@
+{
+  "maximumTotalPublicSymbols": 723,
+  "minimumDocumentedPublicSymbolPercent": 50.0,
+  "modules": {
+    "FoveaAppKit": 13,
+    "FoveaCore": 425,
+    "FoveaHTTP": 171,
+    "FoveaObservability": 17,
+    "FoveaPersistence": 9,
+    "FoveaStorage": 26,
+    "FoveaSwiftUI": 45,
+    "FoveaSystem": 5,
+    "FoveaUIKit": 12
+  },
+  "schemaVersion": 1
+}

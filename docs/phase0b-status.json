@@ -1,0 +1,304 @@
+{
+  "blockers": [
+    {
+      "id": "P0B-COMP-ADAPTERS",
+      "status": "a-tier-seven-integrations-build-complete-final-calibration-refresh-pending",
+      "summary": "All seven accepted A-tier comparators are integrated in the unified project: six headless apps plus a paired Apple AsyncImage/Fovea SwiftUI surface. Final unchanged-source Simulator aggregates and formal repeated physical-device evidence remain incomplete."
+    },
+    {
+      "id": "P0B-DEVICE-PRIMARY",
+      "status": "captured-beta-signing-blocked",
+      "summary": "The iPhone 16e on iOS 27 beta has a sanitized device capture, but signing/provisioning still blocks the formal app run."
+    },
+    {
+      "id": "P0B-DEVICE-SECONDARY",
+      "status": "blocked-no-device",
+      "summary": "A second physical device representing the lower-performance tier remains required for graduation."
+    },
+    {
+      "id": "P0B-FORMAL-W1-W2-W3",
+      "status": "blocked-by-signing-stable-os-device-matrix-and-independent-replication",
+      "summary": "Schema 3 Simulator calibration and correctness infrastructure exist, but formal repeated physical-device W1/W2/W3 remains blocked by signing, stable-OS replication, the lower-performance device, and independent replication."
+    },
+    {
+      "id": "P0B-STABLE-OS-REPLICATION",
+      "status": "blocked-beta-os",
+      "summary": "Beta-OS measurements are provisional and must be repeated on a stable public iOS build before a release claim."
+    },
+    {
+      "id": "P0B-TRUSTED-EVIDENCE",
+      "status": "blocked-dirty-tree",
+      "summary": "The current working tree is not represented by a clean final commit and protected trusted-CI evidence."
+    },
+    {
+      "id": "P0B-INDEPENDENT-REVIEW",
+      "status": "pending",
+      "summary": "Held-out evaluation and accountable human comprehension attestation remain outstanding."
+    },
+    {
+      "id": "P0B-GRADUATION-REPORT",
+      "status": "pending",
+      "summary": "No final Performance Path or Correctness Path graduation report exists."
+    },
+    {
+      "id": "P0B-SIMULATOR-RUNTIME",
+      "status": "environment-blocked-uninterruptible-coresimulator-processes",
+      "summary": "CoreSimulator health evidence records 71 uninterruptible processes, including root simdiskimaged and the replacement exact-build device process tree. The replacement device timed out after 900 seconds during 00LaunchServicesMigrator and is marked incomplete/do-not-reuse. Recovery requires an administrator simdiskimaged restart or host reboot; after recovery the incomplete device must be archived and recreated. No performance result was generated."
+    }
+  ],
+  "componentEvidence": {
+    "cacheLabV2Historical": {
+      "applicableComparisonsPassed": 12,
+      "applicableComparisonsTotal": 13,
+      "artifact": ".artifacts/cache-lab/formal-analysis.json",
+      "formalRuns": 20,
+      "planID": "FOVEA-CACHE-LAB-V2",
+      "status": "historical-final-tree-bound-hot-throughput-dominance-failed"
+    },
+    "cacheLabV3Historical": {
+      "artifact": ".artifacts/cache-lab/shard16-v3-hot20-analysis.json",
+      "planID": "FOVEA-CACHE-LAB-V3",
+      "status": "historical-plan-implementation-round-mismatch-and-three-dominance-failures"
+    },
+    "cacheLabV4": {
+      "akashicCandidate": {
+        "fileCount": 81,
+        "foveaCandidateIntegrationTests": 478,
+        "gitMetadataPresent": false,
+        "releaseReadiness": "passed-local",
+        "sourceIdentitySHA256": "91608c55745b333bf28b923bf0bf64744541b5e81344f061a251adea483bdb92"
+      },
+      "applicableComparisonsPassed": 13,
+      "applicableComparisonsTotal": 13,
+      "artifact": ".artifacts/cache-lab/formal-analysis.json",
+      "bestClaimBlockedReasons": [
+        "dependency-resolution-untrusted-or-edited"
+      ],
+      "bestClaimEligible": false,
+      "diskP99SampleRounds": 8,
+      "dominanceFailures": 0,
+      "formalRuns": 20,
+      "foveaCorrectnessFailures": 0,
+      "hotRoundsPerInnerTrial": 20,
+      "inconclusivePrimaryMetrics": 0,
+      "inferiorPrimaryMetrics": 0,
+      "planID": "FOVEA-CACHE-LAB-V4",
+      "primaryComparatorCorrectnessFailures": 0,
+      "reportSchemaVersion": 4,
+      "shardCount": 8,
+      "status": "local-formal-dominance-passed-publication-and-trusted-ci-blocked"
+    },
+    "comparativeLab": {
+      "aTierHeadlessMatrix": [
+        "Apple URLSession + URLCache + ImageIO",
+        "Fovea",
+        "Nuke",
+        "Kingfisher",
+        "SDWebImage",
+        "PINRemoteImage"
+      ],
+      "aTierUnifiedMatrix": [
+        "Apple URLSession + URLCache + ImageIO",
+        "Apple AsyncImage",
+        "Nuke",
+        "Kingfisher",
+        "SDWebImage",
+        "PINRemoteImage",
+        "Fovea"
+      ],
+      "appleNativeHeadlessBaseline": {
+        "cacheBehaviorTest": "passed-network-then-disk-one-origin-request",
+        "cacheMode": "automatic-use-protocol-cache-policy",
+        "identity": "Apple URLSession + URLCache + ImageIO",
+        "manualCacheIO": false,
+        "networkPath": "shared-real-loopback-http"
+      },
+      "applePlatformIOSCrossBuild": {
+        "artifact": ".artifacts/comparators/apple-platform-cross-build.json",
+        "artifactSHA256": "f5260470a996979099f60dd229f9b9df5b312034e7cbf4e60989d678a7c2c392",
+        "status": "passed-three-surfaces-compile-only",
+        "targetTriple": "arm64-apple-ios15.0-simulator"
+      },
+      "appleSwiftUISurfaceBaseline": {
+        "identity": "Apple AsyncImage",
+        "mergedIntoHeadlessRanking": false,
+        "pairedWith": "Fovea",
+        "planStatus": "passed"
+      },
+      "bTierRetained": [
+        "AlamofireImage"
+      ],
+      "envelopeSchemaVersion": 3,
+      "experimentPlanCanonicalSHA256": "078206a957e4a44e4b5126543011d61a2746384ce6f87e693cee67c6ab5df8d3",
+      "finalATierHeadlessAggregate": "pending-post-w7-fix-rerun",
+      "finalPairedSwiftUISurfaceAggregate": "pending-post-w7-fix-rerun",
+      "finalW7V6Aggregate": "archived-observable-bound-invalid",
+      "finalW7V7Aggregate": "pending-final-six-comparator-rerun",
+      "historicalFiveLibraryAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
+      "latestSimulatorAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
+      "latestSimulatorAggregateTrust": "historical-only-current-plan-rerun-pending",
+      "latestSimulatorExternalContractFailures": 8,
+      "latestSimulatorFoveaFailures": 0,
+      "latestSimulatorIsProvisional": true,
+      "latestSimulatorRunCount": 25,
+      "pairedSwiftUISurface": [
+        "Apple AsyncImage",
+        "Fovea"
+      ],
+      "releaseClaimPermitted": false,
+      "simulatorRunner": {
+        "coreSimulatorHealthArtifact": ".artifacts/comparative-coresimulator-health.json",
+        "coreSimulatorHealthArtifactSHA256": "ebda951f7a85a4e757afd66accb63caa0b623d01db1d21ef2f2235eaf7ec5e60",
+        "coreSimulatorHealthStatus": "healthy",
+        "currentDeviceStatus": "incomplete-first-boot-do-not-reuse",
+        "currentDeviceUDID": "redacted-local-simulator-device",
+        "currentFailure": "900-second-first-boot-timeout-00LaunchServicesMigrator",
+        "dedicatedDeviceName": "Fovea Comparative iPhone 17e R26",
+        "deviceType": "iPhone 17e",
+        "duplicateRuntimeMitigation": "exact-23E254a-bundle-creation-plus-live-device-runtime-build-verification",
+        "failedRuntimeEvidence": "iOS 27 beta install path reproduced uninterruptible I/O on generic and dedicated devices",
+        "firstBootCoreLocationMigratorSeconds": 296.287041,
+        "healthCheckScript": "scripts/check-comparative-coresimulator-health.py",
+        "initializationHostGate": {
+          "artifact": ".artifacts/comparative-initialization-host-preflight.json",
+          "artifactSHA256": "712b3cbd030adcd0d0d9f4ab29abb188b8204108419a6c45940d9ae5c220df13",
+          "competingBuildOrSimulatorProcessesAllowed": 0,
+          "latestCPUIdlePercentSamples": [
+            5.41,
+            2.84,
+            23.95
+          ],
+          "latestCompetingProcessCount": 2,
+          "latestDiskMegabytesPerSecondSamples": [
+            5.78,
+            13.25,
+            21.490000000000002
+          ],
+          "latestStatus": "rejected-host-not-quiescent-before-device-create-or-first-boot",
+          "maximumDiskMegabytesPerSecond": 12.0,
+          "minimumCPUIdlePercent": 65.0,
+          "simulatorOperationStarted": false
+        },
+        "installStatus": "historical-prior-device-passed-six-of-six-current-device-not-installable",
+        "installedHeadlessComparators": 6,
+        "measurementHostGate": {
+          "artifact": ".artifacts/comparative-host-preflight.json",
+          "competingBuildOrSimulatorProcessesAllowed": 0,
+          "latestCPUIdlePercentSamples": [
+            39.91,
+            36.31,
+            41.16
+          ],
+          "latestCompetingProcessCount": 0,
+          "latestDiskMegabytesPerSecondSamples": [
+            23.75,
+            15.76,
+            21.25
+          ],
+          "latestStatus": "not-run-after-CoreSimulator-health-blocker",
+          "maximumDiskMegabytesPerSecond": 12.0,
+          "measurementResultCreated": false,
+          "minimumCPUIdlePercent": 65.0
+        },
+        "priorDeviceArchive": ".artifacts/simulator-archives/20260731T130128Z",
+        "processIsolation": "new-process-group-term-kill-bounded-reap",
+        "recoveryScript": "scripts/recover-comparative-simulator.sh",
+        "runtime": "iOS 26.4.1",
+        "runtimeBinding": "exact-runtime-bundle-path-and-device-registry",
+        "runtimeBuild": "23E254a",
+        "runtimeStorageIdentifier": "redacted-local-runtime-storage",
+        "runtimeValidation": "historical-first-device-passed-current-incomplete-device-do-not-reuse",
+        "staticGate": "passed",
+        "supportTestStatus": "passed-13-tests",
+        "swiftUIInstallNormalization": "symmetric-post-resource-ad-hoc-signature-deep-strict-verified",
+        "swiftUIInstallNormalizationArtifact": ".artifacts/asyncimage-lab/install-staging-verification.json",
+        "swiftUIInstallNormalizationArtifactSHA256": "7092a6c89aec086c33037d5629faac421ef2c9419fb797bcc4887b8fbff9ba4a",
+        "swiftUIInstallStatus": "staging-signatures-passed-runtime-install-blocked",
+        "swiftUIStagingManifestRoot": ".artifacts/asyncimage-lab/InstallStaging",
+        "twoPhaseMode": "initialize-only-install-only-then-skip-build-skip-prepare",
+        "uninterruptibleProcessCount": 0
+      },
+      "status": "apple-native-urlcache-and-asyncimage-required-contracts-passed-final-runtime-aggregates-pending-formal-physical-blocked",
+      "thermalWholeBlockRerun": true,
+      "verificationArtifact": ".artifacts/comparators/verification.json",
+      "verificationArtifactSHA256": "02ab9db195c1b41bac33235cf12ce73d47134931740654d2a7be70506d0e3d47",
+      "w2NetworkOrigin": "shared-real-loopback-http-nwlistener"
+    },
+    "projectMemory": {
+      "discussionLedger": "docs/project-memory/discussion-ledger.json",
+      "memory": "docs/project-memory/project-memory.json",
+      "sessionBootstrap": "scripts/project-session-bootstrap.sh",
+      "sourceManifest": "docs/project-memory/source-manifest.json",
+      "status": "active-and-ci-gated"
+    },
+    "statisticalClaimPolicy": {
+      "allowedScope": "best-within-scope-or-weaker",
+      "claimFamilyCount": 6,
+      "globalWorldBestMarketingClaim": "forbidden",
+      "negativeResultsRegistry": "docs/research/negative-results.json",
+      "policyID": "FOVEA-STATISTICAL-CLAIM-POLICY-V2",
+      "status": "active-before-next-formal-results"
+    },
+    "swiftUISurfaceLab": {
+      "applicability": "Benchmarks/AsyncImageLab/applicability.json",
+      "claimFamilies": "Benchmarks/AsyncImageLab/claim-families.json",
+      "comparators": [
+        "Apple AsyncImage",
+        "Fovea"
+      ],
+      "plan": "Benchmarks/AsyncImageLab/experiment-plan.json",
+      "status": "paired-v2-local-targets-and-smoke-calibration-complete-final-aggregate-pending",
+      "workloads": [
+        "W1-SCROLL-V1",
+        "W2-HERO-V1",
+        "W10-SWIFTUI-IDENTITY-CHURN-V1"
+      ]
+    },
+    "upstreamNativeTests": {
+      "blockedSuiteCount": 1,
+      "failedSuiteCount": 5,
+      "originalSourcesModified": false,
+      "originalTestsModified": false,
+      "passedSuiteCount": 4,
+      "pinRemoteImage": {
+        "assertionFailures": 7,
+        "failedMethods": 2,
+        "tests": 62
+      },
+      "report": ".artifacts/comparators/upstream-tests/report.json",
+      "status": "four-passed-five-failed-one-environment-blocked-ten-suites",
+      "suiteCount": 10
+    },
+    "w7ConcurrencyLab": {
+      "asyncImage": "not-comparable-headless-contract",
+      "bTierRetained": [
+        "AlamofireImage"
+      ],
+      "claimFamilies": "Benchmarks/W7ConcurrencyLab/claim-families.json",
+      "plan": "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
+      "status": "v7-preregistered-after-v6-origin-order-counterexample-final-six-a-tier-calibration-pending"
+    },
+    "workloadContinuity": {
+      "acceptedMatrix": "docs/project-memory/accepted-workload-matrix.md",
+      "adjunctWorkloads": [
+        "X1-ADAPTIVE-REPRESENTATION-V1"
+      ],
+      "completionShortcutForbidden": true,
+      "currentExecutableSubset": [
+        "W1",
+        "W2",
+        "W3"
+      ],
+      "fullRange": "W1-W15",
+      "registry": "Benchmarks/workload-registry.json",
+      "status": "complete-registry-current-subset-w1-w3"
+    }
+  },
+  "currentStage": "phase0b-closeout",
+  "deviceProfiles": [
+    "Benchmarks/ComparativeLab/device-profiles/iphone-16e-ios27-beta.json"
+  ],
+  "phase1DeclarationAllowed": false,
+  "phase1PreparationAllowed": true,
+  "schemaVersion": 1
+}

@@ -119,6 +119,7 @@ def main() -> int:
         trusted = args.trusted_ci and is_github
         producer = "trusted-ci" if trusted else "agent-declared"
         status = "pass" if trusted else "unproven"
+        requires_external_network = args.assurance_stage in {"0b", "release"}
 
         verify_log = (root / args.verify_log).resolve()
         rollback = root / ".artifacts/rollback/rollback-report.json"
@@ -127,13 +128,17 @@ def main() -> int:
         traceability = root / ".artifacts/traceability/test-traceability.json"
         store_contention = root / ".artifacts/store-generation/contention.json"
         coverage = root / ".artifacts/coverage/production-coverage.json"
+        documentation = root / ".artifacts/docs/documentation.json"
         live_network = root / ".artifacts/live-network/network-lab.json"
         loopback_network = root / ".artifacts/loopback-network/network-lab.json"
+        ios_example = root / ".artifacts/ios-example/verification.json"
         benchmark_paths = sorted((root / ".artifacts/benchmarks").glob("*.json"))
         required_files = [
             verify_log, rollback, mutation, conformance, traceability, store_contention, coverage,
-            loopback_network, *benchmark_paths,
+            documentation, loopback_network, ios_example, *benchmark_paths,
         ]
+        if requires_external_network:
+            required_files.append(live_network)
         missing = [str(path.relative_to(root)) for path in required_files if not path.is_file()]
         if missing:
             raise ValueError(f"missing evidence artifacts: {missing}")
@@ -189,6 +194,11 @@ def main() -> int:
         mutation_data = json.loads(mutation.read_text())
         if mutation_data.get("verifiedCommit") != head:
             raise ValueError("mutation report is not bound to the evidence head")
+        head_tree = git_output(root, "rev-parse", "HEAD^{tree}")
+        if mutation_data.get("verifiedTree") != head_tree:
+            raise ValueError("mutation report is not bound to the evidence head tree")
+        if mutation_data.get("includesWorkingTreeChanges") is not False:
+            raise ValueError("trusted CI mutation report must come from a clean commit tree")
         rollback_data = json.loads(rollback.read_text())
         if rollback_data.get("baseCommit") != base or rollback_data.get("headCommit") != head:
             raise ValueError("rollback report commit binding mismatch")
@@ -218,37 +228,87 @@ def main() -> int:
             raise ValueError("0b/release evidence requires complete requirement traceability")
         store_contention_data = json.loads(store_contention.read_text())
         writer_exclusion = store_contention_data.get("writerExclusion", {})
+        generation_selection = store_contention_data.get("generationSelection", {})
+        component_pins = json.loads(
+            (root / "docs/project-memory/component-pins.json").read_text()
+        )
+        expected_akashic_commit = (
+            component_pins.get("components", {}).get("Akashic", {}).get("revision")
+        )
         if (
-            store_contention_data.get("verifiedCommit") != head
+            store_contention_data.get("schemaVersion") != 3
+            or store_contention_data.get("verifiedCommit") != head
             or store_contention_data.get("status") != "passed"
-            or store_contention_data.get("participants", 0) < 2
+            or store_contention_data.get("participants") != 12
             or len(store_contention_data.get("uniqueGenerationIdentifiers", [])) != 1
+            or generation_selection.get("component") != "Akashic"
+            or generation_selection.get("componentCommit") != expected_akashic_commit
+            or generation_selection.get("verifiedCommit") != expected_akashic_commit
+            or generation_selection.get("status") != "passed"
+            or generation_selection.get("participants") != 12
+            or generation_selection.get("successfulParticipants") != 12
+            or len(generation_selection.get("uniqueGenerationIdentifiers", [])) != 1
+            or not isinstance(generation_selection.get("evidenceSHA256"), str)
+            or len(generation_selection.get("evidenceSHA256", "")) != 64
             or writer_exclusion.get("status") != "passed"
+            or writer_exclusion.get("firstWriterAcquired") is not True
             or writer_exclusion.get("secondWriterRejected") is not True
             or writer_exclusion.get("reacquiredAfterOwnerExit") is not True
         ):
             raise ValueError(
-                "StoreGeneration contention report is not a passing multi-process result bound to the evidence head"
+                "Store persistence contention report is not bound to the Fovea head and locked Akashic commit"
             )
 
+        coverage_validation_command = [
+            sys.executable,
+            str(root / "scripts/validate-production-coverage.py"),
+            str(coverage),
+            "--expected-commit",
+            head,
+            "--expected-tree",
+            head_tree,
+        ]
+        if trusted:
+            coverage_validation_command.append("--require-clean-tree")
+        coverage_validation = subprocess.run(
+            coverage_validation_command,
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        if coverage_validation.returncode != 0:
+            raise ValueError(
+                "production coverage validation failed: "
+                + coverage_validation.stdout.strip()
+            )
         coverage_data = json.loads(coverage.read_text())
-        if coverage_data.get("verifiedCommit") != head or coverage_data.get("status") != "passed":
-            raise ValueError("production coverage report is not a passing result bound to the evidence head")
-        coverage_totals = coverage_data.get("totals")
-        if not isinstance(coverage_totals, dict) or any(
-            not isinstance(summary, dict)
-            or summary.get("percent", -1) < summary.get("minimumPercent", float("inf"))
-            for summary in coverage_totals.values()
-        ):
-            raise ValueError("production coverage aggregate thresholds are not satisfied")
-        module_thresholds = coverage_data.get("moduleLineThresholds")
-        module_summaries = coverage_data.get("modules")
-        if not isinstance(module_thresholds, dict) or not isinstance(module_summaries, dict):
-            raise ValueError("production coverage module thresholds are missing")
-        for module, minimum in module_thresholds.items():
-            summary = module_summaries.get(module, {}).get("lines", {})
-            if summary.get("percent", -1) < minimum:
-                raise ValueError(f"production coverage module threshold failed: {module}")
+
+        documentation_validation_command = [
+            sys.executable,
+            str(root / "scripts/validate-documentation-report.py"),
+            str(documentation),
+            "--expected-commit",
+            head,
+            "--expected-tree",
+            head_tree,
+        ]
+        if trusted:
+            documentation_validation_command.append("--require-clean-tree")
+        documentation_validation = subprocess.run(
+            documentation_validation_command,
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        if documentation_validation.returncode != 0:
+            raise ValueError(
+                "documentation validation failed: "
+                + documentation_validation.stdout.strip()
+            )
 
         for workload, path in workloads.items():
             artifact = json.loads(path.read_text())
@@ -265,17 +325,91 @@ def main() -> int:
         ):
             raise ValueError("loopback network artifact is not a passing invariant report bound to the evidence head")
 
-        live_network_data = None
-        if live_network.is_file():
-            live_network_data = json.loads(live_network.read_text())
-            lab = live_network_data.get("lab", {})
-            if (
-                live_network_data.get("verifiedCommit") != head
-                or live_network_data.get("status") != "passed"
-                or lab.get("allSucceeded") is not True
-                or lab.get("allInvariantsSatisfied") is not True
-            ):
-                raise ValueError("live network artifact is not a passing invariant report bound to the evidence head")
+        ios_validation_command = [
+            sys.executable,
+            str(root / "scripts/validate-ios-example-report.py"),
+            str(ios_example),
+            "--expected-commit",
+            head,
+            "--expected-tree",
+            head_tree,
+        ]
+        ios_validation_command.extend([
+            "--required-profile",
+            "complete" if requires_external_network else "deterministic",
+        ])
+        ios_example_validation = subprocess.run(
+            ios_validation_command,
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        if ios_example_validation.returncode != 0:
+            raise ValueError(
+                "FoveaWorkbench verification validation failed: "
+                + ios_example_validation.stdout.strip()
+            )
+
+        ios_example_data = json.loads(ios_example.read_text())
+        ios_phases = {
+            item.get("name")
+            for item in ios_example_data.get("phases", [])
+            if isinstance(item, dict)
+        }
+        expected_ios_phases = {
+            "build", "unit-tests", "ui-tests", "ipad-ui-tests"
+        }
+        expected_ios_profile = "deterministic"
+        if requires_external_network:
+            expected_ios_phases.add("live-network-tests")
+            expected_ios_profile = "complete"
+        if (
+            ios_example_data.get("verifiedCommit") != head
+            or ios_example_data.get("verifiedTree") != head_tree
+            or ios_example_data.get("includesWorkingTreeChanges") is not False
+            or ios_example_data.get("status") != "passed"
+            or ios_example_data.get("verificationProfile") != expected_ios_profile
+            or set(ios_example_data.get("skippedPhases", []))
+              != {
+                  "build",
+                  "unit-tests",
+                  "live-network-tests",
+                  "ui-tests",
+                  "ipad-ui-tests",
+              } - expected_ios_phases
+            or ios_example_data.get("deploymentTarget") != "15.0"
+            or ios_example_data.get("externalNetworkingDefault") is not False
+            or ios_phases != expected_ios_phases
+        ):
+            raise ValueError(
+                "FoveaWorkbench verification phase set does not match the assurance stage"
+            )
+
+        if requires_external_network:
+            live_network_validation = subprocess.run(
+                [
+                    sys.executable,
+                    str(root / "scripts/validate-live-network-report.py"),
+                    str(live_network),
+                    "--expected-commit",
+                    head,
+                    "--expected-tree",
+                    head_tree,
+                    "--require-clean-tree",
+                ],
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+            )
+            if live_network_validation.returncode != 0:
+                raise ValueError(
+                    "live network verification validation failed: "
+                    + live_network_validation.stdout.strip()
+                )
 
         locator_prefix = run_locator if trusted else "local"
         verification = [
@@ -361,12 +495,48 @@ def main() -> int:
                 head,
             ),
             verification_result(
+                "DOCS-PT-001",
+                "test",
+                documentation,
+                producer,
+                status,
+                f"{locator_prefix}#documentation",
+                head,
+            ),
+            verification_result(
                 "DEMO-PT-003",
                 "test",
                 loopback_network,
                 producer,
                 status,
                 f"{locator_prefix}#loopback-network-lab",
+                head,
+            ),
+            verification_result(
+                "DEMO-PT-005",
+                "test",
+                ios_example,
+                producer,
+                status,
+                f"{locator_prefix}#fovea-workbench-ios15",
+                head,
+            ),
+            verification_result(
+                "DEMO-PT-006",
+                "test",
+                ios_example,
+                producer,
+                status,
+                f"{locator_prefix}#fovea-workbench-integration",
+                head,
+            ),
+            verification_result(
+                "DEMO-PT-007",
+                "test",
+                ios_example,
+                producer,
+                status,
+                f"{locator_prefix}#fovea-workbench-ui",
                 head,
             ),
         ]
@@ -382,7 +552,7 @@ def main() -> int:
                     head,
                 )
             )
-        if live_network_data is not None:
+        if requires_external_network:
             verification.append(
                 verification_result(
                     "DEMO-PT-001",
@@ -405,6 +575,38 @@ def main() -> int:
             sort_keys=True,
         ).encode()
         context_fingerprint = hashlib.sha256(context_material).hexdigest()
+        requirements = [
+            "AIQA-GATE-003",
+            "AIQA-GATE-007",
+            "AIQA-GATE-009",
+            "AIQA-GATE-011",
+            "HTTP-CONF-PRIVATE-IMAGE-PROFILE",
+            "TEST-TRACEABILITY-0B",
+            "CACHE-PT-019",
+            "CACHE-PT-024",
+            "AIQA-COV-001",
+            "DOCS-PT-001",
+            "DEMO-PT-002",
+            "DEMO-PT-003",
+            "DEMO-PT-005",
+            "DEMO-PT-006",
+            "DEMO-PT-007",
+            "W1-Feed-Scroll-Smoke",
+            "W2-Detail-Hero-Smoke",
+            "W3-Auth-Gallery-Smoke",
+            "SEC-CASE-014",
+            "SEC-CASE-015",
+            "SEC-CASE-016",
+            "SEC-CASE-017",
+            "SEC-CASE-018",
+            "SEC-CASE-019",
+            "SEC-CASE-030",
+            "SEC-CASE-031",
+            "SEC-CASE-032",
+        ]
+        if requires_external_network:
+            requirements.append("DEMO-PT-001")
+
         bundle = {
             "schemaVersion": 1,
             "changeID": f"fovea-ci-{head[:12]}",
@@ -415,31 +617,7 @@ def main() -> int:
             "taskContextFingerprint": context_fingerprint,
             "riskClass": "R3",
             "accountableOwner": "pending-human-maintainer",
-            "requirements": [
-                "AIQA-GATE-003",
-                "AIQA-GATE-007",
-                "AIQA-GATE-009",
-                "AIQA-GATE-011",
-                "HTTP-CONF-PRIVATE-IMAGE-PROFILE",
-                "TEST-TRACEABILITY-0B",
-                "CACHE-PT-019",
-                "CACHE-PT-024",
-                "AIQA-COV-001",
-                "DEMO-PT-002",
-                "DEMO-PT-003",
-                "W1-Feed-Scroll-Smoke",
-                "W2-Detail-Hero-Smoke",
-                "W3-Auth-Gallery-Smoke",
-                "SEC-CASE-014",
-                "SEC-CASE-015",
-                "SEC-CASE-016",
-                "SEC-CASE-017",
-                "SEC-CASE-018",
-                "SEC-CASE-019",
-                "SEC-CASE-030",
-                "SEC-CASE-031",
-                "SEC-CASE-032",
-            ],
+            "requirements": requirements,
             "agent": {
                 "tool": os.environ.get("FOVEA_AGENT_TOOL", "not-attested-by-ci"),
                 "toolVersion": os.environ.get("FOVEA_AGENT_TOOL_VERSION", "unknown"),
@@ -452,7 +630,18 @@ def main() -> int:
             },
             "permissions": {
                 "tools": ["git", "xcodebuild", "swift", "python3"],
-                "networkDomains": ["github.com"] if trusted else [],
+                "networkDomains": (
+                    [
+                        "github.com",
+                        "httpbin.org",
+                        "picsum.photos",
+                        "fastly.picsum.photos",
+                        "raw.githubusercontent.com",
+                        "www.gstatic.com",
+                    ]
+                    if trusted and requires_external_network
+                    else (["github.com"] if trusted else [])
+                ),
                 "hadProductionSecrets": False,
                 "couldWriteProtectedBranch": False,
                 "couldReadHeldOutTests": False,

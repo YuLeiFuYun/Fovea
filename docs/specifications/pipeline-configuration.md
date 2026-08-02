@@ -45,17 +45,20 @@ transportMemoryThreshold
 maximumConcurrentFetches / maximumQueuedFetches
 maximumConcurrentDecodes / maximumQueuedDecodes
 maximumDecodeWorkingSetBytes
+maximumTrackedNamespaces
 ```
 
-具体 transport、encoded store、record store、decoder、diagnostics 与 `ProfileAccessPolicy` 可在 `FoveaPipeline` composition root 显式注入。官方 `FoveaSystemPipeline.open` 提供安全默认组合：禁用 URLCache/Cookie 的 transport、明确的 `URLSessionTransportPolicy`、同一 StoreGeneration 下的 stores、默认 public-only 的 Profile policy 接缝与 ImageIO target decoder。时钟、namespace registry、stage registry 与 executor 是 `package` 实现细节，不进入外部 API。同步 ImageIO probe/decode 由专用 Dispatch work executor 执行，不占用 Swift cooperative executor。
+序列化配置只接受当前 schema；负数、零值、阈值倒置及未知 schema 必须解码失败，不能借助自动合成 `Codable` 绕过构造器不变量。代码内显式构造仍使用文档化的安全归一化。
+
+具体 transport、encoded store、record store、decoder、diagnostics 与 `ProfileAccessPolicy` 可在 `FoveaPipeline` composition root 显式注入；公共构造器不为 ACL 提供默认值。官方 `FoveaSystemPipeline.open` 提供安全默认组合：禁用 URLCache/Cookie 的 transport、明确的 `URLSessionTransportPolicy`、同一 StoreGeneration 下的 stores、默认 public-only 的 Profile policy 接缝与 ImageIO target decoder。时钟、namespace registry、stage registry 与 executor 是 `package` 实现细节，不进入外部 API。同步 ImageIO probe/decode 由专用 Dispatch work executor 执行，不占用 Swift cooperative executor。`FoveaSystemPipeline.invalidateAndCancel()` 是组合根的确定性关闭边界：它取消 URLSession 任务并释放 transport staging lease；关闭后的 pipeline 不得再创建网络 task。
 
 运行预算不得通过初始化器旁路覆盖：内存成本上限只能来自已冻结的 `PipelineConfiguration.memoryCostLimit`，并进入 full fingerprint。语义 fingerprint 只包含会改变字节、像素或传输语义的字段；并发度、队列长度和内存成本等运行参数只进入 full fingerprint。配置指纹与实际运行值必须一一对应。
 
 完整 codec/processor/source/advisor registry 仍是后续候选，不得把下文目标模型描述为当前实现。
 
-## 4. `Fovea.shared`
+## 4. 候选只读 façade（当前未实现）
 
-`Fovea.shared` 是默认 pipeline 的只读 façade：
+Core v1 Candidate 可评估 `Fovea.shared` 或等价的默认 pipeline façade；Phase 0b 当前没有该符号。若后续引入，它必须满足：
 
 - 不暴露 `registerGlobally`、`setDefaultDecoder` 一类全局可变 API；
 - 测试和多账户 App 应显式持有独立 pipeline；

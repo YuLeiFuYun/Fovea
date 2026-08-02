@@ -105,8 +105,8 @@ TransportMetrics
 ### 4.4 Storage
 
 ```text
-OriginalEncodedStore.open
-RepresentationRecordStore.open
+FoveaPersistentStores.open → encoded + records + namespaceGenerations + lifetime
+AkashicOriginalEncodedStore → OriginalEncodedMaintaining
 PhysicalBlobID
 NamespaceGeneration read/commit fence
 MemoryCache<Key, Value>
@@ -136,7 +136,7 @@ DecodedImage
 FoveaImage / FoveaImagePhase / FoveaImageAccessibility
 ```
 
-unknown/zero target 不得触发原尺寸 decode；原尺寸 API 不进入 0a。只实现静态 JPEG/PNG/系统 ImageIO 可安全探测格式的基础路径，不实现动画、SVG、第三方 codec、HDR/gain-map 或 Analysis。
+unknown/zero target 不得触发原尺寸 decode；原尺寸 API 不进入 0a。只实现静态 JPEG/PNG/系统 ImageIO 可安全探测格式的基础路径：JPEG 必须完整扫描所有 scan 间 marker，全部 APP0–APP15/COM payload 计入 metadata 预算并要求 EOI；PNG 必须以 IEND 精确结束，不接受尾随载荷。不实现动画、SVG、第三方 codec、HDR/gain-map 或 Analysis。
 
 ### 4.6 Configuration
 
@@ -153,9 +153,9 @@ DiagnosticsSink / BoundedDiagnosticsSink
 
 Phase 0a 的并发与组合约束：
 
-- package 使用 Swift 6 严格并发，并启用 Swift 6.2 `NonisolatedNonsendingByDefault` 与 `InferIsolatedConformances`；
+- package 使用 Xcode 27 / Apple Swift 6.4 与 Swift 6 严格并发，显式启用 `NonisolatedNonsendingByDefault` 与 `InferIsolatedConformances`；新语言能力仍须保持 iOS 15/macOS 12 可部署并通过所有权、资源与回归门；
 - 公开加载入口和共享 operation 使用显式 `@concurrent`，不依赖调用者 actor 的偶然继承；
-- 阻塞文件系统操作只在 Akashic/FoveaHTTP 的专用串行 executor 上运行；store 使用异步 `open`，禁止在 UI actor 同步扫描 manifest；
+- 阻塞文件系统操作只在 Akashic/FoveaPersistence/FoveaHTTP 的专用串行 executor 上运行；generation 选择、writer lease、manifest bootstrap、namespace generation 持久化和 staging 维护都使用异步入口，禁止在 UI actor 或 Swift 协作式执行器上同步扫描目录、等待文件锁或执行 `fsync`；
 - `FoveaCore` 只依赖 `ImageDecoding` 协议，具体 ImageIO decoder 由 composition root 注入；
 - 唯一 FetchExecutionKey 任务执行 fetch single-flight；DecodeKey single-flight 明确后移，不得把当前实现描述为完整 stage sharing；
 - fetch/decode 在进入昂贵阶段前获取静态 hard-cap permit；等待取消必须释放资格且不得实际启动该阶段；

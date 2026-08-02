@@ -1,0 +1,441 @@
+{
+  "canonicalADR": "docs/adr/0014-domain-neutral-akashic-contract.md",
+  "conformancePlan": "docs/project-memory/akashic-conformance-plan.json",
+  "currentPublicInventory": [
+    {
+      "anchor": "public protocol OriginalEncodedStoring: Sendable",
+      "classification": "fovea-domain-public-capability",
+      "owner": "FoveaStorage",
+      "path": "Sources/FoveaStorage/OriginalEncodedStoring.swift",
+      "symbol": "OriginalEncodedStoring",
+      "target": "OriginalEncodedStoring"
+    },
+    {
+      "anchor": "public protocol OriginalEncodedMaintaining: OriginalEncodedStoring",
+      "classification": "fovea-domain-public-maintenance-capability",
+      "owner": "FoveaStorage",
+      "path": "Sources/FoveaStorage/StorageTypes.swift",
+      "symbol": "OriginalEncodedMaintaining",
+      "target": "OriginalEncodedMaintaining"
+    },
+    {
+      "anchor": "public struct StorageNamespaceFingerprint",
+      "classification": "fovea-domain-partition-identity",
+      "owner": "FoveaStorage",
+      "path": "Sources/FoveaStorage/StorageTypes.swift",
+      "symbol": "StorageNamespaceFingerprint",
+      "target": "CachePartitionID adapter input"
+    },
+    {
+      "anchor": "public struct StoredBlob",
+      "classification": "fovea-domain-publication-result",
+      "owner": "FoveaStorage",
+      "path": "Sources/FoveaStorage/StorageTypes.swift",
+      "symbol": "StoredBlob",
+      "target": "BlobPublication adapter output"
+    },
+    {
+      "anchor": "public struct StoredContentReference",
+      "classification": "fovea-domain-live-reference",
+      "owner": "FoveaStorage",
+      "path": "Sources/FoveaStorage/StorageTypes.swift",
+      "symbol": "StoredContentReference",
+      "target": "LiveBlobReference adapter input"
+    },
+    {
+      "anchor": "public struct GarbageCollectionResult",
+      "classification": "fovea-domain-maintenance-result",
+      "owner": "FoveaStorage",
+      "path": "Sources/FoveaStorage/StorageTypes.swift",
+      "symbol": "GarbageCollectionResult",
+      "target": "BlobMaintenanceResult adapter output"
+    },
+    {
+      "anchor": "public struct BlobDigest: Hashable, Sendable, Codable",
+      "classification": "neutral-typed-content-identity",
+      "owner": "AkashicCore",
+      "path": "Sources/AkashicCore/BlobIdentity.swift",
+      "symbol": "BlobDigest",
+      "target": "BlobDigest"
+    },
+    {
+      "anchor": "public struct CachePartitionID: Hashable, Sendable, Codable",
+      "classification": "neutral-opaque-partition-identity",
+      "owner": "AkashicCore",
+      "path": "Sources/AkashicCore/BlobIdentity.swift",
+      "symbol": "CachePartitionID",
+      "target": "CachePartitionID"
+    },
+    {
+      "anchor": "public struct PhysicalBlobID: Hashable, Sendable, Codable",
+      "classification": "neutral-store-local-physical-identity",
+      "owner": "AkashicCore",
+      "path": "Sources/AkashicCore/BlobIdentity.swift",
+      "symbol": "PhysicalBlobID",
+      "target": "PhysicalBlobID"
+    },
+    {
+      "anchor": "public actor FileBlobStore: BlobStoreMaintaining, TransactionalBlobStoring",
+      "classification": "neutral-durable-blob-mechanism",
+      "owner": "AkashicDisk",
+      "path": "Sources/AkashicDisk/FileBlobStore.swift",
+      "symbol": "FileBlobStore",
+      "target": "FileBlobStore"
+    },
+    {
+      "anchor": "public struct StoreGenerationHandle: Hashable, Sendable",
+      "classification": "neutral-store-generation-handle",
+      "owner": "AkashicDisk",
+      "path": "Sources/AkashicDisk/StoreGenerationDirectory.swift",
+      "symbol": "StoreGenerationHandle",
+      "target": "StoreGenerationHandle"
+    },
+    {
+      "anchor": "public enum StoreGenerationDirectory",
+      "classification": "neutral-store-generation-mechanism",
+      "owner": "AkashicDisk",
+      "path": "Sources/AkashicDisk/StoreGenerationDirectory.swift",
+      "symbol": "StoreGenerationDirectory",
+      "target": "StoreGenerationDirectory"
+    },
+    {
+      "anchor": "public final class MemoryCache<Key: Hashable & Sendable, Value: Sendable>: @unchecked Sendable",
+      "classification": "neutral-memory-cache-mechanism",
+      "owner": "AkashicMemory",
+      "path": "Sources/AkashicMemory/MemoryCache.swift",
+      "symbol": "MemoryCache",
+      "target": "MemoryCache"
+    }
+  ],
+  "deduplicationPolicy": {
+    "crossPartitionDeduplication": "forbidden-until-confidentiality-and-accounting-policy-is-explicit",
+    "current": "The typed store reuses an existing physical blob only for the same opaque partition and canonical BlobDigest manifest key.",
+    "status": "frozen-for-first-independent-release",
+    "targetDefault": "partition-scoped physical deduplication only"
+  },
+  "diskCompatibility": {
+    "currentStoreGenerationSchemaVersion": 1,
+    "currentTypedBlobSchemaVersion": 1,
+    "decision": "typed-v2-generation-active-legacy-v1-store-retired",
+    "defaultIfUnproven": "create-new-store-generation-and-rebuild-cache",
+    "mustProveForReuse": [
+      "manifest key canonicalization unchanged",
+      "partition fingerprint semantics unchanged",
+      "blob digest coverage unchanged",
+      "stage-publish-discard visibility unchanged",
+      "corruption quarantine and GC reachability unchanged",
+      "future-schema fail-closed behavior unchanged"
+    ],
+    "rationale": "The public identity model, partition construction, names and repository boundary change. Cache bytes are rebuildable, so silent schema reuse is less safe than an atomic new generation.",
+    "retiredLegacyOriginalEncodedSchemaVersion": 4
+  },
+  "extractionBlockers": [
+    "Retain the active required core check and immutable 0.1.0-alpha.3 Swift 6.4 tag on the protected Akashic main branch.",
+    "Complete physical-device resource and energy evidence, multi-hour kill campaigns and physical power-loss/F_FULLFSYNC qualification.",
+    "Replay broader W8/W13 host workloads and retained crash/fault programs against the external typed default path.",
+    "Publish and protect the Fovea repository, then bind host evidence to the public source identity.",
+    "Publish the versioned cross-repository storage conformance kit and current/previous host compatibility matrix."
+  ],
+  "faultInjection": {
+    "artifactSHA256": "d553eed78fdd50827c3c4f4d3df2dadaa4b6ac8f565b7df62860134ef3fd6780",
+    "directoryFsyncFailureSemantics": "replacement-may-be-visible-but-directory-entry-durability-is-unproven",
+    "exactProcessCrashCases": 11,
+    "permissionTransitionTests": 1,
+    "physicalDeviceQualification": false,
+    "powerLossClaim": false,
+    "quotaExhaustionClaim": true,
+    "randomHitCount": 64,
+    "randomMissCount": 14,
+    "randomRounds": 3,
+    "randomSIGKILLCases": 78,
+    "randomSampleHitCount": 61,
+    "randomSampleMissCount": 11,
+    "randomTimingSamples": 72,
+    "realAPFSQuotaArtifactSHA256": "51f939460ee80cab25110d21b86173d9092240ecd3edf7a13882ce01879f1e6a",
+    "realAPFSQuotaCases": 3,
+    "realAPFSQuotaFoundationMetadataFailures": 1,
+    "realAPFSQuotaKernelENOSPCCases": 2,
+    "realFullVolumeArtifactSHA256": "37c27e22436892131f1900f3b8deda57e5e508d2deadc6db6d1e36e464fbc2df",
+    "realFullVolumeCases": 3,
+    "realMountedAPFSENOSPCClaim": true,
+    "schemaVersion": 4,
+    "status": "passed-local-committed",
+    "syscallTests": 8,
+    "wholeContainerFullClaim": false
+  },
+  "fieldMappings": [
+    {
+      "compatibility": "requires canonical parser and exact digest/byte-count equivalence",
+      "current": "contentID: String",
+      "ownerOfConversion": "FoveaPersistence adapter",
+      "target": "digest: BlobDigest"
+    },
+    {
+      "compatibility": "existing fovea-storage-namespace-v1 fingerprint is not accepted as a permanent Akashic public contract",
+      "current": "namespace: String",
+      "ownerOfConversion": "FoveaPersistence adapter",
+      "target": "partition: CachePartitionID"
+    },
+    {
+      "compatibility": "new type must not expose a public initializer from user/account strings",
+      "current": "StorageNamespaceFingerprint",
+      "ownerOfConversion": "Fovea composition root",
+      "target": "CachePartitionID"
+    },
+    {
+      "compatibility": "token remains store-instance scoped, unpublished and idempotently discardable",
+      "current": "OriginalEncodedStage",
+      "ownerOfConversion": "AkashicDisk",
+      "target": "BlobStage"
+    },
+    {
+      "compatibility": "physical ID, byte count and created/reused disposition are retained",
+      "current": "StoredBlob",
+      "ownerOfConversion": "AkashicDisk",
+      "target": "BlobPublication"
+    },
+    {
+      "compatibility": "must preserve anti-rollback and fail-closed manifest validation independently of Akashic",
+      "current": "namespace generation persistence",
+      "ownerOfConversion": "FoveaPersistence",
+      "target": "Fovea NamespaceGenerationStore"
+    }
+  ],
+  "hostMigration": {
+    "adapterVisibility": "package-only",
+    "compatibilityFingerprintPrefix": "fovea-store-v2:akashic-file-1:partition-1",
+    "defaultAdapter": "Sources/FoveaPersistence/AkashicOriginalEncodedStore.swift",
+    "defaultMechanism": "AkashicDisk.FileBlobStore",
+    "domainContractModule": "FoveaStorage",
+    "domainLeakGate": "zero-in-Akashic-production-source",
+    "embeddedAkashicSwiftFileCount": 0,
+    "externalRevisionHostTestsPassed": 475,
+    "externalRevisionRehearsal": "superseded-by-public-exact-pin-clean-copy",
+    "externalRevisionRehearsalArtifactSHA256": "a4639cf7b4979cf02280e69b27df26b5fff5acb40ca07543cb56793db5439fbd",
+    "externalRevisionTestLogSHA256": "1a1b753184c549c567ab2996b67dae2601a5000fe883213fb51a14476eb80935",
+    "hostTestsPassed": 475,
+    "legacyOriginalEncodedStoreRemoved": true,
+    "legacyOverlay": "removed-typed-store-is-the-only-production-original-encoded-implementation",
+    "legacyRemovalMainSynchronizationStatus": "passed-57-paths-zero-conflicts",
+    "mainHostTestCount": 475,
+    "mainReleaseBuild": "passed",
+    "obligations": {
+      "AKASHIC-CT-022": "implemented-host-local",
+      "AKASHIC-CT-023": "implemented-host-local",
+      "AKASHIC-CT-024": "implemented-host-local",
+      "AKASHIC-CT-025": "implemented-host-local",
+      "AKASHIC-CT-026": "implemented-host-local"
+    },
+    "publicAPISymbolCount": 723,
+    "publicEncodedCapability": "OriginalEncodedMaintaining & AnyObject",
+    "serialExternalRevisionHostTestsPassed": 475,
+    "sourceLock": "docs/project-memory/component-pins.json",
+    "sourceTreeSHA256": "34bca8103cd8112676c9489e42ad6aeb7b14854f7726417608f02ce7d40613a3",
+    "externalDependencyRepository": "https://github.com/YuLeiFuYun/Akashic.git",
+    "externalDependencyRevision": "e138b4425688cb0ce32fba7788adcc944c936b53",
+    "externalDependencyMode": "public-exact-revision-no-embedded-source",
+    "cleanCopyHostTestsPassed": 475,
+    "documentationScope": "Fovea-owned-nine-public-production-modules",
+    "previousCompatibleRollbackHostTestsPassed": 475,
+    "forwardCurrentRecoveryHostTestsPassed": 475,
+    "rollbackArtifactSHA256": "81039fe4fef6a541bd9d856524f2617169d8a84c953659c0f6590d9448f3d5d4",
+    "rollbackCombinedLogSHA256": "43730412f4aefec1b47184ed137f975e712631416da6b9d9fb9fde679934f303",
+    "cleanCopySourceDigest": "4d92d7a96cf7840eb82d8704220fd62c9bd190901c60128db3ac341773d65d75",
+    "cleanCopyArtifactSHA256": "872071d5970b8c13f895e4839681d672f8c7c6e31bbba1791597fcd667a4eed8",
+    "cleanCopyLogSHA256": "2b4855ed6c49e014442fed17be2aaffd9f7c7a085b85b9d75efbfedceaec1e34"
+  },
+  "independentEvidence": "docs/research/akashic-independent-local-evidence-2026-07.json",
+  "independentEvidenceSummary": {
+    "realFullVolumeCases": 3,
+    "sourceFileCount": 74,
+    "sourceIdentitySHA256": "34bca8103cd8112676c9489e42ad6aeb7b14854f7726417608f02ce7d40613a3"
+  },
+  "independentPackage": {
+    "commit": "e138b4425688cb0ce32fba7788adcc944c936b53",
+    "faultInjectionArtifactSHA256": "d553eed78fdd50827c3c4f4d3df2dadaa4b6ac8f565b7df62860134ef3fd6780",
+    "localTestsPassed": 41,
+    "path": null,
+    "platformMatrixArtifactSHA256": "a1912709d8cef7d22e0f44832ebd35efd483fc0e517c6aa418880b2421457951",
+    "remoteConfigured": true,
+    "sourceIdentityArtifactSHA256": "f0273568069c89f61b1648e1aa7ee2548a806a41fa9937be67c537e9e1c9689a",
+    "sourceIdentitySHA256": "eb271ce584a799a6753019b5ce6a7edab38c8e9260289c2f29fc2ed848f4ed61",
+    "tagged": true,
+    "workingTree": "clean",
+    "repositoryURL": "https://github.com/YuLeiFuYun/Akashic.git",
+    "publicCI": {
+      "status": "passed",
+      "scope": "main-current-pin",
+      "runner": "xcode-27",
+      "runID": 30687922484,
+      "commit": "e138b4425688cb0ce32fba7788adcc944c936b53"
+    },
+    "tag": "0.1.0-alpha.3",
+    "previousRelease": {
+      "commit": "07d43af89014eaa266390f21cbc9a6c481627cfb",
+      "tag": "0.1.0-alpha.2",
+      "status": "public-ci-green-rollback-baseline"
+    },
+    "fullFaultCampaignBinding": {
+      "revision": "07d43af89014eaa266390f21cbc9a6c481627cfb",
+      "status": "historical-alpha2-evidence-retained-alpha3-full-rebind-pending"
+    }
+  },
+  "migrationID": "FOVEA-AKASHIC-DOMAIN-NEUTRAL-MIGRATION-V1",
+  "packageInternalMoves": [
+    {
+      "currentPath": "Sources/FoveaStorage/NamespaceGenerationPersisting.swift",
+      "decision": "completed-move-to-fovea-storage-package-contract",
+      "reason": "It persists Fovea authorization/revocation generation state and is shared by FoveaCore and FoveaPersistence.",
+      "symbol": "NamespaceGenerationPersisting"
+    },
+    {
+      "currentPath": "Sources/FoveaStorage/NamespaceStorageLimits.swift",
+      "decision": "completed-move-to-fovea-storage-package-policy",
+      "reason": "It bounds Fovea namespace authority state without making the policy part of generic Akashic partitions.",
+      "symbol": "NamespaceStorageLimits"
+    },
+    {
+      "currentPath": "Sources/FoveaStorage/StoredContentIdentifier.swift",
+      "decision": "completed-move-to-fovea-storage-package-validator",
+      "reason": "It validates Fovea ContentID strings at the typed adapter boundary; Akashic accepts only canonical BlobDigest values.",
+      "symbol": "StoredContentIdentifier"
+    }
+  ],
+  "phase": "P3",
+  "principles": [
+    "Akashic owns generic memory-cache and durable blob-store mechanisms, not image, URL, HTTP, account or authorization semantics.",
+    "Fovea owns ContentID interpretation, SecurityNamespaceID, NamespaceGeneration, revoke barriers, HTTP representation records and cross-store publication eligibility.",
+    "Logical blob identity, cache partition, store-local physical locator and store-format generation are distinct typed values.",
+    "Existing disk bytes are rebuildable cache state; compatibility is reused only when field-level and transaction-level equivalence is demonstrated.",
+    "Public API neutralization precedes repository extraction."
+  ],
+  "schemaVersion": 1,
+  "status": "domain-contracts-extracted-public-exact-dependency-embedded-source-removed-clean-copy-rollback-forward-passed",
+  "targetContracts": [
+    {
+      "module": "AkashicCore",
+      "mustNotKnow": [
+        "Fovea ContentID",
+        "URL",
+        "HTTP",
+        "user account"
+      ],
+      "role": "algorithm-tagged digest bytes and exact byte count",
+      "symbol": "BlobDigest"
+    },
+    {
+      "module": "AkashicCore",
+      "mustNotKnow": [
+        "login",
+        "logout",
+        "authorization",
+        "NamespaceGeneration"
+      ],
+      "role": "opaque storage partition selected by the host",
+      "symbol": "CachePartitionID"
+    },
+    {
+      "module": "AkashicCore",
+      "mustNotKnow": [
+        "filesystem path outside the store",
+        "semantic content identity"
+      ],
+      "role": "store-local opaque physical locator",
+      "symbol": "PhysicalBlobID"
+    },
+    {
+      "module": "AkashicCore",
+      "mustNotKnow": [
+        "Fovea revoke generation",
+        "account generation"
+      ],
+      "role": "immutable store-format generation identity",
+      "symbol": "StoreGenerationID"
+    },
+    {
+      "module": "AkashicCore",
+      "mustNotKnow": [
+        "HTTP record publication",
+        "Fovea commit eligibility"
+      ],
+      "role": "single-store unpublished stage token",
+      "symbol": "BlobStage"
+    },
+    {
+      "module": "AkashicCore",
+      "mustNotKnow": [
+        "image",
+        "original encoded",
+        "URL",
+        "HTTP"
+      ],
+      "role": "read, publish and remove by typed partition and digest",
+      "symbol": "BlobStoring"
+    },
+    {
+      "module": "AkashicCore",
+      "mustNotKnow": [
+        "representation record",
+        "namespace revoke"
+      ],
+      "role": "stage, publish and discard with exactly-once visibility semantics",
+      "symbol": "TransactionalBlobStoring"
+    },
+    {
+      "module": "AkashicCore",
+      "mustNotKnow": [
+        "image pipeline policy",
+        "HTTP freshness"
+      ],
+      "role": "bounded usage, garbage collection and corruption maintenance",
+      "symbol": "BlobStoreMaintaining"
+    }
+  ],
+  "trackedDomainLeaks": [
+    {
+      "allowedPaths": [],
+      "pattern": "OriginalEncoded",
+      "status": "zero-verified",
+      "targetState": "zero occurrences in AkashicCore, AkashicMemory and AkashicDisk production source"
+    },
+    {
+      "allowedPaths": [],
+      "pattern": "contentID",
+      "status": "zero-verified",
+      "targetState": "zero free-string Fovea content identity fields in Akashic production source"
+    },
+    {
+      "allowedPaths": [],
+      "pattern": "namespace",
+      "status": "zero-verified",
+      "targetState": "zero Fovea namespace terminology in Akashic production source; only partition remains"
+    },
+    {
+      "allowedPaths": [],
+      "pattern": "dev.fovea|fovea-storage",
+      "status": "zero-verified",
+      "targetState": "zero Fovea product identifiers in Akashic production source"
+    }
+  ],
+  "writerModel": {
+    "current": "cross-process generation selection plus actor-confined store mutation and retained writer lease",
+    "foveaCompositeContentionArtifactSHA256": "1855b08a6cf1efe4fa82268347909842b16f20e69f0e4ece5a9ba2294362fff6",
+    "generationContentionArtifactSHA256": "f5f46b2392df4e584f0cc9c46b52e56087580a33cd36708fe3b64330cb562f49",
+    "generationContentionParticipants": 12,
+    "generationContentionStatus": "passed-local-cross-process",
+    "status": "frozen-for-first-independent-release",
+    "targetForFirstIndependentRelease": "single active writer per store generation; concurrent readers are supported only inside that process/store instance"
+  },
+  "rollback": {
+    "status": "passed-alpha3-current-alpha2-previous-forward-alpha3-475-each",
+    "previousPublicRevision": "07d43af89014eaa266390f21cbc9a6c481627cfb",
+    "currentPublicRevision": "e138b4425688cb0ce32fba7788adcc944c936b53",
+    "requiredEvidence": [
+      "clean-copy host tests",
+      "store reopen",
+      "W8",
+      "W13",
+      "forward recovery"
+    ]
+  }
+}

@@ -1,0 +1,372 @@
+{
+  "cacheStates": [
+    "cold",
+    "warm-disk",
+    "warm-memory"
+  ],
+  "challengeSuite": {
+    "manifest": "Benchmarks/ComparativeLab/challenge-suite.json",
+    "policy": "retain-fovea-tests-and-add-traceable-semantic-ports-from-ios-and-cross-language-upstream-suites"
+  },
+  "comparators": {
+    "independentSurface": [
+      {
+        "applicability": "Benchmarks/AsyncImageLab/applicability.json",
+        "claimFamilies": "Benchmarks/AsyncImageLab/claim-families.json",
+        "comparators": [
+          "Apple AsyncImage",
+          "Fovea"
+        ],
+        "name": "SwiftUI paired surface",
+        "performanceRanking": "only-common-endpoints-within-paired-swiftui-surface",
+        "plan": "Benchmarks/AsyncImageLab/experiment-plan.json"
+      }
+    ],
+    "matrixPolicy": {
+      "aTierHeadlessW1W3": [
+        "Apple URLSession + URLCache + ImageIO",
+        "Fovea",
+        "Nuke",
+        "Kingfisher",
+        "SDWebImage",
+        "PINRemoteImage"
+      ],
+      "aTierIndependentSurface": [
+        "Apple AsyncImage"
+      ],
+      "aTierUnifiedApp": [
+        "Apple URLSession + URLCache + ImageIO",
+        "Apple AsyncImage",
+        "Nuke",
+        "Kingfisher",
+        "SDWebImage",
+        "PINRemoteImage",
+        "Fovea"
+      ],
+      "bTierDoesNotSatisfyATierSlot": true,
+      "bTierRetained": [
+        "AlamofireImage"
+      ]
+    },
+    "platformBaseline": {
+      "name": "Apple URLSession + URLCache + ImageIO",
+      "requiredBindings": [
+        "xcodeBuild",
+        "osBuild",
+        "deviceProfileID"
+      ],
+      "sourceIdentity": "platform-build"
+    },
+    "primary": {
+      "exactCommit": "63a8fcbd6621340a2410bc3e9575ac97058615f4",
+      "name": "Nuke",
+      "version": "13.0.6"
+    },
+    "requiredAdditional": [
+      {
+        "exactCommit": "2de3a496eaf6df9a1312862adcfd54acd73c39c0",
+        "name": "SDWebImage",
+        "version": "5.21.7"
+      },
+      {
+        "exactCommit": "c0d5cfa1947f2456ddb321a85b347b3d60d83254",
+        "name": "PINRemoteImage",
+        "version": "releases/p14.31"
+      }
+    ],
+    "requiredSecondary": {
+      "exactCommit": "410984bf301f4fa224fe56277b3f8672cc465c79",
+      "name": "Kingfisher",
+      "version": "8.11.0"
+    },
+    "retainedBTier": [
+      {
+        "exactCommit": "4cf73d601c482b7d77bae47de3ef1b8bcf328ec1",
+        "name": "AlamofireImage",
+        "version": "4.4.0"
+      }
+    ],
+    "systemUnderTest": {
+      "identity": "runner-injected-head-tree-dirty-state",
+      "name": "Fovea"
+    }
+  },
+  "comparisonGovernance": {
+    "claimPolicy": "Benchmarks/claim-policy.json",
+    "comparatorRegistry": "docs/research/comparator-registry.json",
+    "ontology": "docs/research/comparison-ontology.json",
+    "semanticComparability": "required-before-performance-ranking"
+  },
+  "dataset": {
+    "capturedAssetCount": 128,
+    "capturedDatasetSHA256": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+    "capturedManifest": ".artifacts/comparative-dataset/captured-dataset.json",
+    "capturedTotalByteCount": 33191621,
+    "heroFixtures": [
+      "Sources/FoveaTesting/Fixtures/hero-12mp-4000x3000.jpg",
+      "Sources/FoveaTesting/Fixtures/hero-24mp-6000x4000.jpg",
+      "Sources/FoveaTesting/Fixtures/hero-48mp-8000x6000.jpg"
+    ],
+    "remoteFeedSelection": {
+      "catalog": "Examples/FoveaWorkbenchApp/FoveaWorkbench/Resources/workbench-media-catalog.json",
+      "count": 128,
+      "order": "lexicographic-asset-id",
+      "requestWidthPixels": 960,
+      "sourceKind": "remote"
+    },
+    "selectionManifest": "Benchmarks/ComparativeLab/dataset-selection.json",
+    "status": "captured-and-hash-locked"
+  },
+  "devices": {
+    "primary": {
+      "profile": "Benchmarks/ComparativeLab/device-profiles/iphone-16e-ios27-beta.json",
+      "requiredStableOSReplication": true,
+      "role": "primary-current-mid"
+    },
+    "secondary": {
+      "profile": null,
+      "required": true,
+      "role": "secondary-lower-performance",
+      "status": "blocked-no-device"
+    },
+    "simulatorCountsAsPhysicalDevice": false
+  },
+  "execution": {
+    "bTierSupplemental": {
+      "comparators": [
+        "AlamofireImage"
+      ],
+      "policy": "run-after-a-tier-blocks-and-report-separately; excluded-from-a-tier-multiplicity-family"
+    },
+    "coldCacheRepetitions": 10,
+    "interleaving": {
+      "block": [
+        [
+          "Apple URLSession + URLCache + ImageIO",
+          "Fovea",
+          "Nuke",
+          "Kingfisher",
+          "SDWebImage",
+          "PINRemoteImage"
+        ],
+        [
+          "Fovea",
+          "Nuke",
+          "Kingfisher",
+          "SDWebImage",
+          "PINRemoteImage",
+          "Apple URLSession + URLCache + ImageIO"
+        ],
+        [
+          "Nuke",
+          "Kingfisher",
+          "SDWebImage",
+          "PINRemoteImage",
+          "Apple URLSession + URLCache + ImageIO",
+          "Fovea"
+        ],
+        [
+          "Kingfisher",
+          "SDWebImage",
+          "PINRemoteImage",
+          "Apple URLSession + URLCache + ImageIO",
+          "Fovea",
+          "Nuke"
+        ],
+        [
+          "SDWebImage",
+          "PINRemoteImage",
+          "Apple URLSession + URLCache + ImageIO",
+          "Fovea",
+          "Nuke",
+          "Kingfisher"
+        ],
+        [
+          "PINRemoteImage",
+          "Apple URLSession + URLCache + ImageIO",
+          "Fovea",
+          "Nuke",
+          "Kingfisher",
+          "SDWebImage"
+        ],
+        [
+          "PINRemoteImage",
+          "SDWebImage",
+          "Kingfisher",
+          "Nuke",
+          "Fovea",
+          "Apple URLSession + URLCache + ImageIO"
+        ],
+        [
+          "SDWebImage",
+          "Kingfisher",
+          "Nuke",
+          "Fovea",
+          "Apple URLSession + URLCache + ImageIO",
+          "PINRemoteImage"
+        ],
+        [
+          "Kingfisher",
+          "Nuke",
+          "Fovea",
+          "Apple URLSession + URLCache + ImageIO",
+          "PINRemoteImage",
+          "SDWebImage"
+        ],
+        [
+          "Nuke",
+          "Fovea",
+          "Apple URLSession + URLCache + ImageIO",
+          "PINRemoteImage",
+          "SDWebImage",
+          "Kingfisher"
+        ],
+        [
+          "Fovea",
+          "Apple URLSession + URLCache + ImageIO",
+          "PINRemoteImage",
+          "SDWebImage",
+          "Kingfisher",
+          "Nuke"
+        ],
+        [
+          "Apple URLSession + URLCache + ImageIO",
+          "PINRemoteImage",
+          "SDWebImage",
+          "Kingfisher",
+          "Nuke",
+          "Fovea"
+        ]
+      ],
+      "seed": 20260725,
+      "strategy": "balanced-twelve-order-cyclic-and-reverse-six-a-tier-headless-blocks"
+    },
+    "minimumBatteryPercent": 50,
+    "minimumCooldownSecondsBetweenBlocks": 180,
+    "reduceMotion": true,
+    "steadyState": {
+      "claimRule": "a stationarity warning is visible and blocks the affected family unless a preregistered retry succeeds",
+      "diagnostic": "rolling-p90-slope-reported-but-never-used-for-unbounded-post-hoc-discard",
+      "maximumWarmupSeconds": 120,
+      "warmupPolicy": "fixed-preregistered-warmup-before-measured-block"
+    },
+    "thermalInvalidation": "if thermal state leaves nominal, invalidate the entire randomized block, cool down, and rerun the block from its first comparator",
+    "thermalStateRequiredAtStart": "nominal",
+    "warmStateRepetitions": 20
+  },
+  "metricDecisionThresholds": {
+    "cancel-waste-bytes": {
+      "direction": "lower",
+      "equivalenceAbsolute": 65536,
+      "scope": "W1 full trace",
+      "unit": "bytes",
+      "dominanceRelative": 0.2,
+      "optimalFloor": 0
+    },
+    "decoded-megapixels": {
+      "direction": "lower",
+      "equivalenceAbsolute": 0.05,
+      "scope": "W2 target decode",
+      "unit": "megapixels",
+      "dominanceRelative": 0.2,
+      "optimalFloorRule": "requested-output-megapixels-under-reference-geometry"
+    },
+    "main-thread-hitch-time": {
+      "direction": "lower",
+      "equivalenceAbsolute": 0.005,
+      "scope": "physical-device W1 full trace",
+      "unit": "seconds",
+      "dominanceRelative": 0.2,
+      "optimalFloor": 0
+    },
+    "peak-dirty-memory": {
+      "direction": "lower",
+      "equivalenceAbsolute": 4194304,
+      "scope": "per process run",
+      "unit": "bytes",
+      "dominanceRelative": 0.2
+    }
+  },
+  "nativeUpstreamTestSuites": {
+    "aTierRequired": [
+      "Nuke",
+      "Kingfisher",
+      "SDWebImage",
+      "PINRemoteImage"
+    ],
+    "bTierRetained": [
+      "AlamofireImage"
+    ],
+    "policy": "run-exact-upstream-tests-unmodified-when-platform-compatible; classify-every-exclusion"
+  },
+  "networkProfiles": [
+    "NET-LOCAL-V1",
+    "NET-CONSTRAINED-V1"
+  ],
+  "outcomePolicy": {
+    "aTierMatrix": "all-seven-required-across-headless-and-independent-swiftui-surfaces",
+    "applicableCorrectnessRule": "fovea-must-pass-every-hard-correctness-check-for-every-implemented-capability",
+    "bTier": "reported-separately-and-never-substitutes-for-a-tier",
+    "bestClaimRule": "best-within-scope-requires-every-applicable-L2-primary-endpoint-substantially-superior-or-optimal-floor-saturated",
+    "betaOSResults": "provisional-only",
+    "missingMetric": "incomparable-not-zero",
+    "releaseClaimRequiresStableOS": true,
+    "simulatorResults": "functional-only",
+    "unsupportedCapability": "reported-as-capability-gap-and-excluded-from-existing-capability-ranking",
+    "secondaryDominanceRule": "at-least-eighty-percent-substantially-superior-and-none-materially-inferior"
+  },
+  "planID": "FOVEA-P0B-COMP-V1",
+  "schemaVersion": 1,
+  "statisticalClaimFamilies": "Benchmarks/statistical-claim-families.json",
+  "statistics": {
+    "bootstrapIterations": 10000,
+    "confidenceLevel": 0.95,
+    "randomSeed": 20260725,
+    "resamplingUnit": "run-session-cluster"
+  },
+  "status": "preregistered-before-formal-results",
+  "workloads": {
+    "W1-SCROLL-V1": {
+      "hardCorrectness": [
+        "no-crash-or-hang",
+        "no-late-result-overwrite",
+        "target-pixel-box"
+      ],
+      "primaryMetrics": [
+        "cancel-waste-bytes",
+        "main-thread-hitch-time",
+        "peak-dirty-memory"
+      ],
+      "trace": "timestamped-normalized-offset-40s"
+    },
+    "W2-HERO-V1": {
+      "hardCorrectness": [
+        "target-pixel-invariant",
+        "orientation-correct",
+        "color-reference-accepted"
+      ],
+      "primaryMetrics": [
+        "decoded-megapixels",
+        "peak-dirty-memory"
+      ]
+    },
+    "W3-AUTH-V1": {
+      "hardCorrectness": [
+        "cross-account-pixel-leak-zero",
+        "cross-account-metadata-blob-coupling-zero",
+        "no-store-reusable-write-zero",
+        "logout-residue-zero",
+        "cross-origin-authorization-leak-zero",
+        "revoke-commit-race-residue-zero"
+      ],
+      "primaryMetrics": []
+    }
+  },
+  "networkOriginPolicy": {
+    "W1-SCROLL-V1": "deterministic-urlprotocol-cancellation-byte-accounting",
+    "W2-HERO-V1": "shared-real-loopback-http-nwlistener-all-headless-and-swiftui-surfaces",
+    "W3-AUTH-V1": "deterministic-urlprotocol-security-fault-injection",
+    "W7-THOUSAND-CONCURRENT-V1": "deterministic-urlprotocol-concurrency-admission-trace",
+    "appleNativeW2Cache": "urlsession-urlcache-use-protocol-cache-policy-task-metrics-no-manual-cache-io"
+  }
+}

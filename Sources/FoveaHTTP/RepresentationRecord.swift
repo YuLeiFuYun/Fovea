@@ -1,284 +1,233 @@
 import AkashicCore
 import Foundation
+import FoveaStorage
+
+/// 与一个 HTTP 表征关联的可缓存性决定。
 
 public enum CacheDisposition: String, Codable, Hashable, Sendable {
-  case reusable
-  case noStore
-  case privateNamespace
+    case reusable
+    case noStore
+    case privateNamespace
 }
+
+/// 将变体与编码内容关联的持久化 HTTP 表征元数据。
 
 public struct RepresentationRecord: Codable, Hashable, Sendable {
-  public static let currentSchemaVersion: UInt16 = 5
+    public static let currentSchemaVersion: UInt16 = 6
 
-  public let recordSchemaVersion: UInt16
-  public let securityNamespaceFingerprint: StorageNamespaceFingerprint
-  public let namespaceGeneration: UInt64
-  public let baseKeyDigest: String
-  public let variantKeyDigest: String
-  public let vary: HTTPVarySelection
-  public let statusCode: Int
-  public let requestTime: Date
-  public let responseTime: Date
-  public let responseDate: Date?
-  public let expiresAt: Date?
-  public let etag: String?
-  public let lastModified: String?
-  public let disposition: CacheDisposition
-  public let contentID: String
-  public let payloadLength: Int
-  public let contentType: String?
+    public let recordSchemaVersion: UInt16
+    public let securityNamespaceFingerprint: StorageNamespaceFingerprint
+    public let namespaceGeneration: UInt64
+    public let baseKeyDigest: String
+    public let variantKeyDigest: String
+    public let vary: HTTPVarySelection
+    public let statusCode: Int
+    public let requestTime: Date
+    public let responseTime: Date
+    public let responseDate: Date?
+    public let expiresAt: Date?
+    public let etag: String?
+    public let lastModified: String?
+    public let disposition: CacheDisposition
+    /// origin 是否要求成功验证后才能复用任何陈旧内容。
+    public let requiresRevalidation: Bool
+    public let contentID: String
+    public let payloadLength: Int
+    public let contentType: String?
 
-  public init(
-    recordSchemaVersion: UInt16 = RepresentationRecord.currentSchemaVersion,
-    securityNamespace: String,
-    namespaceGeneration: UInt64,
-    baseKeyDigest: String,
-    variantKeyDigest: String,
-    vary: HTTPVarySelection = HTTPVarySelection(fieldNames: [], values: [:]),
-    statusCode: Int,
-    requestTime: Date,
-    responseTime: Date,
-    responseDate: Date?,
-    expiresAt: Date?,
-    etag: String?,
-    lastModified: String?,
-    disposition: CacheDisposition,
-    contentID: String,
-    payloadLength: Int,
-    contentType: String?
-  ) {
-    self.recordSchemaVersion = recordSchemaVersion
-    self.securityNamespaceFingerprint = StorageNamespaceFingerprint(namespace: securityNamespace)
-    self.namespaceGeneration = namespaceGeneration
-    self.baseKeyDigest = baseKeyDigest
-    self.variantKeyDigest = variantKeyDigest
-    self.vary = vary
-    self.statusCode = statusCode
-    self.requestTime = requestTime
-    self.responseTime = responseTime
-    self.responseDate = responseDate
-    self.expiresAt = expiresAt
-    self.etag = etag
-    self.lastModified = lastModified
-    self.disposition = disposition
-    self.contentID = contentID
-    self.payloadLength = payloadLength
-    self.contentType = contentType
-  }
+    public init(
+        recordSchemaVersion: UInt16 = RepresentationRecord.currentSchemaVersion,
+        securityNamespace: String,
+        namespaceGeneration: UInt64,
+        baseKeyDigest: String,
+        variantKeyDigest: String,
+        vary: HTTPVarySelection = .empty,
+        statusCode: Int,
+        requestTime: Date,
+        responseTime: Date,
+        responseDate: Date?,
+        expiresAt: Date?,
+        etag: String?,
+        lastModified: String?,
+        disposition: CacheDisposition,
+        requiresRevalidation: Bool = false,
+        contentID: String,
+        payloadLength: Int,
+        contentType: String?
+    ) {
+        self.recordSchemaVersion = recordSchemaVersion
+        self.securityNamespaceFingerprint = StorageNamespaceFingerprint(
+            namespace: securityNamespace)
+        self.namespaceGeneration = namespaceGeneration
+        self.baseKeyDigest = baseKeyDigest
+        self.variantKeyDigest = variantKeyDigest
+        self.vary = vary
+        self.statusCode = statusCode
+        self.requestTime = requestTime
+        self.responseTime = responseTime
+        self.responseDate = responseDate
+        self.expiresAt = expiresAt
+        self.etag = etag
+        self.lastModified = lastModified
+        self.disposition = disposition
+        self.requiresRevalidation = requiresRevalidation
+        self.contentID = contentID
+        self.payloadLength = payloadLength
+        self.contentType = contentType
+    }
 
-  public func isFresh(at date: Date) -> Bool {
-    guard disposition != .noStore, let expiresAt else { return false }
-    return date < expiresAt
-  }
+    private enum CodingKeys: String, CodingKey {
+        case recordSchemaVersion
+        case securityNamespaceFingerprint
+        case namespaceGeneration
+        case baseKeyDigest
+        case variantKeyDigest
+        case vary
+        case statusCode
+        case requestTime
+        case responseTime
+        case responseDate
+        case expiresAt
+        case etag
+        case lastModified
+        case disposition
+        case requiresRevalidation
+        case contentID
+        case payloadLength
+        case contentType
+    }
 
-  package var recencyDate: Date { responseDate ?? responseTime }
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.recordSchemaVersion = try values.decode(UInt16.self, forKey: .recordSchemaVersion)
+        self.securityNamespaceFingerprint = try values.decode(
+            StorageNamespaceFingerprint.self,
+            forKey: .securityNamespaceFingerprint
+        )
+        self.namespaceGeneration = try values.decode(UInt64.self, forKey: .namespaceGeneration)
+        self.baseKeyDigest = try values.decode(String.self, forKey: .baseKeyDigest)
+        self.variantKeyDigest = try values.decode(String.self, forKey: .variantKeyDigest)
+        self.vary = try values.decode(HTTPVarySelection.self, forKey: .vary)
+        self.statusCode = try values.decode(Int.self, forKey: .statusCode)
+        self.requestTime = try values.decode(Date.self, forKey: .requestTime)
+        self.responseTime = try values.decode(Date.self, forKey: .responseTime)
+        self.responseDate = try values.decodeIfPresent(Date.self, forKey: .responseDate)
+        self.expiresAt = try values.decodeIfPresent(Date.self, forKey: .expiresAt)
+        self.etag = try values.decodeIfPresent(String.self, forKey: .etag)
+        self.lastModified = try values.decodeIfPresent(String.self, forKey: .lastModified)
+        self.disposition = try values.decode(CacheDisposition.self, forKey: .disposition)
+        self.requiresRevalidation = try values.decode(Bool.self, forKey: .requiresRevalidation)
+        self.contentID = try values.decode(String.self, forKey: .contentID)
+        self.payloadLength = try values.decode(Int.self, forKey: .payloadLength)
+        self.contentType = try values.decodeIfPresent(String.self, forKey: .contentType)
+        guard isValidPersistentRecord() else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .recordSchemaVersion,
+                in: values,
+                debugDescription: "Representation record violates the supported persistent profile"
+            )
+        }
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(recordSchemaVersion, forKey: .recordSchemaVersion)
+        try values.encode(securityNamespaceFingerprint, forKey: .securityNamespaceFingerprint)
+        try values.encode(namespaceGeneration, forKey: .namespaceGeneration)
+        try values.encode(baseKeyDigest, forKey: .baseKeyDigest)
+        try values.encode(variantKeyDigest, forKey: .variantKeyDigest)
+        try values.encode(vary, forKey: .vary)
+        try values.encode(statusCode, forKey: .statusCode)
+        try values.encode(requestTime, forKey: .requestTime)
+        try values.encode(responseTime, forKey: .responseTime)
+        try values.encodeIfPresent(responseDate, forKey: .responseDate)
+        try values.encodeIfPresent(expiresAt, forKey: .expiresAt)
+        try values.encodeIfPresent(etag, forKey: .etag)
+        try values.encodeIfPresent(lastModified, forKey: .lastModified)
+        try values.encode(disposition, forKey: .disposition)
+        try values.encode(requiresRevalidation, forKey: .requiresRevalidation)
+        try values.encode(contentID, forKey: .contentID)
+        try values.encode(payloadLength, forKey: .payloadLength)
+        try values.encodeIfPresent(contentType, forKey: .contentType)
+    }
+
+    package func isValidPersistentRecord(storedUnder key: String? = nil) -> Bool {
+        guard recordSchemaVersion == Self.currentSchemaVersion,
+            key.map({ $0 == variantKeyDigest }) ?? true,
+            StoredContentIdentifier.isLowercaseSHA256(baseKeyDigest),
+            StoredContentIdentifier.isLowercaseSHA256(variantKeyDigest),
+            StoredContentIdentifier.byteCount(
+                in: contentID,
+                expectedByteCount: payloadLength
+            ) != nil,
+            payloadLength >= 0,
+            100...599 ~= statusCode,
+            requestTime.timeIntervalSinceReferenceDate.isFinite,
+            responseTime.timeIntervalSinceReferenceDate.isFinite,
+            responseDate?.timeIntervalSinceReferenceDate.isFinite ?? true,
+            expiresAt?.timeIntervalSinceReferenceDate.isFinite ?? true,
+            Self.isValidOptionalField(etag),
+            Self.isValidOptionalField(lastModified),
+            Self.isValidOptionalField(contentType),
+            let varyBytes = vary.persistentMetadataByteCount,
+            varyBytes <= HTTPMetadataLimits.maximumHeaderBytes,
+            persistentMetadataByteCount(varyBytes: varyBytes)
+                <= HTTPMetadataLimits.maximumPersistentRecordBytes
+        else { return false }
+        return true
+    }
+
+    private static func isValidOptionalField(_ value: String?) -> Bool {
+        value.map(HTTPMetadataLimits.isValidFieldValue) ?? true
+    }
+
+    private func persistentMetadataByteCount(varyBytes: Int) -> Int {
+        let strings = [
+            baseKeyDigest,
+            variantKeyDigest,
+            contentID,
+            etag ?? "",
+            lastModified ?? "",
+            contentType ?? "",
+        ]
+        return strings.reduce(varyBytes + 128) { partial, value in
+            let next = partial.addingReportingOverflow(value.utf8.count)
+            return next.overflow ? Int.max : next.partialValue
+        }
+    }
+
+    public func isFresh(at date: Date) -> Bool {
+        guard disposition != .noStore, let expiresAt else { return false }
+        return date < expiresAt
+    }
+
+    package var recencyDate: Date { responseDate ?? responseTime }
 }
+
+/// 查询并发布命名空间级 HTTP 表征记录。
 
 public protocol RepresentationRecordStoring: Sendable {
-  func records(
-    for baseKeyDigest: String,
-    namespace: String,
-    namespaceGeneration: UInt64
-  ) async -> [RepresentationRecord]
-  func put(_ record: RepresentationRecord) async throws
-  func containsReference(
-    to contentID: String,
-    namespace: String,
-    excludingVariantDigest: String?
-  ) async -> Bool
-  func remove(
-    _ variantDigest: String,
-    namespace: String,
-    namespaceGeneration: UInt64
-  ) async throws
-  func removeAll(namespace: String) async throws
+    func records(
+        for baseKeyDigest: String,
+        namespace: String,
+        namespaceGeneration: UInt64
+    ) async -> [RepresentationRecord]
+    func put(_ record: RepresentationRecord) async throws
+    func containsReference(
+        to contentID: String,
+        namespace: String,
+        excludingVariantDigest: String?
+    ) async -> Bool
+    func remove(
+        _ variantDigest: String,
+        namespace: String,
+        namespaceGeneration: UInt64
+    ) async throws
+    func removeAll(namespace: String) async throws
 }
 
-public actor RepresentationRecordStore: RepresentationRecordMaintaining {
-  private static let maximumManifestBytes = 64 * 1024 * 1024
-  private nonisolated let ioExecutor = BlockingIOExecutor(
-    label: "dev.fovea.http.representation-records"
-  )
+/// 为表征存储补充记录删除与活动内容枚举能力。
 
-  public nonisolated var unownedExecutor: UnownedSerialExecutor {
-    ioExecutor.asUnownedSerialExecutor()
-  }
-
-  private struct Manifest: Codable {
-    let schemaVersion: UInt16
-    var records: [String: RepresentationRecord]
-  }
-
-  private struct LegacyRecordV4: Codable {
-    let recordSchemaVersion: UInt16
-    let securityNamespaceFingerprint: StorageNamespaceFingerprint
-    let namespaceGeneration: UInt64
-    let variantKeyDigest: String
-    let statusCode: Int
-    let requestTime: Date
-    let responseTime: Date
-    let expiresAt: Date?
-    let etag: String?
-    let lastModified: String?
-    let disposition: CacheDisposition
-    let contentID: String
-    let payloadLength: Int
-    let contentType: String?
-  }
-
-  private let fileURL: URL
-  private var recordsByVariant: [String: RepresentationRecord]
-
-  private init(root: URL) {
-    self.fileURL = root.appendingPathComponent("representation-records.json")
-    self.recordsByVariant = [:]
-  }
-
-  public static func open(root: URL) async throws -> RepresentationRecordStore {
-    let store = RepresentationRecordStore(root: root)
-    try await store.bootstrap(root: root)
-    return store
-  }
-
-  private func bootstrap(root: URL) throws {
-    try StorageDirectorySecurity.prepareDirectory(root)
-    guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
-    let data = try BoundedFileReader.read(
-      from: fileURL,
-      maximumBytes: Self.maximumManifestBytes
-    )
-    if let manifest = try? JSONDecoder().decode(Manifest.self, from: data) {
-      guard manifest.schemaVersion == RepresentationRecord.currentSchemaVersion,
-        manifest.records.allSatisfy({ key, record in
-          isValidRecord(record, storedUnder: key)
-        })
-      else {
-        throw AkashicError.invalidManifest
-      }
-      recordsByVariant = manifest.records
-      return
-    }
-
-    if let legacy = try? JSONDecoder().decode([String: LegacyRecordV4].self, from: data),
-      legacy.values.allSatisfy({ $0.recordSchemaVersion == 4 })
-    {
-      // 预发布的 schema 4 未持久化基础键和 Vary 请求选择，无法安全迁移。
-      // 将其稳定地视为未命中，仅在下一次有效写入时重建。
-      recordsByVariant = [:]
-      return
-    }
-
-    throw AkashicError.invalidManifest
-  }
-
-  public func records(
-    for baseKeyDigest: String,
-    namespace: String,
-    namespaceGeneration: UInt64
-  ) -> [RepresentationRecord] {
-    let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
-    return recordsByVariant.values.filter { record in
-      record.baseKeyDigest == baseKeyDigest
-        && record.securityNamespaceFingerprint == fingerprint
-        && record.namespaceGeneration == namespaceGeneration
-    }
-  }
-
-  /// 仅供包内测试和诊断使用。生产查询必须从基础键开始。
-  package func record(for variantDigest: String) -> RepresentationRecord? {
-    recordsByVariant[variantDigest]
-  }
-
-  public func put(_ record: RepresentationRecord) throws {
-    guard isValidRecord(record, storedUnder: record.variantKeyDigest) else {
-      throw AkashicError.invalidManifest
-    }
-    var next = recordsByVariant
-    next[record.variantKeyDigest] = record
-    try persist(next)
-    recordsByVariant = next
-  }
-
-  public func containsReference(
-    to contentID: String,
-    namespace: String,
-    excludingVariantDigest: String? = nil
-  ) -> Bool {
-    let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
-    return recordsByVariant.values.contains { record in
-      record.contentID == contentID
-        && record.securityNamespaceFingerprint == fingerprint
-        && record.variantKeyDigest != excludingVariantDigest
-    }
-  }
-
-  public func remove(
-    _ variantDigest: String,
-    namespace: String,
-    namespaceGeneration: UInt64
-  ) throws {
-    let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
-    guard let record = recordsByVariant[variantDigest],
-      record.securityNamespaceFingerprint == fingerprint,
-      record.namespaceGeneration == namespaceGeneration
-    else { return }
-    var next = recordsByVariant
-    next.removeValue(forKey: variantDigest)
-    try persist(next)
-    recordsByVariant = next
-  }
-
-  public func contentReferences() async -> Set<StoredContentReference> {
-    Set(
-      recordsByVariant.values.map { record in
-        StoredContentReference(
-          namespaceFingerprint: record.securityNamespaceFingerprint,
-          contentID: record.contentID
-        )
-      }
-    )
-  }
-
-  public func removeAll(namespace: String) throws {
-    let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
-    let next = recordsByVariant.filter { $0.value.securityNamespaceFingerprint != fingerprint }
-    guard next.count != recordsByVariant.count else { return }
-    try persist(next)
-    recordsByVariant = next
-  }
-
-  private func isValidRecord(
-    _ record: RepresentationRecord,
-    storedUnder key: String
-  ) -> Bool {
-    guard record.recordSchemaVersion == RepresentationRecord.currentSchemaVersion,
-      key == record.variantKeyDigest,
-      StoredContentIdentifier.isLowercaseSHA256(record.baseKeyDigest),
-      StoredContentIdentifier.isLowercaseSHA256(record.variantKeyDigest),
-      StoredContentIdentifier.byteCount(
-        in: record.contentID,
-        expectedByteCount: record.payloadLength
-      ) != nil,
-      record.payloadLength >= 0,
-      100...599 ~= record.statusCode,
-      record.requestTime.timeIntervalSinceReferenceDate.isFinite,
-      record.responseTime.timeIntervalSinceReferenceDate.isFinite,
-      record.responseDate?.timeIntervalSinceReferenceDate.isFinite ?? true,
-      record.expiresAt?.timeIntervalSinceReferenceDate.isFinite ?? true
-    else { return false }
-    return true
-  }
-
-  private func persist(_ records: [String: RepresentationRecord]) throws {
-    let manifest = Manifest(
-      schemaVersion: RepresentationRecord.currentSchemaVersion,
-      records: records
-    )
-    let data = try JSONEncoder().encode(manifest)
-    try DurableFileWriter.writeReplacing(data, to: fileURL)
-  }
-}
-
-public protocol RepresentationRecordMaintaining: RepresentationRecordStoring {
-  func contentReferences() async -> Set<StoredContentReference>
+public protocol RepresentationRecordMaintaining: AnyObject, RepresentationRecordStoring {
+    func contentReferences() async -> Set<StoredContentReference>
 }

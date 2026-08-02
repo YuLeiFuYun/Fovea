@@ -2,6 +2,12 @@ name: Fovea Live Network Lab
 
 on:
   workflow_dispatch:
+    inputs:
+      budget_approved:
+        description: Confirm that the current GitHub Actions budget can fund this live-network run.
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -12,7 +18,8 @@ concurrency:
 
 jobs:
   live-network:
-    runs-on: macos-15
+    if: ${{ inputs.budget_approved }}
+    runs-on: xcode-27
     timeout-minutes: 10
     steps:
       - name: Checkout exact commit
@@ -30,14 +37,32 @@ jobs:
           git checkout --detach FETCH_HEAD
           test "$(git rev-parse HEAD)" = "$VERIFIED_COMMIT"
 
-      - name: Run opt-in public HTTPS laboratory
+      - name: Run public HTTPS laboratory
         run: scripts/run-live-network-lab.py --timeout 240
 
       - name: Summarize artifact
         if: always()
         run: |
-          if test -f .artifacts/live-network/network-lab.json; then
-            printf '## Fovea Live Network Lab\n\n```json\n' >> "$GITHUB_STEP_SUMMARY"
-            cat .artifacts/live-network/network-lab.json >> "$GITHUB_STEP_SUMMARY"
-            printf '\n```\n' >> "$GITHUB_STEP_SUMMARY"
+          report=.artifacts/live-network/network-lab.json
+          if test -f "$report"; then
+            digest=$(shasum -a 256 "$report" | awk '{ print $1 }')
+            python3 - "$report" "$digest" >> "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import sys
+
+          path, digest = sys.argv[1:]
+          report = json.load(open(path))
+          lab = report.get("lab") or {}
+          cases = lab.get("cases") or []
+          print("## Fovea Live Network Lab")
+          print()
+          print(f"- Status: `{report.get('status', 'missing')}`")
+          print(f"- Verified commit: `{report.get('verifiedCommit', 'missing')}`")
+          print(f"- Attempts: `{len(report.get('attempts') or [])}`")
+          print(f"- Cases: `{len(cases)}`")
+          print(f"- Expectations satisfied: `{bool(lab.get('allExpectationsSatisfied'))}`")
+          print(f"- Invariants satisfied: `{bool(lab.get('allInvariantsSatisfied'))}`")
+          print(f"- Report SHA-256: `{digest}`")
+          print("- Per-origin labels, protocol paths, and timing metrics are intentionally omitted from the public summary.")
+          PY
           fi

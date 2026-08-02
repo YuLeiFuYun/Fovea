@@ -1,0 +1,103 @@
+{
+  "manifestID": "FOVEA-DISCUSSION-SOURCE-MANIFEST-V1",
+  "reviewedOn": "2026-08-01",
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "byteCount": 17293,
+      "id": "SRC-DISCUSSION-MATH-AUDIT-01",
+      "originalName": "粘贴的 markdown (1)。md(7)(1)(1)",
+      "retention": "external-user-provided-source-digest-and-normalized-decisions",
+      "role": "independent mathematical audit and correction of claim semantics",
+      "sha256": "4331f32d48b41c4f3ea407c1c720c4014b8ce4fa0a4ccea4568738bf8ee622c7"
+    },
+    {
+      "byteCount": 35864,
+      "id": "SRC-DISCUSSION-COMPARISON-ROADMAP-01",
+      "originalName": "粘贴的 markdown (1)。md(8)(1)",
+      "retention": "external-user-provided-source-digest-and-normalized-decisions",
+      "role": "cross-language comparison roadmap and canonical W1-W15 workload matrix",
+      "sha256": "361438a15ca974aee4245a393052ee7a9a09fabc1954c1cee76afecf617000bf"
+    },
+    {
+      "byteCount": 29867,
+      "id": "SRC-DISCUSSION-IMPLEMENTATION-PLAN-01",
+      "originalName": "粘贴的 markdown (2)。md(1)",
+      "retention": "external-user-provided-source-digest-and-normalized-decisions",
+      "role": "mathematical implementation plan, phases A-H, oracle and lab structure",
+      "sha256": "7747e292c7b1c1f4dcd648706abc20adf45c92fef91f2ff8bb74f58c41e2f334"
+    },
+    {
+      "byteCount": 26044,
+      "id": "SRC-DISCUSSION-MATH-REVIEWS-02",
+      "originalName": "粘贴的文本 (3)(1).txt",
+      "retention": "external-user-provided-source-digest-and-normalized-decisions",
+      "role": "additional reviews covering stochastic dominance, delayed hits, semantic partial orders and bounded claims",
+      "sha256": "081f201fbe7ebf0d26b27e3dae33500c67c6b674eb0fa80bffb70a4fbb364199"
+    },
+    {
+      "byteCount": 815,
+      "id": "SRC-DISCUSSION-CODEC-PARALLEL-01",
+      "originalName": "2026-07-27 user instruction: Fovea deep audit and parallel codec evolution",
+      "retention": "conversation-source-digest-and-normalized-decisions",
+      "role": "accepted instruction to improve Fovea deeply, let workflow-bundle learn, research current literature, and keep Fovea evolvable while an independent stronger codec is developed in parallel",
+      "sha256": "5ffd24aecc4830f253d2e95951cb5ddb6fb2aac41bea4d00e647f887910bb688"
+    },
+    {
+      "byteCount": 1880,
+      "id": "SRC-DISCUSSION-PLUGGABLE-STACK-01",
+      "originalName": "2026-07-28 user instruction: pluggable codec/cache extraction and Fovea integration plan",
+      "retention": "conversation-source-digest-and-normalized-decisions",
+      "role": "accepted instruction to make codec and cache implementations independently consumable and pluggable, integrate ImageIO and cache packages into Fovea, preserve cautious boundaries, and pursue scoped Pareto advantages with current research and comparisons",
+      "sha256": "bc3681dbcd290bc25e5cd2733fe4c0b4b6d12f95de87becf4b400cef4b020893"
+    },
+    {
+      "byteCount": 212,
+      "id": "SRC-DISCUSSION-LONG-HORIZON-ROADMAP-01",
+      "originalName": "2026-07-29 user instruction: persist and begin the Fovea long-horizon roadmap",
+      "retention": "conversation-source-digest-and-normalized-decisions",
+      "role": "accepted instruction to make the route skeleton durable across many future tasks and immediately begin execution without allowing later tasks to forget or silently replace it",
+      "sha256": "4bd3e105df288511664576181f93e22d2835f1cc85e6e8267f566146502acd99"
+    },
+    {
+      "byteCount": 444,
+      "id": "SRC-DISCUSSION-PUBLIC-MIT-CLEANUP-01",
+      "originalName": "2026-08-01 user instruction: public MIT repositories, privacy-safe cleanup and continued research",
+      "retention": "conversation-source-digest-and-normalized-decisions",
+      "role": "accepted instruction to publish Fovea, ImageCraft and Akashic through GitHub CLI under MIT, prevent privacy leakage, remove superseded material and continue evidence-led development and research",
+      "sha256": "7f0c5daf291bfee3585d49f21ab0cefeaf409e9c889ed423cbf64d75632e011b"
+    },
+    {
+      "byteCount": 12117,
+      "id": "SRC-RESEARCH-CROSS-PLATFORM-PIPELINE-2026-08",
+      "originalName": "2026-08 cross-platform image pipeline and cache mechanism audit",
+      "retention": "repository-research-audit-and-pinned-upstream-revisions",
+      "role": "pinned-source review of Coil, Glide, Fresco, libvips, Caffeine and cache-system papers for P6/P7/P9 adoption and rejection decisions",
+      "sha256": "f695c83d4f5d643aa1bbbcdd1b79aca69b8c13cf85ebfba0c786d39617d5638a"
+    },
+    {
+      "byteCount": 417,
+      "id": "SRC-DISCUSSION-SWIFT-6-4-MIGRATION-01",
+      "originalName": "2026-08-01 user instruction: migrate Fovea, ImageCraft and Akashic to Swift 6.4 without dropping prior work",
+      "retention": "conversation-source-digest-and-normalized-decisions",
+      "role": "accepted instruction to adopt Swift 6.4 across the three repositories, use evidence-backed new capabilities for performance and safety, study current research, and preserve the existing publication and roadmap obligations",
+      "sha256": "a1eb564a8dd0cdadd0d7e739f038ade8a636fda954e4c058356ed9e3c74c7140"
+    },
+    {
+      "byteCount": 17264,
+      "id": "SRC-RESEARCH-SWIFT-6-4-ADOPTION-2026-08",
+      "originalName": "2026-08 Swift 6.4 adoption audit for Fovea, ImageCraft and Akashic",
+      "retention": "repository-research-audit-local-source-revisions-and-negative-results",
+      "role": "pinned local Swift source and official release audit covering adopted, deferred and rejected Swift 6.4 mechanisms, deployment constraints, explicit xcode-27 preview CI policy and validation results",
+      "sha256": "bf24fbe641362e353d593c3a0b6f4f0e6ac3039b897b84a7400f804e94a43773"
+    },
+    {
+      "byteCount": 1094,
+      "id": "SRC-RESEARCH-GITHUB-XCODE27-PREVIEW-2026-08",
+      "originalName": "GitHub actions/runner-images Xcode 27 public preview announcement and image inventory observed 2026-08-01",
+      "retention": "official-public-announcement-normalized-machine-readable-evidence",
+      "role": "authoritative availability and provenance boundary for explicit xcode-27 hosted CI selection",
+      "sha256": "714729ebf31681141dc1329bf56266bf31ec785565e0ac0eedd9b36a4bb5ffc0"
+    }
+  ]
+}

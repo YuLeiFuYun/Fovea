@@ -1,479 +1,290 @@
+import Combine
 import FoveaCore
 import ImageCraftCore
 import SwiftUI
 
-public enum FoveaImagePhase {
-  case empty
-  case loading
-  case preview(DecodedImage)
-  case success(DecodedImage)
-  case failure(PipelineFailure)
-  case cancelled
+/// 用于固定请求、带显式占位与失败内容的 SwiftUI 图像视图。
 
-  public var kind: FoveaImagePhaseKind {
-    switch self {
-    case .empty: .empty
-    case .loading: .loading
-    case .preview: .preview
-    case .success: .success
-    case .failure: .failure
-    case .cancelled: .cancelled
-    }
-  }
-}
+public struct FoveaImage<Placeholder: View, Failure: View>: View {
+    private let request: ImageRequest
+    private let loader: any ImageLoading
+    private let accessibility: FoveaImageAccessibility
+    private let loadingPolicy: FoveaImageLoadingPolicy
+    private let transitionPolicy: FoveaImageTransitionPolicy
+    private let placeholder: () -> Placeholder
+    private let failure: (FoveaImageFailureContext) -> Failure
+    @StateObject private var model = FoveaImageModel()
+    @State private var loadToken = UUID()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-public enum FoveaImagePhaseKind: String, Codable, Hashable, Sendable {
-  case empty
-  case loading
-  case preview
-  case success
-  case failure
-  case cancelled
-}
-
-public enum FoveaImageAccessibility {
-  case decorative
-  case label(Text)
-}
-
-public enum FoveaImageRetentionPolicy: String, Codable, Hashable, Sendable {
-  case clearImmediately
-  case retainSuccessfulImageUntilReplacement
-}
-
-public struct FoveaImageLoadingPolicy: Hashable, Sendable {
-  public let placeholderDelayNanoseconds: UInt64
-  public let retention: FoveaImageRetentionPolicy
-
-  public init(
-    placeholderDelayNanoseconds: UInt64 = 16_000_000,
-    retention: FoveaImageRetentionPolicy = .clearImmediately
-  ) {
-    self.placeholderDelayNanoseconds = placeholderDelayNanoseconds
-    self.retention = retention
-  }
-
-  public static let `default` = FoveaImageLoadingPolicy()
-}
-
-public enum FoveaImageResolvedTransition: Equatable, Sendable {
-  case identity
-  case opacity(duration: Double)
-}
-
-public struct FoveaImageTransitionPolicy: Hashable, Sendable {
-  public let opacityDuration: Double
-
-  public init(opacityDuration: Double = 0.2) {
-    self.opacityDuration = max(0, opacityDuration)
-  }
-
-  public static let `default` = FoveaImageTransitionPolicy()
-
-  public func resolved(reduceMotion: Bool) -> FoveaImageResolvedTransition {
-    guard !reduceMotion, opacityDuration > 0 else { return .identity }
-    return .opacity(duration: opacityDuration)
-  }
-}
-
-public struct FoveaImageFailureContext {
-  public let failure: PipelineFailure
-  public let recoveryAction: FoveaImageRecoveryAction
-  private let retryAction: @MainActor () -> Void
-
-  package init(
-    failure: PipelineFailure,
-    recoveryAction: FoveaImageRecoveryAction,
-    retryAction: @escaping @MainActor () -> Void
-  ) {
-    self.failure = failure
-    self.recoveryAction = recoveryAction
-    self.retryAction = retryAction
-  }
-
-  @MainActor
-  public func retry() {
-    guard recoveryAction == .retry else { return }
-    retryAction()
-  }
-}
-
-public enum FoveaSwiftUIImageFailurePolicy {
-  public static func action(for failure: PipelineFailure) -> FoveaImageRecoveryAction {
-    failure.imageRecoveryAction
-  }
-}
-
-@MainActor
-package final class FoveaImageModel: ObservableObject {
-  @Published package private(set) var phase: FoveaImagePhase = .empty
-  package var requestGeneration: UInt64 { session.requestGeneration }
-
-  private let session = ImageDisplaySession()
-
-  package init() {}
-
-  package func load(
-    request: ImageRequest,
-    loader: any ImageLoading,
-    policy: FoveaImageLoadingPolicy = .default,
-    force: Bool = false
-  ) async {
-    await session.load(
-      request: request,
-      loader: loader,
-      placeholderDelayNanoseconds: policy.placeholderDelayNanoseconds,
-      retention: policy.retention.coreRetention,
-      force: force
-    ) { [weak self] phase in
-      self?.phase = Self.swiftUIPhase(phase)
-    }
-  }
-
-  package func retry(
-    request: ImageRequest,
-    loader: any ImageLoading,
-    policy: FoveaImageLoadingPolicy = .default
-  ) async {
-    await load(request: request, loader: loader, policy: policy, force: true)
-  }
-
-  package func prepareForIdentityChange(
-    to identity: String,
-    retention: FoveaImageRetentionPolicy
-  ) {
-    session.prepareForIdentityChange(to: identity, retention: retention.coreRetention) {
-      [weak self] phase in
-      self?.phase = Self.swiftUIPhase(phase)
-    }
-  }
-
-  package func invalidate() {
-    session.invalidate { [weak self] phase in
-      self?.phase = Self.swiftUIPhase(phase)
-    }
-  }
-
-  private static func swiftUIPhase(_ phase: ImageDisplaySessionPhase) -> FoveaImagePhase {
-    switch phase {
-    case .empty: .empty
-    case .loading: .loading
-    case .preview(let image): .preview(image)
-    case .success(let image): .success(image)
-    case .failure(let failure): .failure(failure)
-    case .cancelled: .cancelled
-    }
-  }
-}
-
-extension FoveaImageRetentionPolicy {
-  package var coreRetention: ImageDisplayRetention {
-    switch self {
-    case .clearImmediately: .clearImmediately
-    case .retainSuccessfulImageUntilReplacement: .retainSuccessfulImageUntilReplacement
-    }
-  }
-}
-
-@MainActor
-package final class FoveaGeometryRequestModel: ObservableObject {
-  @Published package private(set) var request: ImageRequest?
-  @Published package private(set) var failure: PipelineFailure?
-  private var resolver: TargetGeometryResolver
-
-  package init(policy: TargetGeometryPolicy = .coreV1) {
-    self.resolver = TargetGeometryResolver(policy: policy)
-  }
-
-  package func update(
-    widthPoints: Double,
-    heightPoints: Double,
-    scale: Double,
-    contentMode: ImageContentMode,
-    isStable: Bool,
-    requestBuilder: (ResolvedImageTarget) throws -> ImageRequest
-  ) {
-    let target: ResolvedImageTarget?
-    do {
-      target = try resolver.resolve(
-        widthPoints: widthPoints,
-        heightPoints: heightPoints,
-        scale: scale,
-        contentMode: contentMode,
-        isStable: isStable
-      )
-    } catch let pipelineFailure as PipelineFailure {
-      publishFailure(pipelineFailure)
-      return
-    } catch let imageError as ImageCraftError {
-      publishFailure(PipelineFailure.imageCraft(imageError, stage: .requestValidation))
-      return
-    } catch {
-      publishFailure(Self.requestBuilderFailure)
-      return
-    }
-    guard let target else {
-      request = nil
-      failure = nil
-      return
+    /// 创建带显式占位与失败构建器的固定请求图像视图。
+    public init(
+        request: ImageRequest,
+        loader: any ImageLoading,
+        accessibility: FoveaImageAccessibility,
+        loadingPolicy: FoveaImageLoadingPolicy = .default,
+        transitionPolicy: FoveaImageTransitionPolicy = .default,
+        @ViewBuilder placeholder: @escaping () -> Placeholder,
+        @ViewBuilder failure: @escaping (FoveaImageFailureContext) -> Failure
+    ) {
+        self.request = request
+        self.loader = loader
+        self.accessibility = accessibility
+        self.loadingPolicy = loadingPolicy
+        self.transitionPolicy = transitionPolicy
+        self.placeholder = placeholder
+        self.failure = failure
     }
 
-    let next: ImageRequest
-    do {
-      next = try requestBuilder(target)
-    } catch let pipelineFailure as PipelineFailure {
-      publishFailure(pipelineFailure)
-      return
-    } catch let imageError as ImageCraftError {
-      publishFailure(PipelineFailure.imageCraft(imageError, stage: .requestValidation))
-      return
-    } catch {
-      publishFailure(Self.requestBuilderFailure)
-      return
+    /// 绑定当前请求身份生命周期的视图树。
+    public var body: some View {
+        content
+            .transition(resolvedTransition)
+            .animation(resolvedAnimation, value: model.phase.kind)
+            .task(id: taskIdentity) {
+                await model.load(
+                    request: request,
+                    loader: loader,
+                    policy: loadingPolicy,
+                    loadToken: loadToken
+                )
+            }
+            .modifier(
+                FoveaIdentityChangeModifier(identity: requestIdentity) { identity in
+                    model.prepareForIdentityChange(
+                        to: identity,
+                        retention: loadingPolicy.retention
+                    )
+                }
+            )
     }
 
-    failure = nil
-    if request?.displayIdentity != next.displayIdentity {
-      request = next
+    private var content: some View {
+        FoveaImagePhaseContent(
+            phase: model.phase,
+            accessibility: accessibility,
+            contentMode: request.contentMode,
+            placeholder: placeholder,
+            failure: failure,
+            retryAction: retry
+        )
     }
-  }
 
-  package func reset() {
-    resolver.reset()
-    request = nil
-    failure = nil
-  }
+    private var resolvedTransition: AnyTransition {
+        switch transitionPolicy.resolved(reduceMotion: reduceMotion) {
+        case .identity: .identity
+        case .opacity: .opacity
+        }
+    }
 
-  private func publishFailure(_ next: PipelineFailure) {
-    request = nil
-    failure = next
-  }
+    private var resolvedAnimation: Animation? {
+        switch transitionPolicy.resolved(reduceMotion: reduceMotion) {
+        case .identity: nil
+        case .opacity(let duration): .easeInOut(duration: duration)
+        }
+    }
 
-  private static let requestBuilderFailure = PipelineFailure(
-    category: .internalFailure,
-    stage: .requestValidation,
-    disposition: .terminal,
-    reasonCode: "responsive-request-builder-failed"
-  )
+    private var requestIdentity: String { request.displayIdentity }
+    private var taskIdentity: String { "\(requestIdentity)|load:\(loadToken.uuidString)" }
+
+    @MainActor
+    private func retry() {
+        loadToken = UUID()
+    }
+}
+
+private struct FoveaIdentityChangeModifier: ViewModifier {
+    let identity: String
+    let action: (String) -> Void
+    @State private var previousIdentity: String
+
+    init(identity: String, action: @escaping (String) -> Void) {
+        self.identity = identity
+        self.action = action
+        _previousIdentity = State(initialValue: identity)
+    }
+
+    func body(content: Content) -> some View {
+        content.onReceive(Just(identity)) { newIdentity in
+            guard previousIdentity != newIdentity else { return }
+            previousIdentity = newIdentity
+            action(newIdentity)
+        }
+    }
 }
 
 private struct FoveaGeometryTaskIdentity: Hashable {
-  let widthPoints: Double
-  let heightPoints: Double
-  let scale: Double
-  let contentMode: ImageContentMode
-  let isStable: Bool
-  let retryGeneration: UInt64
+    let widthPoints: Double
+    let heightPoints: Double
+    let scale: Double
+    let contentMode: ImageContentMode
+    let isStable: Bool
+    let retryGeneration: UUID
 }
 
-public struct FoveaImage<Placeholder: View, Failure: View>: View {
-  private let request: ImageRequest
-  private let loader: any ImageLoading
-  private let accessibility: FoveaImageAccessibility
-  private let loadingPolicy: FoveaImageLoadingPolicy
-  private let transitionPolicy: FoveaImageTransitionPolicy
-  private let placeholder: () -> Placeholder
-  private let failure: (FoveaImageFailureContext) -> Failure
-  @StateObject private var model = FoveaImageModel()
-  @State private var retryGeneration: UInt64 = 0
-  @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-  public init(
-    request: ImageRequest,
-    loader: any ImageLoading,
-    accessibility: FoveaImageAccessibility,
-    loadingPolicy: FoveaImageLoadingPolicy = .default,
-    transitionPolicy: FoveaImageTransitionPolicy = .default,
-    @ViewBuilder placeholder: @escaping () -> Placeholder,
-    @ViewBuilder failure: @escaping (FoveaImageFailureContext) -> Failure
-  ) {
-    self.request = request
-    self.loader = loader
-    self.accessibility = accessibility
-    self.loadingPolicy = loadingPolicy
-    self.transitionPolicy = transitionPolicy
-    self.placeholder = placeholder
-    self.failure = failure
-  }
-
-  public var body: some View {
-    content
-      .transition(resolvedTransition)
-      .animation(resolvedAnimation, value: model.phase.kind)
-      .task(id: taskIdentity) {
-        await model.load(request: request, loader: loader, policy: loadingPolicy)
-      }
-      .onChange(of: requestIdentity) { identity in
-        model.prepareForIdentityChange(to: identity, retention: loadingPolicy.retention)
-      }
-      .onDisappear { model.invalidate() }
-  }
-
-  @ViewBuilder
-  private var content: some View {
-    switch model.phase {
-    case .empty, .loading, .cancelled:
-      placeholder()
-    case .preview(let decoded), .success(let decoded):
-      renderedImage(decoded)
-    case .failure(let error):
-      failure(
-        FoveaImageFailureContext(
-          failure: error,
-          recoveryAction: FoveaSwiftUIImageFailurePolicy.action(for: error),
-          retryAction: retry
-        )
-      )
-    }
-  }
-
-  @ViewBuilder
-  private func renderedImage(_ decoded: DecodedImage) -> some View {
-    switch accessibility {
-    case .decorative:
-      Image(decorative: decoded.cgImage, scale: 1).resizable()
-    case .label(let label):
-      Image(decoded.cgImage, scale: 1, label: label).resizable()
-    }
-  }
-
-  private var resolvedTransition: AnyTransition {
-    switch transitionPolicy.resolved(reduceMotion: reduceMotion) {
-    case .identity: .identity
-    case .opacity: .opacity
-    }
-  }
-
-  private var resolvedAnimation: Animation? {
-    switch transitionPolicy.resolved(reduceMotion: reduceMotion) {
-    case .identity: nil
-    case .opacity(let duration): .easeInOut(duration: duration)
-    }
-  }
-
-  private var requestIdentity: String { request.displayIdentity }
-  private var taskIdentity: String { "\(requestIdentity)|retry:\(retryGeneration)" }
-
-  @MainActor
-  private func retry() {
-    retryGeneration &+= 1
-  }
-}
+/// 根据实时布局几何派生目标像素的 SwiftUI 图像视图。
 
 public struct FoveaResponsiveImage<Placeholder: View, Failure: View>: View {
-  private let loader: any ImageLoading
-  private let accessibility: FoveaImageAccessibility
-  private let contentMode: ImageContentMode
-  private let geometryIsStable: Bool
-  private let loadingPolicy: FoveaImageLoadingPolicy
-  private let transitionPolicy: FoveaImageTransitionPolicy
-  private let requestBuilder: @MainActor (ResolvedImageTarget) throws -> ImageRequest
-  private let placeholder: () -> Placeholder
-  private let failure: (FoveaImageFailureContext) -> Failure
-  @StateObject private var geometryModel: FoveaGeometryRequestModel
-  @State private var retryGeneration: UInt64 = 0
-  @Environment(\.displayScale) private var displayScale
+    private let loader: any ImageLoading
+    private let accessibility: FoveaImageAccessibility
+    private let contentMode: ImageContentMode
+    private let geometryIsStable: Bool
+    private let loadingPolicy: FoveaImageLoadingPolicy
+    private let transitionPolicy: FoveaImageTransitionPolicy
+    private let requestBuilder: @MainActor (ResolvedImageTarget) throws -> ImageRequest
+    private let placeholder: () -> Placeholder
+    private let failure: (FoveaImageFailureContext) -> Failure
+    private let previewAppeared: @MainActor () -> Void
+    private let successAppeared: @MainActor () -> Void
+    @StateObject private var model: FoveaResponsiveImageModel
+    @State private var retryGeneration = UUID()
+    @Environment(\.displayScale) private var displayScale
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-  public init(
-    loader: any ImageLoading,
-    accessibility: FoveaImageAccessibility,
-    contentMode: ImageContentMode = .fit,
-    geometryPolicy: TargetGeometryPolicy = .coreV1,
-    geometryIsStable: Bool = true,
-    loadingPolicy: FoveaImageLoadingPolicy = .default,
-    transitionPolicy: FoveaImageTransitionPolicy = .default,
-    requestBuilder: @escaping @MainActor (ResolvedImageTarget) throws -> ImageRequest,
-    @ViewBuilder placeholder: @escaping () -> Placeholder,
-    @ViewBuilder failure: @escaping (FoveaImageFailureContext) -> Failure
-  ) {
-    self.loader = loader
-    self.accessibility = accessibility
-    self.contentMode = contentMode
-    self.geometryIsStable = geometryIsStable
-    self.loadingPolicy = loadingPolicy
-    self.transitionPolicy = transitionPolicy
-    self.requestBuilder = requestBuilder
-    self.placeholder = placeholder
-    self.failure = failure
-    _geometryModel = StateObject(
-      wrappedValue: FoveaGeometryRequestModel(policy: geometryPolicy)
-    )
-  }
+    /// 创建几何感知图像视图，并根据已解析目标像素重建请求。
+    public init(
+        loader: any ImageLoading,
+        accessibility: FoveaImageAccessibility,
+        contentMode: ImageContentMode = .fit,
+        geometryPolicy: TargetGeometryPolicy = .current,
+        geometryIsStable: Bool = true,
+        loadingPolicy: FoveaImageLoadingPolicy = .default,
+        transitionPolicy: FoveaImageTransitionPolicy = .default,
+        requestBuilder: @escaping @MainActor (ResolvedImageTarget) throws -> ImageRequest,
+        @ViewBuilder placeholder: @escaping () -> Placeholder,
+        @ViewBuilder failure: @escaping (FoveaImageFailureContext) -> Failure
+    ) {
+        self.loader = loader
+        self.accessibility = accessibility
+        self.contentMode = contentMode
+        self.geometryIsStable = geometryIsStable
+        self.loadingPolicy = loadingPolicy
+        self.transitionPolicy = transitionPolicy
+        self.requestBuilder = requestBuilder
+        self.placeholder = placeholder
+        self.failure = failure
+        self.previewAppeared = {}
+        self.successAppeared = {}
+        _model = StateObject(
+            wrappedValue: FoveaResponsiveImageModel(policy: geometryPolicy)
+        )
+    }
 
-  public var body: some View {
-    GeometryReader { proxy in
-      Group {
-        if let request = geometryModel.request {
-          FoveaImage(
+    /// 创建带成功视图可见性观测的几何感知图像视图。
+    ///
+    /// 该入口仅用于基准测试，避免把测量钩子扩展为稳定公开 API。
+    @_spi(Benchmarking)
+    public init(
+        loader: any ImageLoading,
+        accessibility: FoveaImageAccessibility,
+        contentMode: ImageContentMode = .fit,
+        geometryPolicy: TargetGeometryPolicy = .current,
+        geometryIsStable: Bool = true,
+        loadingPolicy: FoveaImageLoadingPolicy = .default,
+        transitionPolicy: FoveaImageTransitionPolicy = .default,
+        onPreviewAppear: @escaping @MainActor () -> Void = {},
+        onSuccessAppear: @escaping @MainActor () -> Void,
+        requestBuilder: @escaping @MainActor (ResolvedImageTarget) throws -> ImageRequest,
+        @ViewBuilder placeholder: @escaping () -> Placeholder,
+        @ViewBuilder failure: @escaping (FoveaImageFailureContext) -> Failure
+    ) {
+        self.loader = loader
+        self.accessibility = accessibility
+        self.contentMode = contentMode
+        self.geometryIsStable = geometryIsStable
+        self.loadingPolicy = loadingPolicy
+        self.transitionPolicy = transitionPolicy
+        self.requestBuilder = requestBuilder
+        self.placeholder = placeholder
+        self.failure = failure
+        self.previewAppeared = onPreviewAppear
+        self.successAppeared = onSuccessAppear
+        _model = StateObject(
+            wrappedValue: FoveaResponsiveImageModel(policy: geometryPolicy)
+        )
+    }
+
+    /// 由几何驱动的视图树与请求生命周期。
+    public var body: some View {
+        GeometryReader { proxy in
+            FoveaImagePhaseContent(
+                phase: model.phase,
+                accessibility: accessibility,
+                contentMode: contentMode,
+                placeholder: placeholder,
+                failure: failure,
+                retryAction: retryGeometryResolution,
+                previewAppeared: previewAppeared,
+                successAppeared: successAppeared
+            )
+            .transition(resolvedTransition)
+            .animation(resolvedAnimation, value: model.phase.kind)
+            .task(id: taskIdentity(for: proxy.size)) {
+                await model.updateAndLoad(
+                    widthPoints: proxy.size.width,
+                    heightPoints: proxy.size.height,
+                    scale: displayScale,
+                    contentMode: contentMode,
+                    isStable: geometryIsStable,
+                    retryGeneration: retryGeneration,
+                    loader: loader,
+                    loadingPolicy: loadingPolicy,
+                    requestBuilder: requestBuilder
+                )
+            }
+        }
+    }
+
+    private func taskIdentity(for size: CGSize) -> FoveaGeometryTaskIdentity {
+        FoveaGeometryTaskIdentity(
+            widthPoints: size.width,
+            heightPoints: size.height,
+            scale: displayScale,
+            contentMode: contentMode,
+            isStable: geometryIsStable,
+            retryGeneration: retryGeneration
+        )
+    }
+
+    private var resolvedTransition: AnyTransition {
+        switch transitionPolicy.resolved(reduceMotion: reduceMotion) {
+        case .identity: .identity
+        case .opacity: .opacity
+        }
+    }
+
+    private var resolvedAnimation: Animation? {
+        switch transitionPolicy.resolved(reduceMotion: reduceMotion) {
+        case .identity: nil
+        case .opacity(let duration): .easeInOut(duration: duration)
+        }
+    }
+
+    @MainActor
+    private func retryGeometryResolution() {
+        retryGeneration = UUID()
+    }
+}
+
+extension FoveaImage where Placeholder == ProgressView<EmptyView, EmptyView>, Failure == EmptyView {
+    /// 创建使用标准进度占位且不提供失败 UI 的固定请求图像视图。
+    public init(
+        request: ImageRequest,
+        loader: any ImageLoading,
+        accessibility: FoveaImageAccessibility,
+        loadingPolicy: FoveaImageLoadingPolicy = .default,
+        transitionPolicy: FoveaImageTransitionPolicy = .default
+    ) {
+        self.init(
             request: request,
             loader: loader,
             accessibility: accessibility,
             loadingPolicy: loadingPolicy,
-            transitionPolicy: transitionPolicy,
-            placeholder: placeholder,
-            failure: failure
-          )
-        } else if let requestFailure = geometryModel.failure {
-          failure(
-            FoveaImageFailureContext(
-              failure: requestFailure,
-              recoveryAction: FoveaSwiftUIImageFailurePolicy.action(for: requestFailure),
-              retryAction: retryGeometryResolution
-            )
-          )
-        } else {
-          placeholder()
+            transitionPolicy: transitionPolicy
+        ) {
+            ProgressView()
+        } failure: { _ in
+            EmptyView()
         }
-      }
-      .task(id: taskIdentity(for: proxy.size)) {
-        geometryModel.update(
-          widthPoints: proxy.size.width,
-          heightPoints: proxy.size.height,
-          scale: displayScale,
-          contentMode: contentMode,
-          isStable: geometryIsStable,
-          requestBuilder: requestBuilder
-        )
-      }
-      .onDisappear { geometryModel.reset() }
     }
-  }
-
-  private func taskIdentity(for size: CGSize) -> FoveaGeometryTaskIdentity {
-    FoveaGeometryTaskIdentity(
-      widthPoints: size.width,
-      heightPoints: size.height,
-      scale: displayScale,
-      contentMode: contentMode,
-      isStable: geometryIsStable,
-      retryGeneration: retryGeneration
-    )
-  }
-
-  @MainActor
-  private func retryGeometryResolution() {
-    retryGeneration &+= 1
-  }
-}
-
-extension FoveaImage where Placeholder == ProgressView<EmptyView, EmptyView>, Failure == EmptyView {
-  public init(
-    request: ImageRequest,
-    loader: any ImageLoading,
-    accessibility: FoveaImageAccessibility,
-    loadingPolicy: FoveaImageLoadingPolicy = .default,
-    transitionPolicy: FoveaImageTransitionPolicy = .default
-  ) {
-    self.init(
-      request: request,
-      loader: loader,
-      accessibility: accessibility,
-      loadingPolicy: loadingPolicy,
-      transitionPolicy: transitionPolicy
-    ) {
-      ProgressView()
-    } failure: { _ in
-      EmptyView()
-    }
-  }
 }

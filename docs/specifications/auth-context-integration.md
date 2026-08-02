@@ -106,7 +106,7 @@ Phase 0a 的 `ImageRequest.credentialHeaderNames` 允许调用者显式标记非
 - URLSession task 注册该集合，跨 origin redirect 必须同时剥离内置与自定义凭证字段；
 - 自定义凭证存在但 authorization context / credential generation 缺失时，在发网前 fail-closed。
 
-内置敏感字段覆盖 Authorization、Proxy-Authorization、Cookie、API key 及常见 cloud/access-token 名称；不能识别的业务凭证必须由调用者显式分类。
+内置敏感字段覆盖 Authorization、Proxy-Authorization、Cookie、API key 及常见 cloud/access-token 名称；此外，header 名中的 auth/credential/csrf/key/password/secret/session/signature/token/xsrf 组件会保守归类为敏感。命名无法表达凭证语义的业务字段仍必须由调用者显式分类。
 
 ## 5. Profile ACL
 
@@ -115,7 +115,7 @@ Phase 0a 的 `ImageRequest.credentialHeaderNames` 允许调用者显式标记非
 - 判定在任何缓存读取、single-flight 订阅和网络访问前同步完成；
 - 精确组合不匹配时返回 `profile-access-denied`；
 - policy 不读取 token、URL、header 或图片内容，也不自行推断角色继承；
-- 底层 `FoveaPipeline` 默认 unrestricted 以保持可组合性；官方 `FoveaSystemPipeline` 默认 public-only，私有 profile 必须显式提供 allowlist；
+- 公共 `FoveaPipeline` 构造器要求显式传入 `ProfileAccessPolicy`，不得隐式放开 ACL；官方 `FoveaSystemPipeline` 默认 public-only，私有 profile 必须显式提供 allowlist；
 - ACL 变化需要构造新 pipeline 或 revoke 相关 namespace，不能热改旧任务语义。
 
 ## 6. Cookie 默认策略
@@ -125,9 +125,11 @@ Apple 的默认和后台 `URLSessionConfiguration` 通常使用共享 Cookie sto
 ```text
 httpCookieStorage = nil
 httpShouldSetCookies = false
+urlCredentialStorage = nil
+httpAdditionalHeaders = nil
 ```
 
-并通过显式 CookieProvider/RequestAuthorizer 注入当前请求需要的 Cookie。
+并通过显式 CookieProvider/RequestAuthorizer 注入当前请求需要的 Cookie。调用者传入的 `URLSessionConfiguration` 即使是 ephemeral，也会被清除 credential storage 与 `httpAdditionalHeaders`：Apple 的 ephemeral 配置仍有私有内存 credential store，而 session-wide header 会绕过 `ImageRequest` 的身份、Vary 与凭证代际建模。需要 User-Agent、Accept-Language 或业务 header 时必须显式放入请求。
 
 若应用选择系统 `HTTPCookieStorage`：
 
@@ -152,7 +154,7 @@ Fail closed 不等于拒绝显示：请求仍可作为 task-local、不可复用
 
 ## 8. 并发与刷新
 
-- 同一授权上下文的 refresh 应 single-flight，防止多个 401 同时刷新；调用者取消只终止自身等待，已启动刷新在短暂零订阅者交接窗口内继续运行，供同一旧代际的迟到 401 复用；
+- 同一授权上下文的 refresh 应 single-flight，防止多个 401 同时刷新；调用者取消只终止自身等待，已启动刷新只在有界 handoff grace 内允许零订阅者存活，供同一旧代际的迟到 401 复用；默认 250ms、公开策略最大 5s，窗口结束仍无人订阅则取消任务并清理 registry；
 - 每个 fetch 最多触发一次显式 refresh cycle；
 - refresh 完成后生成新 CredentialGeneration 和 FetchExecutionKey；
 - refresh 期间 namespace 被撤销时立即终止，不再重试；
@@ -174,9 +176,19 @@ Fail closed 不等于拒绝显示：请求仍可作为 task-local、不可复用
 - **AUTH-PT-011**：revoke 清理完成后，晚到 304 metadata refresh 被 generation fence 删除；
 - **AUTH-PT-012**：自定义 credential header 不进入稳定 identity，header 集合改变 exact execution identity，跨 origin redirect 会剥离，缺 auth context 时发网前失败；
 - **AUTH-PT-013**：credential refresh 只替换敏感 header 与 generation，不重置 color、cache、stale、network、geometry、priority 或 render admission 语义；
-- **AUTH-PT-014**：Profile ACL 只允许精确 namespace/auth-context 组合，拒绝发生在缓存与网络访问前。
+- **AUTH-PT-014**：Profile ACL 只允许精确 namespace/auth-context 组合，拒绝发生在缓存与网络访问前；
+- **AUTH-PT-015**：credential refresh 的零订阅者 handoff 具有有界租约；窗口内迟到订阅复用原任务，超时后底层任务被取消且 registry 不保留孤儿条目；
+- **AUTH-PT-016**：namespace generation 达到 `UInt64.max` 后永久失败关闭，不得回绕为零或重新接受历史 generation；
+- **AUTH-PT-017**：可选精确 origin policy 与 profile ACL 组合后，非允许目的地在任何缓存访问或发网前被拒绝；官方组合根必须把同一策略传给 transport。
+- **AUTH-PT-018**：已取消调用者不得从 remembered credential 快路径取得结果，也不得继续执行认证重放；取消在 refresh 入口、快路径返回和重放前均失败关闭。
+- **AUTH-PT-019**：generation 递增后，namespace 在全部并发 revoke 清理 lease 完成前持续失败关闭；新请求不得与 namespace-wide 持久清理重叠，且并发 revoke 共享同一新 generation。
+- **AUTH-PT-020**：revoke 必须在 persistent cleanup 前原子发布 namespace generation；cleanup 失败或进程崩溃后重启，旧 generation 仍不可读；并发 revoke 共享一次 durable advance；
 
 ## 10. 参考
 
 - Apple `URLSessionConfiguration.httpCookieStorage`：默认/后台 session 使用共享 Cookie storage；设为 `nil` 可禁用。
 - RFC 9111：认证响应、`Vary`、`no-store` 和 private cache 语义。
+
+## 统一注销能力
+
+`RefreshingImageLoader<Base>` 是泛型装饰器。普通 `Base: ImageLoading` 只获得加载能力；只有 `Base: NamespaceRevoking` 时，装饰器才条件式实现 `NamespaceRevoking`。统一 `revoke(namespace:)` 先取消 refresh、清除 remembered credentials，再调用底层 generation/任务/持久状态撤销。即使底层清理随后报告 degradation，刷新凭证也不回滚恢复。

@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "ontologyID": "FOVEA-COMPARISON-ONTOLOGY-V1",
+  "reviewedOn": "2026-07-25",
+  "systemClasses": [
+    {
+      "id": "platform-baseline",
+      "description": "Apple 平台原生 URL、解码、缓存或 UI 基线，只在绑定的 OS/设备上解释。",
+      "directEndToEndRanking": true
+    },
+    {
+      "id": "client-pipeline",
+      "description": "从请求到可显示图像的客户端网络图片管线。",
+      "directEndToEndRanking": true
+    },
+    {
+      "id": "portable-mechanism",
+      "description": "请求合并、调度、准入、淘汰、keying 或预取等可迁移机制。",
+      "directEndToEndRanking": false
+    },
+    {
+      "id": "cache-system",
+      "description": "内存、磁盘或混合缓存实现；只在语义等级一致时直接比较。",
+      "directEndToEndRanking": false
+    },
+    {
+      "id": "codec-engine",
+      "description": "图像探测、解码、编码或变换引擎；要求相同输出质量契约。",
+      "directEndToEndRanking": false
+    },
+    {
+      "id": "algorithm-simulator",
+      "description": "离线 trace、oracle 或算法模拟器，不参与客户端端到端排名。",
+      "directEndToEndRanking": false
+    },
+    {
+      "id": "adjacent-system",
+      "description": "服务端处理、浏览器、CDN、数据库或其他相邻系统，只贡献挑战与设计。",
+      "directEndToEndRanking": false
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "transport",
+      "hardDimensions": [
+        "requestIdentity",
+        "securityIsolation",
+        "cancellation"
+      ]
+    },
+    {
+      "id": "http-cache",
+      "hardDimensions": [
+        "cachePolicy",
+        "securityIsolation",
+        "requestIdentity"
+      ]
+    },
+    {
+      "id": "request-coalescing",
+      "hardDimensions": [
+        "requestIdentity",
+        "cancellation"
+      ]
+    },
+    {
+      "id": "scheduling",
+      "hardDimensions": [
+        "cancellation",
+        "resourceBounds"
+      ]
+    },
+    {
+      "id": "target-decode",
+      "hardDimensions": [
+        "targetGeometry",
+        "outputQuality",
+        "colorManagement"
+      ]
+    },
+    {
+      "id": "memory-cache",
+      "hardDimensions": [
+        "cachePolicy",
+        "resourceBounds",
+        "requestIdentity"
+      ]
+    },
+    {
+      "id": "disk-cache",
+      "hardDimensions": [
+        "cachePolicy",
+        "durability",
+        "securityIsolation",
+        "requestIdentity"
+      ]
+    },
+    {
+      "id": "transform",
+      "hardDimensions": [
+        "outputQuality",
+        "targetGeometry",
+        "colorManagement",
+        "requestIdentity"
+      ]
+    },
+    {
+      "id": "progressive",
+      "hardDimensions": [
+        "outputQuality",
+        "cancellation",
+        "resourceBounds"
+      ]
+    },
+    {
+      "id": "animated",
+      "hardDimensions": [
+        "outputQuality",
+        "resourceBounds",
+        "lifecycle"
+      ]
+    },
+    {
+      "id": "resumable-transfer",
+      "hardDimensions": [
+        "requestIdentity",
+        "cachePolicy",
+        "cancellation"
+      ]
+    },
+    {
+      "id": "prefetch",
+      "hardDimensions": [
+        "lifecycle",
+        "cancellation",
+        "resourceBounds"
+      ]
+    },
+    {
+      "id": "ui-lifecycle",
+      "hardDimensions": [
+        "lifecycle",
+        "requestIdentity",
+        "cancellation"
+      ]
+    },
+    {
+      "id": "security",
+      "hardDimensions": [
+        "securityIsolation",
+        "requestIdentity",
+        "resourceBounds"
+      ]
+    },
+    {
+      "id": "observability",
+      "hardDimensions": [
+        "privacy",
+        "requestIdentity"
+      ]
+    },
+    {
+      "id": "format-coverage",
+      "hardDimensions": [
+        "outputQuality",
+        "resourceBounds"
+      ]
+    }
+  ],
+  "semanticDimensions": [
+    {
+      "id": "outputQuality",
+      "comparisonRule": "相同参考像素、尺寸、alpha 与允许误差"
+    },
+    {
+      "id": "durability",
+      "comparisonRule": "相同 D0-D5 持久化等级"
+    },
+    {
+      "id": "securityIsolation",
+      "comparisonRule": "相同 namespace、凭证、Vary、redirect 与 no-store 约束"
+    },
+    {
+      "id": "cachePolicy",
+      "comparisonRule": "相同缓存层、冷暖状态、freshness 与容量预算"
+    },
+    {
+      "id": "targetGeometry",
+      "comparisonRule": "相同 point/pixel 目标、scale、content mode 与向上量化约束"
+    },
+    {
+      "id": "colorManagement",
+      "comparisonRule": "相同 EXIF、ICC、色域、HDR 与 alpha 处理"
+    },
+    {
+      "id": "cancellation",
+      "comparisonRule": "相同订阅者取消与底层工作停止语义"
+    },
+    {
+      "id": "requestIdentity",
+      "comparisonRule": "共享键覆盖相同资源、命名空间、代际、变换与解码配置"
+    },
+    {
+      "id": "resourceBounds",
+      "comparisonRule": "相同并发、像素、内存、磁盘和临时文件上界"
+    },
+    {
+      "id": "lifecycle",
+      "comparisonRule": "相同可见区间、复用、消失和重新绑定语义"
+    },
+    {
+      "id": "privacy",
+      "comparisonRule": "相同诊断字段、脱敏和持久化限制"
+    }
+  ],
+  "claimStates": [
+    "proven-in-finite-model",
+    "empirically-superior",
+    "empirically-equivalent",
+    "empirically-noninferior",
+    "inconclusive",
+    "inferior",
+    "not-comparable",
+    "capability-gap",
+    "invalid-evidence"
+  ],
+  "rules": {
+    "rankingPrecondition": "all-hard-correctness-and-semantic-profile-equivalence",
+    "crossRuntime": "architecture-and-portable-mechanism-by-default; component-performance-only-on-one-device-and-one-contract",
+    "missingMetric": "not-comparable-never-zero",
+    "unsupportedCapability": "capability-gap-never-silent-exclusion",
+    "aggregateScore": "forbidden-for-best-claim"
+  }
+}

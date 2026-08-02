@@ -83,7 +83,7 @@ GPUBacked
 platformPrepared
 ```
 
-Display preparation 只在需要时发生。已经 fully decoded 的结果不重复准备；GPU-backed 或特殊 provider 走对应 adapter。readiness 是执行属性，只有在影响可复用结果和后端兼容时才进入 key。
+ImageCraft 当前不公开 `displayReadiness` 或二次 `preparedForDisplay` 状态。ImageIO adapter 直接返回不可变 `CGImage` 像素事实；普通 prepared decode 与带诊断 prepared decode 必须产生一致的尺寸、颜色、alpha 与 pixel-format。平台视图是否执行额外显示准备属于 UIKit/AppKit adapter 的宿主实现细节，不进入 codec 公共身份。
 
 ## 8. Cache 与比较
 
@@ -101,7 +101,7 @@ Display preparation 只在需要时发生。已经 fully decoded 的结果不重
 - **IMG-PT-005**: gain map 请求与不请求产生不同 DecodeKey；
 - **IMG-PT-006**: resize/downsample 不静默丢失颜色描述；
 - **IMG-PT-007**: alpha/pixel format 转换结果与参考一致；
-- **IMG-PT-008**: fully decoded 结果不重复 display preparation；
+- **IMG-PT-008**: 公开 prepared decode 与 direct decode 的尺寸、色彩、alpha 与像素格式事实完全一致，不依赖 codec package-only 诊断状态；
 - **IMG-PT-009**: unsupported HDR/attachment 按 policy fallback 或拒绝；
 - **IMG-PT-010**: 颜色与动态范围测试覆盖最低系统和当前设备；
 - **IMG-PT-011**: 外部传入的 ImageProbe 必须与实际 bitstream 的尺寸、帧数和 orientation 一致；不一致时解码前拒绝。

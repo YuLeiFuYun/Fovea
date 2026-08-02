@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "ledgerID": "FOVEA-IMAGEIO-DECODE-RESOURCE-LIFETIME-V1",
+  "status": "static-audit-retained-measurement-pending",
+  "subject": {
+    "backend": "ImageCraftImageIO ImageIOImageDecoder",
+    "host": "FoveaCore DecodeStage",
+    "contractVersion": 1,
+    "sourcePaths": [
+      "component://ImageCraft/Sources/ImageCraftImageIO/ImageIOImageDecoder.swift",
+      "component://ImageCraft/Sources/ImageCraftCore/ImageDecodeWorkingSetEstimator.swift",
+      "component://ImageCraft/Sources/ImageCraftCore/ImageCodecContract.swift",
+      "Sources/FoveaCore/DecodeStage.swift"
+    ]
+  },
+  "currentAdmissionRule": {
+    "expression": "max(hostGenericWorkingSetBytes, backendWorkingSetBytes)",
+    "backendDefault": "hostGenericWorkingSetBytes",
+    "classification": "not-proven-complete-live-set-bound",
+    "reason": "The two scalar reports do not declare physical coverage, aliases, overlap, ownership transfer, framework-private allocations or reclaim tails."
+  },
+  "codeAnchors": [
+    {
+      "path": "component://ImageCraft/Sources/ImageCraftImageIO/ImageIOImageDecoder.swift",
+      "anchor": "private static let maximumEntryCount = 1_024"
+    },
+    {
+      "path": "component://ImageCraft/Sources/ImageCraftImageIO/ImageIOImageDecoder.swift",
+      "anchor": "kCGImageSourceShouldCache: false"
+    },
+    {
+      "path": "component://ImageCraft/Sources/ImageCraftImageIO/ImageIOImageDecoder.swift",
+      "anchor": "kCGImageSourceShouldCacheImmediately: true"
+    },
+    {
+      "path": "component://ImageCraft/Sources/ImageCraftImageIO/ImageIOImageDecoder.swift",
+      "anchor": "let context = CGContext("
+    },
+    {
+      "path": "component://ImageCraft/Sources/ImageCraftImageIO/ImageIOImageDecoder.swift",
+      "anchor": "let cropped = image.cropping(to: crop)"
+    },
+    {
+      "path": "Sources/FoveaCore/DecodeStage.swift",
+      "anchor": "try await workingSetPermit.withPermit"
+    },
+    {
+      "path": "Sources/FoveaCore/DecodeStage.swift",
+      "anchor": "return try ImageDecodeResourceEstimate.conservativeMaximum("
+    }
+  ],
+  "phases": [
+    {
+      "id": "inspection",
+      "begins": "inspectContainer",
+      "ends": "ImageProbe or ImageDecodePreparation creation",
+      "permit": "decode concurrency permit only; no working-set permit",
+      "liveResourceIDs": [
+        "encoded-input-data",
+        "container-scan-state",
+        "imageio-source",
+        "imageio-properties",
+        "embedded-icc-profile",
+        "source-color-space"
+      ],
+      "notes": "CGImageSource is created with should-cache false, but framework-private parser and metadata allocations remain undocumented."
+    },
+    {
+      "id": "prepared-wait",
+      "begins": "ImageIOPreparationStore.insert",
+      "ends": "take or discard",
+      "permit": "no probe or working-set permit is retained",
+      "liveResourceIDs": [
+        "encoded-input-data",
+        "imageio-source",
+        "source-color-space",
+        "preparation-registry-entry"
+      ],
+      "notes": "The registry is count-bounded at 1024 entries but has no aggregate encoded-byte or framework-private-memory budget."
+    },
+    {
+      "id": "raster-create",
+      "begins": "CGImageSourceCreateThumbnailAtIndex",
+      "ends": "thumbnail returned",
+      "permit": "working-set permit and decode concurrency permit",
+      "liveResourceIDs": [
+        "encoded-input-data",
+        "imageio-source",
+        "source-color-space",
+        "thumbnail-surface",
+        "imageio-private-raster-scratch"
+      ],
+      "notes": "The host estimator models a thumbnail-sized surface but cannot observe ImageIO private scratch or decoder-specific coefficient state."
+    },
+    {
+      "id": "color-normalize",
+      "begins": "colorNormalizedImage",
+      "ends": "normalized CGImage returned",
+      "permit": "working-set permit and decode concurrency permit",
+      "liveResourceIDs": [
+        "thumbnail-surface",
+        "color-conversion-context",
+        "normalized-surface"
+      ],
+      "notes": "Retagging can alias the thumbnail provider; cross-model conversion allocates a four-byte-per-pixel CGContext. makeImage ownership and copy behavior are not declared by this contract."
+    },
+    {
+      "id": "fill-crop",
+      "begins": "CGImage.cropping",
+      "ends": "DecodedImage creation",
+      "permit": "working-set permit and decode concurrency permit",
+      "liveResourceIDs": [
+        "normalized-surface",
+        "cropped-final-surface"
+      ],
+      "notes": "Cropping may share or retain the parent provider; the current estimate treats the output as an additional surface without proving physical independence."
+    },
+    {
+      "id": "result-transfer",
+      "begins": "DecodedImage returned from executor",
+      "ends": "caller/cache/display releases final image",
+      "permit": "working-set permit is released immediately after decode returns",
+      "liveResourceIDs": [
+        "final-output-surface"
+      ],
+      "notes": "The final surface outlives the decode working-set permit. This is an ownership transfer to rendered-memory/display accounting, but the transfer is not represented in the codec resource contract."
+    },
+    {
+      "id": "operation-boundary-cancellation",
+      "begins": "Task cancellation before or during executor work",
+      "ends": "executor operation completes and post-operation cancellation check runs",
+      "permit": "permits remain held until synchronous ImageIO work returns",
+      "liveResourceIDs": [
+        "encoded-input-data",
+        "imageio-source",
+        "thumbnail-surface",
+        "color-conversion-context",
+        "final-output-surface"
+      ],
+      "notes": "ImageIO work is not interruptible. Cancellation prevents publication after the operation boundary but does not prove prompt physical reclamation."
+    }
+  ],
+  "resources": [
+    {
+      "id": "encoded-input-data",
+      "owner": "host and preparation store",
+      "physicalIdentity": "potentially-shared-copy-on-write-storage",
+      "sizeModel": "exact encoded byte count",
+      "currentWorkingSetCoverage": "excluded",
+      "lifetime": "request input through preparation consumption/discard and synchronous decode",
+      "evidenceClass": "static-code-inspection"
+    },
+    {
+      "id": "container-scan-state",
+      "owner": "ImageCraft security inspector",
+      "physicalIdentity": "implementation-private",
+      "sizeModel": "bounded by encoded and metadata limits but not separately reported",
+      "currentWorkingSetCoverage": "excluded",
+      "lifetime": "inspection only",
+      "evidenceClass": "static-code-inspection"
+    },
+    {
+      "id": "imageio-source",
+      "owner": "ImageIO preparation entry",
+      "physicalIdentity": "opaque-framework-object",
+      "sizeModel": "unknown",
+      "currentWorkingSetCoverage": "not-declared",
+      "lifetime": "inspection through preparation consumption/discard and raster creation",
+      "evidenceClass": "framework-opaque"
+    },
+    {
+      "id": "imageio-properties",
+      "owner": "inspection stack",
+      "physicalIdentity": "Foundation object graph",
+      "sizeModel": "serialized-property size is bounded; in-memory graph size is not measured",
+      "currentWorkingSetCoverage": "excluded",
+      "lifetime": "inspection and probe construction",
+      "evidenceClass": "mixed-declared-and-opaque"
+    },
+    {
+      "id": "embedded-icc-profile",
+      "owner": "container inspection",
+      "physicalIdentity": "Data potentially sharing inspected input copy",
+      "sizeModel": "metadata-byte bounded",
+      "currentWorkingSetCoverage": "excluded",
+      "lifetime": "inspection through CGColorSpace construction",
+      "evidenceClass": "static-code-inspection"
+    },
+    {
+      "id": "source-color-space",
+      "owner": "preparation entry",
+      "physicalIdentity": "opaque Core Graphics object",
+      "sizeModel": "unknown but metadata-derived",
+      "currentWorkingSetCoverage": "not-declared",
+      "lifetime": "inspection through color normalization",
+      "evidenceClass": "framework-opaque"
+    },
+    {
+      "id": "preparation-registry-entry",
+      "owner": "ImageIOPreparationStore",
+      "physicalIdentity": "dictionary entry retaining Data, CGImageSource, probe and color space",
+      "sizeModel": "count bounded to 1024; aggregate bytes not bounded",
+      "currentWorkingSetCoverage": "excluded",
+      "lifetime": "prepare to take/discard",
+      "evidenceClass": "static-code-inspection"
+    },
+    {
+      "id": "thumbnail-surface",
+      "owner": "ImageIO backend then DecodedImage path",
+      "physicalIdentity": "CGImage provider identity opaque",
+      "sizeModel": "approximately thumbnail width times height times bytes per pixel; row padding and framework storage unknown",
+      "currentWorkingSetCoverage": "included by host generic estimator",
+      "lifetime": "raster creation through normalization/crop/result selection",
+      "evidenceClass": "declared-estimate-not-measured-bound"
+    },
+    {
+      "id": "imageio-private-raster-scratch",
+      "owner": "ImageIO/Core Graphics",
+      "physicalIdentity": "opaque",
+      "sizeModel": "unknown",
+      "currentWorkingSetCoverage": "not-declared",
+      "lifetime": "at least raster creation; reclaim tail unknown",
+      "evidenceClass": "framework-opaque"
+    },
+    {
+      "id": "color-conversion-context",
+      "owner": "ImageCraftImageIO",
+      "physicalIdentity": "new CGContext allocation when color models differ or conversion is requested",
+      "sizeModel": "width times height times 4 bytes plus row and framework overhead",
+      "currentWorkingSetCoverage": "represented by second thumbnail-sized term but alias and overhead are not explicit",
+      "lifetime": "color conversion through makeImage and local release",
+      "evidenceClass": "static-size-lower-bound"
+    },
+    {
+      "id": "normalized-surface",
+      "owner": "ImageCraftImageIO",
+      "physicalIdentity": "may alias thumbnail on preserve/retag or may derive from conversion context",
+      "sizeModel": "branch-dependent",
+      "currentWorkingSetCoverage": "implicitly represented but not identity-aware",
+      "lifetime": "normalization through crop or result return",
+      "evidenceClass": "branch-and-alias-uncertain"
+    },
+    {
+      "id": "cropped-final-surface",
+      "owner": "DecodedImage",
+      "physicalIdentity": "may share parent provider or retain additional framework state",
+      "sizeModel": "target output dimensions; physical allocation unknown",
+      "currentWorkingSetCoverage": "included as output bytes",
+      "lifetime": "crop through cache/display release",
+      "evidenceClass": "framework-opaque"
+    },
+    {
+      "id": "final-output-surface",
+      "owner": "Fovea rendered pipeline/cache/display",
+      "physicalIdentity": "selected normalized or cropped CGImage",
+      "sizeModel": "output dimensions with actual provider/row cost not reported",
+      "currentWorkingSetCoverage": "counted during decode but permit ownership ends on return",
+      "lifetime": "post-decode persistent",
+      "evidenceClass": "ownership-transfer-not-modeled"
+    }
+  ],
+  "requiredGaps": [
+    {
+      "id": "prepared-state-outlives-probe-permit",
+      "severity": "high",
+      "closure": "Add aggregate prepared-state admission/accounting or prove a tighter lifetime that cannot accumulate under queued decode pressure."
+    },
+    {
+      "id": "framework-private-allocation-unbounded",
+      "severity": "high",
+      "closure": "Collect retained per-format/process measurements and define a bounded evidence class or conservative fallback policy."
+    },
+    {
+      "id": "final-output-transfer-not-explicit",
+      "severity": "medium",
+      "closure": "Represent output ownership transfer so decode admission and rendered-memory accounting cannot both omit or indefinitely double-count the same physical surface."
+    },
+    {
+      "id": "alias-and-branch-composition-implicit",
+      "severity": "high",
+      "closure": "Replace scalar-only composition with a minimum identity/lifetime-aware envelope or backend-specific validated total bound."
+    },
+    {
+      "id": "operation-boundary-reclaim-tail-unmeasured",
+      "severity": "medium",
+      "closure": "Measure cancellation completion and physical reclaim on retained devices and inputs; do not infer release from Swift reachability alone."
+    }
+  ],
+  "admissionPolicy": {
+    "secondBackendCompileAndConformance": "allowed",
+    "secondBackendShadowExperiment": "allowed-with-explicit-nonproduction-label",
+    "secondBackendProductionQualified": "forbidden-until-required-gaps-closed-or-waived-by-explicit-adr",
+    "defaultBackendChange": "forbidden"
+  }
+}

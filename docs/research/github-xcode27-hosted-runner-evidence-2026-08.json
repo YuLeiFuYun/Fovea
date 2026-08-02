@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "observedOn": "2026-08-01",
+  "announcementDate": "2026-07-16",
+  "status": "public-preview",
+  "runnerLabels": [
+    "xcode-27",
+    "xcode-27-xlarge"
+  ],
+  "defaultXcode": {
+    "version": "27.0-beta",
+    "build": "27A5218g",
+    "path": "/Applications/Xcode_27_beta_3.app"
+  },
+  "runnerArchitecture": "arm64",
+  "sourceURLs": [
+    "https://github.com/actions/runner-images/issues/14404",
+    "https://raw.githubusercontent.com/actions/runner-images/main/images/macos/xcode-27-Readme.md"
+  ],
+  "acceptedPolicy": [
+    "Use the explicit xcode-27 label; do not assume macos-26 or macos-latest contains Swift 6.4.",
+    "Fail closed unless the runner reports Xcode 27 or newer and Apple Swift 6.4.",
+    "Treat preview capacity and image stability separately from GA release qualification.",
+    "Validate component pull requests before updating exact pins or tags.",
+    "Cross-build the Fovea x86_64 macOS 14 test bundle with the native arm64 Swift driver, then execute the exact identity selector through the universal xctest x86_64 slice under Rosetta."
+  ]
+}

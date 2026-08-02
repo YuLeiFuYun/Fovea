@@ -1,0 +1,3702 @@
+{
+  "schemaVersion": 2,
+  "title": "生态超载：一部相互依赖的世界图谱",
+  "deck": "从地球系统、社会代谢与生命网络出发，追踪资源、权力和风险如何穿过食物、战争、城市、技术与日常生活。每个页面同时是可审计内容单元和真实图片管线压力场景。",
+  "reviewedAt": "2026-07-25",
+  "editorialPrinciples": [
+    "不把温度、碳足迹、GDP 或任何单一指标当作完整世界模型。",
+    "每个专题同时回答因果机制、分配后果、竞争解释和证据边界。",
+    "评估共识、观测综合、模型情景、理论镜头、证据争议与规范立场分开标记。",
+    "不以个人消费替代制度责任，也不以制度责任否认个人和集体行动。",
+    "图片既服务理解，也必须覆盖真实加载、复用、裁切、取消、离线和恢复路径。"
+  ],
+  "mediaPolicy": {
+    "principle": "题材本身不自动决定去留；教育必要性、来源、权力关系、主体尊严、年龄适宜性与可避免伤害共同决定。",
+    "contextualTopics": [
+      "肉食与动物利用",
+      "未成年人",
+      "战争与军事",
+      "疾病、伤害与死亡",
+      "贫困、迁徙与灾害"
+    ],
+    "requiredChecks": [
+      "教育必要性",
+      "可信来源与许可",
+      "主体尊严与隐私",
+      "年龄适宜性与内容提示",
+      "非猎奇呈现",
+      "准确替代文本",
+      "避免污名化",
+      "与论证直接相关"
+    ],
+    "prohibitedUses": [
+      "以痛苦制造点击",
+      "羞辱或物化主体",
+      "无法核实来源",
+      "与论证无关的刺激性展示",
+      "把群体当作抽象灾难背景"
+    ]
+  },
+  "sources": [
+    {
+      "id": "geo7-2025",
+      "organization": "UNEP",
+      "title": "Global Environment Outlook 7: A Future We Choose",
+      "year": 2025,
+      "url": "https://www.unep.org/resources/global-environment-outlook-7",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "egr-2025",
+      "organization": "UNEP",
+      "title": "Emissions Gap Report 2025: Off Target",
+      "year": 2025,
+      "url": "https://www.unep.org/resources/emissions-gap-report-2025",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "agr-2025",
+      "organization": "UNEP",
+      "title": "Adaptation Gap Report 2025: Running on Empty",
+      "year": 2025,
+      "url": "https://www.unep.org/resources/adaptation-gap-report-2025",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "ipcc-ar6-syr",
+      "organization": "IPCC",
+      "title": "AR6 Synthesis Report: Climate Change 2023",
+      "year": 2023,
+      "url": "https://www.ipcc.ch/report/ar6/syr/",
+      "sourceClass": "intergovernmentalAssessment"
+    },
+    {
+      "id": "ipcc-wg2",
+      "organization": "IPCC",
+      "title": "AR6 Working Group II: Impacts, Adaptation and Vulnerability",
+      "year": 2022,
+      "url": "https://www.ipcc.ch/report/ar6/wg2/",
+      "sourceClass": "intergovernmentalAssessment"
+    },
+    {
+      "id": "ipcc-wg3",
+      "organization": "IPCC",
+      "title": "AR6 Working Group III: Mitigation of Climate Change",
+      "year": 2022,
+      "url": "https://www.ipcc.ch/report/ar6/wg3/",
+      "sourceClass": "intergovernmentalAssessment"
+    },
+    {
+      "id": "boundaries-2025",
+      "organization": "Stockholm Resilience Centre",
+      "title": "Planetary Health Check 2025 and Planetary Boundaries",
+      "year": 2025,
+      "url": "https://www.stockholmresilience.org/research/planetary-boundaries.html",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "ipbes-global-2019",
+      "organization": "IPBES",
+      "title": "Global Assessment Report on Biodiversity and Ecosystem Services",
+      "year": 2019,
+      "url": "https://www.ipbes.net/global-assessment",
+      "sourceClass": "intergovernmentalAssessment"
+    },
+    {
+      "id": "ipbes-nexus-2024",
+      "organization": "IPBES",
+      "title": "Nexus Assessment: Biodiversity, Water, Food and Health",
+      "year": 2024,
+      "url": "https://ict.ipbes.net/ipbes-ict-guide/data-and-knowledge-management/citations-of-ipbes-assessments/nexus-assessment",
+      "sourceClass": "intergovernmentalAssessment"
+    },
+    {
+      "id": "ipbes-transformative-2024",
+      "organization": "IPBES",
+      "title": "Transformative Change Assessment",
+      "year": 2024,
+      "url": "https://ict.ipbes.net/ipbes-ict-guide/data-and-knowledge-management/citations-of-ipbes-assessments/transformative-change-assessment",
+      "sourceClass": "intergovernmentalAssessment"
+    },
+    {
+      "id": "gro-2024",
+      "organization": "UNEP International Resource Panel",
+      "title": "Global Resources Outlook 2024",
+      "year": 2024,
+      "url": "https://www.unep.org/resources/Global-Resource-Outlook-2024",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "food-waste-2024",
+      "organization": "UNEP",
+      "title": "Food Waste Index Report 2024",
+      "year": 2024,
+      "url": "https://www.unep.org/resources/publication/food-waste-index-report-2024",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "food-systems-2025",
+      "organization": "UNEP",
+      "title": "Food Systems: Nature, Climate, Pollution and Equity",
+      "year": 2025,
+      "url": "https://www.unep.org/explore-topics/food-systems",
+      "sourceClass": "officialGuidance"
+    },
+    {
+      "id": "plastics-2023",
+      "organization": "UNEP",
+      "title": "Turning off the Tap: Ending Plastic Pollution",
+      "year": 2023,
+      "url": "https://www.unep.org/resources/turning-off-tap-end-plastic-pollution-create-circular-economy",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "fashion-2025",
+      "organization": "UNEP",
+      "title": "Sustainability and Circularity in the Textile Value Chain",
+      "year": 2025,
+      "url": "https://www.unep.org/resources/annual-report-2025/sustainability-and-circularity-textile-value-chain",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "who-one-health-2026",
+      "organization": "World Health Organization",
+      "title": "One Health Fact Sheet",
+      "year": 2026,
+      "url": "https://www.who.int/news-room/fact-sheets/detail/one-health",
+      "sourceClass": "officialGuidance"
+    },
+    {
+      "id": "who-spillover-2023",
+      "organization": "One Health High-Level Expert Panel",
+      "title": "Prevention of Zoonotic Spillover: From Response to Prevention at Source",
+      "year": 2023,
+      "url": "https://www.who.int/publications/m/item/prevention-of-zoonotic-spillover",
+      "sourceClass": "officialGuidance"
+    },
+    {
+      "id": "who-origins-2025",
+      "organization": "World Health Organization",
+      "title": "Global Framework for Studies into Origins of Emerging Pathogens",
+      "year": 2025,
+      "url": "https://www.who.int/publications/i/item/9789240101470",
+      "sourceClass": "officialGuidance"
+    },
+    {
+      "id": "iea-ai-2026",
+      "organization": "International Energy Agency",
+      "title": "Key Questions on Energy and AI",
+      "year": 2026,
+      "url": "https://www.iea.org/reports/key-questions-on-energy-and-ai",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "iea-ai-2025",
+      "organization": "International Energy Agency",
+      "title": "Energy and AI",
+      "year": 2025,
+      "url": "https://www.iea.org/reports/energy-and-ai",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "ilo-transition-2023",
+      "organization": "International Labour Organization",
+      "title": "Resolution concerning a just transition for all",
+      "year": 2023,
+      "url": "https://www.ilo.org/resource/ilc/111/resolution-concerning-just-transition-towards-environmentally-sustainable",
+      "sourceClass": "legalPolicy"
+    },
+    {
+      "id": "unep-gaza-2025",
+      "organization": "UNEP",
+      "title": "Environmental Impact of the Escalation of Conflict in the Gaza Strip",
+      "year": 2025,
+      "url": "https://www.unep.org/resources/report/environmental-impact-escalation-conflict-gaza-strip",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "unep-ukraine-2022",
+      "organization": "UNEP",
+      "title": "Environmental Impact of the Conflict in Ukraine: Preliminary Review",
+      "year": 2022,
+      "url": "https://www.unep.org/resources/report/environmental-impact-conflict-ukraine-preliminary-review",
+      "sourceClass": "officialAssessment"
+    },
+    {
+      "id": "unequal-exchange-2020",
+      "organization": "Ecological Economics",
+      "title": "Global patterns of ecologically unequal exchange",
+      "year": 2020,
+      "url": "https://doi.org/10.1016/j.ecolecon.2020.106824",
+      "sourceClass": "peerReviewedResearch"
+    },
+    {
+      "id": "maximum-empower-2004",
+      "organization": "Ecological Modelling",
+      "title": "Maximum (em)power: a foundational principle linking man and nature",
+      "year": 2004,
+      "url": "https://doi.org/10.1016/j.ecolmodel.2003.12.009",
+      "sourceClass": "theoreticalResearch"
+    },
+    {
+      "id": "relative-quantization-2011",
+      "organization": "IEEE Transactions on Information Theory",
+      "title": "Scalar Quantization for Relative Error",
+      "year": 2011,
+      "url": "https://doi.org/10.1109/TIT.2011.2162264",
+      "sourceClass": "peerReviewedResearch"
+    },
+    {
+      "id": "degrowth-2023",
+      "organization": "Annual Review of Environment and Resources",
+      "title": "Post-growth and degrowth approaches to sustainability",
+      "year": 2023,
+      "url": "https://doi.org/10.1146/annurev-environ-112321-102921",
+      "sourceClass": "peerReviewedResearch"
+    },
+    {
+      "id": "jevons-1865",
+      "organization": "Macmillan",
+      "title": "The Coal Question",
+      "year": 1865,
+      "url": "https://oll.libertyfund.org/title/jevons-the-coal-question",
+      "sourceClass": "foundationalText"
+    }
+  ],
+  "volumes": [
+    {
+      "id": "earth-system",
+      "number": 1,
+      "title": "地球系统不是背景",
+      "subtitle": "从温度到生命支持系统",
+      "summary": "气候只是入口。边界之间的耦合、不可逆性与区域差异，决定单指标政策为何经常失真。",
+      "storyIDs": [
+        "climate-gap",
+        "planetary-boundaries",
+        "biodiversity-web",
+        "water-ocean-cryosphere"
+      ]
+    },
+    {
+      "id": "metabolism",
+      "number": 2,
+      "title": "社会代谢",
+      "subtitle": "物质、能量、基础设施与废物",
+      "summary": "现代社会通过开采、加工、运输、使用和废弃维持自身；效率提升不自动意味着总吞吐下降。",
+      "storyIDs": [
+        "material-throughput",
+        "energy-rebound",
+        "pollution-plastics",
+        "transition-minerals"
+      ]
+    },
+    {
+      "id": "food-health",
+      "number": 3,
+      "title": "食物、动物与健康",
+      "subtitle": "同一张生命网络中的生产与风险",
+      "summary": "食物系统连接土地、水、动物生命、劳动、营养、病原体和文化，无法由单一碳指标替代。",
+      "storyIDs": [
+        "food-land",
+        "animal-ethics",
+        "one-health",
+        "soil-pollinators"
+      ]
+    },
+    {
+      "id": "unequal-geography",
+      "number": 4,
+      "title": "不平等的地理",
+      "subtitle": "谁消费，谁开采，谁承受后果",
+      "summary": "贸易、历史排放、殖民遗产和金融约束使收益与损害长期落在不同地区和群体。",
+      "storyIDs": [
+        "historical-responsibility",
+        "unequal-exchange",
+        "colonial-extractivism",
+        "adaptation-debt"
+      ]
+    },
+    {
+      "id": "war-security",
+      "number": 5,
+      "title": "战争与安全",
+      "subtitle": "冲突如何穿透生态系统",
+      "summary": "战争摧毁基础设施、释放污染、驱动迁徙并重塑能源与粮食安全；环境损害会延续到停火之后。",
+      "storyIDs": [
+        "military-environment",
+        "conflict-toxic-legacy",
+        "energy-security",
+        "borders-displacement"
+      ]
+    },
+    {
+      "id": "daily-systems",
+      "number": 6,
+      "title": "日常系统",
+      "subtitle": "衣、住、行与计算并不私人",
+      "summary": "日常选择被产品寿命、城市结构、广告、能源系统和劳动关系塑造，个人责任必须放回制度环境。",
+      "storyIDs": [
+        "fast-fashion",
+        "mobility-city",
+        "housing-cooling",
+        "ai-data-centres"
+      ]
+    },
+    {
+      "id": "transformation-debates",
+      "number": 7,
+      "title": "转型争论",
+      "subtitle": "增长、所有权、权利与充分性",
+      "summary": "技术替代之外，不同方案对需求、所有权、公共服务和自然权利提出互不相同的政治答案。",
+      "storyIDs": [
+        "green-growth",
+        "degrowth",
+        "ecosocialism",
+        "rights-of-nature"
+      ]
+    },
+    {
+      "id": "governance-action",
+      "number": 8,
+      "title": "治理与行动",
+      "subtitle": "从指标到能够执行的制度",
+      "summary": "转型需要跨尺度协调、社会对话、公共能力和可追责的分配规则，而不仅是更好的消费建议。",
+      "storyIDs": [
+        "transformative-change",
+        "just-transition",
+        "public-provisioning",
+        "action-scales"
+      ]
+    }
+  ],
+  "stories": [
+    {
+      "id": "climate-gap",
+      "volumeID": "earth-system",
+      "eyebrow": "诊断 01",
+      "title": "温升数字背后的排放缺口",
+      "summary": "最新承诺仍不足以把现实路径带回巴黎目标；温升区间必须与风险分布、不可逆损失和政策执行能力一起阅读。",
+      "readingMinutes": 9,
+      "epistemicStatus": "assessedConsensus",
+      "layout": "editorial",
+      "heroAssetID": "local-golfarone-waterfall-villa-minozzo-in-2024-02-jpg-0f7c961d1e",
+      "galleryAssetIDs": [
+        "local-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781",
+        "local-fog-descending-on-a-pine-forest-unsplash-jpg-0d278baca4",
+        "local-butterfly-enjoying-with-nature-jpg-17c5abc374",
+        "local-cat-in-quebec-city-jpg-167723d6cf"
+      ],
+      "mechanism": "累积温室气体排放改变辐射平衡，影响热浪、降水、海平面和复合极端事件；政策承诺只有在转化为能源、土地和工业变化时才改变轨迹。",
+      "distribution": "历史贡献、当前人均排放、支付能力与暴露程度高度不均，因此同一温升不会产生同一损害。",
+      "debate": {
+        "proposition": "更高效率和清洁技术能够在维持经济活动的同时快速减排。",
+        "challenge": "承诺、部署速度和总需求之间仍有巨大缺口，效率收益也可能被规模扩张抵消。",
+        "synthesis": "技术扩散是必要条件，但必须同时约束高碳基础设施、总需求和不平等的融资能力。"
+      },
+      "claims": [
+        {
+          "id": "climate-gap-mechanism",
+          "text": "累积温室气体排放改变辐射平衡，影响热浪、降水、海平面和复合极端事件；政策承诺只有在转化为能源、土地和工业变化时才改变轨迹。",
+          "sourceIDs": [
+            "egr-2025",
+            "ipcc-ar6-syr"
+          ]
+        },
+        {
+          "id": "climate-gap-distribution",
+          "text": "历史贡献、当前人均排放、支付能力与暴露程度高度不均，因此同一温升不会产生同一损害。",
+          "sourceIDs": [
+            "egr-2025",
+            "ipcc-ar6-syr"
+          ]
+        },
+        {
+          "id": "climate-gap-boundary",
+          "text": "技术扩散是必要条件，但必须同时约束高碳基础设施、总需求和不平等的融资能力。",
+          "sourceIDs": [
+            "egr-2025",
+            "ipcc-ar6-syr"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "climate-gap-metric-0",
+          "value": "2.3–2.5°C",
+          "label": "全面落实当前 NDC 的本世纪升温估计",
+          "context": "这是条件化模型结果，不是确定预言。",
+          "sourceIDs": [
+            "egr-2025",
+            "ipcc-ar6-syr"
+          ]
+        },
+        {
+          "id": "climate-gap-metric-1",
+          "value": "2.8°C",
+          "label": "现行政策路径估计",
+          "context": "说明承诺与实际政策仍分离。",
+          "sourceIDs": [
+            "egr-2025",
+            "ipcc-ar6-syr"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "id": "climate-gap-event-0",
+          "marker": "1992",
+          "title": "气候公约",
+          "body": "全球治理框架建立，但执行依赖国家政策。",
+          "assetID": "local-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781",
+          "sourceIDs": [
+            "egr-2025",
+            "ipcc-ar6-syr"
+          ]
+        },
+        {
+          "id": "climate-gap-event-1",
+          "marker": "2015",
+          "title": "巴黎协定",
+          "body": "将长期温控目标与国家承诺机制结合。",
+          "assetID": "local-fog-descending-on-a-pine-forest-unsplash-jpg-0d278baca4",
+          "sourceIDs": [
+            "egr-2025",
+            "ipcc-ar6-syr"
+          ]
+        },
+        {
+          "id": "climate-gap-event-2",
+          "marker": "2025",
+          "title": "新一轮差距评估",
+          "body": "新承诺只带来有限改善。",
+          "assetID": "local-butterfly-enjoying-with-nature-jpg-17c5abc374",
+          "sourceIDs": [
+            "egr-2025",
+            "ipcc-ar6-syr"
+          ]
+        }
+      ],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "editorial · 5 个稳定媒体身份",
+        "sourceMix": "5 bundled",
+        "targetVariants": [
+          "21:9 远景 fill",
+          "3:2 正文插图 fit",
+          "80pt 来源缩略图"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "planetary-boundaries",
+      "volumeID": "earth-system",
+      "eyebrow": "诊断 02",
+      "title": "七条越界不是七个孤立故障",
+      "summary": "地球系统边界用于描述风险上升区间；它的价值在于显示耦合，而不是制造一个末日倒计时。",
+      "readingMinutes": 10,
+      "epistemicStatus": "modelledScenario",
+      "layout": "atlas",
+      "heroAssetID": "remote-a-closed-coles-supermarket-at-ocean-shores-in-the-lead-04df83f410",
+      "galleryAssetIDs": [
+        "remote-the-indian-desert-jird-2-jpg-08d3a547ec",
+        "remote-roman-landscape-met-ep26-100-bw-r-jpg-03b8a13422",
+        "remote-kyzylkum-desert-in-uzbekistan-jpg-0062872f5d",
+        "remote-golfarone-waterfall-villa-minozzo-in-2024-02-jpg-0f7c961d1e"
+      ],
+      "mechanism": "气候、生物圈、淡水、土地、营养盐、海洋化学与新型实体通过反馈相连；改变一个过程可能放大或缓冲另一个过程。",
+      "distribution": "全球边界不能直接分摊到每个国家和个人；责任还取决于历史使用、发展需要、贸易和能力。",
+      "debate": {
+        "proposition": "统一边界图能帮助政策避免单目标优化。",
+        "challenge": "控制变量、阈值和区域尺度的转译存在不确定性，图形很容易被误读成精确红线。",
+        "synthesis": "把边界当作风险导航和问题清单，而不是把九个指标压成一个道德分数。"
+      },
+      "claims": [
+        {
+          "id": "planetary-boundaries-mechanism",
+          "text": "气候、生物圈、淡水、土地、营养盐、海洋化学与新型实体通过反馈相连；改变一个过程可能放大或缓冲另一个过程。",
+          "sourceIDs": [
+            "boundaries-2025",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "planetary-boundaries-distribution",
+          "text": "全球边界不能直接分摊到每个国家和个人；责任还取决于历史使用、发展需要、贸易和能力。",
+          "sourceIDs": [
+            "boundaries-2025",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "planetary-boundaries-boundary",
+          "text": "把边界当作风险导航和问题清单，而不是把九个指标压成一个道德分数。",
+          "sourceIDs": [
+            "boundaries-2025",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "planetary-boundaries-metric-0",
+          "value": "7/9",
+          "label": "2025 年被评估为越界的地球系统过程",
+          "context": "海洋酸化在 2025 年首次被列为越界。",
+          "sourceIDs": [
+            "boundaries-2025",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "id": "planetary-boundaries-event-0",
+          "marker": "2009",
+          "title": "框架提出",
+          "body": "以安全运行空间组织多个地球系统过程。",
+          "assetID": "remote-the-indian-desert-jird-2-jpg-08d3a547ec",
+          "sourceIDs": [
+            "boundaries-2025",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "planetary-boundaries-event-1",
+          "marker": "2023",
+          "title": "九条边界首次全部量化评估",
+          "body": "比较性增强，同时暴露尺度转译问题。",
+          "assetID": "remote-roman-landscape-met-ep26-100-bw-r-jpg-03b8a13422",
+          "sourceIDs": [
+            "boundaries-2025",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "planetary-boundaries-event-2",
+          "marker": "2025",
+          "title": "海洋酸化越界",
+          "body": "七条边界处于高风险区域。",
+          "assetID": "remote-kyzylkum-desert-in-uzbekistan-jpg-0062872f5d",
+          "sourceIDs": [
+            "boundaries-2025",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "atlas · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "自适应网格",
+          "多尺寸缩略图",
+          "快速滚动与反向滚动"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "biodiversity-web",
+      "volumeID": "earth-system",
+      "eyebrow": "诊断 03",
+      "title": "生物多样性不是物种清单",
+      "summary": "遗传、物种和生态系统多样性共同维持授粉、土壤、水循环、疾病调节与文化关系。",
+      "readingMinutes": 9,
+      "epistemicStatus": "assessedConsensus",
+      "layout": "mosaic",
+      "heroAssetID": "remote-landscape-with-waterfall-met-dp804317-jpg-06acaa1cb6",
+      "galleryAssetIDs": [
+        "remote-landscape-met-dp164346-jpg-0ea83d65cc",
+        "remote-forest-in-fony-d-jpg-089c5b4362",
+        "remote-international-ocean-shipping-building-jpg-06a67a6f86",
+        "remote-secret-caverns-waterfall-june-2024-jpg-0da1c7e890"
+      ],
+      "mechanism": "多样性影响生态系统功能、冗余和恢复能力；损失常通过食物网和生态反馈跨越部门边界。",
+      "distribution": "保护区可能把成本转移给依赖土地的社区；供应链也可能在消费地“保护”同时把破坏外包。",
+      "debate": {
+        "proposition": "扩大保护面积是阻止自然损失的核心工具。",
+        "challenge": "仅划线保护可能忽略原住民权利、栖息地质量和保护区外的生产体系。",
+        "synthesis": "保护面积、生态完整性、共同治理和生产消费改革必须一起评估。"
+      },
+      "claims": [
+        {
+          "id": "biodiversity-web-mechanism",
+          "text": "多样性影响生态系统功能、冗余和恢复能力；损失常通过食物网和生态反馈跨越部门边界。",
+          "sourceIDs": [
+            "ipbes-global-2019",
+            "ipbes-nexus-2024"
+          ]
+        },
+        {
+          "id": "biodiversity-web-distribution",
+          "text": "保护区可能把成本转移给依赖土地的社区；供应链也可能在消费地“保护”同时把破坏外包。",
+          "sourceIDs": [
+            "ipbes-global-2019",
+            "ipbes-nexus-2024"
+          ]
+        },
+        {
+          "id": "biodiversity-web-boundary",
+          "text": "保护面积、生态完整性、共同治理和生产消费改革必须一起评估。",
+          "sourceIDs": [
+            "ipbes-global-2019",
+            "ipbes-nexus-2024"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "biodiversity-web-metric-0",
+          "value": "约 100 万",
+          "label": "IPBES 评估中面临灭绝威胁的物种量级",
+          "context": "估计具有分类与数据不确定性。",
+          "sourceIDs": [
+            "ipbes-global-2019",
+            "ipbes-nexus-2024"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "mosaic · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "2:1 主图 fill",
+          "1:1 拼贴 fill",
+          "4:3 细节 fit"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "water-ocean-cryosphere",
+      "volumeID": "earth-system",
+      "eyebrow": "诊断 04",
+      "title": "水循环、冰冻圈与海洋化学",
+      "summary": "淡水不是单一库存，海洋也不是无限碳汇；降水、地下水、冰川、河流与海洋通过气候和生态系统相连。",
+      "readingMinutes": 9,
+      "epistemicStatus": "observedSynthesis",
+      "layout": "timeline",
+      "heroAssetID": "remote-the-forest-at-pontaubert-met-dt2165-jpg-02e22c372a",
+      "galleryAssetIDs": [
+        "remote-murchiosn-falls-in-uganda-jpg-0e619a9bd4",
+        "remote-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781",
+        "remote-snoqualmie-falls-solstice-jpg-0bd8f6c1d5",
+        "remote-ngao-waterfall-thai-nguyen-jpg-054e93a363"
+      ],
+      "mechanism": "变暖改变蒸发、降水和融冰，二氧化碳吸收改变海洋碳酸盐化学；这些变化影响供水、海岸和海洋食物网。",
+      "distribution": "缺水风险由自然变化与管网、土地权、产业配置和政治权力共同决定。",
+      "debate": {
+        "proposition": "建设更多工程设施可以解决水安全。",
+        "challenge": "大型工程可能制造新的生态和分配代价，并不能替代需求治理和流域恢复。",
+        "synthesis": "基础设施、生态系统保护、需求管理和公平分配需要组成组合方案。"
+      },
+      "claims": [
+        {
+          "id": "water-ocean-cryosphere-mechanism",
+          "text": "变暖改变蒸发、降水和融冰，二氧化碳吸收改变海洋碳酸盐化学；这些变化影响供水、海岸和海洋食物网。",
+          "sourceIDs": [
+            "boundaries-2025",
+            "ipcc-wg2",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "water-ocean-cryosphere-distribution",
+          "text": "缺水风险由自然变化与管网、土地权、产业配置和政治权力共同决定。",
+          "sourceIDs": [
+            "boundaries-2025",
+            "ipcc-wg2",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "water-ocean-cryosphere-boundary",
+          "text": "基础设施、生态系统保护、需求管理和公平分配需要组成组合方案。",
+          "sourceIDs": [
+            "boundaries-2025",
+            "ipcc-wg2",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "water-ocean-cryosphere-metric-0",
+          "value": "0.1 pH",
+          "label": "工业化以来海洋表层 pH 的约降幅",
+          "context": "pH 是对数尺度，不能理解成只下降了十个百分点。",
+          "sourceIDs": [
+            "boundaries-2025",
+            "ipcc-wg2",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "id": "water-ocean-cryosphere-event-0",
+          "marker": "2025",
+          "title": "Planetary Health Check 2025 and Planetary Boundaries",
+          "body": "由 Stockholm Resilience Centre 发布，提供本专题的第 1 组证据与方法边界。",
+          "assetID": "remote-murchiosn-falls-in-uganda-jpg-0e619a9bd4",
+          "sourceIDs": [
+            "boundaries-2025"
+          ]
+        },
+        {
+          "id": "water-ocean-cryosphere-event-1",
+          "marker": "2022",
+          "title": "AR6 Working Group II: Impacts, Adaptation and Vulnerability",
+          "body": "由 IPCC 发布，提供本专题的第 2 组证据与方法边界。",
+          "assetID": "remote-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781",
+          "sourceIDs": [
+            "ipcc-wg2"
+          ]
+        },
+        {
+          "id": "water-ocean-cryosphere-event-2",
+          "marker": "2025",
+          "title": "Global Environment Outlook 7: A Future We Choose",
+          "body": "由 UNEP 发布，提供本专题的第 3 组证据与方法边界。",
+          "assetID": "remote-snoqualmie-falls-solstice-jpg-0bd8f6c1d5",
+          "sourceIDs": [
+            "geo7-2025"
+          ]
+        }
+      ],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "timeline · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "16:9 时间线卡片 fill",
+          "横向预取",
+          "回屏复用"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "material-throughput",
+      "volumeID": "metabolism",
+      "eyebrow": "代谢 01",
+      "title": "经济增长背后的物质流",
+      "summary": "产品最终重量只是一小部分；采矿、建材、生物质、燃料和基础设施构成更大的上游物质足迹。",
+      "readingMinutes": 10,
+      "epistemicStatus": "observedSynthesis",
+      "layout": "dossier",
+      "heroAssetID": "local-cityscape-of-taipei-taiwan-20151221-jpg-055363cd88",
+      "galleryAssetIDs": [
+        "local-bridge-in-forest-21158992109-jpg-165bd12127",
+        "local-arthur-a-smith-covered-bridge-interior-jpg-06a43dfdd9",
+        "local-computer-motherboard-13-jpg-012d087158",
+        "local-camera-desk-computer-notepad-life-unsplash-jpg-01c8c31015"
+      ],
+      "mechanism": "经济活动需要物质和能量输入，并产生废物与排放；服务业和数字化也依赖建筑、电网、设备和矿物。",
+      "distribution": "高收入地区的人均资源使用和相关影响远高于低收入地区，贸易把部分开采和污染转移到生产地。",
+      "debate": {
+        "proposition": "循环经济可以让增长与资源使用完全脱钩。",
+        "challenge": "再利用和回收受热力学损失、品质下降、存量增长与能源需求限制。",
+        "synthesis": "循环设计很重要，但绝对减量、寿命延长和基础设施选择不能被“回收率”替代。"
+      },
+      "claims": [
+        {
+          "id": "material-throughput-mechanism",
+          "text": "经济活动需要物质和能量输入，并产生废物与排放；服务业和数字化也依赖建筑、电网、设备和矿物。",
+          "sourceIDs": [
+            "gro-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "material-throughput-distribution",
+          "text": "高收入地区的人均资源使用和相关影响远高于低收入地区，贸易把部分开采和污染转移到生产地。",
+          "sourceIDs": [
+            "gro-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "material-throughput-boundary",
+          "text": "循环设计很重要，但绝对减量、寿命延长和基础设施选择不能被“回收率”替代。",
+          "sourceIDs": [
+            "gro-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "material-throughput-metric-0",
+          "value": "约 3 倍",
+          "label": "过去五十年全球自然资源开采增长量级",
+          "context": "增长与基础设施扩张和高消费紧密相关。",
+          "sourceIDs": [
+            "gro-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "material-throughput-metric-1",
+          "value": "+60%",
+          "label": "缺少强力转型时 2020—2060 年开采量可能增幅",
+          "context": "来自情景模型。",
+          "sourceIDs": [
+            "gro-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "dossier · 5 个稳定媒体身份",
+        "sourceMix": "5 bundled",
+        "targetVariants": [
+          "64pt 缩略图",
+          "16:9 档案封面",
+          "长列表复用"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "energy-rebound",
+      "volumeID": "metabolism",
+      "eyebrow": "代谢 02",
+      "title": "效率为什么可能增加总消耗",
+      "summary": "效率降低单位服务成本，却也可能刺激更多使用、扩大市场和加速资本周转；反弹不是反对效率，而是反对把效率等同于绝对减量。",
+      "readingMinutes": 10,
+      "epistemicStatus": "interpretiveLens",
+      "layout": "comparison",
+      "heroAssetID": "remote-blackfriars-london-cityscape-by-james-cochran-jpg-0fb17b4729",
+      "galleryAssetIDs": [
+        "remote-factory-interior-met-dp208960-jpg-01f298a777",
+        "remote-cathedral-naples-interior-222-jpg-02dd60b6f5",
+        "remote-2020-warszawa-widok-z-pkin-na-p-noc-1-jpg-072ff3d826",
+        "remote-zarafshon-majmuasi-yon-tomondan-tasviri-jpg-0cfece112b"
+      ],
+      "mechanism": "单位能耗下降改变价格与行为，宏观上还会通过收入、投资和产业结构产生间接反弹。",
+      "distribution": "能源服务增长主要发生在哪里、服务谁、替代何种劳动和生态成本，比平均效率更能解释分配结果。",
+      "debate": {
+        "proposition": "只要设备足够高效，总排放自然会下降。",
+        "challenge": "当总服务量增长快于单位强度下降，绝对消耗仍会上升。",
+        "synthesis": "效率必须与总量预算、需求侧政策和公共服务目标共同设计。"
+      },
+      "claims": [
+        {
+          "id": "energy-rebound-mechanism",
+          "text": "单位能耗下降改变价格与行为，宏观上还会通过收入、投资和产业结构产生间接反弹。",
+          "sourceIDs": [
+            "gro-2024",
+            "jevons-1865",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "energy-rebound-distribution",
+          "text": "能源服务增长主要发生在哪里、服务谁、替代何种劳动和生态成本，比平均效率更能解释分配结果。",
+          "sourceIDs": [
+            "gro-2024",
+            "jevons-1865",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "energy-rebound-boundary",
+          "text": "效率必须与总量预算、需求侧政策和公共服务目标共同设计。",
+          "sourceIDs": [
+            "gro-2024",
+            "jevons-1865",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "energy-rebound-metric-0",
+          "value": "1865",
+          "label": "杰文斯系统讨论煤炭效率与消费扩张",
+          "context": "历史机制不能机械等同于今天的所有技术。",
+          "sourceIDs": [
+            "gro-2024",
+            "jevons-1865",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "comparison · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "双栏同高 fill",
+          "单图 fit 放大",
+          "分屏宽度变化"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "pollution-plastics",
+      "volumeID": "metabolism",
+      "eyebrow": "代谢 03",
+      "title": "污染不是垃圾桶末端的问题",
+      "summary": "塑料和化学污染从原料、设计、添加剂、使用到废弃全链条发生；只增加回收设施无法处理全部根因。",
+      "readingMinutes": 8,
+      "epistemicStatus": "assessedConsensus",
+      "layout": "atlas",
+      "heroAssetID": "remote-larkspur-library-under-construction-aug-17-2025-jpg-01358a0a3d",
+      "galleryAssetIDs": [
+        "remote-douglas-jung-building-plaque-jpg-1649b7dfb5",
+        "remote-interior-of-saint-peter-s-rome-met-dp123936-jpg-1506dbb1db",
+        "remote-cityscape-of-taipei-taiwan-20151221-jpg-055363cd88",
+        "remote-construction-in-denver-co-2019-jpg-0f38a4d4e3"
+      ],
+      "mechanism": "产品设计和商业模式决定材料组合、可修复性、重复使用和泄漏风险；末端治理只能处理已经进入系统的流量。",
+      "distribution": "废弃物处理、焚烧和非正规回收的健康风险往往集中在低收入社区和全球南方。",
+      "debate": {
+        "proposition": "更先进的回收技术可以解决塑料污染。",
+        "challenge": "复合材料、污染、经济性和持续增长限制回收，且回收本身消耗能源。",
+        "synthesis": "优先减少不必要使用、复用和重设计，再为剩余流量建设高质量回收。"
+      },
+      "claims": [
+        {
+          "id": "pollution-plastics-mechanism",
+          "text": "产品设计和商业模式决定材料组合、可修复性、重复使用和泄漏风险；末端治理只能处理已经进入系统的流量。",
+          "sourceIDs": [
+            "plastics-2023",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "pollution-plastics-distribution",
+          "text": "废弃物处理、焚烧和非正规回收的健康风险往往集中在低收入社区和全球南方。",
+          "sourceIDs": [
+            "plastics-2023",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "pollution-plastics-boundary",
+          "text": "优先减少不必要使用、复用和重设计，再为剩余流量建设高质量回收。",
+          "sourceIDs": [
+            "plastics-2023",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "pollution-plastics-metric-0",
+          "value": "3 个转向",
+          "label": "减少与替代、复用、回收",
+          "context": "UNEP 将其作为系统转型组合，而非单一回收目标。",
+          "sourceIDs": [
+            "plastics-2023",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "atlas · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "自适应网格",
+          "多尺寸缩略图",
+          "快速滚动与反向滚动"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "transition-minerals",
+      "volumeID": "metabolism",
+      "eyebrow": "代谢 04",
+      "title": "能源转型也有矿山和土地",
+      "summary": "电气化减少化石燃料燃烧，但会改变铜、锂、镍、稀土等需求；“绿色”标签不能消除采矿的土地、水与劳动问题。",
+      "readingMinutes": 9,
+      "epistemicStatus": "contestedEvidence",
+      "layout": "fieldNotes",
+      "heroAssetID": "remote-hawkesworth-bridge-jpg-15ae58be85",
+      "galleryAssetIDs": [
+        "remote-stadsgezicht-rijksmuseum-sk-a-2455-jpeg-00015a5878",
+        "remote-main-street-of-richmond-maine-jpg-159feaa820",
+        "remote-dulles-state-office-building-interior-looking-left-jpg-09cb447086",
+        "remote-2024-rnc-street-checkpoint-jpg-11aa812621"
+      ],
+      "mechanism": "不同技术路线对应不同材料强度、回收潜力和基础设施寿命；需求侧变化能显著改变矿物压力。",
+      "distribution": "矿区收益、污染、用水和迁移成本经常与消费地和资本收益分离。",
+      "debate": {
+        "proposition": "扩大关键矿产供给是快速脱碳的必要代价。",
+        "challenge": "若不改变交通、住房和产品寿命，矿物扩张会复制旧的开采关系。",
+        "synthesis": "以服务需求而非设备销量规划转型，并把原住民同意、回收、替代和减量列为约束。"
+      },
+      "claims": [
+        {
+          "id": "transition-minerals-mechanism",
+          "text": "不同技术路线对应不同材料强度、回收潜力和基础设施寿命；需求侧变化能显著改变矿物压力。",
+          "sourceIDs": [
+            "gro-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "transition-minerals-distribution",
+          "text": "矿区收益、污染、用水和迁移成本经常与消费地和资本收益分离。",
+          "sourceIDs": [
+            "gro-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "transition-minerals-boundary",
+          "text": "以服务需求而非设备销量规划转型，并把原住民同意、回收、替代和减量列为约束。",
+          "sourceIDs": [
+            "gro-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "transition-minerals-metric-0",
+          "value": "多资源约束",
+          "label": "能源转型同时受矿物、土地、水、电网与技能约束",
+          "context": "不存在只优化一种矿物的全局最优方案。",
+          "sourceIDs": [
+            "gro-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "fieldNotes · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "混合长宽比",
+          "离线首图",
+          "网络补充图"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "food-land",
+      "volumeID": "food-health",
+      "eyebrow": "生命 01",
+      "title": "食物系统是一套土地制度",
+      "summary": "食物连接饮食、农业投入、土地利用、贸易、劳动、营养和废弃；“消费者选择”只是其中一个节点。",
+      "readingMinutes": 10,
+      "epistemicStatus": "assessedConsensus",
+      "layout": "mosaic",
+      "heroAssetID": "local-autumn-rosehip-berries-in-bia-ystok-forest-jpg-037296a444",
+      "galleryAssetIDs": [
+        "local-fruits-in-bowl-oranges-lime-apples-1-jpg-1261dbe849",
+        "local-vegan-food-in-madrid-2016-jpg-1631accbda",
+        "local-apple-flower-dissected-jpg-08da56450c",
+        "local-flower-in-guingamp-5-jpg-0e620a1b3f"
+      ],
+      "mechanism": "农业扩张、化肥农药、畜牧、冷链和浪费共同影响气候、生物多样性、淡水与健康。",
+      "distribution": "农民、加工商、零售平台和消费者的议价能力不同，环境成本和营养收益也分配不均。",
+      "debate": {
+        "proposition": "提高单产可以避免更多土地转化。",
+        "challenge": "高投入单一化可能损害土壤、水和韧性，并通过价格刺激需求。",
+        "synthesis": "单产、膳食、浪费、土地权和农业生态实践应同时进入政策。"
+      },
+      "claims": [
+        {
+          "id": "food-land-mechanism",
+          "text": "农业扩张、化肥农药、畜牧、冷链和浪费共同影响气候、生物多样性、淡水与健康。",
+          "sourceIDs": [
+            "food-systems-2025",
+            "ipbes-nexus-2024",
+            "food-waste-2024"
+          ]
+        },
+        {
+          "id": "food-land-distribution",
+          "text": "农民、加工商、零售平台和消费者的议价能力不同，环境成本和营养收益也分配不均。",
+          "sourceIDs": [
+            "food-systems-2025",
+            "ipbes-nexus-2024",
+            "food-waste-2024"
+          ]
+        },
+        {
+          "id": "food-land-boundary",
+          "text": "单产、膳食、浪费、土地权和农业生态实践应同时进入政策。",
+          "sourceIDs": [
+            "food-systems-2025",
+            "ipbes-nexus-2024",
+            "food-waste-2024"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "food-land-metric-0",
+          "value": "10.5 亿吨",
+          "label": "2022 年零售、餐饮和家庭食物浪费估计",
+          "context": "包含不可食部分，口径必须与其他数字区分。",
+          "sourceIDs": [
+            "food-systems-2025",
+            "ipbes-nexus-2024",
+            "food-waste-2024"
+          ]
+        },
+        {
+          "id": "food-land-metric-1",
+          "value": "约 1/5",
+          "label": "面向消费者食物中的浪费比例",
+          "context": "来自 UNEP 2024 估计。",
+          "sourceIDs": [
+            "food-systems-2025",
+            "ipbes-nexus-2024",
+            "food-waste-2024"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "mosaic · 5 个稳定媒体身份",
+        "sourceMix": "5 bundled",
+        "targetVariants": [
+          "2:1 主图 fill",
+          "1:1 拼贴 fill",
+          "4:3 细节 fit"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "animal-ethics",
+      "volumeID": "food-health",
+      "eyebrow": "生命 02",
+      "title": "动物不是碳核算中的库存单位",
+      "summary": "生态政策常以物种、产量或排放衡量动物，却可能遗漏个体感受、可避免痛苦和生命利益。",
+      "readingMinutes": 9,
+      "epistemicStatus": "normativePosition",
+      "layout": "immersive",
+      "heroAssetID": "remote-bowl-of-fruit-jpg-05b12774e0",
+      "galleryAssetIDs": [
+        "remote-fruits-and-vegetables-in-refrigerator-50838357101-jpg-0efb64345b",
+        "remote-vegetables-in-refrigerator-bin-jpg-160942fe3e",
+        "remote-spanish-onions-the-fruit-bowl-brighton-2024-03-21-jpg-0c9b145739",
+        "remote-vegan-tan-tan-goemon-ramen-bar-jpg-137eaa3695"
+      ],
+      "mechanism": "畜牧、渔业、野生动物管理和栖息地政策同时改变生态过程与个体动物处境。",
+      "distribution": "便宜动物产品的收益与养殖劳动、污染、公共卫生风险和动物承受的伤害并不落在同一主体。",
+      "debate": {
+        "proposition": "只要系统总排放更低，动物利用方式就是可接受的。",
+        "challenge": "碳效率无法回答痛苦、尊严和生命是否可被工具化。",
+        "synthesis": "把生态系统结果与个体动物福利作为两个不可互相吞并的审查维度。"
+      },
+      "claims": [
+        {
+          "id": "animal-ethics-mechanism",
+          "text": "畜牧、渔业、野生动物管理和栖息地政策同时改变生态过程与个体动物处境。",
+          "sourceIDs": [
+            "food-systems-2025",
+            "ipbes-nexus-2024"
+          ]
+        },
+        {
+          "id": "animal-ethics-distribution",
+          "text": "便宜动物产品的收益与养殖劳动、污染、公共卫生风险和动物承受的伤害并不落在同一主体。",
+          "sourceIDs": [
+            "food-systems-2025",
+            "ipbes-nexus-2024"
+          ]
+        },
+        {
+          "id": "animal-ethics-boundary",
+          "text": "把生态系统结果与个体动物福利作为两个不可互相吞并的审查维度。",
+          "sourceIDs": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "animal-ethics-metric-0",
+          "value": "双重审查",
+          "label": "生态系统完整性 + 个体动物利益",
+          "context": "这是本应用的规范性立场，不冒充科学定理。",
+          "sourceIDs": [
+            "food-systems-2025",
+            "ipbes-nexus-2024"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "immersive · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "全宽连续大图",
+          "渐进滚动",
+          "内存清理后恢复"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "one-health",
+      "volumeID": "food-health",
+      "eyebrow": "生命 03",
+      "title": "大流行病预防要回到源头",
+      "summary": "监测和疫苗重要，但土地利用、动物生产与贸易、生物安全和全球流动共同塑造溢出风险。",
+      "readingMinutes": 10,
+      "epistemicStatus": "assessedConsensus",
+      "layout": "timeline",
+      "heroAssetID": "remote-berries-arlington-ma-01-jpg-205ba1b49a",
+      "galleryAssetIDs": [
+        "remote-berries-arlington-ma-dsc03693-jpg-0cfcc66fa8",
+        "remote-sauerkraut-with-juniper-berries-curry-powder-and-black-00afc2ab92",
+        "remote-vegetables-hilltop-hotel-tokyo-dsc09002-jpg-147c48d70d",
+        "remote-autumn-rosehip-berries-in-bia-ystok-forest-jpg-037296a444"
+      ],
+      "mechanism": "生态扰动改变人、家养动物、野生动物和病原体的接触网络；溢出后，交通与社会条件决定扩散。",
+      "distribution": "风险治理若只限制小农或特定文化，却不处理工业生产、贸易和实验室安全，会制造污名与盲点。",
+      "debate": {
+        "proposition": "更强的早期检测足以防止下一次大流行。",
+        "challenge": "检测发生在风险已经生成之后，且不确定病原体可能逃过现有监测。",
+        "synthesis": "源头预防、One Health 监测、医疗能力和开放的起源研究应并行。"
+      },
+      "claims": [
+        {
+          "id": "one-health-mechanism",
+          "text": "生态扰动改变人、家养动物、野生动物和病原体的接触网络；溢出后，交通与社会条件决定扩散。",
+          "sourceIDs": [
+            "who-one-health-2026",
+            "who-spillover-2023",
+            "who-origins-2025"
+          ]
+        },
+        {
+          "id": "one-health-distribution",
+          "text": "风险治理若只限制小农或特定文化，却不处理工业生产、贸易和实验室安全，会制造污名与盲点。",
+          "sourceIDs": [
+            "who-one-health-2026",
+            "who-spillover-2023",
+            "who-origins-2025"
+          ]
+        },
+        {
+          "id": "one-health-boundary",
+          "text": "源头预防、One Health 监测、医疗能力和开放的起源研究应并行。",
+          "sourceIDs": [
+            "who-one-health-2026",
+            "who-spillover-2023",
+            "who-origins-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "one-health-metric-0",
+          "value": "One Health",
+          "label": "人类、动物与环境健康的联合治理框架",
+          "context": "不是把所有疾病简单归因于生物多样性丧失。",
+          "sourceIDs": [
+            "who-one-health-2026",
+            "who-spillover-2023",
+            "who-origins-2025"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "id": "one-health-event-0",
+          "marker": "2026",
+          "title": "One Health Fact Sheet",
+          "body": "由 World Health Organization 发布，提供本专题的第 1 组证据与方法边界。",
+          "assetID": "remote-berries-arlington-ma-dsc03693-jpg-0cfcc66fa8",
+          "sourceIDs": [
+            "who-one-health-2026"
+          ]
+        },
+        {
+          "id": "one-health-event-1",
+          "marker": "2023",
+          "title": "Prevention of Zoonotic Spillover: From Response to Prevention at Source",
+          "body": "由 One Health High-Level Expert Panel 发布，提供本专题的第 2 组证据与方法边界。",
+          "assetID": "remote-sauerkraut-with-juniper-berries-curry-powder-and-black-00afc2ab92",
+          "sourceIDs": [
+            "who-spillover-2023"
+          ]
+        },
+        {
+          "id": "one-health-event-2",
+          "marker": "2025",
+          "title": "Global Framework for Studies into Origins of Emerging Pathogens",
+          "body": "由 World Health Organization 发布，提供本专题的第 3 组证据与方法边界。",
+          "assetID": "remote-vegetables-hilltop-hotel-tokyo-dsc09002-jpg-147c48d70d",
+          "sourceIDs": [
+            "who-origins-2025"
+          ]
+        }
+      ],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "timeline · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "16:9 时间线卡片 fill",
+          "横向预取",
+          "回屏复用"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "soil-pollinators",
+      "volumeID": "food-health",
+      "eyebrow": "生命 04",
+      "title": "看不见的基础设施：土壤与授粉者",
+      "summary": "土壤生物、真菌网络和授粉者维持食物生产，却常在经济核算中被当成免费背景。",
+      "readingMinutes": 8,
+      "epistemicStatus": "observedSynthesis",
+      "layout": "fieldNotes",
+      "heroAssetID": "remote-red-okra-in-the-bowl-259536425-jpeg-1f40de25c4",
+      "galleryAssetIDs": [
+        "remote-fruits-in-bowl-oranges-lime-apples-1-jpg-1261dbe849",
+        "remote-vegan-food-in-madrid-2016-jpg-1631accbda",
+        "remote-jpg-16dac64c88",
+        "remote-vegan-breakfast-at-premises-jpg-0ba600645d"
+      ],
+      "mechanism": "土壤结构、有机质和多样性影响水分、养分与抗扰动能力；授粉网络对多种作物和野生植物重要。",
+      "distribution": "退化成本常由未来农民、下游社区和公共财政承担，而短期收益由土地和投入品市场获取。",
+      "debate": {
+        "proposition": "可以用技术投入完全替代生态功能。",
+        "challenge": "人工授粉、化肥和灌溉只能替代部分功能，并可能引入新的成本。",
+        "synthesis": "将生态功能视为基础设施，优先避免退化，再讨论技术补充。"
+      },
+      "claims": [
+        {
+          "id": "soil-pollinators-mechanism",
+          "text": "土壤结构、有机质和多样性影响水分、养分与抗扰动能力；授粉网络对多种作物和野生植物重要。",
+          "sourceIDs": [
+            "ipbes-global-2019",
+            "ipbes-nexus-2024"
+          ]
+        },
+        {
+          "id": "soil-pollinators-distribution",
+          "text": "退化成本常由未来农民、下游社区和公共财政承担，而短期收益由土地和投入品市场获取。",
+          "sourceIDs": [
+            "ipbes-global-2019",
+            "ipbes-nexus-2024"
+          ]
+        },
+        {
+          "id": "soil-pollinators-boundary",
+          "text": "将生态功能视为基础设施，优先避免退化，再讨论技术补充。",
+          "sourceIDs": [
+            "ipbes-global-2019",
+            "ipbes-nexus-2024"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "soil-pollinators-metric-0",
+          "value": "多尺度",
+          "label": "农田、流域与区域生态网络共同决定韧性",
+          "context": "单块土地的优化可能损害区域连接性。",
+          "sourceIDs": [
+            "ipbes-global-2019",
+            "ipbes-nexus-2024"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "fieldNotes · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "混合长宽比",
+          "离线首图",
+          "网络补充图"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "historical-responsibility",
+      "volumeID": "unequal-geography",
+      "eyebrow": "正义 01",
+      "title": "历史责任不能被当前国界抹平",
+      "summary": "累积排放、殖民工业化、消费足迹和能力差异决定谁拥有更大减排与融资责任。",
+      "readingMinutes": 10,
+      "epistemicStatus": "assessedConsensus",
+      "layout": "dossier",
+      "heroAssetID": "local-judith-leyster-self-portrait-c-1630-nga-37003-jpg-1b167db6e1",
+      "galleryAssetIDs": [
+        "local-antonello-da-messina-portrait-of-a-man-il-condottiere--07e3973b95",
+        "local-abstract-landscape-in-reds-large-painting-on-canvas-in-1fe5712d3d",
+        "local-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d",
+        "local-landscape-with-a-village-in-the-distance-met-dp145939--20d156fcdb"
+      ],
+      "mechanism": "二氧化碳长期累积，使过去的排放仍影响今天的风险；财富积累也部分建立在高碳基础设施上。",
+      "distribution": "国家平均值会隐藏国内阶级差异；脆弱国家内部也存在高消费群体。",
+      "debate": {
+        "proposition": "所有国家只需按当前排放同比例减排。",
+        "challenge": "同一比例忽略累积贡献、基本发展需要、支付能力和损害暴露。",
+        "synthesis": "共同目标需要差异化路径，并把国内不平等纳入国家责任。"
+      },
+      "claims": [
+        {
+          "id": "historical-responsibility-mechanism",
+          "text": "二氧化碳长期累积，使过去的排放仍影响今天的风险；财富积累也部分建立在高碳基础设施上。",
+          "sourceIDs": [
+            "ipcc-ar6-syr",
+            "ipcc-wg2",
+            "agr-2025"
+          ]
+        },
+        {
+          "id": "historical-responsibility-distribution",
+          "text": "国家平均值会隐藏国内阶级差异；脆弱国家内部也存在高消费群体。",
+          "sourceIDs": [
+            "ipcc-ar6-syr",
+            "ipcc-wg2",
+            "agr-2025"
+          ]
+        },
+        {
+          "id": "historical-responsibility-boundary",
+          "text": "共同目标需要差异化路径，并把国内不平等纳入国家责任。",
+          "sourceIDs": [
+            "ipcc-ar6-syr",
+            "ipcc-wg2",
+            "agr-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "historical-responsibility-metric-0",
+          "value": "12–14 倍",
+          "label": "发展中国家 2035 年适应融资需求与 2023 年国际公共资金之比",
+          "context": "模型成本与计划需求给出不同上限。",
+          "sourceIDs": [
+            "ipcc-ar6-syr",
+            "ipcc-wg2",
+            "agr-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "dossier · 5 个稳定媒体身份",
+        "sourceMix": "5 bundled",
+        "targetVariants": [
+          "64pt 缩略图",
+          "16:9 档案封面",
+          "长列表复用"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "unequal-exchange",
+      "volumeID": "unequal-geography",
+      "eyebrow": "正义 02",
+      "title": "贸易中的隐含土地、能源与劳动",
+      "summary": "进口商品让消费地获得服务，却可能把开采、排放、土地和低工资劳动留在生产地。",
+      "readingMinutes": 10,
+      "epistemicStatus": "interpretiveLens",
+      "layout": "comparison",
+      "heroAssetID": "remote-aim-from-the-parasol-drills-series-n18-for-allen-ginte-2b9f3846fb",
+      "galleryAssetIDs": [
+        "remote-portrait-of-a-man-met-dp361123-jpg-1d043b5b4b",
+        "remote-portrait-of-a-woman-met-dt363544-jpg-2ef258687e",
+        "remote-self-portrait-met-dp170787-jpg-08702910fd",
+        "remote-self-portrait-by-ludger-tom-ring-d-j-1547-ad-oil-on-oa-1711208a0b"
+      ],
+      "mechanism": "多区域投入产出模型追踪商品链中的隐含物质、能源、土地和劳动，从消费责任角度重画环境地图。",
+      "distribution": "交换价格、债务和产业分工影响哪些地区能保留高附加值、哪些地区承担资源密集环节。",
+      "debate": {
+        "proposition": "贸易提高效率，因而总体上减少资源浪费。",
+        "challenge": "价格并不完整反映生态损害、权力差异与不可替代的地方损失。",
+        "synthesis": "贸易可能带来收益，但必须同时审查物质净转移、劳动条件和修复责任。"
+      },
+      "claims": [
+        {
+          "id": "unequal-exchange-mechanism",
+          "text": "多区域投入产出模型追踪商品链中的隐含物质、能源、土地和劳动，从消费责任角度重画环境地图。",
+          "sourceIDs": [
+            "unequal-exchange-2020",
+            "gro-2024"
+          ]
+        },
+        {
+          "id": "unequal-exchange-distribution",
+          "text": "交换价格、债务和产业分工影响哪些地区能保留高附加值、哪些地区承担资源密集环节。",
+          "sourceIDs": [
+            "unequal-exchange-2020",
+            "gro-2024"
+          ]
+        },
+        {
+          "id": "unequal-exchange-boundary",
+          "text": "贸易可能带来收益，但必须同时审查物质净转移、劳动条件和修复责任。",
+          "sourceIDs": [
+            "unequal-exchange-2020",
+            "gro-2024"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "unequal-exchange-metric-0",
+          "value": "6 倍",
+          "label": "高收入国家人均资源使用约为低收入国家的倍数",
+          "context": "来自 UNEP GRO 2024 的综合估计。",
+          "sourceIDs": [
+            "unequal-exchange-2020",
+            "gro-2024"
+          ]
+        },
+        {
+          "id": "unequal-exchange-metric-1",
+          "value": "10 倍",
+          "label": "相关气候影响约倍数",
+          "context": "不能简单用于每个国家或商品。",
+          "sourceIDs": [
+            "unequal-exchange-2020",
+            "gro-2024"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "comparison · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "双栏同高 fill",
+          "单图 fit 放大",
+          "分屏宽度变化"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "colonial-extractivism",
+      "volumeID": "unequal-geography",
+      "eyebrow": "正义 03",
+      "title": "殖民主义留下的不只是历史记忆",
+      "summary": "土地征用、单一出口、边界划分和知识压制塑造了今天的资源制度与气候脆弱性。",
+      "readingMinutes": 11,
+      "epistemicStatus": "interpretiveLens",
+      "layout": "timeline",
+      "heroAssetID": "remote-self-portrait-met-dt1922-jpg-19ba6feb97",
+      "galleryAssetIDs": [
+        "remote-self-portrait-met-dt9819-jpg-3231178a93",
+        "remote-vladimir-medinsky-at-shkin-opera-historical-festival-2-054f310ed4",
+        "remote-self-portrait-met-lc-15-30-37-2-jpg-2643ba9f7a",
+        "remote-1914-self-portrait-by-ivan-l-nnberg-jpg-12d22bf1b9"
+      ],
+      "mechanism": "制度路径依赖使过去的土地和贸易结构继续决定基础设施、财政能力与生态治理。",
+      "distribution": "“无人土地”叙事和技术专家主义可能排除原住民与地方知识，并将保护成本再次外部化。",
+      "debate": {
+        "proposition": "今天的环境政策只需面向未来，不必处理历史。",
+        "challenge": "不处理产权、债务和知识权力，转型可能复制相同的剥夺关系。",
+        "synthesis": "历史修复不是替代减排，而是决定转型合法性和实施能力的一部分。"
+      },
+      "claims": [
+        {
+          "id": "colonial-extractivism-mechanism",
+          "text": "制度路径依赖使过去的土地和贸易结构继续决定基础设施、财政能力与生态治理。",
+          "sourceIDs": [
+            "ipcc-wg2",
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "colonial-extractivism-distribution",
+          "text": "“无人土地”叙事和技术专家主义可能排除原住民与地方知识，并将保护成本再次外部化。",
+          "sourceIDs": [
+            "ipcc-wg2",
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "colonial-extractivism-boundary",
+          "text": "历史修复不是替代减排，而是决定转型合法性和实施能力的一部分。",
+          "sourceIDs": [
+            "ipcc-wg2",
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "colonial-extractivism-metric-0",
+          "value": "路径依赖",
+          "label": "过去制度改变当前选择集合与成本",
+          "context": "不是声称历史决定一切。",
+          "sourceIDs": [
+            "ipcc-wg2",
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "id": "colonial-extractivism-event-0",
+          "marker": "2022",
+          "title": "AR6 Working Group II: Impacts, Adaptation and Vulnerability",
+          "body": "由 IPCC 发布，提供本专题的第 1 组证据与方法边界。",
+          "assetID": "remote-self-portrait-met-dt9819-jpg-3231178a93",
+          "sourceIDs": [
+            "ipcc-wg2"
+          ]
+        },
+        {
+          "id": "colonial-extractivism-event-1",
+          "marker": "2024",
+          "title": "Transformative Change Assessment",
+          "body": "由 IPBES 发布，提供本专题的第 2 组证据与方法边界。",
+          "assetID": "remote-vladimir-medinsky-at-shkin-opera-historical-festival-2-054f310ed4",
+          "sourceIDs": [
+            "ipbes-transformative-2024"
+          ]
+        },
+        {
+          "id": "colonial-extractivism-event-2",
+          "marker": "2025",
+          "title": "Global Environment Outlook 7: A Future We Choose",
+          "body": "由 UNEP 发布，提供本专题的第 3 组证据与方法边界。",
+          "assetID": "remote-self-portrait-met-lc-15-30-37-2-jpg-2643ba9f7a",
+          "sourceIDs": [
+            "geo7-2025"
+          ]
+        }
+      ],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "timeline · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "16:9 时间线卡片 fill",
+          "横向预取",
+          "回屏复用"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "adaptation-debt",
+      "volumeID": "unequal-geography",
+      "eyebrow": "正义 04",
+      "title": "适应融资为何会变成新债务",
+      "summary": "易受影响国家需要防洪、供水、医疗和生态恢复，却常在财政空间最小的时候承担更高融资成本。",
+      "readingMinutes": 9,
+      "epistemicStatus": "observedSynthesis",
+      "layout": "dossier",
+      "heroAssetID": "remote-self-portrait-by-arvid-fougstedt-1933-jpg-3281440cd1",
+      "galleryAssetIDs": [
+        "remote-self-portrait-by-carl-larsson-1895-jpg-1d1ca30efe",
+        "remote-portrait-of-a-woman-with-a-dog-oil-on-wood-painting-by-22b2647101",
+        "remote-henri-fantin-latour-self-portrait-met-dt1979-jpg-05e9b2ab88",
+        "remote-portrait-of-l-aanteech-leader-of-kook-hit-the-box-hous-1bd45e378d"
+      ],
+      "mechanism": "气候损害削弱财政收入并增加支出，债务又压缩适应投资，形成风险与融资成本相互强化的循环。",
+      "distribution": "贷款形式的适应资金可能让对危机贡献较小的群体承担偿还责任。",
+      "debate": {
+        "proposition": "私人资本可以填补适应融资缺口。",
+        "challenge": "缺乏可收费现金流的公共健康、生态和贫困社区项目难以吸引私人投资。",
+        "synthesis": "公共赠款、债务处理、损失损害安排和政策性资本应针对不同公共品组合。"
+      },
+      "claims": [
+        {
+          "id": "adaptation-debt-mechanism",
+          "text": "气候损害削弱财政收入并增加支出，债务又压缩适应投资，形成风险与融资成本相互强化的循环。",
+          "sourceIDs": [
+            "agr-2025",
+            "ipcc-wg2"
+          ]
+        },
+        {
+          "id": "adaptation-debt-distribution",
+          "text": "贷款形式的适应资金可能让对危机贡献较小的群体承担偿还责任。",
+          "sourceIDs": [
+            "agr-2025",
+            "ipcc-wg2"
+          ]
+        },
+        {
+          "id": "adaptation-debt-boundary",
+          "text": "公共赠款、债务处理、损失损害安排和政策性资本应针对不同公共品组合。",
+          "sourceIDs": [
+            "agr-2025",
+            "ipcc-wg2"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "adaptation-debt-metric-0",
+          "value": "310–3650 亿美元/年",
+          "label": "发展中国家 2035 年适应融资需求估计区间",
+          "context": "一个来自模型成本，一个来自计划需求外推。",
+          "sourceIDs": [
+            "agr-2025",
+            "ipcc-wg2"
+          ]
+        },
+        {
+          "id": "adaptation-debt-metric-1",
+          "value": "260 亿美元",
+          "label": "2023 年国际公共适应资金流",
+          "context": "与需求量级存在显著缺口。",
+          "sourceIDs": [
+            "agr-2025",
+            "ipcc-wg2"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "dossier · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "64pt 缩略图",
+          "16:9 档案封面",
+          "长列表复用"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "military-environment",
+      "volumeID": "war-security",
+      "eyebrow": "冲突 01",
+      "title": "军事活动的环境成本不只在战场",
+      "summary": "燃料、训练、基地、武器生产和战后重建形成长期物质与排放链，但数据常不完整。",
+      "readingMinutes": 9,
+      "epistemicStatus": "contestedEvidence",
+      "layout": "atlas",
+      "heroAssetID": "local-brown-line-train-crossing-chicago-river-2-jpg-0a17bbd87d",
+      "galleryAssetIDs": [
+        "local-bodrum-kalesi-ve-yelkenliler-2015-jpg-08f73e720b",
+        "local-august-2006-bicycle-rental-in-stockholm-3-jpg-111e267349",
+        "remote-koluvere-manor-main-bridge-2020-jpg-01ef1dfa2a",
+        "remote-design-for-church-interior-met-dp-907-001-jpg-061fff4ad4"
+      ],
+      "mechanism": "爆炸、燃烧和基础设施破坏可释放污染，军事供应链和重建又增加资源需求。",
+      "distribution": "平民、农民、废物处理人员和未来世代承担的环境风险通常远高于决策者。",
+      "debate": {
+        "proposition": "国家安全要求军事环境数据保持例外。",
+        "challenge": "缺乏数据会阻止风险治理、赔偿和恢复，并可能把污染长期留给社区。",
+        "synthesis": "安全限制应最小化，并建立独立核查、环境基线和战后责任机制。"
+      },
+      "claims": [
+        {
+          "id": "military-environment-mechanism",
+          "text": "爆炸、燃烧和基础设施破坏可释放污染，军事供应链和重建又增加资源需求。",
+          "sourceIDs": [
+            "unep-gaza-2025",
+            "unep-ukraine-2022",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "military-environment-distribution",
+          "text": "平民、农民、废物处理人员和未来世代承担的环境风险通常远高于决策者。",
+          "sourceIDs": [
+            "unep-gaza-2025",
+            "unep-ukraine-2022",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "military-environment-boundary",
+          "text": "安全限制应最小化，并建立独立核查、环境基线和战后责任机制。",
+          "sourceIDs": [
+            "unep-gaza-2025",
+            "unep-ukraine-2022",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "military-environment-metric-0",
+          "value": "多阶段",
+          "label": "准备—作战—占领—重建",
+          "context": "只计算战斗期会漏掉大部分生命周期。",
+          "sourceIDs": [
+            "unep-gaza-2025",
+            "unep-ukraine-2022",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "atlas · 5 个稳定媒体身份",
+        "sourceMix": "3 bundled + 2 remote",
+        "targetVariants": [
+          "自适应网格",
+          "多尺寸缩略图",
+          "快速滚动与反向滚动"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "conflict-toxic-legacy",
+      "volumeID": "war-security",
+      "eyebrow": "冲突 02",
+      "title": "停火之后，污染仍在迁移",
+      "summary": "废墟、未爆弹药、燃料、污水系统破坏和受污染土壤会在冲突结束后继续影响健康和生态。",
+      "readingMinutes": 9,
+      "epistemicStatus": "observedSynthesis",
+      "layout": "immersive",
+      "heroAssetID": "remote-cinder-street-york-central-jul25-03-jpg-038c4b18e5",
+      "galleryAssetIDs": [
+        "remote-cinder-street-york-central-jul25-05-jpg-00e198e8e1",
+        "remote-eboracum-way-york-jun26-jpg-0f50fe2785",
+        "remote-foundry-way-york-central-jul25-03-jpg-0ac9d6cd3f",
+        "remote-park-street-york-central-jul25-04-jpg-0b19f62719"
+      ],
+      "mechanism": "污染物通过空气、水和食物链移动；基础设施损坏使常规监测、处置和医疗能力同时下降。",
+      "distribution": "恢复优先级若只按资产价值排序，低收入社区和非正式住区可能长期暴露。",
+      "debate": {
+        "proposition": "重建越快越好。",
+        "challenge": "未经调查的快速清理和重建可能扩散污染、销毁证据或锁定高风险布局。",
+        "synthesis": "先建立风险地图、废物链和社区参与，再按健康和生态优先级推进恢复。"
+      },
+      "claims": [
+        {
+          "id": "conflict-toxic-legacy-mechanism",
+          "text": "污染物通过空气、水和食物链移动；基础设施损坏使常规监测、处置和医疗能力同时下降。",
+          "sourceIDs": [
+            "unep-gaza-2025",
+            "unep-ukraine-2022"
+          ]
+        },
+        {
+          "id": "conflict-toxic-legacy-distribution",
+          "text": "恢复优先级若只按资产价值排序，低收入社区和非正式住区可能长期暴露。",
+          "sourceIDs": [
+            "unep-gaza-2025",
+            "unep-ukraine-2022"
+          ]
+        },
+        {
+          "id": "conflict-toxic-legacy-boundary",
+          "text": "先建立风险地图、废物链和社区参与，再按健康和生态优先级推进恢复。",
+          "sourceIDs": [
+            "unep-gaza-2025",
+            "unep-ukraine-2022"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "conflict-toxic-legacy-metric-0",
+          "value": "长期遗产",
+          "label": "污染与基础设施损失可延续数十年",
+          "context": "具体时间取决于污染物、地质和治理能力。",
+          "sourceIDs": [
+            "unep-gaza-2025",
+            "unep-ukraine-2022"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "immersive · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "全宽连续大图",
+          "渐进滚动",
+          "内存清理后恢复"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "energy-security",
+      "volumeID": "war-security",
+      "eyebrow": "安全 03",
+      "title": "能源安全与生态转型不是二选一",
+      "summary": "集中化、进口依赖和单一路线会制造脆弱性；多样化、需求管理和分布式系统可同时影响安全与排放。",
+      "readingMinutes": 9,
+      "epistemicStatus": "modelledScenario",
+      "layout": "comparison",
+      "heroAssetID": "remote-view-from-9-sobieskiego-street-in-zabrze-silesian-voiv-05d9fef8cc",
+      "galleryAssetIDs": [
+        "remote-building-in-ukiah-june-2024-sarah-stierch-jpg-0bc274d716",
+        "remote-07-jpg-00f4140d07",
+        "remote-vake-cityscape-tbilisi-georgia-autumn-jpg-064f78c569",
+        "remote-street-country-jpg-155e7ee84d"
+      ],
+      "mechanism": "能源安全包括可靠性、可负担性和抗冲击能力；不同能源系统对燃料、矿物、网络与气候风险的暴露不同。",
+      "distribution": "高价格和断供对低收入家庭、关键公共服务和能源密集劳动者影响更大。",
+      "debate": {
+        "proposition": "扩大任何本土能源供给都能提高安全。",
+        "challenge": "高成本或高污染供给可能锁定风险，并挤压效率和公共交通投资。",
+        "synthesis": "以服务韧性、需求降低、网络冗余和生命周期风险而非单一产量定义安全。"
+      },
+      "claims": [
+        {
+          "id": "energy-security-mechanism",
+          "text": "能源安全包括可靠性、可负担性和抗冲击能力；不同能源系统对燃料、矿物、网络与气候风险的暴露不同。",
+          "sourceIDs": [
+            "iea-ai-2025",
+            "geo7-2025",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "energy-security-distribution",
+          "text": "高价格和断供对低收入家庭、关键公共服务和能源密集劳动者影响更大。",
+          "sourceIDs": [
+            "iea-ai-2025",
+            "geo7-2025",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "energy-security-boundary",
+          "text": "以服务韧性、需求降低、网络冗余和生命周期风险而非单一产量定义安全。",
+          "sourceIDs": [
+            "iea-ai-2025",
+            "geo7-2025",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "energy-security-metric-0",
+          "value": "三维",
+          "label": "可靠、可负担、韧性",
+          "context": "安全不能压成单一自给率。",
+          "sourceIDs": [
+            "iea-ai-2025",
+            "geo7-2025",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "comparison · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "双栏同高 fill",
+          "单图 fit 放大",
+          "分屏宽度变化"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "borders-displacement",
+      "volumeID": "war-security",
+      "eyebrow": "安全 04",
+      "title": "气候、冲突与迁徙之间没有单一路径",
+      "summary": "环境变化会影响生计和迁徙，但政治排斥、暴力、住房、劳动市场和边境制度决定迁徙是否转化为灾难。",
+      "readingMinutes": 10,
+      "epistemicStatus": "contestedEvidence",
+      "layout": "fieldNotes",
+      "heroAssetID": "remote-saga-cityscape-southward-wide-jpg-12e881c893",
+      "galleryAssetIDs": [
+        "remote-long-exposure-of-urban-cityscape-at-night-jpg-071da82728",
+        "remote-moscow-taganka-walk-the-bridge-opus-building-april-202-050298ce77",
+        "remote-siphon-bridge-bargaon-jpg-11d27030ea",
+        "remote-bridge-in-forest-21158992109-jpg-165bd12127"
+      ],
+      "mechanism": "气候冲击与已有贫困、治理和冲突风险相互作用；迁徙也可以是适应策略，而非纯粹失败。",
+      "distribution": "无法迁徙者可能比跨境迁徙者更脆弱；边境政策会重新分配风险。",
+      "debate": {
+        "proposition": "气候变化会自动导致大规模战争与迁徙。",
+        "challenge": "线性因果忽略社会制度、中介变量和人类适应能力。",
+        "synthesis": "使用条件化风险链，避免确定论和对迁徙者的安全化污名。"
+      },
+      "claims": [
+        {
+          "id": "borders-displacement-mechanism",
+          "text": "气候冲击与已有贫困、治理和冲突风险相互作用；迁徙也可以是适应策略，而非纯粹失败。",
+          "sourceIDs": [
+            "ipcc-wg2",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "borders-displacement-distribution",
+          "text": "无法迁徙者可能比跨境迁徙者更脆弱；边境政策会重新分配风险。",
+          "sourceIDs": [
+            "ipcc-wg2",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "borders-displacement-boundary",
+          "text": "使用条件化风险链，避免确定论和对迁徙者的安全化污名。",
+          "sourceIDs": [
+            "ipcc-wg2",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "borders-displacement-metric-0",
+          "value": "多因一果",
+          "label": "同一迁徙结果可由不同风险组合产生",
+          "context": "预测必须明确中介机制。",
+          "sourceIDs": [
+            "ipcc-wg2",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "fieldNotes · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "混合长宽比",
+          "离线首图",
+          "网络补充图"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "fast-fashion",
+      "volumeID": "daily-systems",
+      "eyebrow": "日常 01",
+      "title": "一件衣服为何是一条全球系统",
+      "summary": "高频上新、低使用次数、纤维混合、工资结构、广告与废弃共同塑造服装影响。",
+      "readingMinutes": 9,
+      "epistemicStatus": "observedSynthesis",
+      "layout": "mosaic",
+      "heroAssetID": "local-20220410-florin-sign-and-ij-digraph-on-dutch-typewrite-0368d9ffc0",
+      "galleryAssetIDs": [
+        "remote-spinning-top-sculpture-brisbane-01-jpg-03ce56b87d",
+        "remote-textile-sample-met-dp10905-jpg-0300c4d774",
+        "remote-textile-sample-met-dp12177-jpg-0737afce4b",
+        "remote-textile-samples-met-dp10868-jpg-0b005e48e7"
+      ],
+      "mechanism": "设计、采购周期和价格压力决定产品寿命、生产条件、化学品使用和回收可能性。",
+      "distribution": "低价收益主要在消费端，工资压缩、污染和废弃常留在生产地与二手出口地。",
+      "debate": {
+        "proposition": "消费者购买可持续品牌即可解决问题。",
+        "challenge": "品牌标签难以改变行业节奏、总销量、维修权和生产者责任。",
+        "synthesis": "耐用设计、供应链责任、工资、维修复用和总量约束需要共同作用。"
+      },
+      "claims": [
+        {
+          "id": "fast-fashion-mechanism",
+          "text": "设计、采购周期和价格压力决定产品寿命、生产条件、化学品使用和回收可能性。",
+          "sourceIDs": [
+            "fashion-2025",
+            "gro-2024"
+          ]
+        },
+        {
+          "id": "fast-fashion-distribution",
+          "text": "低价收益主要在消费端，工资压缩、污染和废弃常留在生产地与二手出口地。",
+          "sourceIDs": [
+            "fashion-2025",
+            "gro-2024"
+          ]
+        },
+        {
+          "id": "fast-fashion-boundary",
+          "text": "耐用设计、供应链责任、工资、维修复用和总量约束需要共同作用。",
+          "sourceIDs": [
+            "fashion-2025",
+            "gro-2024"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "fast-fashion-metric-0",
+          "value": "2–8%",
+          "label": "纺织价值链约占全球温室气体排放范围",
+          "context": "估计依赖边界和数据口径。",
+          "sourceIDs": [
+            "fashion-2025",
+            "gro-2024"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "mosaic · 5 个稳定媒体身份",
+        "sourceMix": "1 bundled + 4 remote",
+        "targetVariants": [
+          "2:1 主图 fill",
+          "1:1 拼贴 fill",
+          "4:3 细节 fit"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "mobility-city",
+      "volumeID": "daily-systems",
+      "eyebrow": "日常 02",
+      "title": "城市形态先于出行选择",
+      "summary": "密度、用地混合、公共交通、道路和住房位置决定居民可获得的交通方式。",
+      "readingMinutes": 9,
+      "epistemicStatus": "assessedConsensus",
+      "layout": "atlas",
+      "heroAssetID": "remote-abstract-landscape-in-reds-large-painting-on-canvas-in-1fe5712d3d",
+      "galleryAssetIDs": [
+        "remote-abstract-large-painting-dune-landscape-painted-by-dutc-1724c2f69c",
+        "remote-no-title-nr-5-050-small-abstract-painting-on-canvas-pa-0b5e15fdda",
+        "remote-mindanao-bangsamoro-weaving-fabric-art-24553019434-jpg-2095e754b8",
+        "remote-kerameikos-cemetery-on-july-10-2020-jpg-024ed5072f"
+      ],
+      "mechanism": "基础设施改变时间成本和可达性，随后塑造车辆拥有、能源需求和土地扩张。",
+      "distribution": "拥堵、空气污染、事故和通勤时间在社区间分配不均，低收入者常同时承担更差服务。",
+      "debate": {
+        "proposition": "只要车辆电动化，交通问题就解决。",
+        "challenge": "电动车仍占用道路、材料和城市空间，也不自动改善可达性。",
+        "synthesis": "优先减少被迫出行距离、提升公共与主动交通，再电气化剩余车辆。"
+      },
+      "claims": [
+        {
+          "id": "mobility-city-mechanism",
+          "text": "基础设施改变时间成本和可达性，随后塑造车辆拥有、能源需求和土地扩张。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "mobility-city-distribution",
+          "text": "拥堵、空气污染、事故和通勤时间在社区间分配不均，低收入者常同时承担更差服务。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "mobility-city-boundary",
+          "text": "优先减少被迫出行距离、提升公共与主动交通，再电气化剩余车辆。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "mobility-city-metric-0",
+          "value": "可达性",
+          "label": "在合理时间内接近工作、教育、医疗与照护",
+          "context": "比车辆速度更接近交通服务目标。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "atlas · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "自适应网格",
+          "多尺寸缩略图",
+          "快速滚动与反向滚动"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "housing-cooling",
+      "volumeID": "daily-systems",
+      "eyebrow": "日常 03",
+      "title": "舒适、住房与能源贫困",
+      "summary": "建筑围护、城市热岛、租赁制度和电价决定制冷与采暖需求；节能设备无法替代安全住房。",
+      "readingMinutes": 9,
+      "epistemicStatus": "assessedConsensus",
+      "layout": "comparison",
+      "heroAssetID": "remote-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d",
+      "galleryAssetIDs": [
+        "remote-aichi-prefectural-ceramic-museum-2018-037-jpg-125cec6dcf",
+        "remote-aichi-prefectural-ceramic-museum-2018-102-jpg-1566de8490",
+        "remote-textile-sample-met-dp10850-jpg-04315cef10",
+        "remote-textile-sample-met-dp14544-jpg-1de09eb123"
+      ],
+      "mechanism": "被动设计、保温、遮阳、绿地和高效设备共同影响峰值负荷与热风险。",
+      "distribution": "租客可能支付能源账单却无权改造建筑，低收入家庭也更难承担前期投资。",
+      "debate": {
+        "proposition": "提高能源价格能有效促使节能。",
+        "challenge": "对能源贫困家庭，价格冲击可能减少基本舒适而非促成改造。",
+        "synthesis": "最低住房标准、公共改造、阶梯价格和清洁供能应联合设计。"
+      },
+      "claims": [
+        {
+          "id": "housing-cooling-mechanism",
+          "text": "被动设计、保温、遮阳、绿地和高效设备共同影响峰值负荷与热风险。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipcc-wg2",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "housing-cooling-distribution",
+          "text": "租客可能支付能源账单却无权改造建筑，低收入家庭也更难承担前期投资。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipcc-wg2",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "housing-cooling-boundary",
+          "text": "最低住房标准、公共改造、阶梯价格和清洁供能应联合设计。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipcc-wg2",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "housing-cooling-metric-0",
+          "value": "分裂激励",
+          "label": "房东决定投资，租客承担运行成本",
+          "context": "是节能改造中的典型制度障碍。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipcc-wg2",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "comparison · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "双栏同高 fill",
+          "单图 fit 放大",
+          "分屏宽度变化"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "ai-data-centres",
+      "volumeID": "daily-systems",
+      "eyebrow": "日常 04",
+      "title": "AI 不是无重量的云",
+      "summary": "模型训练和推理依赖数据中心、电网、冷却水、芯片、网络和供应链；同时也可能改善能源系统优化。",
+      "readingMinutes": 10,
+      "epistemicStatus": "modelledScenario",
+      "layout": "dossier",
+      "heroAssetID": "remote-herculaneum-pottery-in-2015-jpg-056b35539c",
+      "galleryAssetIDs": [
+        "remote-landscape-with-a-village-in-the-distance-met-dp145939--20d156fcdb",
+        "remote-columns-in-kerameikos-athens-greece-jpg-039a9043b4",
+        "remote-mannapoli-6705-creation-of-the-man-sarcophagus-jpg-188cbd597e",
+        "remote-dick-mcneely-sculpture-1976-lafayette-indiana-frame-jp-0e53ce1ab5"
+      ],
+      "mechanism": "计算需求、芯片效率、利用率、模型架构和服务规模共同决定能耗，效率提升可能被需求增长抵消。",
+      "distribution": "数据中心收益、用电价格、供水压力和电网扩建成本可能落在不同地区与用户。",
+      "debate": {
+        "proposition": "AI 效率提高会自动降低数字系统总能耗。",
+        "challenge": "应用扩张、模型规模和低边际成本可能放大总计算量。",
+        "synthesis": "报告绝对能耗、水、时段和电源结构，并把效率与预算、选址和公共收益绑定。"
+      },
+      "claims": [
+        {
+          "id": "ai-data-centres-mechanism",
+          "text": "计算需求、芯片效率、利用率、模型架构和服务规模共同决定能耗，效率提升可能被需求增长抵消。",
+          "sourceIDs": [
+            "iea-ai-2026",
+            "iea-ai-2025",
+            "gro-2024"
+          ]
+        },
+        {
+          "id": "ai-data-centres-distribution",
+          "text": "数据中心收益、用电价格、供水压力和电网扩建成本可能落在不同地区与用户。",
+          "sourceIDs": [
+            "iea-ai-2026",
+            "iea-ai-2025",
+            "gro-2024"
+          ]
+        },
+        {
+          "id": "ai-data-centres-boundary",
+          "text": "报告绝对能耗、水、时段和电源结构，并把效率与预算、选址和公共收益绑定。",
+          "sourceIDs": [
+            "iea-ai-2026",
+            "iea-ai-2025",
+            "gro-2024"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "ai-data-centres-metric-0",
+          "value": "2026",
+          "label": "IEA 发布更新问题清单",
+          "context": "说明该领域数据和预测仍快速变化。",
+          "sourceIDs": [
+            "iea-ai-2026",
+            "iea-ai-2025",
+            "gro-2024"
+          ]
+        },
+        {
+          "id": "ai-data-centres-metric-1",
+          "value": "双向作用",
+          "label": "AI 消耗能源，也可能优化能源系统",
+          "context": "两侧都需要量化而非宣传。",
+          "sourceIDs": [
+            "iea-ai-2026",
+            "iea-ai-2025",
+            "gro-2024"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "dossier · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "64pt 缩略图",
+          "16:9 档案封面",
+          "长列表复用"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "green-growth",
+      "volumeID": "transformation-debates",
+      "eyebrow": "争论 01",
+      "title": "绿色增长能否实现足够快的绝对脱钩",
+      "summary": "争论不在于单位 GDP 强度能否下降，而在于全球绝对资源和排放能否以足够速度下降，同时改善福祉。",
+      "readingMinutes": 11,
+      "epistemicStatus": "contestedEvidence",
+      "layout": "comparison",
+      "heroAssetID": "remote-remember-me-exhibition-rijksmuseum-115-jpg-07960a7fb4",
+      "galleryAssetIDs": [
+        "remote-portrait-of-jamini-bhushan-ray-png-0f25cfd7ff",
+        "remote-bertillon-alphonse-fiche-anthropom-trique-recto-verso--0e67736cac",
+        "remote-portrait-of-the-artist-met-ap18-118-jpg-1c8222a33b",
+        "remote-self-portrait-met-ap06-1311-jpg-1797bfa13e"
+      ],
+      "mechanism": "技术替代、结构变化和政策可以降低强度；总量结果还取决于经济规模、需求和跨境外包。",
+      "distribution": "增长收益及转型成本分配决定社会接受度；GDP 上升也不保证基本服务改善。",
+      "debate": {
+        "proposition": "创新和价格信号能让增长与环境压力完全脱钩。",
+        "challenge": "历史绝对脱钩的范围和速度不足以证明全球长期目标必然可达。",
+        "synthesis": "把争论转化为可检验的时间表：绝对指标、消费足迹、分配和失败备选方案。"
+      },
+      "claims": [
+        {
+          "id": "green-growth-mechanism",
+          "text": "技术替代、结构变化和政策可以降低强度；总量结果还取决于经济规模、需求和跨境外包。",
+          "sourceIDs": [
+            "geo7-2025",
+            "gro-2024",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "green-growth-distribution",
+          "text": "增长收益及转型成本分配决定社会接受度；GDP 上升也不保证基本服务改善。",
+          "sourceIDs": [
+            "geo7-2025",
+            "gro-2024",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "green-growth-boundary",
+          "text": "把争论转化为可检验的时间表：绝对指标、消费足迹、分配和失败备选方案。",
+          "sourceIDs": [
+            "geo7-2025",
+            "gro-2024",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "green-growth-metric-0",
+          "value": "绝对脱钩",
+          "label": "总环境压力下降而经济产出上升",
+          "context": "必须区分于仅下降单位强度的相对脱钩。",
+          "sourceIDs": [
+            "geo7-2025",
+            "gro-2024",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "comparison · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "双栏同高 fill",
+          "单图 fit 放大",
+          "分屏宽度变化"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "degrowth",
+      "volumeID": "transformation-debates",
+      "eyebrow": "争论 02",
+      "title": "去增长讨论的核心是降低什么",
+      "summary": "严肃的去增长主张通常针对高收入经济的物质能源吞吐和不必要生产，而非要求所有地区同步衰退。",
+      "readingMinutes": 11,
+      "epistemicStatus": "interpretiveLens",
+      "layout": "editorial",
+      "heroAssetID": "remote-judith-leyster-self-portrait-c-1630-nga-37003-jpg-1b167db6e1",
+      "galleryAssetIDs": [
+        "remote-portrait-of-ardeshir-mirza-uncle-of-the-king-met-dp202-3205ec39db",
+        "remote-portrait-du-magnifique-du-bastiment-de-la-maison-de-vi-055b2e7b00",
+        "remote-smolensk-historical-museum-0405-jpg-30864375ce",
+        "remote-emile-bernard-self-portrait-with-palette-in-1939-jpg-2743941840"
+      ],
+      "mechanism": "通过缩短工时、公共服务、产品寿命和需求上限降低高消耗活动，同时把资源转向照护与基本需要。",
+      "distribution": "若缺少收入、住房和就业保障，经济收缩会把成本推给劳动者，因此衰退不等于有计划的去增长。",
+      "debate": {
+        "proposition": "任何 GDP 下降都会减少环境压力。",
+        "challenge": "危机式衰退可能削弱公共能力、加剧不平等，并不保证结构转型。",
+        "synthesis": "评价具体政策组合，而不是把“增长/去增长”当作身份标签。"
+      },
+      "claims": [
+        {
+          "id": "degrowth-mechanism",
+          "text": "通过缩短工时、公共服务、产品寿命和需求上限降低高消耗活动，同时把资源转向照护与基本需要。",
+          "sourceIDs": [
+            "degrowth-2023",
+            "gro-2024",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "degrowth-distribution",
+          "text": "若缺少收入、住房和就业保障，经济收缩会把成本推给劳动者，因此衰退不等于有计划的去增长。",
+          "sourceIDs": [
+            "degrowth-2023",
+            "gro-2024",
+            "ipcc-wg3"
+          ]
+        },
+        {
+          "id": "degrowth-boundary",
+          "text": "评价具体政策组合，而不是把“增长/去增长”当作身份标签。",
+          "sourceIDs": [
+            "degrowth-2023",
+            "gro-2024",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "degrowth-metric-0",
+          "value": "充分性",
+          "label": "以满足需要而非最大化商品流量定义目标",
+          "context": "具体边界必须民主决定并接受权利约束。",
+          "sourceIDs": [
+            "degrowth-2023",
+            "gro-2024",
+            "ipcc-wg3"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "editorial · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "21:9 远景 fill",
+          "3:2 正文插图 fit",
+          "80pt 来源缩略图"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "ecosocialism",
+      "volumeID": "transformation-debates",
+      "eyebrow": "争论 03",
+      "title": "生态社会主义把所有权放回问题中心",
+      "summary": "生态社会主义认为，投资、能源和土地由谁控制，会决定生态目标能否优先于短期利润。",
+      "readingMinutes": 10,
+      "epistemicStatus": "normativePosition",
+      "layout": "immersive",
+      "heroAssetID": "remote-joseph-dupont-portrait-of-the-painter-hendrik-frans-sc-2deff4f778",
+      "galleryAssetIDs": [
+        "remote-joseph-dupont-portrait-of-the-painter-johann-bernhard--2b048f00be",
+        "remote-portrait-of-james-m-buchanan-rp-f-2001-7-926-10-croppe-1ec4db6716",
+        "remote-portrait-of-marheineke-rp-p-1907-1043-cropped-jpg-10759f8768",
+        "remote-portrait-of-the-painter-jan-michiel-ruyten-l-ecole-d-a-2152e2cd66"
+      ],
+      "mechanism": "公共或共同所有权可能支持长期规划，但治理质量、民主问责和知识多样性决定实际结果。",
+      "distribution": "转型若不改善住房、照护、交通和劳动条件，就难以获得持续政治支持。",
+      "debate": {
+        "proposition": "公有化本身就能保证生态结果。",
+        "challenge": "国家或公共机构也可能追求扩张、压制参与或忽视地方生态。",
+        "synthesis": "所有权改革必须与民主治理、生态上限、透明预算和退出纠错机制绑定。"
+      },
+      "claims": [
+        {
+          "id": "ecosocialism-mechanism",
+          "text": "公共或共同所有权可能支持长期规划，但治理质量、民主问责和知识多样性决定实际结果。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "ecosocialism-distribution",
+          "text": "转型若不改善住房、照护、交通和劳动条件，就难以获得持续政治支持。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "ecosocialism-boundary",
+          "text": "所有权改革必须与民主治理、生态上限、透明预算和退出纠错机制绑定。",
+          "sourceIDs": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "ecosocialism-metric-0",
+          "value": "所有权问题",
+          "label": "谁决定投资、风险与剩余分配",
+          "context": "是规范性与制度设计问题，不是自然科学定理。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "immersive · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "全宽连续大图",
+          "渐进滚动",
+          "内存清理后恢复"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "rights-of-nature",
+      "volumeID": "transformation-debates",
+      "eyebrow": "争论 04",
+      "title": "自然权利改变谁能进入法庭",
+      "summary": "自然权利尝试让河流、森林或生态系统成为法律主体，从而改变损害证明和代表关系。",
+      "readingMinutes": 9,
+      "epistemicStatus": "normativePosition",
+      "layout": "fieldNotes",
+      "heroAssetID": "remote-portrait-rp-f-f25501-as-jpg-324947acd5",
+      "galleryAssetIDs": [
+        "remote-portrait-rp-f-f25501-at-jpg-1c639db290",
+        "remote-portrait-rp-f-f25501-m-jpg-2127e0b9f7",
+        "remote-zelfportret-van-heinrich-k-hn-portrait-of-heinrich-k-h-2fcc14dc08",
+        "remote-romaine-brooks-self-portrait-1923-jpg-23fee88fd6"
+      ],
+      "mechanism": "法律人格可以提供诉讼入口，但代表人、权利冲突和执行能力决定其是否产生实质保护。",
+      "distribution": "若制度只使用象征性语言而不改变土地权和财政资源，地方社区仍可能承担保护成本。",
+      "debate": {
+        "proposition": "赋予自然权利会自动停止破坏。",
+        "challenge": "权利可能与采矿许可、公共工程和社区生计冲突，且执行机关可能薄弱。",
+        "synthesis": "把自然权利视为治理工具之一，并审查代表机制、救济和社区权利。"
+      },
+      "claims": [
+        {
+          "id": "rights-of-nature-mechanism",
+          "text": "法律人格可以提供诉讼入口，但代表人、权利冲突和执行能力决定其是否产生实质保护。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "rights-of-nature-distribution",
+          "text": "若制度只使用象征性语言而不改变土地权和财政资源，地方社区仍可能承担保护成本。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "rights-of-nature-boundary",
+          "text": "把自然权利视为治理工具之一，并审查代表机制、救济和社区权利。",
+          "sourceIDs": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "rights-of-nature-metric-0",
+          "value": "法律主体",
+          "label": "让生态系统拥有可主张的法定利益",
+          "context": "具体效果取决于司法与行政制度。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "fieldNotes · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "混合长宽比",
+          "离线首图",
+          "网络补充图"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "transformative-change",
+      "volumeID": "governance-action",
+      "eyebrow": "治理 01",
+      "title": "转型不是把旧系统换成绿色设备",
+      "summary": "IPBES 将转型性变革指向观念、结构和实践的全系统改变，强调处理自然衰退的深层原因。",
+      "readingMinutes": 10,
+      "epistemicStatus": "assessedConsensus",
+      "layout": "timeline",
+      "heroAssetID": "local-flowers-in-tokyo-jpg-0c0ce9192b",
+      "galleryAssetIDs": [
+        "remote-a-dutch-hulk-and-a-boeier-from-the-sailing-vessels-met-0e220f81be",
+        "remote-sailing-home-eni-02312897-amsterdam-rijn-kanaal-pic3-j-09270cae42",
+        "remote-atm-tram-series-2800-n-2807-jpg-0596aede72",
+        "remote-standing-on-the-knotted-bowsprit-net-jpg-1141d701d0"
+      ],
+      "mechanism": "规则、补贴、所有权、文化与基础设施共同产生稳定反馈；只替换设备可能保留原有需求和权力。",
+      "distribution": "谁能定义“转型”、谁拥有否决权和补偿，是技术路线之外的核心问题。",
+      "debate": {
+        "proposition": "大规模技术部署速度最快，应避免制度争论。",
+        "challenge": "忽略制度可能造成反弹、反对和新的不平等锁定。",
+        "synthesis": "技术部署与权利、分配、参与和需求治理并行，且设置阶段性审查。"
+      },
+      "claims": [
+        {
+          "id": "transformative-change-mechanism",
+          "text": "规则、补贴、所有权、文化与基础设施共同产生稳定反馈；只替换设备可能保留原有需求和权力。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "transformative-change-distribution",
+          "text": "谁能定义“转型”、谁拥有否决权和补偿，是技术路线之外的核心问题。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        },
+        {
+          "id": "transformative-change-boundary",
+          "text": "技术部署与权利、分配、参与和需求治理并行，且设置阶段性审查。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "transformative-change-metric-0",
+          "value": "三层",
+          "label": "观念—结构—实践",
+          "context": "变革不能只停留在个人态度。",
+          "sourceIDs": [
+            "ipbes-transformative-2024",
+            "geo7-2025"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "id": "transformative-change-event-0",
+          "marker": "2024",
+          "title": "Transformative Change Assessment",
+          "body": "由 IPBES 发布，提供本专题的第 1 组证据与方法边界。",
+          "assetID": "remote-a-dutch-hulk-and-a-boeier-from-the-sailing-vessels-met-0e220f81be",
+          "sourceIDs": [
+            "ipbes-transformative-2024"
+          ]
+        },
+        {
+          "id": "transformative-change-event-1",
+          "marker": "2025",
+          "title": "Global Environment Outlook 7: A Future We Choose",
+          "body": "由 UNEP 发布，提供本专题的第 2 组证据与方法边界。",
+          "assetID": "remote-sailing-home-eni-02312897-amsterdam-rijn-kanaal-pic3-j-09270cae42",
+          "sourceIDs": [
+            "geo7-2025"
+          ]
+        }
+      ],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "timeline · 5 个稳定媒体身份",
+        "sourceMix": "1 bundled + 4 remote",
+        "targetVariants": [
+          "16:9 时间线卡片 fill",
+          "横向预取",
+          "回屏复用"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "just-transition",
+      "volumeID": "governance-action",
+      "eyebrow": "治理 02",
+      "title": "公正转型不是转型后的补偿包",
+      "summary": "劳动者和社区应在产业路径形成前参与，而不是在关闭决定完成后才获得培训。",
+      "readingMinutes": 9,
+      "epistemicStatus": "observedSynthesis",
+      "layout": "dossier",
+      "heroAssetID": "remote-red-bicycle-unsplash-jpg-107ed86350",
+      "galleryAssetIDs": [
+        "remote-jpg-0592d9eaa3",
+        "remote-eug-ne-boudin-seascape-with-sailing-vessel-c-1875-nga--01a403b780",
+        "remote-replica-of-an-historical-dutch-sailing-ship-of-17th-ce-12d448a9ad",
+        "remote-fleet-of-galleys-escorted-by-a-caravel-from-the-sailin-0bfeb652e7"
+      ],
+      "mechanism": "产业政策、社会保障、技能、区域投资和集体协商共同决定转型是否创造可持续工作。",
+      "distribution": "高碳行业劳动者、非正规劳动者、照护者和受污染社区面临不同风险，统一培训方案不足。",
+      "debate": {
+        "proposition": "绿色产业新增岗位会自然弥补旧岗位流失。",
+        "challenge": "岗位地点、工资、技能、工会权利和时间节奏可能不匹配。",
+        "synthesis": "以地区和家庭为单位规划收入、公共服务、所有权和就业，而非只比较岗位总数。"
+      },
+      "claims": [
+        {
+          "id": "just-transition-mechanism",
+          "text": "产业政策、社会保障、技能、区域投资和集体协商共同决定转型是否创造可持续工作。",
+          "sourceIDs": [
+            "ilo-transition-2023",
+            "ipcc-wg3",
+            "agr-2025"
+          ]
+        },
+        {
+          "id": "just-transition-distribution",
+          "text": "高碳行业劳动者、非正规劳动者、照护者和受污染社区面临不同风险，统一培训方案不足。",
+          "sourceIDs": [
+            "ilo-transition-2023",
+            "ipcc-wg3",
+            "agr-2025"
+          ]
+        },
+        {
+          "id": "just-transition-boundary",
+          "text": "以地区和家庭为单位规划收入、公共服务、所有权和就业，而非只比较岗位总数。",
+          "sourceIDs": [
+            "ilo-transition-2023",
+            "ipcc-wg3",
+            "agr-2025"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "just-transition-metric-0",
+          "value": "社会对话",
+          "label": "政府、劳动者与雇主共同参与规则形成",
+          "context": "参与质量比一次咨询更重要。",
+          "sourceIDs": [
+            "ilo-transition-2023",
+            "ipcc-wg3",
+            "agr-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "dossier · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "64pt 缩略图",
+          "16:9 档案封面",
+          "长列表复用"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "public-provisioning",
+      "volumeID": "governance-action",
+      "eyebrow": "治理 03",
+      "title": "公共服务可以降低高消费依赖",
+      "summary": "可靠的住房、交通、医疗、教育、能源和数字基础设施能以较低物质需求满足更多基本需要。",
+      "readingMinutes": 10,
+      "epistemicStatus": "interpretiveLens",
+      "layout": "mosaic",
+      "heroAssetID": "remote-brown-line-train-crossing-chicago-river-2-jpg-0a17bbd87d",
+      "galleryAssetIDs": [
+        "remote-bike-covered-with-overgrown-jpg-001e991604",
+        "remote-bodrum-kalesi-ve-yelkenliler-2015-jpg-08f73e720b",
+        "remote-2011-10-15-184427-lh6802-airplane-crossing-switzerland-0d2a083b0d",
+        "remote-0736malolos-city-bulacan-02-jpg-0328d8b1f3"
+      ],
+      "mechanism": "共享基础设施和普遍服务可减少每户购买替代品的必要，同时提升韧性与议价能力。",
+      "distribution": "公共服务的质量、可达性和治理决定其是否真正替代私人高耗能方案。",
+      "debate": {
+        "proposition": "公共供给必然低效且选择更少。",
+        "challenge": "碎片化私人购买也会重复资产、排除低收入者并增加交易成本。",
+        "synthesis": "比较完整服务结果、资源强度、排队与民主问责，而不是只比较名义所有权。"
+      },
+      "claims": [
+        {
+          "id": "public-provisioning-mechanism",
+          "text": "共享基础设施和普遍服务可减少每户购买替代品的必要，同时提升韧性与议价能力。",
+          "sourceIDs": [
+            "geo7-2025",
+            "gro-2024",
+            "degrowth-2023"
+          ]
+        },
+        {
+          "id": "public-provisioning-distribution",
+          "text": "公共服务的质量、可达性和治理决定其是否真正替代私人高耗能方案。",
+          "sourceIDs": [
+            "geo7-2025",
+            "gro-2024",
+            "degrowth-2023"
+          ]
+        },
+        {
+          "id": "public-provisioning-boundary",
+          "text": "比较完整服务结果、资源强度、排队与民主问责，而不是只比较名义所有权。",
+          "sourceIDs": [
+            "geo7-2025",
+            "gro-2024",
+            "degrowth-2023"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "public-provisioning-metric-0",
+          "value": "服务效率",
+          "label": "单位资源满足的实际需要",
+          "context": "不能只用机构成本或 GDP 贡献衡量。",
+          "sourceIDs": [
+            "geo7-2025",
+            "gro-2024",
+            "degrowth-2023"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "mosaic · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "2:1 主图 fill",
+          "1:1 拼贴 fill",
+          "4:3 细节 fit"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    },
+    {
+      "id": "action-scales",
+      "volumeID": "governance-action",
+      "eyebrow": "治理 04",
+      "title": "个人行动、集体行动与制度行动如何衔接",
+      "summary": "个人选择可以形成规范和需求信号，但基础设施、价格、法律和组织能力决定可选择空间。",
+      "readingMinutes": 9,
+      "epistemicStatus": "normativePosition",
+      "layout": "atlas",
+      "heroAssetID": "remote-badge-high-school-ussr-civil-aviation-png-1409c091e1",
+      "galleryAssetIDs": [
+        "remote-2-jpg-03f96bfe82",
+        "remote-uetlihof-tram-stop-z-rich-jpg-0a6fe3cdc0",
+        "remote-views-from-a-dutch-train-august-2023-03-jpg-0ef3f9db29",
+        "remote-views-from-a-dutch-train-august-2023-11-jpg-012cf0096c"
+      ],
+      "mechanism": "行动在家庭、社区、组织、城市、国家和国际层级之间相互依赖；上层制度能扩大或抵消下层努力。",
+      "distribution": "把责任完全个人化会惩罚选择最少者；把责任完全制度化又可能否认日常实践和组织动员。",
+      "debate": {
+        "proposition": "只需改变个人消费。",
+        "challenge": "个人无法独自改变电网、住房市场、供应链和国际金融。",
+        "synthesis": "把个人实践连接到组织、公共政策和所有权改革，并明确每个层级可控制的变量。"
+      },
+      "claims": [
+        {
+          "id": "action-scales-mechanism",
+          "text": "行动在家庭、社区、组织、城市、国家和国际层级之间相互依赖；上层制度能扩大或抵消下层努力。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipbes-transformative-2024",
+            "food-systems-2025"
+          ]
+        },
+        {
+          "id": "action-scales-distribution",
+          "text": "把责任完全个人化会惩罚选择最少者；把责任完全制度化又可能否认日常实践和组织动员。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipbes-transformative-2024",
+            "food-systems-2025"
+          ]
+        },
+        {
+          "id": "action-scales-boundary",
+          "text": "把个人实践连接到组织、公共政策和所有权改革，并明确每个层级可控制的变量。",
+          "sourceIDs": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "action-scales-metric-0",
+          "value": "六个尺度",
+          "label": "家庭—社区—组织—城市—国家—全球",
+          "context": "行动应同时说明权限、资源和问责主体。",
+          "sourceIDs": [
+            "geo7-2025",
+            "ipbes-transformative-2024",
+            "food-systems-2025"
+          ]
+        }
+      ],
+      "timeline": [],
+      "questions": [
+        "这个机制在哪些条件下会失效或反转？",
+        "若把成本按消费、生产、历史责任和支付能力分配，结论会怎样改变？",
+        "本专题中哪些变量由个人、组织、城市、国家和国际制度分别控制？"
+      ],
+      "imageScenario": {
+        "name": "atlas · 5 个稳定媒体身份",
+        "sourceMix": "5 remote",
+        "targetVariants": [
+          "自适应网格",
+          "多尺寸缩略图",
+          "快速滚动与反向滚动"
+        ],
+        "interactions": [
+          "进入详情并等待主图",
+          "快速滚动到图集尾部",
+          "切换 fit/fill",
+          "返回后再次进入",
+          "清理内存后重载"
+        ],
+        "expectedBehaviors": [
+          "同一目标身份 single-flight 合并",
+          "不同目标尺寸独立解码但共享原始编码",
+          "本地素材离线可见",
+          "取消离屏工作且不污染终态",
+          "回屏优先命中 SIEVE 渲染缓存或磁盘缓存"
+        ]
+      }
+    }
+  ],
+  "featuredStoryIDs": [
+    "climate-gap",
+    "material-throughput",
+    "food-land",
+    "unequal-exchange",
+    "military-environment",
+    "ai-data-centres",
+    "degrowth",
+    "transformative-change"
+  ],
+  "caseStudyStoryIDs": [
+    "pollution-plastics",
+    "one-health",
+    "adaptation-debt",
+    "conflict-toxic-legacy",
+    "fast-fashion",
+    "mobility-city",
+    "ai-data-centres",
+    "just-transition"
+  ],
+  "glossary": [
+    {
+      "id": "absolute-decoupling",
+      "term": "绝对脱钩",
+      "definition": "环境压力总量下降，同时经济产出上升。必须说明指标、地域边界与时间窗口。",
+      "relatedStoryIDs": [
+        "green-growth"
+      ]
+    },
+    {
+      "id": "adaptation",
+      "term": "适应",
+      "definition": "调整社会与生态系统以降低现实或预期气候损害；适应存在资金、制度和物理上限。",
+      "relatedStoryIDs": [
+        "climate-gap",
+        "adaptation-debt"
+      ]
+    },
+    {
+      "id": "anthropocentrism",
+      "term": "人类中心主义",
+      "definition": "主要从人类利益评价自然与动物的伦理立场；与是否承认生态系统内在价值有关。",
+      "relatedStoryIDs": [
+        "animal-ethics",
+        "rights-of-nature"
+      ]
+    },
+    {
+      "id": "ecological-unequal-exchange",
+      "term": "生态不平等交换",
+      "definition": "通过贸易与价格结构发生的材料、能源、土地和劳动净转移框架。",
+      "relatedStoryIDs": [
+        "unequal-exchange"
+      ]
+    },
+    {
+      "id": "overshoot",
+      "term": "生态超载",
+      "definition": "社会需求和废物负荷超过生态系统可持续再生、吸收或安全运行空间的状态。",
+      "relatedStoryIDs": [
+        "material-throughput",
+        "planetary-boundaries"
+      ]
+    },
+    {
+      "id": "rebound",
+      "term": "反弹效应",
+      "definition": "效率降低单位服务成本后，使用量或其他消费增长抵消部分预期节约。",
+      "relatedStoryIDs": [
+        "energy-rebound",
+        "ai-data-centres"
+      ]
+    },
+    {
+      "id": "sufficiency",
+      "term": "充分性",
+      "definition": "以足够满足需要为目标，同时对高消耗活动设置总量和分配边界。",
+      "relatedStoryIDs": [
+        "degrowth",
+        "public-provisioning"
+      ]
+    },
+    {
+      "id": "transformative-change",
+      "term": "转型性变革",
+      "definition": "对观念、结构和实践的根本性全系统改变，而非局部技术替代。",
+      "relatedStoryIDs": [
+        "transformative-change"
+      ]
+    },
+    {
+      "id": "one-health",
+      "term": "One Health",
+      "definition": "联合处理人类、动物与生态系统健康的跨部门框架。",
+      "relatedStoryIDs": [
+        "one-health"
+      ]
+    },
+    {
+      "id": "social-metabolism",
+      "term": "社会代谢",
+      "definition": "社会维持生产与生活所需的物质和能量流，以及由此产生的废物。",
+      "relatedStoryIDs": [
+        "material-throughput"
+      ]
+    },
+    {
+      "id": "stranded-assets",
+      "term": "搁浅资产",
+      "definition": "因政策、技术或市场变化而在预期寿命前失去经济价值的高碳资产。",
+      "relatedStoryIDs": [
+        "energy-security",
+        "just-transition"
+      ]
+    },
+    {
+      "id": "climate-justice",
+      "term": "气候正义",
+      "definition": "把贡献、能力、暴露、权利和程序公平纳入气候行动。",
+      "relatedStoryIDs": [
+        "historical-responsibility",
+        "adaptation-debt"
+      ]
+    }
+  ]
+}

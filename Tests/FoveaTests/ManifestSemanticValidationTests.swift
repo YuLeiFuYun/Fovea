@@ -4,6 +4,7 @@ import CryptoKit
 import Foundation
 import FoveaCore
 import FoveaHTTP
+import FoveaPersistence
 import XCTest
 
 final class ManifestSemanticValidationTests: XCTestCase {
@@ -12,64 +13,126 @@ final class ManifestSemanticValidationTests: XCTestCase {
   {
     for mutation in OriginalManifestMutation.allCases {
       let root = try makeTemporaryDirectory("original-manifest-\(mutation.rawValue)")
-      let store = try await OriginalEncodedStore.open(root: root)
+      var store: AkashicOriginalEncodedStore? = try await AkashicOriginalEncodedStore.open(
+        root: root
+      )
       for label in ["first", "second"] {
         let data = Data(label.utf8)
-        _ = try await store.commit(
+        let activeStore = try XCTUnwrap(store)
+        _ = try await activeStore.commit(
           data: data,
           contentID: ContentID(data: data).description,
           namespace: "public:manifest-tests"
         )
       }
-      let fileURL = root.appendingPathComponent("manifest.json")
-      let corrupted = try mutation.apply(to: Data(contentsOf: fileURL))
-      try corrupted.write(to: fileURL, options: [.atomic])
+      store = nil
+      await Task.yield()
+
+      let recordFixtures = try akashicManifestRecordFixtures(root: root)
+      let writes: [OriginalManifestMutationWrite]
+      if recordFixtures.isEmpty {
+        let snapshotURL = root.appendingPathComponent("manifest.json")
+        writes = try [
+          OriginalManifestMutationWrite(
+            url: snapshotURL,
+            data: mutation.applyToSnapshot(
+              Data(contentsOf: snapshotURL)
+            )
+          ),
+        ]
+      } else {
+        writes = try mutation.apply(to: recordFixtures)
+      }
+      for write in writes {
+        try writeAkashicManifestFixture(write.data, to: write.url)
+      }
 
       do {
-        _ = try await OriginalEncodedStore.open(root: root)
+        _ = try await reopenAkashicOriginalEncodedStore(root: root)
         XCTFail("同 schema 的语义损坏必须失败关闭: \(mutation.rawValue)")
       } catch let error as AkashicError {
         XCTAssertEqual(error, .invalidManifest)
       }
-      XCTAssertEqual(try Data(contentsOf: fileURL), corrupted)
+      for write in writes {
+        XCTAssertEqual(try Data(contentsOf: write.url), write.data)
+      }
     }
   }
 
-  func testOriginalManifestCannotDeclareBlobAboveConfiguredLimit_SEC_CASE_030() async throws {
+  func testOriginalManifestEntryAboveRuntimeLimitIsReconciled_SEC_CASE_030() async throws {
     let root = try makeTemporaryDirectory("original-manifest-over-budget")
     let namespace = "public:manifest-budget"
-    let store = try await OriginalEncodedStore.open(root: root, softLimitBytes: 32)
-    let payload = Data("small".utf8)
-    _ = try await store.commit(
-      data: payload,
-      contentID: ContentID(data: payload).description,
-      namespace: namespace
+    var store: AkashicOriginalEncodedStore? = try await reopenAkashicOriginalEncodedStore(
+      root: root,
+      limits: OriginalEncodedStoreLimits(softTotalBytes: 32, maximumBlobBytes: 32)
     )
-
-    let fileURL = root.appendingPathComponent("manifest.json")
-    var manifest = try jsonObject(Data(contentsOf: fileURL))
-    var entries = try dictionary(manifest["entries"])
-    let oldKey = try XCTUnwrap(entries.keys.first)
-    var entry = try dictionary(entries.removeValue(forKey: oldKey))
-    let fingerprint = try dictionary(entry["namespaceFingerprint"])["value"] as? String
-    let fingerprintValue = try XCTUnwrap(fingerprint)
-    let oversizedContentID = "sha256:\(String(repeating: "0", count: 64)):33"
-    entry["byteCount"] = 33
-    entry["contentID"] = oversizedContentID
-    let material = Data("\(fingerprintValue)\u{0}\(oversizedContentID)".utf8)
-    let newKey = SHA256.hash(data: material).map { String(format: "%02x", $0) }.joined()
-    entries[newKey] = entry
-    manifest["entries"] = entries
-    let corrupted = try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
-    try corrupted.write(to: fileURL, options: [.atomic])
-
+    let payload = Data("small".utf8)
     do {
-      _ = try await OriginalEncodedStore.open(root: root, softLimitBytes: 32)
-      XCTFail("manifest 不得声明超过当前 store 单 blob 上限的条目")
-    } catch let error as AkashicError {
-      XCTAssertEqual(error, .invalidManifest)
+      let activeStore = try XCTUnwrap(store)
+      _ = try await activeStore.commit(
+        data: payload,
+        contentID: ContentID(data: payload).description,
+        namespace: namespace
+      )
     }
-    XCTAssertEqual(try Data(contentsOf: fileURL), corrupted)
+    store = nil
+    await Task.yield()
+
+    let oversizedDigest = "sha256:\(String(repeating: "0", count: 64)):33"
+    let corruptedURL: URL
+    let corrupted: Data
+    let recordFixtures = try akashicManifestRecordFixtures(root: root)
+    if var fixture = recordFixtures.singleElement {
+      var entry = try dictionary(fixture.object["entry"])
+      let partition = try dictionary(entry["partition"])
+      let partitionValue = try XCTUnwrap(partition["value"] as? String)
+      let partitionBytes = try XCTUnwrap(Data(base64Encoded: partitionValue))
+      XCTAssertEqual(partitionBytes.count, 32)
+
+      entry["byteCount"] = 33
+      entry["digest"] = ["canonical": oversizedDigest]
+      let newKey = manifestKey(partitionBytes: partitionBytes, digest: oversizedDigest)
+      fixture.object["key"] = newKey
+      fixture.object["entry"] = entry
+      corrupted = try JSONSerialization.data(
+        withJSONObject: fixture.object,
+        options: [.sortedKeys]
+      )
+      corruptedURL = akashicManifestRecordURL(root: root, key: newKey)
+      try FileManager.default.removeItem(at: fixture.url)
+      try writeAkashicManifestFixture(corrupted, to: corruptedURL)
+    } else {
+      corruptedURL = root.appendingPathComponent("manifest.json")
+      var manifest = try jsonObject(Data(contentsOf: corruptedURL))
+      var entries = try dictionary(manifest["entries"])
+      let oldKey = try XCTUnwrap(entries.keys.first)
+      var entry = try dictionary(entries.removeValue(forKey: oldKey))
+      let partition = try dictionary(entry["partition"])
+      let partitionValue = try XCTUnwrap(partition["value"] as? String)
+      let partitionBytes = try XCTUnwrap(Data(base64Encoded: partitionValue))
+      XCTAssertEqual(partitionBytes.count, 32)
+
+      entry["byteCount"] = 33
+      entry["digest"] = ["canonical": oversizedDigest]
+      let newKey = manifestKey(partitionBytes: partitionBytes, digest: oversizedDigest)
+      entries[newKey] = entry
+      manifest["entries"] = entries
+      corrupted = try JSONSerialization.data(
+        withJSONObject: manifest,
+        options: [.sortedKeys]
+      )
+      try writeAkashicManifestFixture(corrupted, to: corruptedURL)
+    }
+
+    let reconciledStore = try await reopenAkashicOriginalEncodedStore(
+      root: root,
+      limits: OriginalEncodedStoreLimits(softTotalBytes: 32, maximumBlobBytes: 32)
+    )
+    _ = reconciledStore
+
+    XCTAssertNotEqual(try Data(contentsOf: corruptedURL), corrupted)
+    XCTAssertTrue(try akashicEffectiveManifestEntries(root: root).isEmpty)
+    XCTAssertTrue(try akashicBlobPayloadURLs(root: root).isEmpty)
   }
 
   func testRepresentationManifestSemanticCorruptionFailsClosedWithoutRewrite_SEC_CASE_030()
@@ -106,7 +169,8 @@ final class ManifestSemanticValidationTests: XCTestCase {
     async throws
   {
     let root = try makeTemporaryDirectory("runtime-original-validation")
-    let store = try await OriginalEncodedStore.open(root: root)
+    let store = try await AkashicOriginalEncodedStore.open(root: root)
+    let metadataBefore = try akashicManifestMetadataData(root: root)
     let data = Data("a".utf8)
     let canonical = ContentID(data: data).description
     let noncanonicalLength = canonical.replacingOccurrences(of: ":1", with: ":01")
@@ -119,7 +183,7 @@ final class ManifestSemanticValidationTests: XCTestCase {
       )
       XCTFail("非规范内容标识不得进入 blob 索引或磁盘")
     } catch let error as AkashicError {
-      XCTAssertEqual(error, .integrityMismatch)
+      XCTAssertEqual(error, .invalidIdentity)
     }
 
     let physicalID = await store.physicalID(
@@ -127,14 +191,10 @@ final class ManifestSemanticValidationTests: XCTestCase {
       namespace: "public:manifest-tests"
     )
     XCTAssertNil(physicalID)
-    let blobDirectory = root.appendingPathComponent("blobs", isDirectory: true)
-    XCTAssertEqual(
-      try FileManager.default.contentsOfDirectory(atPath: blobDirectory.path),
-      []
-    )
-    XCTAssertFalse(
-      FileManager.default.fileExists(atPath: root.appendingPathComponent("manifest.json").path)
-    )
+    XCTAssertEqual(try akashicManifestMetadataData(root: root), metadataBefore)
+    XCTAssertTrue(try akashicEffectiveManifestEntries(root: root).isEmpty)
+    XCTAssertTrue(try akashicManifestRecordFixtures(root: root).isEmpty)
+    XCTAssertTrue(try akashicBlobPayloadURLs(root: root).isEmpty)
   }
 
   func testRecordStoreAcceptsFiniteWallClockRollback_HTTP_CONF_AGE_005() async throws {
@@ -197,12 +257,17 @@ final class ManifestSemanticValidationTests: XCTestCase {
   }
 }
 
+private struct OriginalManifestMutationWrite {
+  let url: URL
+  let data: Data
+}
+
 private enum OriginalManifestMutation: String, CaseIterable {
   case mismatchedKey
   case negativeByteCount
   case duplicatePhysicalID
 
-  func apply(to data: Data) throws -> Data {
+  func applyToSnapshot(_ data: Data) throws -> Data {
     var root = try jsonObject(data)
     var entries = try dictionary(root["entries"])
     let keys = entries.keys.sorted()
@@ -224,6 +289,43 @@ private enum OriginalManifestMutation: String, CaseIterable {
     }
     root["entries"] = entries
     return try JSONSerialization.data(withJSONObject: root, options: [.sortedKeys])
+  }
+
+  func apply(
+    to fixtures: [AkashicManifestRecordFixture]
+  ) throws -> [OriginalManifestMutationWrite] {
+    guard fixtures.count == 2 else { throw ManifestFixtureError.invalidFixture }
+    var first = fixtures[0]
+    var second = fixtures[1]
+
+    switch self {
+    case .mismatchedKey:
+      first.object["key"] = String(repeating: "0", count: 64)
+      return try [write(for: first)]
+    case .negativeByteCount:
+      var entry = try dictionary(first.object["entry"])
+      entry["byteCount"] = -1
+      first.object["entry"] = entry
+      return try [write(for: first)]
+    case .duplicatePhysicalID:
+      let firstEntry = try dictionary(first.object["entry"])
+      var secondEntry = try dictionary(second.object["entry"])
+      secondEntry["physicalID"] = firstEntry["physicalID"]
+      second.object["entry"] = secondEntry
+      return try [write(for: second)]
+    }
+  }
+
+  private func write(
+    for fixture: AkashicManifestRecordFixture
+  ) throws -> OriginalManifestMutationWrite {
+    try OriginalManifestMutationWrite(
+      url: fixture.url,
+      data: JSONSerialization.data(
+        withJSONObject: fixture.object,
+        options: [.sortedKeys]
+      )
+    )
   }
 }
 
@@ -256,6 +358,16 @@ private enum RepresentationManifestMutation: String, CaseIterable {
 
 private enum ManifestFixtureError: Error {
   case invalidFixture
+}
+
+private func manifestKey(partitionBytes: Data, digest: String) -> String {
+  var keyMaterial = Data("akashic-file-blob-key-v1\u{0}".utf8)
+  keyMaterial.append(partitionBytes)
+  keyMaterial.append(0)
+  keyMaterial.append(Data(digest.utf8))
+  return SHA256.hash(data: keyMaterial)
+    .map { String(format: "%02x", $0) }
+    .joined()
 }
 
 private func jsonObject(_ data: Data) throws -> [String: Any] {

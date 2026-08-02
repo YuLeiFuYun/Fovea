@@ -1,433 +1,445 @@
 import Foundation
 import FoveaHTTP
 
-struct TimedTransportResponse: Sendable {
-  let requestTime: Date
-  let responseTime: Date
-  let transport: TransportResponse
-
-  var head: TransportResponseHead { transport.head }
+package enum FetchCancellationHandoffContext {
+    @TaskLocal package static var graceNanoseconds: UInt64 = 0
 }
 
+/// 负责 fetch 阶段的请求编排、共享执行和单次网络尝试。
+/// 编排获取阶段的共享执行、有限重试、优先级传播和命名空间屏障。
+/// 网络时间从真正获得许可后开始计量，排队时间不会污染 HTTP 年龄计算。
 final class FetchStage: Sendable {
-  private let configuration: PipelineConfiguration
-  private let transport: any HTTPTransporting
-  private let diagnostics: any DiagnosticsSink
-  private let clock: any WallClock
-  private let namespaceRegistry: NamespaceRegistry
-  private let retrySleeper: any RetrySleeping
-  private let retryJitter: any RetryJittering
-  private let permits: AsyncPermitPool
-  private let registry = SharedTaskRegistry<ScopedFetchExecutionKey, TimedTransportResponse>()
+    private let configuration: PipelineConfiguration
+    private let transport: any HTTPTransporting
+    private let clock: any WallClock
+    private let namespaceRegistry: NamespaceRegistry
+    private let permits: AsyncPermitPool
+    private let diagnostics: FetchStageDiagnostics
+    private let retryController: FetchRetryController
+    private let registry = SharedTaskRegistry<ScopedFetchExecutionKey, TimedTransportResponse>()
 
-  init(
-    configuration: PipelineConfiguration,
-    transport: any HTTPTransporting,
-    diagnostics: any DiagnosticsSink,
-    clock: any WallClock,
-    namespaceRegistry: NamespaceRegistry,
-    retrySleeper: any RetrySleeping,
-    retryJitter: any RetryJittering
-  ) {
-    self.configuration = configuration
-    self.transport = transport
-    self.diagnostics = diagnostics
-    self.clock = clock
-    self.namespaceRegistry = namespaceRegistry
-    self.retrySleeper = retrySleeper
-    self.retryJitter = retryJitter
-    self.permits = AsyncPermitPool(
-      limit: configuration.maximumConcurrentFetches,
-      queueLimit: configuration.maximumQueuedFetches
-    )
-  }
-
-  func cancelAll(namespace: SecurityNamespaceID) async {
-    _ = await registry.cancelAll { $0.namespace == namespace }
-  }
-
-  @concurrent
-  func response(
-    for request: ImageRequest,
-    conditionalRecord: RepresentationRecord?,
-    generation: NamespaceGeneration
-  ) async throws -> TimedTransportResponse {
-    var urlRequest = URLRequest(url: request.url)
-    urlRequest.httpMethod = "GET"
-    urlRequest.allowsCellularAccess = request.networkPolicy.allowsCellularAccess
-    urlRequest.allowsConstrainedNetworkAccess = request.networkPolicy.allowsConstrainedNetworkAccess
-    urlRequest.allowsExpensiveNetworkAccess = request.networkPolicy.allowsExpensiveNetworkAccess
-    for (name, value) in request.headers {
-      urlRequest.setValue(value, forHTTPHeaderField: name)
-    }
-    if let conditionalRecord {
-      for (name, value) in HTTPCachePolicy.conditionalHeaders(for: conditionalRecord) {
-        urlRequest.setValue(value, forHTTPHeaderField: name)
-      }
-    }
-
-    let selectedVariant = conditionalRecord.map { request.fetchVariantKey(for: $0.vary) }
-    let executionKey = request.fetchExecutionKey(
-      selectedVariant: selectedVariant,
-      revalidationFingerprint: Self.revalidationFingerprint(for: conditionalRecord),
-      transportPolicyFingerprint:
-        "\(configuration.transportPolicyFingerprint):\(transport.reusePolicy.executionFingerprint)"
-    )
-    let scopedKey = ScopedFetchExecutionKey(
-      namespace: request.namespace,
-      execution: executionKey
-    )
-    let authorizedRequest = urlRequest
-
-    if !transport.reusePolicy.allowsCrossRequestReuse {
-      await diagnostics.record(
-        DiagnosticEvent(
-          kind: .fetchQueued,
-          keyDigest: executionKey.digestHex,
-          reason: "transport-task-local",
-          requestedPriority: request.priority
+    init(
+        configuration: PipelineConfiguration,
+        transport: any HTTPTransporting,
+        diagnostics: any DiagnosticsSink,
+        clock: any WallClock,
+        namespaceRegistry: NamespaceRegistry,
+        retrySleeper: any RetrySleeping,
+        retryJitter: any RetryJittering
+    ) {
+        let fetchDiagnostics = FetchStageDiagnostics(sink: diagnostics)
+        self.configuration = configuration
+        self.transport = transport
+        self.clock = clock
+        self.namespaceRegistry = namespaceRegistry
+        self.diagnostics = fetchDiagnostics
+        self.retryController = FetchRetryController(
+            policy: configuration.transportRetryPolicy,
+            sleeper: retrySleeper,
+            jitter: retryJitter,
+            diagnostics: fetchDiagnostics
         )
-      )
-      let priorityControl = SharedTaskPriorityControl(priority: request.priority)
-      do {
-        let result = try await executeWithRetry(
-          authorizedRequest: authorizedRequest,
-          request: request,
-          generation: generation,
-          executionKey: executionKey,
-          priorityControl: priorityControl
+        self.permits = AsyncPermitPool(
+            limit: configuration.maximumConcurrentFetches,
+            queueLimit: configuration.maximumQueuedFetches
         )
-        await priorityControl.finish()
-        return result
-      } catch {
-        await priorityControl.finish()
-        if !(await namespaceRegistry.isActive(generation, for: request.namespace)) {
-          throw PipelineFailure.namespaceRevoked
-        }
-        if error is CancellationError { throw PipelineFailure.cancelled(stage: .transport) }
-        throw error
-      }
     }
 
-    let subscription = await registry.subscribe(
-      key: scopedKey,
-      priority: request.priority
-    ) { [self] priorityControl in
-      await diagnostics.record(
-        DiagnosticEvent(
-          kind: .fetchQueued,
-          keyDigest: executionKey.digestHex,
-          requestedPriority: request.priority
-        )
-      )
-      return try await executeWithRetry(
-        authorizedRequest: authorizedRequest,
-        request: request,
-        generation: generation,
-        executionKey: executionKey,
-        priorityControl: priorityControl
-      )
+    func cancelAll(namespace: SecurityNamespaceID) async {
+        _ = await registry.cancelAll { $0.namespace == namespace }
     }
 
-    if subscription.wasJoined {
-      await diagnostics.record(
-        DiagnosticEvent(
-          kind: .fetchJoined,
-          keyDigest: executionKey.digestHex,
-          requestedPriority: request.priority,
-          effectivePriority: await subscription.priorityControl.currentPriority()
+    /// 测试缝：查询无条件 fetch 执行身份的当前订阅者数量。
+    /// 只读取 registry 控制面，不创建任务、不改变优先级或取消租约。
+    package func subscriberCountForTesting(request: ImageRequest) async -> Int {
+        let executionKey = request.fetchExecutionKey(
+            selectedVariant: nil,
+            revalidationFingerprint: FetchRequestPreparation.revalidationFingerprint(for: nil),
+            transportPolicyFingerprint:
+                "\(configuration.transportPolicyFingerprint):\(transport.reusePolicy.executionFingerprint)"
         )
-      )
-    }
-
-    return try await withTaskCancellationHandler {
-      do {
-        let result = try await subscription.value()
-        try Task.checkCancellation()
-        await subscription.cancel()
-        return result
-      } catch {
-        await subscription.cancel()
-        if !(await namespaceRegistry.isActive(generation, for: request.namespace)) {
-          throw PipelineFailure.namespaceRevoked
-        }
-        if error is CancellationError { throw PipelineFailure.cancelled(stage: .transport) }
-        throw error
-      }
-    } onCancel: {
-      Task { await subscription.cancel() }
-    }
-  }
-
-  private func executeWithRetry(
-    authorizedRequest: URLRequest,
-    request: ImageRequest,
-    generation: NamespaceGeneration,
-    executionKey: FetchExecutionKey,
-    priorityControl: SharedTaskPriorityControl
-  ) async throws -> TimedTransportResponse {
-    let policy = configuration.transportRetryPolicy
-    var attempt = 1
-    var totalDelay: UInt64 = 0
-    var additionalResponseBytes = 0
-
-    while true {
-      try Task.checkCancellation()
-      guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
-        throw PipelineFailure.namespaceRevoked
-      }
-
-      let response: TimedTransportResponse
-      do {
-        response = try await executeAttempt(
-          authorizedRequest: authorizedRequest,
-          request: request,
-          executionKey: executionKey,
-          attempt: attempt,
-          priorityControl: priorityControl
-        )
-      } catch {
-        let failure: PipelineFailure
-        if error is CancellationError {
-          failure = .cancelled(stage: .transport)
-        } else if let pipelineFailure = error as? PipelineFailure {
-          failure = pipelineFailure
-        } else {
-          failure = .transport(error)
-        }
-
-        guard failure.disposition == .retryable,
-          attempt < policy.maximumAttempts,
-          let delay = await retryDelay(
-            policy: policy,
-            failedAttempt: attempt,
-            retryAfterNanoseconds: nil,
-            totalDelay: totalDelay
-          )
-        else {
-          if failure.disposition == .cancelled {
-            await diagnostics.record(
-              DiagnosticEvent(
-                kind: .fetchCancelled,
-                keyDigest: executionKey.digestHex,
-                attempt: attempt
-              )
+        return await registry.subscriberCount(
+            for: ScopedFetchExecutionKey(
+                namespace: request.namespace,
+                execution: executionKey
             )
-          }
-          throw failure
+        )
+    }
+
+    @concurrent
+    func response(
+        for request: ImageRequest,
+        conditionalRecord: RepresentationRecord?,
+        generation: NamespaceGeneration,
+        memoryThresholdOverride: Int? = nil,
+        bodyDelivery: TransportBodyDelivery = .materialized
+    ) async throws -> TimedTransportResponse {
+        let authorizedRequest = FetchRequestPreparation.authorizedRequest(
+            for: request,
+            conditionalRecord: conditionalRecord
+        )
+        let selectedVariant = conditionalRecord.map { request.fetchVariantKey(for: $0.vary) }
+        let executionKey = request.fetchExecutionKey(
+            selectedVariant: selectedVariant,
+            revalidationFingerprint: FetchRequestPreparation.revalidationFingerprint(
+                for: conditionalRecord
+            ),
+            transportPolicyFingerprint:
+                "\(configuration.transportPolicyFingerprint):\(transport.reusePolicy.executionFingerprint)"
+        )
+
+        if !transport.reusePolicy.allowsCrossRequestReuse {
+            return try await executeTaskLocal(
+                authorizedRequest: authorizedRequest,
+                request: request,
+                generation: generation,
+                executionKey: executionKey,
+                memoryThresholdOverride: memoryThresholdOverride,
+                bodyDelivery: bodyDelivery
+            )
         }
 
-        totalDelay += delay
-        await recordRetry(
-          executionKey: executionKey,
-          attempt: attempt,
-          delay: delay,
-          reason: failure.reasonCode,
-          statusCode: failure.statusCode
+        return try await executeShared(
+            authorizedRequest: authorizedRequest,
+            request: request,
+            generation: generation,
+            executionKey: executionKey,
+            memoryThresholdOverride: memoryThresholdOverride,
+            bodyDelivery: bodyDelivery
         )
-        try await retrySleeper.sleep(nanoseconds: delay)
-        attempt += 1
-        continue
-      }
+    }
 
-      let statusFailure = PipelineFailure.unsupportedStatus(response.head.statusCode)
-      guard statusFailure.disposition == .retryable, response.head.statusCode != 304 else {
-        await recordCompleted(response, executionKey: executionKey, attempt: attempt)
-        return response
-      }
-
-      let bytes = response.transport.metrics.receivedBytes
-      let byteTotal = additionalResponseBytes.addingReportingOverflow(bytes)
-      guard attempt < policy.maximumAttempts,
-        !byteTotal.overflow,
-        byteTotal.partialValue <= policy.maximumAdditionalResponseBytes
-      else {
-        await recordCompleted(response, executionKey: executionKey, attempt: attempt)
-        return response
-      }
-
-      let retryAfter = HTTPCachePolicy.retryAfterNanoseconds(
-        in: response.head.headers,
-        now: response.responseTime,
-        maximum: policy.maximumDelayNanoseconds
-      )
-      guard
-        let delay = await retryDelay(
-          policy: policy,
-          failedAttempt: attempt,
-          retryAfterNanoseconds: retryAfter,
-          totalDelay: totalDelay
+    private func executeTaskLocal(
+        authorizedRequest: URLRequest,
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        executionKey: FetchExecutionKey,
+        memoryThresholdOverride: Int?,
+        bodyDelivery: TransportBodyDelivery
+    ) async throws -> TimedTransportResponse {
+        await diagnostics.recordQueued(
+            executionKey: executionKey,
+            requestedPriority: request.priority,
+            reason: "transport-task-local"
         )
-      else {
-        await recordCompleted(response, executionKey: executionKey, attempt: attempt)
-        return response
-      }
+        let priorityControl = SharedTaskPriorityControl(priority: request.priority)
 
-      additionalResponseBytes = byteTotal.partialValue
-      totalDelay += delay
-      await recordRetry(
-        executionKey: executionKey,
-        attempt: attempt,
-        delay: delay,
-        reason: "http-status-retry",
-        statusCode: response.head.statusCode
-      )
-      try await retrySleeper.sleep(nanoseconds: delay)
-      attempt += 1
-    }
-  }
-
-  private func executeAttempt(
-    authorizedRequest: URLRequest,
-    request: ImageRequest,
-    executionKey: FetchExecutionKey,
-    attempt: Int,
-    priorityControl: SharedTaskPriorityControl
-  ) async throws -> TimedTransportResponse {
-    let permit: AsyncPermitPool.Permit
-    do {
-      let initialPriority = await priorityControl.currentPriority()
-      permit = try await permits.acquire(
-        priority: initialPriority,
-        priorityUpdates: await priorityControl.updates()
-      )
-    } catch is CancellationError {
-      throw PipelineFailure.cancelled(stage: .transport)
-    } catch PermitPoolError.queueLimitExceeded {
-      throw PipelineFailure.resourceLimit(
-        stage: .transport,
-        reasonCode: "fetch-queue-limit-exceeded"
-      )
+        do {
+            let result = try await executeWithRetry(
+                authorizedRequest: authorizedRequest,
+                request: request,
+                generation: generation,
+                executionKey: executionKey,
+                priorityControl: priorityControl,
+                memoryThresholdOverride: memoryThresholdOverride,
+                bodyDelivery: bodyDelivery
+            )
+            await priorityControl.finish()
+            return result
+        } catch {
+            await priorityControl.finish()
+            throw await normalizeSubscriptionFailure(
+                error,
+                request: request,
+                generation: generation
+            )
+        }
     }
 
-    let effectivePriority = await priorityControl.currentPriority()
-    await diagnostics.record(
-      DiagnosticEvent(
-        kind: .fetchStarted,
-        keyDigest: executionKey.digestHex,
-        attempt: attempt,
-        requestedPriority: request.priority,
-        effectivePriority: effectivePriority
-      )
-    )
-    let requestTime = await clock.now()
-    let transportPriority = TransportPriorityController(
-      priority: effectivePriority.transportPriority
-    )
-    let priorityPropagation = Task { @concurrent in
-      let updates = await priorityControl.updates()
-      for await priority in updates {
-        await transportPriority.update(priority.transportPriority)
-      }
-    }
-
-    do {
-      let transportResponse = try await transport.execute(
-        TransportRequest(
-          request: authorizedRequest,
-          maximumBytes: configuration.maximumTransportBytes,
-          memoryThreshold: configuration.transportMemoryThreshold,
-          credentialHeaderNames: request.credentialHeaderNames,
-          priority: effectivePriority.transportPriority,
-          priorityController: transportPriority
+    private func executeShared(
+        authorizedRequest: URLRequest,
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        executionKey: FetchExecutionKey,
+        memoryThresholdOverride: Int?,
+        bodyDelivery: TransportBodyDelivery
+    ) async throws -> TimedTransportResponse {
+        let scopedKey = ScopedFetchExecutionKey(
+            namespace: request.namespace,
+            execution: executionKey
         )
-      )
-      let responseTime = await clock.now()
-      priorityPropagation.cancel()
-      await transportPriority.finish()
-      await permit.release()
-      return TimedTransportResponse(
-        requestTime: requestTime,
-        responseTime: responseTime,
-        transport: transportResponse
-      )
-    } catch {
-      priorityPropagation.cancel()
-      await transportPriority.finish()
-      await permit.release()
-      throw error
+        let subscription = await registry.subscribe(
+            key: scopedKey,
+            priority: request.priority,
+            admission: SharedTaskAdmissionContext.current ?? .now()
+        ) { [self] priorityControl in
+            await diagnostics.recordQueued(
+                executionKey: executionKey,
+                requestedPriority: request.priority
+            )
+            return try await executeWithRetry(
+                authorizedRequest: authorizedRequest,
+                request: request,
+                generation: generation,
+                executionKey: executionKey,
+                priorityControl: priorityControl,
+                memoryThresholdOverride: memoryThresholdOverride,
+                bodyDelivery: bodyDelivery
+            )
+        }
+
+        if subscription.wasJoined {
+            await diagnostics.recordJoined(
+                executionKey: executionKey,
+                requestedPriority: request.priority,
+                effectivePriority: await subscription.priorityControl.currentPriority()
+            )
+        }
+
+        let handoffGraceNanoseconds = FetchCancellationHandoffContext.graceNanoseconds
+        return try await withTaskCancellationHandler {
+            do {
+                let result = try await subscription.value()
+                try Task.checkCancellation()
+                await subscription.cancel()
+                return result
+            } catch {
+                if Self.isCancellation(error) || Task.isCancelled {
+                    if handoffGraceNanoseconds > 0 {
+                        await subscription.detach(
+                            handoffGraceNanoseconds: handoffGraceNanoseconds
+                        )
+                    } else {
+                        await subscription.cancel(
+                            retainingCancelledTaskForNanoseconds: CancellationCohortPolicy
+                                .retentionNanoseconds
+                        )
+                    }
+                } else {
+                    await subscription.cancel()
+                }
+                throw await normalizeSubscriptionFailure(
+                    error,
+                    request: request,
+                    generation: generation
+                )
+            }
+        } onCancel: {
+            Task {
+                if handoffGraceNanoseconds > 0 {
+                    await subscription.detach(
+                        handoffGraceNanoseconds: handoffGraceNanoseconds
+                    )
+                } else {
+                    await subscription.cancel(
+                        retainingCancelledTaskForNanoseconds: CancellationCohortPolicy
+                            .retentionNanoseconds
+                    )
+                }
+            }
+        }
     }
-  }
 
-  private func retryDelay(
-    policy: TransportRetryPolicy,
-    failedAttempt: Int,
-    retryAfterNanoseconds: UInt64?,
-    totalDelay: UInt64
-  ) async -> UInt64? {
-    let jitter = await retryJitter.offsetPermille(maximumMagnitude: policy.jitterPermille)
-    let delay = policy.delayNanoseconds(
-      afterFailedAttempt: failedAttempt,
-      retryAfterNanoseconds: retryAfterNanoseconds,
-      jitterOffsetPermille: jitter
-    )
-    let nextTotal = totalDelay.addingReportingOverflow(delay)
-    guard !nextTotal.overflow, nextTotal.partialValue <= policy.maximumTotalDelayNanoseconds else {
-      return nil
+    private static func isCancellation(_ error: any Error) -> Bool {
+        if error is CancellationError { return true }
+        guard let failure = error as? PipelineFailure else { return false }
+        return failure.disposition == .cancelled
     }
-    return delay
-  }
 
-  private func recordRetry(
-    executionKey: FetchExecutionKey,
-    attempt: Int,
-    delay: UInt64,
-    reason: String,
-    statusCode: Int?
-  ) async {
-    await diagnostics.record(
-      DiagnosticEvent(
-        kind: .fetchRetryScheduled,
-        keyDigest: executionKey.digestHex,
-        statusCode: statusCode,
-        reason: reason,
-        attempt: attempt,
-        retryDelayNanoseconds: delay
-      )
-    )
-  }
+    private func executeWithRetry(
+        authorizedRequest: URLRequest,
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        executionKey: FetchExecutionKey,
+        priorityControl: SharedTaskPriorityControl,
+        memoryThresholdOverride: Int?,
+        bodyDelivery: TransportBodyDelivery
+    ) async throws -> TimedTransportResponse {
+        var state = FetchRetryState()
 
-  private func recordCompleted(
-    _ response: TimedTransportResponse,
-    executionKey: FetchExecutionKey,
-    attempt: Int
-  ) async {
-    let network = response.transport.metrics.network
-    await diagnostics.record(
-      DiagnosticEvent(
-        kind: .fetchCompleted,
-        keyDigest: executionKey.digestHex,
-        statusCode: response.head.statusCode,
-        byteCount: response.transport.metrics.receivedBytes,
-        attempt: attempt,
-        durationNanoseconds: network?.taskDurationNanoseconds,
-        transactionCount: network?.transactionCount,
-        networkProtocolNames: network?.negotiatedProtocolNames,
-        reusedConnectionCount: network?.reusedConnectionCount,
-        proxyConnectionCount: network?.proxyConnectionCount,
-        cellularTransactionCount: network?.cellularTransactionCount,
-        expensiveTransactionCount: network?.expensiveTransactionCount,
-        constrainedTransactionCount: network?.constrainedTransactionCount
-      )
-    )
-  }
+        while true {
+            try await requireAttemptAllowed(
+                request: request,
+                generation: generation,
+                executionKey: executionKey,
+                attempt: state.attempt
+            )
 
-  private static func revalidationFingerprint(for record: RepresentationRecord?) -> String {
-    guard let record else { return "unconditional" }
-    let etag = record.etag ?? ""
-    let lastModified = record.lastModified ?? ""
-    return Data("etag:\(etag)\u{0}last-modified:\(lastModified)".utf8).sha256Hex
-  }
-}
+            let response: TimedTransportResponse
+            do {
+                response = try await executeAttempt(
+                    authorizedRequest: authorizedRequest,
+                    request: request,
+                    executionKey: executionKey,
+                    attempt: state.attempt,
+                    priorityControl: priorityControl,
+                    memoryThresholdOverride: memoryThresholdOverride,
+                    bodyDelivery: bodyDelivery
+                )
+            } catch {
+                let failure = retryController.normalizedFailure(error)
+                guard
+                    let plan = await retryController.failurePlan(
+                        failure: failure,
+                        state: state
+                    )
+                else {
+                    await diagnostics.recordTerminalFailure(
+                        failure,
+                        executionKey: executionKey,
+                        attempt: state.attempt
+                    )
+                    throw failure
+                }
+                try await retryController.schedule(
+                    plan,
+                    executionKey: executionKey,
+                    attempt: state.attempt
+                )
+                state.totalDelay += plan.delay
+                state.attempt += 1
+                continue
+            }
 
-extension ImageRequestPriority {
-  fileprivate var transportPriority: TransportPriority {
-    switch self {
-    case .background: .background
-    case .low: .low
-    case .normal: .normal
-    case .high: .high
-    case .userInitiated: .userInitiated
+            guard
+                let plan = await retryController.responsePlan(
+                    response: response,
+                    state: state
+                )
+            else {
+                await diagnostics.recordCompleted(
+                    response,
+                    executionKey: executionKey,
+                    attempt: state.attempt
+                )
+                return response
+            }
+
+            try await retryController.schedule(
+                plan,
+                executionKey: executionKey,
+                attempt: state.attempt
+            )
+            state.additionalResponseBytes =
+                plan.additionalResponseBytes ?? state.additionalResponseBytes
+            state.totalDelay += plan.delay
+            state.attempt += 1
+        }
     }
-  }
+
+    private func requireAttemptAllowed(
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        executionKey: FetchExecutionKey,
+        attempt: Int
+    ) async throws {
+        do {
+            try Task.checkCancellation()
+        } catch {
+            let failure = PipelineFailure.cancelled(stage: .transport)
+            await diagnostics.recordTerminalFailure(
+                failure,
+                executionKey: executionKey,
+                attempt: attempt
+            )
+            throw failure
+        }
+        guard await namespaceRegistry.isActive(generation, for: request.namespace) else {
+            let failure = PipelineFailure.namespaceRevoked
+            await diagnostics.recordTerminalFailure(
+                failure,
+                executionKey: executionKey,
+                attempt: attempt
+            )
+            throw failure
+        }
+    }
+
+    private func executeAttempt(
+        authorizedRequest: URLRequest,
+        request: ImageRequest,
+        executionKey: FetchExecutionKey,
+        attempt: Int,
+        priorityControl: SharedTaskPriorityControl,
+        memoryThresholdOverride: Int?,
+        bodyDelivery: TransportBodyDelivery
+    ) async throws -> TimedTransportResponse {
+        let permit = try await acquirePermit(priorityControl: priorityControl)
+        let effectivePriority = await priorityControl.currentPriority()
+        await diagnostics.recordStarted(
+            executionKey: executionKey,
+            attempt: attempt,
+            requestedPriority: request.priority,
+            effectivePriority: effectivePriority
+        )
+
+        let requestTime = await clock.now()
+        let transportPriority = TransportPriorityController(
+            priority: effectivePriority.transportPriority
+        )
+        let priorityPropagation = Task { @concurrent in
+            let updates = await priorityControl.updates()
+            for await priority in updates {
+                await transportPriority.update(priority.transportPriority)
+            }
+        }
+
+        return try await permit.withPermit {
+            defer { priorityPropagation.cancel() }
+            do {
+                let transportResponse = try await transport.execute(
+                    try TransportRequest(
+                        request: authorizedRequest,
+                        maximumBytes: configuration.maximumTransportBytes,
+                        memoryThreshold: min(
+                            configuration.maximumTransportBytes,
+                            max(
+                                0, memoryThresholdOverride ?? configuration.transportMemoryThreshold
+                            )
+                        ),
+                        credentialHeaderNames: request.credentialHeaderNames,
+                        priority: effectivePriority.transportPriority,
+                        bodyDelivery: bodyDelivery,
+                        priorityController: transportPriority
+                    )
+                )
+                guard transportResponse.bodyByteCount <= configuration.maximumTransportBytes else {
+                    throw TransportError.bodyTooLarge
+                }
+                let responseTime = await clock.now()
+                await transportPriority.finish()
+                return TimedTransportResponse(
+                    requestTime: requestTime,
+                    responseTime: responseTime,
+                    transport: transportResponse
+                )
+            } catch {
+                await transportPriority.finish()
+                throw error
+            }
+        }
+    }
+
+    private func acquirePermit(
+        priorityControl: SharedTaskPriorityControl
+    ) async throws -> AsyncPermitPool.Permit {
+        do {
+            return try await permits.acquire(
+                priority: await priorityControl.currentPriority(),
+                priorityUpdates: await priorityControl.updates()
+            )
+        } catch is CancellationError {
+            throw PipelineFailure.cancelled(stage: .transport)
+        } catch PermitPoolError.queueLimitExceeded {
+            throw PipelineFailure.resourceLimit(
+                stage: .transport,
+                reasonCode: "fetch-queue-limit-exceeded"
+            )
+        }
+    }
+
+    private func normalizeSubscriptionFailure(
+        _ error: any Error,
+        request: ImageRequest,
+        generation: NamespaceGeneration
+    ) async -> any Error {
+        FetchSubscriptionFailureNormalizer.normalize(
+            error,
+            namespaceIsActive: await namespaceRegistry.isActive(
+                generation,
+                for: request.namespace
+            ),
+            callerIsCancelled: Task.isCancelled
+        )
+    }
 }

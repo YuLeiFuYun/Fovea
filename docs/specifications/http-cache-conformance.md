@@ -1,6 +1,6 @@
 # Fovea Private Image Cache Profile 与一致性测试
 
-> **状态：Proposed，Phase 0b/Core v1 门禁；Phase 0a 只实现内部最小子集。**  
+> **状态：Proposed，Phase 0b/Core v1 门禁；Phase 0a 只实现内部最小子集。**
 > 本规范定义 Fovea 支持的 HTTP 缓存子集、外部测试语料接入方式和明确不支持的范围。它不是通用代理缓存规范。
 
 ## 1. Profile 范围
@@ -181,3 +181,11 @@ reason code 必须可用于测试断言，不能只输出自由文本日志。
 ## 9. 当前传输完整性门禁
 
 - **HTTP-CONF-CONTENT-LENGTH-001**: identity 编码响应的 `Content-Length` 必须是一个或多个完全相同的非负 ASCII 十进制值；畸形、溢出或相互冲突的多值失败关闭，合法重复值仍按完整 body 长度验证。
+
+## 严格解析与强制重验证
+
+- `Age`、`max-age` 与数字形式 `Retry-After` 只接受非空十进制数字；小数、科学计数法、符号和负数无效；
+- Cache-Control 列表解析理解引号、反斜线转义和 quoted comma；未闭合引号、非法 directive 名或无法规范化的值均失败关闭；
+- 多个 `max-age` 即使单独合法也视为语义歧义：响应不持久化，freshness 立即过期；
+- representation schema 6 持久化 `requiresRevalidation`。`no-cache` 与 `must-revalidate` 都禁止 stale-if-error fallback；304 缺少 Cache-Control 时保留旧约束，明确返回时按新响应替换；
+- 自定义 record store 的返回顺序不参与选择语义；同 variant 的完全重复记录去重，内容冲突则整个 variant 拒绝。

@@ -1,12 +1,12 @@
 # Fovea 图片加载系统架构
 
-> **状态：Proposed（唯一工作架构文档；当前项目状态：`0b-in-progress`）**
+> **状态：Proposed（唯一工作架构文档；当前项目状态：`phase0b-closeout`，Phase 1 preparation only）**
 > 本文是当前唯一的架构入口。只有经过可运行原型、自动化正确性测试和真机基准验证的局部决策，才可在对应 ADR 中标记为 `Accepted`。整份蓝图在 Phase 0b 完成前不称“定稿”。
 >
 > **规范优先级：** Accepted ADR 决定其范围内的决策；`specifications/` 决定可执行语义；本文决定系统边界、产品范围和阶段门禁。发现直接冲突时必须停止实现并修正文档，不能由实现者静默择一。
 >
 > **当前平台基线：** iOS/iPadOS 15、macOS 12；其他平台尚未声明支持。
-> **语言：** Swift 6 严格并发；当前实现启用 Swift 6.2 `NonisolatedNonsendingByDefault` 与 `InferIsolatedConformances`。
+> **语言与工具链：** Xcode 27 / Apple Swift 6.4、Swift 6 严格并发；当前实现显式启用 `NonisolatedNonsendingByDefault` 与 `InferIsolatedConformances`，并仅采用通过部署与证据门的 6.4 所有权能力。
 > **执行模型：** UI adapter 为 `@MainActor`；加载入口与共享 operation 显式 `@concurrent`；阻塞磁盘 I/O 使用专用串行 executor；核心通过 `ImageDecoding`/`WallClock` 等协议注入平台实现与可控时间。
 > **产品边界：** Apple 平台静态图、动图及其按需辅助平面；不扩张为视频播放器、生成式图片平台或通用网络框架。
 
@@ -30,9 +30,9 @@ Fovea 必须通过 Phase 0b 的存在性门禁后才能扩大公共 API。门禁
 
 ### 1.1 当前实现快照（2026-07）
 
-当前代码已具备：固定职责 coordinator、Fetch/Decode single-flight、namespace revoke、持久 StoreGeneration 与单 writer fail-closed、请求级网络权限、Profile ACL、带权 decode working-set 准入、脱敏 URLSession 事务摘要、SwiftUI/UIKit/AppKit 生命周期适配，以及两个可编译示例。`FoveaNetworkLab` 真实联网必须显式 `--live`，不属于确定性合并门。
+当前代码已具备：固定职责 coordinator、Fetch/Decode single-flight、无回绕 namespace revoke、持久 StoreGeneration 与单 writer fail-closed、请求级网络权限、Profile ACL、精确 origin policy、URLSession ambient state 清除、代理 metrics 验证、带权 decode working-set 准入、脱敏 URLSession 事务摘要、SwiftUI/UIKit/AppKit 生命周期适配，以及 iOS 15+ `FoveaWorkbench`、macOS Gallery 与 Network Lab 三类可执行验证面。`FoveaNetworkLab` 真实联网必须显式 `--live`；确定性 loopback chaos matrix 才属于本地门禁。
 
-当前没有：通用 middleware/interceptor DAG、自定义代理路由器、CPU 时间硬配额、后台 URLSession 延续、完整多进程多 writer、全格式生态、真机竞品 non-inferiority 证明或稳定 API 承诺。运行时不创建子进程；所谓“僵尸进程回收”只适用于测试工具，Network Lab runner 通过进程组超时终止处理。
+当前没有：通用 middleware/interceptor DAG、自定义代理路由器、IP/CIDR 级 egress 或 DNS rebinding 防护、CPU 时间硬配额、后台 URLSession 延续、完整多进程多 writer、全格式生态、真机竞品 non-inferiority 证明或稳定 API 承诺。运行时不创建子进程；所谓“僵尸进程回收”只适用于测试工具，Network Lab runner 通过进程组超时终止处理。
 
 扩展原则是 typed seam 优先于任意 post-key mutation。任何未来 request preparer 必须在 identity 冻结前执行，或提供版本化且非敏感的 execution fingerprint。
 
@@ -42,12 +42,16 @@ Fovea 必须通过 Phase 0b 的存在性门禁后才能扩大公共 API。门禁
 
 ### 2.1 单一权威来源
 
+- `docs/PHASE0B_GRADUATION_AND_PHASE1_ENTRY.md` 与 `docs/phase0b-status.json`：阶段转换和当前阻塞项。
 - `docs/ARCHITECTURE.md`：唯一工作架构。
 - `docs/adr/`：局部决策及其证据。
 - `docs/specifications/`：可执行规范，包括缓存/身份语义、HTTP 一致性、调度、并发所有权、资源预算、错误恢复、诊断、表示正确性、基准、安全默认、UI 状态机和平台配置。
 - `docs/TECHNOLOGY_RADAR.md`：前沿技术跟踪，不构成产品承诺。
 - `docs/COMPETITIVE_CONTRACTS.md`：只记录经来源或 Phase 0b 适配器验证的竞品能力与 Fovea 验收契约。
+- `Benchmarks/ComparativeLab`：不进入生产依赖图的统一竞品协议、独立 adapter package、真机 workload 与脱敏工件。
 - `docs/research/`：专题研究与证据综述，不直接形成产品承诺；决策必须进入 ADR/规格。
+- `docs/specifications/interdisciplinary-engineering.md`：跨学科工程定律、反教条边界与“金蛋”发现流程。
+- `docs/engineering-knowledge.json`：定律、证伪条件、代码证据和可复用发现的机器注册表。
 
 决策状态：
 
@@ -109,6 +113,12 @@ independent oracle + trusted CI + accountable human
 
 详见 ADR-0009、`docs/specifications/ai-development-assurance.md` 与 2026 专题研究。AIQA 在 0a 内分为 bootstrap 与 complete：前 1–3 个 PR 先建立最小可信合并轨道，完整 mutant/rollback 门禁在宣布 0a 完成前补齐。该治理属于实现质量控制，不解除功能型文档冻结。
 
+### 2.5 跨学科工程定律与发现账本
+
+AI 的知识广度用于扩大候选解释、反例和实验空间，不用于绕过证据。数学不变量、物理资源守恒、生态承载力、控制稳定性、复杂性局部化、经济外部性和科学哲学的可证伪性，被翻译成明确的软件状态、边界、指标与失败条件；类比本身不构成架构证明。完整定律见 `docs/specifications/interdisciplinary-engineering.md`。
+
+重大缺陷和复杂实现还必须检查是否产生可复用“金蛋”：值类型、所有权原语、安全校验器、测试工具、门禁或明确的拒绝抽象边界。promoted 发现必须拥有真实资产、独立证据、复用边界和过度推广风险，并登记在 `docs/engineering-knowledge.json`。`scripts/check-engineering-knowledge.py` 验证原则 ID、测试追踪和资产路径；项目不以定律或金蛋数量评价质量。
+
 ---
 
 ## 3. 交付门禁与成熟度分层
@@ -151,26 +161,24 @@ URL
 
 - G0 全量协议、持久化、schema、priority 和 revoke 门禁；
 - Private Image Cache Profile 的 required external corpus；
-- W1/W2/W3 与预注册竞品 adapter；
+- W1/W2/W3 当前 baseline 与预注册竞品 adapter；完整 W1-W15 路线仍由 workload registry 持续追踪；
 - 最低性能档和当前主流设备复现；
 - Performance Path 或 Correctness Path 至少一条通过；
 - R3 完整独立 oracle、关键 mutant、agent eval 与供应链证据通过。
 
-通过 0b 才意味着可以继续建设可发布的 Core v1 Candidate。完整判据见 `docs/specifications/benchmark-workloads.md` 与 ADR-0008。
+通过 0b 才意味着可以正式声明进入 Phase 1 / Core v1 Candidate Hardening。准备性 adapter、API 收缩草案和 Source 原型可以先行，但不得扩大稳定公共面。完整判据见 `docs/PHASE0B_GRADUATION_AND_PHASE1_ENTRY.md`、`docs/specifications/benchmark-workloads.md` 与 ADR-0008。
 
-### 3.3 Core v1 Candidate
+### 3.3 Phase 1 / Core v1 Candidate Hardening
 
-Phase 0b 通过后才进入此层，目标是形成首个可发布候选：
+Phase 1 与 Core v1 Candidate Hardening 是同一层，不再作为两个重叠阶段维护。Phase 0b 通过后才可正式进入，目标是形成首个可发布候选：
 
-- URL/File/Data/Asset source；
-- 固定阶段管线与 single-flight；
-- target-size static decode 与 orientation/color/alpha 基本正确性；
-- OriginalEncoded 与 RenderedMemory；
-- 版本化 Fovea Private Image Cache Profile：freshness、Age、validator、`Vary`、304 和核心认证语义；
-- 取消、优先级和提交边界；
-- DecodeLimits 与安全默认矩阵；
-- UIKit、AppKit、SwiftUI；
-- 可复现诊断与 canonical workloads。
+- 收缩 public API，明确普通集成面、Advanced 逃生口和内部实现；
+- 在既有 URLSource 上补齐 File/Data/Asset source 的身份、失效、权限和持久化边界；
+- 冻结版本化 Fovea Private Image Cache Profile v1 Candidate；
+- 以真实宿主 App 完成至少一个兼容周期；
+- 固化错误、取消、默认值、配置和 StoreGeneration 迁移政策；
+- 建立 API diff、编译器矩阵、二进制体积、启动成本、SBOM 和发布 provenance；
+- 保持 target-size decode、缓存、single-flight、安全矩阵、三套 UI adapter 与 canonical workloads 的回归证据。
 
 Core v1 Candidate 仍可破坏 API。只有经过真实应用试用、至少一个兼容周期和 Accepted ADR 后，局部契约才能成为 Stable Core。
 
@@ -241,6 +249,29 @@ FoveaLab 工作还必须满足：
 
 ---
 
+
+### 3.8 FoveaWorkbench：可演进的 iOS 集成工作台
+
+`Examples/FoveaWorkbenchApp` 与库保持相同的 iOS/iPadOS 15.0 最低版本。它是独立 Xcode App，不进入 SwiftPM 产品图，也不允许依赖 `FoveaTesting`。场景通过稳定 ID、类别、行为和预期结果注册；未来增加 source、渐进加载、动画或 codec 时，应扩展 scenario/capability，而不是复制新的导航和状态容器。
+
+所有正常入口、专题直达入口和场景工坊直达入口都包在 `WorkbenchAppHost` 内。该宿主是 `WorkbenchAppModel.start()`、`scenePhase`、运行错误与重试呈现的唯一 UI 生命周期所有者，并发布稳定的 `runtime.state` Accessibility 值；`WorkbenchRootView` 只组合标签页，快捷路由不得建立第二条运行时或绕过图片管线初始化。
+
+Workbench 的普通交互启动进入 schema 2 的“生态超载世界图谱”。内容由 8 卷、32 个专题、28 份可追踪来源、6 类证据性质和 160 个互不重复的稳定媒体身份组成。每个专题必须同时记录因果机制、权力与分配、主张、质疑、综合判断、来源、指标、讨论问题和图片负载契约；旧九章 schema 和兼容解码已删除。
+
+页面不是同一种卡片复制三十二次。内容层提供 editorial、mosaic、timeline、comparison、atlas、dossier、field-notes 与 immersive 八种媒体表面，并另有首页、专题库、八卷索引、案例集、系统地图、概念索引和方法页。UI 自动化分别进入八种表面，并验证 fit/fill、重建、清内存恢复和从叙事进入完整图片实验场。
+
+媒体治理分三层。许可校验回答能否使用；普通图库采用严格默认准入；公共教育叙事允许肉食与动物利用、未成年人、战争、疾病、伤害、贫困和迁徙进入情境审查，但必须记录教育必要性、来源与许可、主体尊严和隐私、年龄适宜性、非猎奇呈现、避免污名化及替代文本。题材不自动通过，也不自动拒绝；以痛苦制造点击、羞辱主体、来源不可核实或与论证无关的刺激性展示始终禁止。
+
+一级导航固定为理解、验证、证据、设置。理解层承载公共叙事和真实图片负载，再从二级入口进入 11 类产品场景、完整媒体目录与高压 Feed。验证层按问题域组织；原始事件和高级参数只在证据层出现。
+
+`--ui-testing`、确定性集成测试和普通合并门只使用 `fovea-demo.test`；公网 Live XCTest 必须由构建设置显式授权并始终标记为 environment-dependent。App 只依赖官方 `Fovea` product，并通过 `FoveaSystemPipeline` 获得正式 `URLSessionTransport`、持久 namespace generation、Profile/destination ACL、持久 store、single-flight、解码预算和 SwiftUI/UIKit 生命周期。网络预取身份由稳定素材 ID、目标宽高与 content mode 构成，视图刷新 UUID 不进入业务身份；任务条目另带版本戳，reset 前的迟到 completion 不能删除同 key 的替换任务。随包图片由宿主的有界内存缓存管理，不冒充网络证据。
+
+回屏性能由核心和宿主共同保证：SwiftUI 初始 `.empty` 状态保持透明，只有加载延迟真正到期后才显示占位；新鲜 RepresentationRecord 可由持久 ContentID 直接构造 RenderKey，先查 rendered-memory，再按需读取原编码磁盘；Feed 默认保留成功图并预取首批内容。请求/显示配置与 transport/store 配置分别比较，只有后者触发事务式 runtime 替换；重建先取消并汇合全部证据 runtime，再发布新管线；管线代际改变会清空预取完成集，避免新 runtime 被旧预取状态抑制。旧 profile 清理由专用 utility I/O 队列执行，符号链接不参与候选且失败以计数暴露。
+
+每次证据运行串行执行，并使用独立 diagnostics sink、run correlation 和临时 runtime 保存 origin/join/cache/cancel/status evidence；interactive/evidence 采用物理隔离 store 根，预览暖缓存不得污染实验状态；Feed 脚本额外保存 `CADisplayLink` 帧间隔代理与 `task_vm_info.phys_footprint` 差分。证据包 schema 3 绑定 source revision、source-tree hash、dirty 状态和配置指纹；持久 generation 只导出每次随机加盐的短期令牌，时间降到小时粒度，运行/性能记录只用包内顺序号。simulator UDID、原始 URL、凭证、诊断 key digest、locale、时区、精确设备型号、运行 UUID 和精确开始/结束时间均不进入可分享工件。
+
+工程结构由固定 XcodeGen 版本从 `project.yml` 生成并提交生成结果。统一门禁同时比较 PBX、共享 scheme 与 workspace 的字节摘要，验证 canonical `Fovea -> ../..` package 路径、DesignSystem/视觉测试 target 成员和已删除占位素材的缺席；不得用手工 PBX 条目掩盖漂移。门禁还执行 Release Build、生产管线集成测试、UI 行为矩阵和 oracle 1.2.0 的双设备视觉矩阵。行为矩阵按证明对象分配设备：15 项 compact-width 行为在 iPhone 的三个五测试分片中执行；4 项原生 regular-width 行为在 iPad 的两个两测试分片中执行；包含五张公共导航卡的 `DEMO-PT-024` 使用独立 iPad 分片。分片间重启对应 Simulator，实际 15/5 计数写入 phase 报告，不得解释为跳过。 iPad Feed 行为测试以产品实际发布的中文完成状态和内存占用状态为异步完成证据，随后再验证 UIKit collection 与最后一个动态 cell；视觉或元素存在不能替代该业务状态闭环。每个设备族固定七个视觉检查点并同时导出截图、Accessibility 树和几何 JSON；纵向滚动内容与已声明横向轨道按明确规则处理，普通水平逃逸、低于 44 pt 的按钮、缩字和大面积图片重叠仍失败。结构化 phase 报告写入 `.artifacts/ios-example/verification.json`，视觉报告与三联件写入 `.artifacts/ios-example/visual-audit/`。决策与边界见 `docs/adr/0013-workbench-visual-assurance.md`。研究型 `FoveaLab` 与该产品示例保持不同名称和依赖边界。
+
 ## 4. 项目边界与开发形态
 
 长期发布边界仍是三个生产项目：
@@ -270,29 +301,29 @@ ImageCraftTesting
 
 ### 4.2 Akashic 目标边界
 
+当前生产模块只有：
+
 ```text
 AkashicCore
 AkashicMemory
 AkashicDisk
-AkashicTraceKit
-AkashicTesting
+FoveaStorage
 ```
 
-它缓存任意键值，不知道图片、URL、HTTP 或用户界面。成本由调用者传入或通过 `CostEstimator<Value>` 注入，不要求第三方类型遵循库私有协议。
+`AkashicTraceKit`、`AkashicTesting` 只是未来在真实离线策略评估或独立测试工具形成后才允许创建的候选模块，不属于当前 Package 产品。Akashic 缓存任意键值，不知道图片、URL、HTTP 或用户界面。成本由调用者显式传入，不要求第三方类型遵循库私有协议。
 
 ### 4.3 Fovea 产品
 
-当前 SwiftPM 生产产品为：
+当前 SwiftPM 顶层 library product 有四个：
 
 ```text
-ImageCraftCore / ImageCraftImageIO
-AkashicCore / AkashicMemory / AkashicDisk
-FoveaHTTP / FoveaCore / FoveaPersistence / FoveaSystem
-FoveaUIKit / FoveaAppKit / FoveaSwiftUI
-FoveaTesting
+Fovea              官方安全集成面；现阶段默认包含 ImageIO adapter
+FoveaAdvanced      自定义 transport/store/decoder 与持久化组合的显式逃生口
+ImageCraftCore     独立、技术中立的公共 codec contract
+ImageCraftImageIO  只依赖 ImageCraftCore 的独立 ImageIO 参考实现
 ```
 
-`FoveaStoreProbe` 是只用于跨进程竞争门禁的验证可执行文件，不是运行时依赖。`FoveaSources`、`FoveaDiagnostics`、聚合 `Fovea` façade 等仍是目标命名，不得在未实现时列入当前产品。格式解码插件属于 ImageCraft，不以 `FoveaAVIF` 等名称倒置职责。
+源码仍按 ImageCraft、Akashic、FoveaStorage、FoveaHTTP/Core/Persistence/System/Observability/UIKit/AppKit/SwiftUI 的职责 target 拆分；target 是依赖边界，不再等同于对集成者暴露的顶层产品菜单。`FoveaStoreProbe` 只用于跨进程竞争门禁，不是运行时 product。OSLog/Signpost 适配器位于独立 `FoveaObservability` target，`FoveaCore` 不直接依赖 OSLog。`FoveaSources` 与历史候选名 `FoveaDiagnostics` 不得在未实现时列入当前产品。格式解码插件属于 ImageCraft，不以 `FoveaAVIF` 等名称倒置职责。
 
 Phase 0a 已落实该边界：`AkashicMemory` 提供图片无关的 `MemoryCache<Key, Value>`，值成本由 Fovea 插入时显式传入；当前决策见 ADR-0001。
 
@@ -315,7 +346,7 @@ FoveaPipeline               immutable composition + public failure/revoke bounda
 
 当前 `PipelineCache` 用同一可取消、有界事务门串行化“数据块提交 → 表征记录发布”和显式 mark-and-sweep 垃圾回收，防止 GC 在记录可见前删除新数据块。持久删除先原子发布移除后的 metadata，再删除物理文件；故障可以留下可回收 orphan，但不得留下指向缺失文件的可见记录。自定义 store 只有实现 `OriginalEncodedMaintaining` 与 `RepresentationRecordMaintaining` 才具备公开 GC 能力，否则返回结构化能力错误。
 
-OriginalEncoded/representation 事务与 RenderedMemory 发布是两个 checkpoint：安全 decode 完成后先提交原编码事务，再执行带 fingerprint 的 `TransformStage`；transform 失败保留可复用的 OriginalEncoded，但不得发布 RenderedMemory。该边界使处理失败不会强迫重复网络获取，也不会把半成品伪装成 final。
+OriginalEncoded/representation 事务与 RenderedMemory 发布是两个 checkpoint：安全 decode 完成后先提交原编码事务，再执行带固定长度 fingerprint 的 `TransformStage`；transform 返回值重新验证 dimension、pixel count 与 working-set cap。transform 失败或超限保留可复用的 OriginalEncoded，但不得发布 RenderedMemory。该边界使处理失败不会强迫重复网络获取，也不会把半成品伪装成 final。
 
 ---
 
@@ -326,34 +357,22 @@ OriginalEncoded/representation 事务与 RenderedMemory 发布是两个 checkpoi
 ```swift
 let system = try await FoveaSystemPipeline.open(cacheRoot: cacheRoot)
 let image = try await system.pipeline.image(for: request)
+await system.invalidateAndCancel() // 宿主确定结束该 runtime 时，取消网络任务并释放 staging lease
 ```
 
-它固定组合禁用 `URLCache`/Cookie 的 transport、同一 StoreGeneration 下的持久存储和 target-pixel ImageIO decoder。自定义 transport/store/decoder 仍通过 `FoveaPipeline` 显式注入。SwiftUI 使用 `FoveaImage(request:loader:accessibility:)`；UIKit/AppKit 使用平台 `FoveaImageView.setImage(request:loader:accessibility:)`。所有 UI surface 都要求显式 decorative 或 label。尚未提供只接收 URL 并猜测 target 的便利 API。
+它固定组合禁用 `URLCache`/Cookie 的 transport与同一 StoreGeneration 下的持久存储，并以独立 `ImageCraftImageIO` 产品作为当前默认 decoder。`FoveaSystemPipeline.open` 可显式注入自定义 decoder、transformer 和 `RenderedImageCaching`；自定义 transport/store 仍通过 `FoveaPipeline` 注入，且公共构造器必须显式选择 `ProfileAccessPolicy`。SwiftUI 使用 `FoveaImage(request:loader:accessibility:)`；UIKit/AppKit 使用平台 `FoveaImageView.setImage(request:loader:accessibility:)`。所有 UI surface 都要求显式 decorative 或 label。尚未提供只接收 URL 并猜测 target 的便利 API。 生产可观测性通过 `FoveaObservability.OSLogDiagnosticsSink` 显式注入；它只消费已脱敏事件，不改变 pipeline 配置、身份或调度。
+
+当前不存在 `Fovea.shared`、通用 `Source` enum 或只接收 URL 的便利入口。下列形态仅是 Core v1 Candidate 的易用性方向，不是可编译 API：
 
 ```swift
-let image = try await Fovea.shared.image(
+// Candidate API — not implemented in Phase 0b.
+let image = try await defaultPipeline.image(
     for: url,
     target: .pixels(width: 600, height: 400)
 )
 ```
 
-原始编码字节使用：
-
-```swift
-let data = try await Fovea.shared.encodedData(for: url)
-```
-
-高级请求才使用结构化配置：
-
-```swift
-let request = ImageRequest(
-    source: .url(url),
-    target: .init(points: view.bounds.size, scale: screenScale),
-    contentMode: .fill,
-    priority: .interactive,
-    cachePolicy: .automatic
-)
-```
+当前原始编码入口仍使用显式 `ImageRequest` 与 `EncodedDataLoading`；任何未来便利 façade 都不得引入全局可变注册表或绕过 target、ACL 与资源策略。
 
 v1 的公共请求不强迫用户理解 trust、模型、八维预算或完整多表示 manifest。高级功能通过可选配置或独立模块启用。
 
@@ -479,22 +498,20 @@ PhotosSource（可选）
 CustomSource
 ```
 
-非网络来源不得伪装成 Transport。File/Data/Asset/Photos/Custom 的身份、revision 和失效规则见 `docs/specifications/source-identity.md`。
+非网络来源不得伪装成 Transport。当前生产实现只有 URL source；File/Data/Asset/Photos/Custom 的身份、revision 和失效规则仍是候选规格，不得据此宣称已交付。
 
 ### 7.2 Transport
 
-Transport 只搬运远程字节：
+Transport 只搬运远程字节。当前官方 URLSession transport 已实现：
 
-- 有界缓冲和背压；
-- 响应头与 body 分离；
-- 可取消；
-- 提供进度与 metrics；
-- 支持 Range 机制，但不自行决定恢复策略；
-- 超过阈值自动 spill 到 staging file；
-- 下载时可并行执行增量摘要、staging 写入和渐进 decoder 输入；
-- 不要求把完整图片常驻为单一巨大 `Data`。
+- hard byte limit、分块消费、内存阈值后 spill 与流式 SHA-256；
+- 响应头/body 事件分离、取消和 task metrics；
+- 请求级 cellular/constrained/expensive 权限；
+- Cookie、URLCache、credential store 与 session-wide header 清除；
+- 初始 URL 与每次 redirect 的精确 destination policy；
+- 跨 origin 凭证剥离。
 
-不建立通用 REST DSL、JSON 映射或 OAuth 框架。
+当前不提供公开下载进度、Range resume 或生产渐进 decoder 输入；这些能力必须在独立状态机与身份契约完成后才能加入。Transport 不建立通用 REST DSL、JSON 映射或 OAuth 框架。
 
 ### 7.3 Fovea Private Image Cache Profile
 
@@ -521,7 +538,7 @@ Transport 只搬运远程字节：
   → 请求失败时按策略交付过期内容
 ```
 
-Fovea 不宣称实现通用代理缓存。Core v1 只承诺版本化的 private image cache profile；对未支持的 method/status/directive 选择不持久化或回源，而不是猜测语义。Phase 0a 只实现 fresh、304、no-store 和 namespace 的最小内部路径；Phase 0b 才要求 GET、200/304、显式 freshness、Age、validator、Vary、auth/no-store 的 required profile corpus。206/If-Range 与 stale 扩展按 profile capability 推进。
+Fovea 不宣称实现通用代理缓存。当前 `0b-in-progress` 已实现 GET、200/304、显式 freshness、Age、validator、Vary、认证隔离、no-store、有限 retry 与 stale-if-error 子集；required profile corpus 已进入本地门禁。206/If-Range、stale-while-revalidate 与通用 shared-cache 语义仍未实现，遇到未支持组合时选择不持久化或失败，而不是猜测。
 
 必须覆盖：
 
@@ -536,7 +553,7 @@ Fovea 不宣称实现通用代理缓存。Core v1 只承诺版本化的 private 
 - content-decoding layer 与 Range 的兼容性；
 - 专用图片缓存只持久化必要 header，禁止保存/回放 `Set-Cookie` 和认证字段。
 
-Akashic 提供事务和存储；FoveaHTTP 拥有 HTTP 语义。热路径所有权固定如下：
+Akashic 提供通用 typed blob/cache 事务与存储；FoveaStorage 拥有原编码能力、namespace 指纹与撤销持久化的最小领域契约；FoveaPersistence 提供 adapter 和磁盘组合；FoveaHTTP 拥有 HTTP 语义。FoveaStorage 只依赖 AkashicCore，防止 FoveaCore 与 FoveaHTTP 形成依赖环。热路径所有权固定如下：
 
 | 决策或动作 | 唯一所有者 | 持久化位置 |
 |---|---|---|
@@ -600,7 +617,7 @@ Observer 只能观察。任何影响 locator、字节或像素的扩展必须在
 - 不同目标像素在解码阶段分叉；
 - 相同解码、不同圆角在处理阶段分叉。
 
-当前 `0b-in-progress` 已实现 FetchExecutionKey 与 DecodeKey 级 single-flight：相同精确网络执行共享 fetch，相同 namespace generation + DecodeKey 共享 probe/decode。RenderedMemory 按 RenderKey 复用，但独立 transform-stage single-flight 尚未实现；不同请求若同时越过解码且尚无最终内存条目，仍可能重复 transform。不得把 RenderKey 缓存命中冒充为 transform single-flight。
+当前 `0b-in-progress` 已实现 FetchExecutionKey、DecodeKey 与 RenderKey 级 single-flight：相同精确网络执行共享 fetch，相同 namespace generation + DecodeKey 共享 probe/decode，相同 namespace generation + RenderKey 共享 transform。RenderedMemory 仍负责已完成结果复用；single-flight 负责并发中的工作共享，两者是不同契约。namespace revoke 会取消对应 fetch/decode/transform，并在发布 RenderedMemory 前再次验证 generation。
 
 ### 8.2 交付事件
 
@@ -702,13 +719,35 @@ schema version
 
 Planner 导出 DecodePlan 与 RenderPlan，把 region、orientation 和 resize 尽可能下推到 decoder，避免中间位图。
 
-### 10.4 后端选择
+### 10.4 Codec 能力契约与后端选择
 
-ImageIO、vImage、Core Graphics、Core Image 和 Metal 通过真机数据选择。Metal 不是默认答案。
+当前默认后端仍是 ImageIO，但它不再被当作管线结构本身。独立 `ImageCraftCore` 产品公开 `ImageCodecDescriptor`、`ImageCodec` 与 `PreparedImageDecoding`，以版本化有限集合声明容器格式、完整/渐进交付、主帧/动画轨道、metadata、SDR/HDR、输出表示、取消保证和资源估算。`DecodeStage` 在任何 working-set reservation 与像素分配前验证请求语义；能力缺口 fail closed。只实现最低 `ImageDecoding` 的 decoder 仍可使用，但只能获得按动态类型隔离的保守身份与通用资源估计。
+
+当前 ImageIO adapter 只声明 PNG/JPEG/GIF 的完整主帧、orientation/source color、SDR、`CGImage` 和 operation-boundary cancellation。它能够探测 GIF 多帧容器，不等于已经实现 animation timeline；存在 incremental ImageIO API，也不等于生产 pipeline 已经实现 progressive generations。
+
+后端 identity 是：
+
+```text
+codec identifier
++ implementation version
++ codec contract version
+```
+
+该 fingerprint 同时进入 DecodeKey 和 RenderKey。任何可能改变像素、颜色、方向、metadata 解释或 capability 语义的变化都必须改变版本，防止不同后端或不同语义复用同一派生像素。
+
+working-set 准入使用：
+
+```text
+W_admit = max(W_generic, W_backend)
+```
+
+后端估计只能提高保守程度，不能通过低报削弱 host 下界；零值、负值或无法表达的估计作为 codec contract violation 失败。prepared state 在能力、估计、准入、取消和 decode 失败路径都必须释放。
+
+公共 contract 与显式注入已经可用，但只有第二个 backend 通过技术中立的共享 conformance kit 后，才考虑一个 pipeline 内的 registry 与按格式选择策略。首版多后端选择必须确定、显式、可关闭，不尝试没有证据的“自动最优”。当前默认迁移只需修改官方 composition root，原始编码与 HTTP 表征无需迁移，派生像素由 codec fingerprint 自动隔离。ImageIO、vImage、Core Graphics、Core Image 和 Metal 的具体组合仍由真机数据选择；Metal 不是默认答案。
 
 row alignment 由目标后端和基准决定；不宣称固定 64 字节对齐即可保证 Core Animation 零拷贝。
 
-Display preparation 是条件阶段。若结果已 eager decoded 且 display-ready，不重复调用平台 preparation API。
+Display preparation 是条件阶段。若结果已 eager decoded 且 display-ready，不重复调用平台 preparation API。能力契约见 ADR-0011；公共插件、独立 ImageIO 与缓存装配见 ADR-0012；并行集成计划见 `docs/roadmaps/fovea-codec-parallel-roadmap.md`。
 
 ### 10.5 缓冲复用
 
@@ -720,11 +759,42 @@ Core 的真实表示不是 `UIImage`。`DecodedImage` 必须明确 pixel size、
 
 ### 10.7 动画图像
 
-动画属于 Phase 2/Experimental，不阻塞 Phase 0a。它使用独立的 animation asset、frame cache 和 cost model，默认采用受控 decode window，不把所有帧无界解码进内存。frame timing、loop、disposal、可见性、后台和 Reduce Motion 策略见 `docs/specifications/animation-policy.md`。
+动画属于 Phase 2/Experimental，不阻塞 Phase 0a。`ImageDecodeTrackMode.animatedSequence` 与 `ImageFrameTiming` 只冻结能力词汇和无溢出时间值；当前生产 `FoveaPipeline` 仍不会枚举动画轨道、调度 frame clock 或播放动画。
+
+真正实现使用独立 animation asset、frame cache 和 cost model，默认采用受控 decode window，不把所有帧无界解码进内存。track selection、frame timing、loop、disposal/blend、可见性、后台和 Reduce Motion 策略见 `docs/specifications/animation-policy.md`。
+
+### 10.8 渐进代次
+
+渐进预览必须以同一 content/backend/request/frame identity 下的严格递增 generation 发布：
+
+```text
+generation_new > generation_published
+```
+
+相等、倒退或跨 identity 的结果不得替换当前图像。当前只实现 `ImageProgressiveGeneration` 值语义和模型检查；生产尚缺累计输入预算、增量 parser、preview cadence、subscriber sharing/cancellation、final promotion 和 UI identity fence，因此 W4 继续保持 capability gap。
+
+### 10.9 Codec 与 Fovea 的职责边界
+
+codec 不接触 URL、授权 header、profile namespace、HTTP record、持久 cache 或 UI。Fovea 不感知 codec 的 entropy model、SIMD、LoRA、GPU kernel、内部 frame graph 或 scratch allocator。双方共享的只有：
+
+```text
+versioned descriptor
+bounded probe facts
+capability request/result
+resource estimate
+prepared/decode lifecycle
+pixel + metadata result
+stable failure taxonomy
+conformance fixtures
+```
+
+未来 codec 完成后，应先独立通过 conformance/corpus/fuzz/differential gate，再作为 opt-in backend 接入；不能因其研究目标更先进而跳过 host 侧准入与身份验证。
 
 ---
 
 ## 11. 缓存：使用语义名，不使用乱序层号
+
+RenderedMemory 通过公共同步 `RenderedImageCaching` 契约替换算法或实现。其键强制包含 namespace、generation 和完整 RenderKey；调用方不能通过自定义缓存绕过账户隔离、撤销代际、transformer 或 codec fingerprint。默认实现是 Akashic SIEVE，但不是语义要求。OriginalEncoded 与 RepresentationRecord 已分别由公共 store 协议抽象；官方 System 组合根使用持久默认实现，自定义持久存储通过 `FoveaPipeline` 显式注入。request alias、transient verified handoff 和提交事务属于正确性状态机，不开放为普通缓存插件。
 
 ```text
 RenderedMemory       目标尺寸、处理完成的显示结果
@@ -737,19 +807,9 @@ RasterExperimental   未压缩热点 slab，默认关闭
 
 ### 11.1 内存策略
 
-文档阶段不预定 S3-FIFO、SIEVE、TinyLFU、ARC 或 LRU 为赢家。
+RenderedMemory 当前只维护 SIEVE，不保留生产 LRU 兼容分支。命中只设置单比特访问标记，淘汰指针在需要空间时沿 FIFO 链表清位或淘汰，避免逐命中改链表。硬约束仍包括 byte-aware cost、单对象 cap、oversize reject、memory pressure 清理和总成本不溢出。
 
-v1 必须先实现：
-
-- byte-aware cost；
-- 单对象 cost cap；
-- oversize reject；
-- memory pressure 清理；
-- 可重复 trace；
-- LRU 基线；
-- 至少一种抗扫描候选（S3-FIFO 或 SIEVE）。
-
-默认策略由 Feed Scroll 与真实应用 trace 决定。复杂多因子评分先放在 AkashicTraceKit 离线评估，不进入默认同步热路径。
+选择依据不是“新算法”标签，而是精确离线 oracle、WorkBench 回屏/扫描 trace、独立状态机差分和 NSDI 2024 SIEVE 研究的假设匹配。LRU、GDSF、频率密度和学习增强策略只保留在离线比较器中；若真实 trace 证明 SIEVE 持续劣化，必须以新证据替换，而不是保留两套生产状态机。
 
 初始准入采用可解释硬规则：
 
@@ -808,13 +868,13 @@ Analysis 缓存键至少包含 `ContentID + AnalysisKind + implementation/model 
 
 ContentID 是逻辑摘要，不直接作为日志值或物理文件名。store 使用 namespace-local、随机不透明 `PhysicalBlobID`，metadata 维护索引。目标架构包含 hard limit、soft target、namespace quota、分类预算、active-reader lease 与批量 atime；这些目标详见 `docs/specifications/cache-budget-gc.md` 与 ADR-0007。
 
-当前实现具备单 store soft limit、namespace 隔离、opaque locator、引用快照、显式 mark-and-sweep，以及由 `AkashicDisk.StoreGenerationDirectory` 提供的原子 generation 指针切换。generation 选择与指针发布同时受进程内锁和 POSIX 文件锁保护，独立进程竞争门禁验证所有 opener 收敛到同一 generation。`FoveaPersistence` 在该 generation 根目录组合 encoded/record stores；启动时会清理不完整目录和暂存指针，并恢复到完整且兼容的 generation。generation 选择之后，`FoveaPersistence` 对活动 generation 持有进程生命周期的单 writer 租约：同进程重复打开复用同一组 store actor，跨进程第二 writer 立即失败关闭，owner 退出后才可重新取得租约。当前仍不支持多个进程共享 writer 或跨进程 reader/writer 快照协调；namespace quota、reader lease、DiskIOBudget 与批量 atime 也尚未实现。
+当前实现具备单 store soft limit、namespace 隔离、opaque locator、引用快照、显式 mark-and-sweep、持久 namespace revoke generation，以及由 `AkashicDisk.StoreGenerationDirectory` 提供的原子 store-generation 指针切换。generation 选择与指针发布同时受进程内锁和 POSIX 文件锁保护，独立进程竞争门禁验证所有 opener 收敛到同一 generation。`FoveaPersistence` 在该 generation 根目录组合 typed encoded/record/namespace-generation stores；FoveaStorage 提供共享领域契约，具体 `AkashicOriginalEncodedStore` 保持 package-only，旧 `OriginalEncodedStore` 及其独立 manifest 实现已经删除；namespace revoke 在清理 blob/record 前原子发布新世代，清理失败或进程终止后重启不会使旧世代重新可读。持久层只存储 fingerprint → UInt64，Core 契约由 System adapter 连接，避免依赖方向倒置。具体 representation manifest actor 属于该模块并保持 package implementation，`FoveaHTTP` 只拥有表征模型与存储协议。启动时会清理不完整目录和暂存指针，并恢复到完整且兼容的 generation。运行期 GC 即使没有 manifest victim 也会扫描孤儿与暂存文件。generation 选择之后，`FoveaPersistence` 对活动 generation 持有进程生命周期的单 writer 租约：同进程重复打开复用同一组 store actor，跨进程第二 writer 立即失败关闭，owner 退出后才可重新取得租约。当前仍不支持多个进程共享 writer 或跨进程 reader/writer 快照协调；namespace quota、reader lease、DiskIOBudget 与批量 atime 也尚未实现。
 
 ---
 
 ## 12. 资源治理：先简单、可测
 
-当前实现具有可取消的 fetch/decode hard cap 与有界等待队列。permit 位于 single-flight operation 内部；等待者取消不会启动对应阶段或泄漏 permit。队列按当前订阅者有效优先级选择，并以 `maximumPriorityBypasses` 限制低优先级饥饿；Swift TaskPriority/URLSessionTask.priority 仍只是 best-effort 映射。尚未实现系统 memory-pressure 自适应、namespace 公平配额、working-set reservation 或 CPU 时间预算。
+当前实现具有可取消的 fetch/decode hard cap、有界等待队列和带权 decode working-set reservation。permit 位于 single-flight operation 内部；probe 后立即释放 count permit，等待者取消不会启动对应阶段或泄漏 permit。队列按当前订阅者有效优先级选择，并以 `maximumPriorityBypasses` 限制低优先级饥饿；官方系统层在 memory pressure 下清空可重建 RenderedMemory。Swift TaskPriority/URLSessionTask.priority 仍只是 best-effort 映射。尚未实现 namespace 加权公平、CPU 时间/能耗/thermal 动态预算或后台执行治理。
 
 v1 实现：
 
@@ -881,12 +941,15 @@ SwiftUI 行为不能只是 UIKit wrapper 的附录。规范状态机、request t
 - MIME、UTType、magic number 交叉验证；
 - `text/html` 等非图像响应默认拒绝；
 - SVG script、external entity/resource 默认禁止；
-- 重定向到不同 origin 默认不继承 Authorization；
+- 重定向到不同 origin 默认不继承 Authorization，并重新执行精确 destination policy；
+- 官方 URLSession 不继承调用者配置中的 Cookie、credential storage、URLCache 或 session-wide header；
+- namespace generation 达到计数上限后永久失败关闭，不允许回绕；
 - `no-store` 不进入任何跨请求可复用缓存；只允许同一 in-flight task cohort 处理，并由当前 view token 继续显示已交付像素；
 - 认证响应不进入共享 namespace；
-- logout/revoke 通过 NamespaceGeneration 栅栏阻止旧在途任务事后提交；
+- logout/revoke 在 persistent cleanup 前耐崩溃发布 NamespaceGeneration，并通过栅栏阻止旧在途任务事后提交；
 - DerivedEncoded 与 Analysis 不得比来源拥有更宽松的持久化权限；
-- 日志不记录 token、cookie 和完整私有 URL；
+- 日志不记录 token、cookie 和完整私有 URL；全部动态 OSLog/signpost payload 使用 private privacy，防止短期 digest、尺寸、状态码与路径时序成为公开行为指纹；
+- 使用 `stat/fstat/lstat` 的 Akashic targets 各自携带 Privacy Manifest；Workbench 可执行目标另声明容器内 FileTimestamp `C617.1` 与仅用于 App 功能的 UserDefaults `CA92.1`。门禁把源码调用、XcodeGen/SwiftPM 资源和 Release 产物绑定验证；所有清单均无 tracking domain 或 collected data；
 - 第三方 codec 版本钉定、fuzz、ASan/UBSan 和恶意 corpus；
 - 模型不由 Fovea 隐式远程下载。
 
@@ -896,11 +959,15 @@ SwiftUI 行为不能只是 UIKit wrapper 的附录。规范状态机、request t
 
 ## 15. Canonical workloads 与存在性门槛
 
-详见 `docs/specifications/benchmark-workloads.md`。Phase 0b 固定三个 canonical workloads：
+完整 canonical workload 矩阵固定为 W1-W15，权威机器入口是 `Benchmarks/workload-registry.json`，人类可读摘要见 `docs/project-memory/accepted-workload-matrix.md` 与 `docs/specifications/benchmark-workloads.md`。
 
-1. **Feed Scroll**：大量图片、高取消率、列表复用。
-2. **Detail Hero**：少量超大源图、目标尺寸远小于源。
-3. **Auth Gallery**：token/cookie、多账户、登出和私有缓存。
+Phase 0b 当前只执行其中三个最小端到端 baseline：
+
+1. **W1 Feed Scroll**：大量图片、高取消率、列表复用；
+2. **W2 Detail Hero**：少量超大源图、目标尺寸远小于源；
+3. **W3 Auth Gallery**：token/cookie、多账户、登出和私有缓存。
+
+W1-W3 完成不表示 W4-W15 完成，也不能生成完整图片加载库“最佳”声明。W4-W15 必须持续保留状态、依赖、能力缺口和开放事项。
 
 统一核心指标：
 
@@ -916,7 +983,7 @@ cache pollution after logout
 
 Phase 0a 只要求 workload harness 可运行，不承担存在性裁决。Phase 0b 的 G0 和 W3 是不可交换的硬门禁；外部 HTTP corpus 只在 G0 统计一次。通过 Performance Path 时，W1/W2 必须满足 provisional 性能门和回归护栏；通过 Correctness Path 时，必须证明关键正确性契约、target-pixel invariant 和预注册 non-inferiority。不可比指标既不能帮助通过，也不能判失败；每个 workload 至少保留一个采用统一 harness 的可比较主指标。门限、profile 和可比性分类只能通过 ADR 调整，且不得在查看目标实现结果后追溯改写。
 
-`Adaptive Representation` 可作为第四个非阻塞实验 workload，用于验证多候选选择，不阻塞 v1。
+`Adaptive Representation` 保留为辅助 workload `X1-ADAPTIVE-REPRESENTATION-V1`，用于验证多候选选择，不占用 W4，也不阻塞 v1。
 
 ---
 
@@ -956,7 +1023,7 @@ JPEG AI Part 1 已于 2025 年标准化，因此应立即跟踪和原型验证�
 
 AI 用于并行实现候选方案和扩大验证，而不是扩大未经证实的公共契约：
 
-- 同时实现 LRU、SIEVE、S3-FIFO 等策略并回放同一 trace；
+- 在离线分析器中实现 SIEVE、LRU、GDSF、频率密度和学习增强候选并回放同一 trace；生产只保留已通过采用门的策略；
 - 自动生成 HTTP 状态机组合和 property tests；
 - 生成畸形图像与 fuzz corpus；
 - 差分测试 ImageIO 与第三方 decoder；
@@ -1018,27 +1085,29 @@ PipelineFailure category/stage/disposition/reasonCode
 - `PipelineFailure`、有界 diagnostics、W1/W2/W3、critical mutants、rollback 和 sanitizer 门禁；
 - 静态 fetch/decode active + queued hard cap。
 
-当前产品实现已进入 `0b-in-progress`，但 0a/0b 的治理证明仍缺少远程 protected required check、可信 CI run locator、human comprehension attestation 与独立 held-out evaluator。功能代码和本地验证通过不能冒充这些外部信任锚，也不能倒推宣布 0a/0b 已完成。
+当前产品实现已进入 `phase0b-closeout`，Phase 1 preparation 已开始，但治理证明仍缺少远程 protected required check、可信 CI run locator、human comprehension attestation 与独立 held-out evaluator。功能代码和本地验证通过不能冒充这些外部信任锚，也不能倒推宣布 0a/0b 已完成。
 
-### Phase 0b：Existence Gate（当前状态：`0b-in-progress`）
+### Phase 0b：Existence Gate（当前状态：`phase0b-closeout`）
 
 1. 完成 G0 的 schema/generation crash matrix、priority/revoke property suites 和 key golden vectors。
 2. 接入 RFC 向量、cache-tests.fyi 和适用 WPT 的 required external corpus。
-3. 完成 W1/W2/W3、Nuke/Kingfisher adapter、固定网络/滚动 trace 和双设备复现。
+3. A 级七项矩阵已完成本地集成与 target 构建：Apple Native、Fovea、Nuke、Kingfisher、SDWebImage、PINRemoteImage 使用六项 headless 合同，Apple AsyncImage 与 FoveaResponsiveImage 使用配对 SwiftUI surface；AlamofireImage 仅为 B 级补充。继续完成当前源码摘要下的正式 W1/W2/W3、W7 与 SwiftUI aggregate、稳定 iOS 复跑和双设备复现。W4-W15 的计划、能力缺口和实现顺序由 `Benchmarks/workload-registry.json` 保持可见。
 4. 按预注册规则通过 Performance Path 或 Correctness Path。
 5. 公开不可比指标、coverage gap、raw trace、adapter 配置和失败项。
 6. 完成 R3 critical mutant、held-out oracle、FoveaAgentEval、SBOM/provenance 与独立审查证据；
 7. 通过后才进入 Core v1 Candidate。
 
-### Phase 1：确定性生产核心
+### Phase 1 / Core v1 Candidate Hardening
 
-- URL/File/Data/Asset，并通过 source identity/invalidation 规格；
-- target-size static decode；
-- OriginalEncoded、RenderedMemory；
-- single-flight、取消和优先级；
-- UIKit/AppKit/SwiftUI；
-- DecodeLimits、安全矩阵和诊断；
-- Fovea Private Image Cache Profile 的 required cases 全部通过。
+Phase 1 不重复建设已经存在的 URL 管线、目标像素解码、OriginalEncoded、RenderedMemory、single-flight、取消、优先级和三套 UI adapter。它负责把这些内部能力收缩成可发布候选：
+
+- 收缩 public API，分离普通集成面、Advanced 逃生口与内部实现；
+- 补齐 File/Data/Asset source 的身份、失效、权限与持久化契约；
+- 冻结版本化 Private Image Cache Profile v1 Candidate；
+- 完成真实宿主 App 兼容周期；
+- 固化错误、取消、默认值、配置和 StoreGeneration 迁移政策；
+- 建立 API diff、工具链矩阵、二进制体积、启动成本、SBOM 与发布 provenance；
+- 继续允许 breaking change，Stable Core 在兼容周期和 Accepted ADR 前保持为空。
 
 ### Phase 2：经数据选择的优化
 

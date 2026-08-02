@@ -1,0 +1,23 @@
+{
+  "originHash" : "bd5c936963fafc0d8d0fe6b2750767ee60e6574c62a6d756d2a2c376f4cc1e45",
+  "pins" : [
+    {
+      "identity" : "imagecraft",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/YuLeiFuYun/ImageCraft.git",
+      "state" : {
+        "revision" : "4507da936ef348fa198652c2e4314a1f393b2c90"
+      }
+    },
+    {
+      "identity" : "pinoperation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pinterest/PINOperation.git",
+      "state" : {
+        "revision" : "a74f978733bdaf982758bfa23d70a189f4b4c1b6",
+        "version" : "1.2.3"
+      }
+    }
+  ],
+  "version" : 3
+}

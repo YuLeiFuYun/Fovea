@@ -1,0 +1,34 @@
+{
+  "concurrentFailure": {
+    "concurrentWork": "Fovea release full-graph compilation",
+    "errorCategory": "transport",
+    "errorDisposition": "retryable",
+    "errorReasonCode": "url-session-transport",
+    "externalHostTestsExecuted": 475,
+    "externalHostTestsFailed": 1,
+    "test": "ProgressiveImageLoadingTests/testRapidCancellationWarmupDefersDurabilityUntilVisibleConsumer_UI_PT_027_CACHE_PT_044"
+  },
+  "decision": {
+    "automaticRetryInsideGate": false,
+    "externalRehearsalMustRunWithoutConcurrentFullGraphBuild": true,
+    "failedRunRemainsRetained": true,
+    "serialSuccessRequiredForPassingEvidence": true
+  },
+  "findingID": "FOVEA-EXTERNAL-REHEARSAL-CONTENTION-2026-07-30",
+  "interpretation": "The failure occurred only while a separate release build saturated compiler and filesystem resources. It is retained as a test-harness resource-sensitivity counterexample, not classified as proof of an external-component semantic incompatibility.",
+  "schemaVersion": 1,
+  "serialFullRehearsal": {
+    "artifactSHA256": "a4639cf7b4979cf02280e69b27df26b5fff5acb40ca07543cb56793db5439fbd",
+    "expectedTestCount": 475,
+    "failures": 0,
+    "status": "passed",
+    "testCount": 475,
+    "testLogSHA256": "1a1b753184c549c567ab2996b67dae2601a5000fe883213fb51a14476eb80935"
+  },
+  "serialTargetedReplay": {
+    "attempts": 5,
+    "failures": 0,
+    "status": "passed"
+  },
+  "verifiedOn": "2026-07-31"
+}

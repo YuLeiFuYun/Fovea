@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "reviewedOn": "2026-08-01",
+  "status": "phase-1-local-core-composition-and-platform-green-trusted-ci-pending",
+  "toolchain": {
+    "xcode": "27.0 beta 27A5228h",
+    "swift": "Apple Swift 6.4 swiftlang-6.4.0.27.1",
+    "swiftSource": "4ea844422a7477910d77e7561c32955af6298869",
+    "swiftEvolution": "7607273ce9de51bc154df8d4f8b9f1de5f01fa0e",
+    "swiftFoundation": "111c5077d14bb0cabf97ec168cb04a1dbd82d10c",
+    "swiftPackageManager": "c21af2594e8b0cab31298afff6665849de31c361",
+    "swiftTesting": "b9c33e7d1f9ed6b533a36d78bc674a1e128a0d6e"
+  },
+  "platformBaseline": {
+    "ios": "15.0",
+    "macos": "12.0",
+    "raisedByMigration": false
+  },
+  "adopted": [
+    {
+      "capability": "swift-tools-version-6.4",
+      "repositories": [
+        "Fovea",
+        "ImageCraft",
+        "Akashic"
+      ],
+      "reason": "Compile every product, fixture and benchmark contract under one SwiftPM 6.4 manifest model."
+    },
+    {
+      "capability": "async-defer",
+      "repositories": [
+        "Fovea"
+      ],
+      "locations": [
+        "Sources/FoveaCore/AsyncPermitPool.swift",
+        "Sources/FoveaCore/DecodeStage.swift"
+      ],
+      "reason": "Make permit release, shared subscription cancellation, preparation discard and priority-control finish structurally unavoidable across success and failure paths."
+    },
+    {
+      "capability": "weak-let",
+      "repositories": [
+        "Fovea"
+      ],
+      "locations": [
+        "Sources/FoveaSystem/FoveaMemoryPressureMonitor.swift",
+        "Sources/FoveaPersistence/FoveaPersistentStores.swift"
+      ],
+      "reason": "Express immutable non-owning relationships and prevent accidental post-initialization retargeting."
+    },
+    {
+      "capability": "noncopyable-writer-lease",
+      "repositories": [
+        "Akashic"
+      ],
+      "locations": [
+        "Sources/AkashicDisk/StoreWriterLease.swift",
+        "Sources/AkashicDisk/FileBlobStore.swift"
+      ],
+      "reason": "Make the process writer lease a linear resource and acquire it through a dedicated serial actor instead of a Copyable continuation result."
+    },
+    {
+      "capability": "swift-build-path-discovery",
+      "repositories": [
+        "Fovea",
+        "ImageCraft",
+        "Akashic"
+      ],
+      "reason": "Remove .build/debug and .build/out path assumptions by resolving products through swift build --show-bin-path under Swift Build."
+    },
+    {
+      "capability": "toolchain-identity-gate",
+      "repositories": [
+        "Fovea",
+        "ImageCraft",
+        "Akashic"
+      ],
+      "reason": "Fail closed unless Xcode 27+ and Apple Swift 6.4 are selected; keep compiler identity explicit in local evidence."
+    },
+    {
+      "capability": "scoped-warning-policy",
+      "repositories": [
+        "Fovea"
+      ],
+      "reason": "Xcode 27 rejects global warnings-as-errors combined with SwiftPM dependency suppression; Fovea-owned warnings are rejected by source-attributed log auditing and app-target settings without overriding external packages."
+    }
+  ],
+  "deferred": [
+    {
+      "capability": "rawspan-parser-hot-path",
+      "repositories": [
+        "ImageCraft"
+      ],
+      "reason": "Checked RawSpan parsing passed correctness tests but the local paired microbenchmark was noisy and did not prove non-inferiority; the new integer load API is SDK-available only on Apple OS 27."
+    },
+    {
+      "capability": "noncopyable-image-decode-preparation",
+      "repositories": [
+        "ImageCraft",
+        "Fovea"
+      ],
+      "reason": "The component-local API can be made linear, but a diagnostic wrapper triggered a Swift 6.4 compiler bug and Fovea's DispatchWorkExecutor still has a Copyable result boundary."
+    },
+    {
+      "capability": "swiftpm-spdx3-release-certificate",
+      "repositories": [
+        "Fovea",
+        "ImageCraft",
+        "Akashic"
+      ],
+      "reason": "The beta toolchain generated SBOM output while skipping schema validation and omitted root MIT declared-license relationships; retain as experimental diagnostics only."
+    },
+    {
+      "capability": "task-cancellation-shield",
+      "repositories": [
+        "Fovea"
+      ],
+      "reason": "The API is runtime-available only on Apple OS 27 and therefore cannot protect the iOS 15/macOS 12 revoke path without a split implementation."
+    },
+    {
+      "capability": "isTriviallyIdentical-specialization-and-forced-inline",
+      "repositories": [
+        "Fovea",
+        "ImageCraft",
+        "Akashic"
+      ],
+      "reason": "No retained workload currently proves a net win after code size, optimizer stability and branch effects; adoption requires a named hotspot and preregistered A/B evidence."
+    }
+  ],
+  "experimentalOnly": [
+    "~Sendable",
+    "source warning control",
+    "manual specialization attributes",
+    "unchecked RawSpan indexing",
+    "custom noncopyable continuation bridges"
+  ],
+  "validation": {
+    "foveaTests": "475-of-475-strict-zero-owned-warnings-after-hosted-rendering-fix",
+    "imageCraftTests": 64,
+    "akashicTests": 41,
+    "imageCraftReleaseBuild": "passed",
+    "minimumDeploymentBuild": "pending-full-three-repository-platform-matrix",
+    "hostedCI": "disabled-budget-exhausted-local-candidate-qualification-only",
+    "foveaIOS15Compile": "workbench-original-five-test-shard-passed-5-of-5",
+    "foveaLocalComponentCompositionTests": 475,
+    "foveaReleaseBuild": "passed",
+    "foveaCacheLabTests": 7,
+    "imageCraftPlatformMatrix": "macOS-12-universal+iOS-15-simulator-universal+iOS-15-device-arm64-passed",
+    "akashicPlatformMatrix": "6-cases-macOS-12+iOS-15-simulator+iOS-15-device-passed",
+    "foveaOriginalUIShard": "passed-5-of-5-after-explicit-app-teardown",
+    "mutationApplications": "101-of-101-alpha3",
+    "targetedMutants": "AIQA-MUT-039-056-069-killed",
+    "foveaIOSPackageTests": "474-of-474-passed-iOS-Simulator",
+    "foveaIOSPackageTerminalStatus": "TEST-SUCCEEDED",
+    "targetedMutationReportSHA256": "aa12cd8d523f0391ba2472adb634d858a74f931832687cfe2ff3edef36e9e51b",
+    "comparativeMacOSAdapters": "7-of-7-built",
+    "comparativeIOSAdapters": "7-of-7-built",
+    "comparativeSwiftUISurfaces": "Apple-AsyncImage-and-Fovea-SwiftUI-built",
+    "comparativeVerification": "passed-external-true-ios-true",
+    "comparativePerformanceRanking": "not-run-and-not-claimed",
+    "phase1DeclarationAllowed": false,
+    "x86IdentityBuild": "passed-hosted-xcode27-direct-rosetta-xctest-run-30689587302",
+    "componentReleases": {
+      "ImageCraft": "4507da936ef348fa198652c2e4314a1f393b2c90@0.1.0-alpha.3",
+      "Akashic": "e138b4425688cb0ce32fba7788adcc944c936b53@0.1.0-alpha.3"
+    },
+    "foveaAlpha3CleanCopy": "475-of-475",
+    "foveaAlpha2RollbackForward": "3-scenarios-475-each",
+    "foveaPrivateRoot": {
+      "commit": "49c34224fd354578e3ea5c3e1b07bb26fd30d4ba",
+      "runID": 30690150522,
+      "continuity": "passed",
+      "arm64Identity": "passed",
+      "x86Identity": "passed-direct-rosetta-xctest",
+      "coldBootReadiness": "passed-and-entered-workbench",
+      "verify": "failed-ipad-visual-outer-600-second-watchdog-after-two-attempts"
+    },
+    "x86IdentityRunner": "native-arm64-strict-cross-build+universal-xctest-x86_64-slice+platform-runtime-search-paths-passed",
+    "swiftUIIdentityChangeCompatibility": "combine-state-guarded-backdeployable-modifier-macos14-deprecation-free",
+    "hostedX86Identity": "passed-run-30689587302",
+    "hostedSimulatorReadiness": "resolved-run-30690150522-proceeded-through-cold-boot",
+    "hostedX86IdentityEvidence": {
+      "runID": 30689587302,
+      "jobID": 91341807599,
+      "testCount": 1,
+      "failures": 0,
+      "logSHA256": "ea1ea74f2bc0e372acf6b8e7a5e3e7ea11b13d02559366d840cd379adf748c1d"
+    },
+    "visualCaptureWatchdog": "local-live-log-720-total-240-inactivity-no-auto-diagnostics-hosted-private-root-validation-pending",
+    "actionsBudgetGovernance": {
+      "status": "active",
+      "automaticTriggers": false,
+      "dispatchBudgetApprovalDefault": false,
+      "verificationProfiles": [
+        "identity",
+        "full"
+      ],
+      "liveNetworkScheduled": false,
+      "remoteWorkflowsDisabled": true
+    },
+    "documentationBuildWatchdog": {
+      "status": "bounded-failure-observed-host-recovery-required",
+      "totalTimeoutSeconds": 900,
+      "inactivityTimeoutSeconds": 180,
+      "streamsRetainedLog": true,
+      "isolatedProcessGroup": true,
+      "counterexample": "success-marker-with-unreaped-xcodebuild-exit-state",
+      "completeRerun": "macOS-success-marker-then-180-second-inactivity-failure",
+      "cliExitCode": 124,
+      "finalReportProduced": false
+    },
+    "adaptiveCancellationWarmup": {
+      "status": "passed",
+      "targetedReplay": "20-of-20",
+      "fullHostSuite": "476-of-476",
+      "admissionLineage": "original-top-level-admission",
+      "oracle": "exact-final-request-handoff-plus-no-new-transport-request",
+      "maximumFixtureAttempts": 5,
+      "nonPromotingExactQueryTest": "CACHE_PT_053-passed"
+    }
+  }
+}

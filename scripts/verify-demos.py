@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from swift_tooling import build_product, selected_environment
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -22,38 +24,25 @@ def run(command: list[str], env: dict[str, str]) -> subprocess.CompletedProcess[
 
 
 def main() -> int:
-    env = os.environ.copy()
-    env["DEVELOPER_DIR"] = subprocess.run(
-        [str(ROOT / "scripts/select-xcode.sh")],
-        cwd=ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=True,
-    ).stdout.strip()
+    env = selected_environment(ROOT)
+    try:
+        network_lab = build_product(ROOT, env, "FoveaNetworkLab")
+        _ = build_product(ROOT, env, "FoveaGalleryDemo")
+    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+        print(str(error), file=sys.stderr)
+        return 1
 
-    for product in ("FoveaNetworkLab", "FoveaGalleryDemo"):
-        completed = run(
-            ["xcrun", "swift", "build", "--product", product, "-Xswiftc", "-warnings-as-errors"],
-            env,
-        )
-        if completed.returncode != 0:
-            print(completed.stdout, file=sys.stderr)
-            print(completed.stderr, file=sys.stderr)
-            print(f"Demo build failed: {product}", file=sys.stderr)
-            return 1
-
-    refusal = run(
-        ["xcrun", "swift", "run", "--skip-build", "FoveaNetworkLab"],
-        env,
-    )
+    refusal = run([str(network_lab)], env)
     if refusal.returncode != 2 or "--live" not in refusal.stderr:
         print(refusal.stdout, file=sys.stderr)
         print(refusal.stderr, file=sys.stderr)
-        print("FoveaNetworkLab must refuse network access without explicit --live", file=sys.stderr)
+        print("FoveaNetworkLab must refuse execution without explicit --live", file=sys.stderr)
         return 1
 
-    print("Demo verification passed: both products build and live networking is opt-in.")
+    print(
+        "Demo verification passed: products build and the NetworkLab binary "
+        "refuses implicit network execution."
+    )
     return 0
 
 

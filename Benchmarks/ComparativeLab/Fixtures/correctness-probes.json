@@ -1,0 +1,105 @@
+{
+  "probes": [
+    {
+      "expectedPixelHeight": 80,
+      "expectedPixelWidth": 120,
+      "identifier": "orientation-6-quadrants",
+      "maxChannelError": 50,
+      "mimeType": "image/jpeg",
+      "rawPixelHeight": 120,
+      "rawPixelWidth": 80,
+      "resourceName": "orientation-6-quadrants.jpg",
+      "samples": [
+        {
+          "rgb": [
+            30,
+            60,
+            235
+          ],
+          "x": 0.2,
+          "y": 0.25
+        },
+        {
+          "rgb": [
+            240,
+            30,
+            30
+          ],
+          "x": 0.8,
+          "y": 0.25
+        },
+        {
+          "rgb": [
+            235,
+            220,
+            30
+          ],
+          "x": 0.2,
+          "y": 0.75
+        },
+        {
+          "rgb": [
+            30,
+            220,
+            50
+          ],
+          "x": 0.8,
+          "y": 0.75
+        }
+      ],
+      "sha256": "1e12e83b549f2d7e23dfaa2ef055292ccbc47512604ac9055ce4d447288c64ac",
+      "sourceFile": "orientation-6-quadrants.jpeg.fixture"
+    },
+    {
+      "expectedPixelHeight": 64,
+      "expectedPixelWidth": 64,
+      "identifier": "color-reference-srgb",
+      "maxChannelError": 3,
+      "mimeType": "image/png",
+      "rawPixelHeight": 64,
+      "rawPixelWidth": 64,
+      "resourceName": "color-reference-srgb.png.fixture",
+      "samples": [
+        {
+          "rgb": [
+            220,
+            40,
+            30
+          ],
+          "x": 0.25,
+          "y": 0.25
+        },
+        {
+          "rgb": [
+            30,
+            200,
+            60
+          ],
+          "x": 0.75,
+          "y": 0.25
+        },
+        {
+          "rgb": [
+            30,
+            70,
+            220
+          ],
+          "x": 0.25,
+          "y": 0.75
+        },
+        {
+          "rgb": [
+            128,
+            128,
+            128
+          ],
+          "x": 0.75,
+          "y": 0.75
+        }
+      ],
+      "sha256": "5e6e9713e30aa7b141f38003581559c8532362187b120a3a829e1fec64c653b1",
+      "sourceFile": "color-reference-srgb.png.fixture"
+    }
+  ],
+  "schemaVersion": 1
+}

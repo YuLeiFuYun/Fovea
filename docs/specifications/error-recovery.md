@@ -88,7 +88,7 @@ v1 只自动重试幂等 GET 的明确瞬态失败：
 
 规则：
 
-- 指数退避使用有界 jitter；
+- 指数退避固定使用 full jitter `U(0, capped exponential)`；`Retry-After` 是不可下穿的下界；
 - 重试总次数、总时间和总额外字节有硬上限；
 - 新 subscriber 加入不重置共享任务 retry budget；
 - 取消、securityLimit、securityPolicy、schemaIncompatible、确定性 decode failure 默认不重试；
@@ -148,7 +148,7 @@ fresh reusable result
 | decode unsupported | 尝试明确 fallback 后失败 | 否 | placeholder/error image |
 | stale delivered | 标记 source/staleness | 后台 revalidate 依策略 | 保留 stale 直到替换 |
 
-UIKit/AppKit/SwiftUI 必须共享同一 disposition 到 UI action 的映射；UI adapter 不自行发明 retry。
+恢复矩阵唯一位于 `FoveaCore.PipelineFailure.imageRecoveryAction`。SwiftUI 直接消费该值；UIKit/AppKit 把结构化 `PipelineFailure` 交给 completion，由宿主使用同一 Core 映射。平台模块不得复制 category/disposition 分支，也不得为了转发一个属性暴露空壳 policy API。
 
 ## 10. Property tests
 
@@ -165,4 +165,4 @@ UIKit/AppKit/SwiftUI 必须共享同一 disposition 到 UI action 的映射；UI
 - **ERR-PT-011**: namespaceRevoked 在所有 UI adapter 中立即清图且不自动重试；
 - **ERR-PT-012**: securityLimit 不保留被拒绝像素；
 - **ERR-PT-013**: cache degradation 不覆盖成功 final；
-- **ERR-PT-014**: UIKit/AppKit/SwiftUI 对同一 disposition 产生一致默认 UI action；恢复矩阵唯一实现在 `FoveaCore`，三个平台策略模块只委托该映射，不维护副本。
+- **ERR-PT-014**: `PipelineFailure.imageRecoveryAction` 是唯一恢复矩阵；SwiftUI 直接消费，UIKit/AppKit completion 保留同一结构化 failure，平台模块不存在重复策略表或零逻辑包装器。

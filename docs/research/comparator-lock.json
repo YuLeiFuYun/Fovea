@@ -1,0 +1,66 @@
+{
+  "comparators": [
+    {
+      "exactCommit": "63a8fcbd6621340a2410bc3e9575ac97058615f4",
+      "name": "Nuke",
+      "phase0bRole": "required",
+      "repository": "https://github.com/kean/Nuke.git",
+      "researchTier": "A",
+      "tag": "13.0.6",
+      "testSuite": "Tests"
+    },
+    {
+      "exactCommit": "410984bf301f4fa224fe56277b3f8672cc465c79",
+      "name": "Kingfisher",
+      "phase0bRole": "required",
+      "repository": "https://github.com/onevcat/Kingfisher.git",
+      "researchTier": "A",
+      "tag": "8.11.0",
+      "testSuite": "Tests"
+    },
+    {
+      "exactCommit": "2de3a496eaf6df9a1312862adcfd54acd73c39c0",
+      "name": "SDWebImage",
+      "phase0bRole": "required",
+      "repository": "https://github.com/SDWebImage/SDWebImage.git",
+      "researchTier": "A",
+      "tag": "5.21.7",
+      "testSuite": "Tests/SDWebImage Tests.xcodeproj"
+    },
+    {
+      "exactCommit": "c0d5cfa1947f2456ddb321a85b347b3d60d83254",
+      "name": "PINRemoteImage",
+      "phase0bRole": "required",
+      "repository": "https://github.com/pinterest/PINRemoteImage.git",
+      "researchTier": "A",
+      "tag": "releases/p14.31",
+      "testSuite": "Tests"
+    },
+    {
+      "exactCommit": "4cf73d601c482b7d77bae47de3ef1b8bcf328ec1",
+      "name": "AlamofireImage",
+      "phase0bRole": "required",
+      "repository": "https://github.com/Alamofire/AlamofireImage.git",
+      "researchTier": "B",
+      "tag": "4.4.0",
+      "testSuite": "Tests"
+    }
+  ],
+  "matrixPolicy": {
+    "aTierUnifiedApp": [
+      "Apple URLSession + URLCache + ImageIO",
+      "Apple AsyncImage",
+      "Nuke",
+      "Kingfisher",
+      "SDWebImage",
+      "PINRemoteImage",
+      "Fovea"
+    ],
+    "bTierRetained": [
+      "AlamofireImage"
+    ],
+    "rule": "A-tier entries are mandatory for the complete Apple-platform matrix; B-tier entries remain useful but do not substitute for an A-tier entry."
+  },
+  "reviewedOn": "2026-07-31",
+  "schemaVersion": 1
+}

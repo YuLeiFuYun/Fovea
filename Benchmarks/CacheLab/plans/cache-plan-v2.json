@@ -1,0 +1,241 @@
+{
+  "archivedPlan": "Benchmarks/CacheLab/plans/cache-plan-v1.json",
+  "claimPolicy": {
+    "correctness": "Fovea passes every applicable hard check for implemented cache capabilities.",
+    "performance": "Every applicable Cache Lab L2 primary endpoint must exceed the preregistered dominance margin against every eligible comparator, unless a machine-checkable optimal-floor proof applies.",
+    "scope": "Inconclusive evidence blocks only its claim family; descriptive D1 metrics and L3 secondary diagnostics cannot create or defeat an unrelated L2 certificate.",
+    "secondaryDominance": "At least eighty percent of applicable secondary endpoints must be substantially superior and none may be materially inferior.",
+    "semanticStratification": "Only contestants in the same semanticGroup and durabilityLevel are ranked directly. Native PINCache results remain descriptive.",
+    "unsupported": "Non-common capabilities are reported separately and never imputed as passes."
+  },
+  "comparators": {
+    "disk": [
+      {
+        "contestant": "PINDiskCacheNative",
+        "durabilityLevel": "D1",
+        "name": "PINCache 3.0.4 PINDiskCache native",
+        "operationQueueIsolation": "Each contestant instance owns a dedicated PINOperationQueue that is drained at batch and teardown boundaries.",
+        "rankingRole": "descriptive",
+        "semanticGroup": "native-best-effort-atomic-write"
+      },
+      {
+        "attribution": "The wrapper semantics belong to the Fovea benchmark harness, not to native PINCache.",
+        "contestant": "PINDiskCacheDurableValidated",
+        "durabilityLevel": "D5",
+        "name": "PINCache 3.0.4 with Fovea durable validation wrapper",
+        "operationQueueIsolation": "Each contestant instance owns a dedicated PINOperationQueue that is drained at batch and teardown boundaries.",
+        "rankingRole": "primary",
+        "semanticGroup": "content-validated-durable-commit",
+        "wrapperSemantics": [
+          "pin-write-completes",
+          "data-file-fsync",
+          "data-parent-directory-fsync",
+          "api-readback-content-id-validation",
+          "durable-proof-publication",
+          "proof-gates-visibility"
+        ]
+      }
+    ],
+    "memory": [
+      "LRUCache 1.2.1",
+      "PINCache 3.0.4 PINMemoryCache"
+    ],
+    "systemUnderTest": "Fovea AkashicMemory/AkashicDisk"
+  },
+  "diskWorkloads": {
+    "DISK-ADVERSARIAL-V2": {
+      "hardCorrectness": [
+        "corruption-not-served",
+        "atomic-publication",
+        "bounded-bootstrap-reconciliation",
+        "unproven-residue-not-visible"
+      ],
+      "primaryMetrics": []
+    },
+    "DISK-MIXED-V2": {
+      "completionBoundary": {
+        "readThroughput": "The timed read batch ends only after contestant quiescence; synchronous per-read latency remains the p99 sample.",
+        "teardown": "Contestant quiescence completes before clear, reopen, root deletion, or the next contestant window.",
+        "writeThroughput": "The timed write batch ends only after contestant quiescence; deferred work created by writes is included."
+      },
+      "descriptiveContestants": [
+        "PINDiskCacheNative"
+      ],
+      "hardCorrectness": [
+        "restart-persistence",
+        "external-deletion-clean-miss",
+        "returned-bytes-match",
+        "proof-gates-visibility",
+        "background-work-does-not-cross-measurement-window"
+      ],
+      "objectSizes": [
+        4096,
+        65536,
+        1048576
+      ],
+      "objectsPerSize": 64,
+      "primaryMetrics": [
+        "disk-write-throughput",
+        "disk-read-throughput",
+        "disk-p99-read-latency"
+      ],
+      "primarySemanticGroup": "content-validated-durable-commit"
+    }
+  },
+  "hostExecutionPolicy": {
+    "abortFormalOnExternalCompiler": true,
+    "acceptedBlockRetention": "retain-complete-clean-blocks-across-rejected-attempts",
+    "buildExcludedFromMeasurement": true,
+    "contaminatedAttemptPolicy": "discard-current-process-block-and-retry-after-quiescence",
+    "correctnessProcess": "separate-monitored-process-excluded-from-statistical-runs",
+    "directBinaryRequired": true,
+    "externalActivity": "Build drivers are always disqualifying; standalone compiler/linker processes are disqualifying while actively consuming CPU.",
+    "formalAcceptedBlockCount": 20,
+    "formalRequiredConsecutiveCleanSamples": 10,
+    "policyID": "external-compiler-process-block-v3",
+    "processIdentification": "Use the full command executable token because macOS ps comm may truncate long Xcode paths; build drivers always disqualify and standalone compilers disqualify while active.",
+    "processModel": "independent-process-per-resampling-unit",
+    "resultPublication": "atomic-after-complete-campaign",
+    "runnerMustBePrebuilt": true,
+    "sampleIntervalMilliseconds": 1000,
+    "schemaVersion": 3,
+    "wholeRunnerMonitoringRequired": true
+  },
+  "memoryWorkloads": {
+    "MEM-CONCURRENT-V2": {
+      "hardCorrectness": [
+        "no-crash-or-hang",
+        "returned-bytes-match",
+        "bounded-cost"
+      ],
+      "innerTrialsPerProcessRun": 3,
+      "operationsPerWorker": 5000,
+      "primaryMetrics": [
+        "memory-concurrent-throughput",
+        "memory-concurrent-p99-latency"
+      ],
+      "withinProcessAggregation": "median",
+      "workers": 8
+    },
+    "MEM-HOT-SCAN-V2": {
+      "capacityCost": 128,
+      "hardCorrectness": [
+        "returned-bytes-match",
+        "cost-never-exceeds-limit"
+      ],
+      "hotObjectCount": 32,
+      "innerTrialsPerProcessRun": 3,
+      "primaryMetrics": [
+        "memory-hot-scan-hit-rate",
+        "memory-hot-scan-throughput",
+        "memory-hot-scan-p99-latency"
+      ],
+      "rounds": 20,
+      "scanObjectCount": 4096,
+      "withinProcessAggregation": "median"
+    }
+  },
+  "metricDecisionRules": {
+    "disk-p99-read-latency": {
+      "direction": "lower",
+      "dominanceMargin": 0.2,
+      "equivalenceMargin": 0.05,
+      "nonInferiorityMargin": 0.05,
+      "scale": "log-ratio",
+      "superiorityMargin": 0.02
+    },
+    "disk-read-throughput": {
+      "direction": "higher",
+      "dominanceMargin": 0.2,
+      "equivalenceMargin": 0.05,
+      "nonInferiorityMargin": 0.05,
+      "scale": "log-ratio",
+      "superiorityMargin": 0.02
+    },
+    "disk-write-throughput": {
+      "direction": "higher",
+      "dominanceMargin": 0.2,
+      "equivalenceMargin": 0.05,
+      "nonInferiorityMargin": 0.05,
+      "scale": "log-ratio",
+      "superiorityMargin": 0.02
+    },
+    "memory-concurrent-p99-latency": {
+      "direction": "lower",
+      "dominanceMargin": 0.2,
+      "equivalenceMargin": 0.05,
+      "nonInferiorityMargin": 0.05,
+      "scale": "log-ratio",
+      "superiorityMargin": 0.02
+    },
+    "memory-concurrent-throughput": {
+      "direction": "higher",
+      "dominanceMargin": 0.2,
+      "equivalenceMargin": 0.05,
+      "nonInferiorityMargin": 0.05,
+      "scale": "log-ratio",
+      "superiorityMargin": 0.02
+    },
+    "memory-hot-scan-hit-rate": {
+      "direction": "higher",
+      "dominanceMargin": 0.05,
+      "equivalenceMargin": 0.005,
+      "nonInferiorityMargin": 0.005,
+      "scale": "absolute-difference",
+      "superiorityMargin": 0.01
+    },
+    "memory-hot-scan-p99-latency": {
+      "direction": "lower",
+      "dominanceMargin": 0.2,
+      "equivalenceMargin": 0.05,
+      "nonInferiorityMargin": 0.05,
+      "scale": "log-ratio",
+      "superiorityMargin": 0.02
+    },
+    "memory-hot-scan-throughput": {
+      "direction": "higher",
+      "dominanceMargin": 0.2,
+      "equivalenceMargin": 0.05,
+      "nonInferiorityMargin": 0.05,
+      "scale": "log-ratio",
+      "superiorityMargin": 0.02
+    }
+  },
+  "planID": "FOVEA-CACHE-LAB-V2",
+  "schemaVersion": 2,
+  "sourceIdentityPolicy": {
+    "components": [
+      "Fovea",
+      "Akashic"
+    ],
+    "legacyReports": "Schema 2 and 3 reports remain readable historical evidence but are source-identity-unbound under the current policy.",
+    "reportSchemaVersion": 4,
+    "requiredFields": [
+      "commit",
+      "sourceTreeDigest",
+      "includesWorkingTreeChanges",
+      "dependencyMode"
+    ],
+    "researchEvidence": "Dirty worktrees and edited dependencies may produce local research evidence, but cannot produce a trusted certificate.",
+    "trustedCertificate": {
+      "akashicDeclaredRevisionMustEqualMeasuredCommit": true,
+      "akashicDependencyMode": "source-control-checkout",
+      "foveaDependencyMode": "root-worktree",
+      "workingTreesMustBeClean": true
+    }
+  },
+  "statisticalClaimFamilies": "Benchmarks/statistical-claim-families.json",
+  "statistics": {
+    "bootstrapIterations": 10000,
+    "confidenceLevel": 0.95,
+    "equivalenceMethod": "paired-bootstrap-TOST",
+    "formalProcessModel": "one-independent-runner-process-per-resampling-unit",
+    "multipleComparisonCorrection": "Holm-within-metric-family",
+    "randomSeed": 20260725,
+    "repetitions": 20,
+    "resamplingUnit": "process-run-after-within-run-median",
+    "withinProcessAggregation": "median",
+    "withinProcessMemoryTrials": 3
+  },
+  "status": "preregistered-before-next-formal-results"
+}

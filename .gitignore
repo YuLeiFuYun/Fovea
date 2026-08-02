@@ -12,3 +12,11 @@ evidence/local/
 __pycache__/
 *.py[cod]
 *.profraw
+.swiftpm/
+xcuserdata/
+*.profdata
+*.dSYM/
+*.xccovarchive
+*.xccovreport
+Benchmarks/ComparativeLab/Apps/GeneratedResources/
+Benchmarks/ComparativeLab/Apps/FoveaComparativeApps.xcodeproj/

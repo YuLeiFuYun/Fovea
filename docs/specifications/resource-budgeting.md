@@ -27,7 +27,28 @@ maximumQueuedFetches / maximumQueuedDecodes = 512（默认，可配置）
 - 官方系统组合层在 warning/critical memory pressure 下清空 RenderedMemory；
 - 请求级 cellular/constrained/expensive 权限进入 exact execution identity，不进入持久缓存身份；
 - 官方 URLSession policy 明确 `waitsForConnectivity`、请求/资源超时和每主机连接上限；
-- 同步 probe/decode 在专用 Dispatch executor 上运行，不阻塞 Swift cooperative executor。
+- 同步 probe/decode 在专用 Dispatch executor 上运行，不阻塞 Swift cooperative executor；
+- 自定义 transport 返回后由 `FetchStage` 重新验证实际 body hard cap，自定义 transformer 返回后重新验证 dimension、pixel count 与 working-set cap；
+- 程序化配置与 Codable 配置共享宽松但有限的控制面上界，损坏配置不能把 `Int.max` 传入队列、URLSession、重试或解码分配。
+
+当前控制面绝对上界不是推荐设备预算，而是损坏/敌意配置的最后防线：
+
+```text
+transport body                    1 GiB
+memory cache                      4 GiB
+fetch concurrency                 256
+decode concurrency                64
+decode working set                8 GiB
+fetch/decode queue                1,000,000 each
+URLSession request timeout        1 hour
+URLSession resource timeout       24 hours
+connections per host              64
+retry attempts                    8
+retry total delay                 15 minutes
+stale fallback                    365 days
+decode/geometry maximum dimension 65,536
+pixel count                       1,000,000,000
+```
 
 仍未实现：按 CPU 时间的硬配额、thermal/pressure 驱动的动态并发、namespace 加权公平、独立 prefetch 配额、后台 URLSession 延续、跨进程全局资源预算与实际分配动态扩容。后续章节描述完整目标模型，不得误读为当前已交付能力。
 
@@ -44,7 +65,7 @@ ProcessPermit(estimatedWorkingSet)
 
 - permit 只覆盖明确阶段，不跨未知用户回调；
 - 等待 permit 的任务保留 Subscriber 取消能力；
-- permit 释放必须幂等；
+- `AsyncPermitPool.Permit` 是不可复制的消耗型所有权令牌；`withPermit`/`release` 消耗令牌，编译器阻止复制后并发使用或二次释放，pool 内部仍对迟到/重复标识执行防御性忽略；
 - 无法可靠估算时使用保守上界；
 - 实测成本反馈给后续调度，但不在一次请求中无界追加资源。
 
@@ -151,4 +172,15 @@ network constrained/expensive decision
 - **RES-PT-011**: 官方系统组合层在 warning/critical memory pressure 下清空 RenderedMemory；清理幂等，不删除 OriginalEncoded、不触发重复网络请求，也不改变在途任务身份；
 - **RES-PT-012**: 官方 URLSession policy 的连接等待、超时和每主机连接上限进入 transport context；自定义 configuration 不被默认策略静默覆盖；
 - **RES-PT-013**: 带权 decode working-set reservation 永不超过 hard cap，fill overscan 进入估算，超大任务在像素分配前失败；
-- **RES-PT-014**: probe 完成后立即释放 decode-count permit；等待 working-set 的大任务不得阻塞仍可容纳的小任务。
+- **RES-PT-014**: probe 完成后立即释放 decode-count permit；等待 working-set 的大任务不得阻塞仍可容纳的小任务；
+- **RES-PT-015**: 默认代理策略明确遵循系统设置；严格模式要求 URLSession task metrics 可用且所有 transaction 均未使用代理，否则失败关闭。该检查不冒充连接前直连隔离；
+- **RES-PT-016**: logical source、namespace、authorization context 与 geometry fingerprint 在进入 identity、actor dictionary 或持久键之前具有非空与 UTF-8 字节上限，并拒绝 Unicode 控制字符；
+- **RES-PT-017**: 精确 origin allowlist 有最大 256 项，规范化 scheme/host/default port，拒绝远程明文 HTTP，并同时约束初始请求与 redirect；策略摘要进入 transport execution identity。
+
+- **RES-PT-018**: namespace registry 具有显式 hard capacity；超限的新 namespace 在缓存/网络前失败关闭，已跟踪的撤销 generation 保持稳定且不得被逐出。
+
+- **RES-PT-019**: 系统 memory-pressure monitor 由长生命周期 pipeline 持有，而不是由瞬态组合 wrapper 持有；清理证据原子区分移除条目数与释放的缓存成本字节数。
+
+## 可插拔边界的二次准入
+
+hard cap 由消费方负责复核，不能只传给插件：custom transport 返回后检查实际 body；custom record store 每个 base key 最多 256 个候选；custom decoder probe 在 working-set reservation 前按 DecodeLimits 复核；transform 输出在交付和 RenderedMemory admission 前按像素与 working-set 复核；GC live references 最多 100,000 个。

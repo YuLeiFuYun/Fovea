@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "factors": {
+    "namespace": ["public", "private"],
+    "cacheControl": [
+      "absent",
+      "max-age",
+      "no-store",
+      "no-cache",
+      "must-revalidate",
+      "private",
+      "duplicate-max-age",
+      "malformed"
+    ],
+    "vary": ["absent", "field", "wildcard", "invalid"],
+    "varySelection": ["available", "unavailable"]
+  },
+  "expectedCombinationCount": 128,
+  "claimBoundary": "仅证明所列有限因子域内的缓存准入与再验证决策全部执行，不代表任意 HTTP 字符串或完整管线状态空间已穷举。"
+}

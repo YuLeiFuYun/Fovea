@@ -1,0 +1,98 @@
+{
+  "akashicCommit": "f04060fbd01b9745b7caa87f389bdb0324874854",
+  "akashicExactSourceTreeSHA256": "0d8b63defd12a6121f9538aafac4895536b5d7576ab04bb6eddd9c0734dd6ea8",
+  "akashicExactSwiftFileCount": 18,
+  "akashicFaultInjection": {
+    "artifactSHA256": "d553eed78fdd50827c3c4f4d3df2dadaa4b6ac8f565b7df62860134ef3fd6780",
+    "powerLossClaim": false,
+    "quotaExhaustionClaim": true,
+    "randomRounds": 3,
+    "randomSIGKILLCases": 78,
+    "realAPFSQuotaArtifactSHA256": "51f939460ee80cab25110d21b86173d9092240ecd3edf7a13882ce01879f1e6a",
+    "realAPFSQuotaCases": 3,
+    "realFullVolumeArtifactSHA256": "37c27e22436892131f1900f3b8deda57e5e508d2deadc6db6d1e36e464fbc2df",
+    "realFullVolumeCases": 3,
+    "schemaVersion": 4,
+    "status": "passed",
+    "syscallTests": 8
+  },
+  "claimsNotEstablished": [
+    "formal remote dependency release",
+    "power-loss safety",
+    "physical-device energy or I/O qualification",
+    "Pareto dominance"
+  ],
+  "compositeStoreContention": {
+    "artifactSHA256": "1855b08a6cf1efe4fa82268347909842b16f20e69f0e4ece5a9ba2294362fff6",
+    "participants": 12,
+    "status": "passed",
+    "writerExclusion": "passed"
+  },
+  "criticalMutants": [
+    {
+      "id": "AIQA-MUT-025",
+      "status": "killed",
+      "test": "ManifestSemanticValidationTests/testOriginalManifestSemanticCorruptionFailsClosedWithoutRewrite_SEC_CASE_030"
+    },
+    {
+      "id": "AIQA-MUT-029",
+      "status": "killed",
+      "test": "ManifestSemanticValidationTests/testOriginalStoreRejectsNoncanonicalRuntimeContentIDWithoutMutation_SEC_CASE_030"
+    },
+    {
+      "id": "AIQA-MUT-061",
+      "status": "killed",
+      "test": "StagingAndStorageTests/testTransientBlobReadFailureDoesNotDeleteValidManifestEntry"
+    },
+    {
+      "id": "AIQA-MUT-080",
+      "status": "killed",
+      "test": "StagingAndStorageTests/testGarbageCollectionRetriesOrphanCleanupWithoutManifestVictims"
+    },
+    {
+      "id": "AIQA-MUT-098",
+      "status": "killed",
+      "test": "StagingAndStorageTests/testGarbageCollectionRetriesOrphanCleanupWithoutManifestVictims"
+    }
+  ],
+  "documentation": {
+    "artifactPath": ".artifacts/docs/documentation.json",
+    "publicSymbols": "575/1144",
+    "publicTypes": "183/183",
+    "status": "passed"
+  },
+  "evidenceID": "FOVEA-LEGACY-ORIGINAL-ENCODED-REMOVAL-2026-07-30",
+  "externalRevisionRehearsal": {
+    "artifactSHA256": "a4639cf7b4979cf02280e69b27df26b5fff5acb40ca07543cb56793db5439fbd",
+    "status": "passed",
+    "testCount": 475,
+    "testLogSHA256": "1a1b753184c549c567ab2996b67dae2601a5000fe883213fb51a14476eb80935"
+  },
+  "hostTests": {
+    "count": 475,
+    "status": "passed-main-and-isolated"
+  },
+  "includesWorkingTreeChanges": true,
+  "mainSynchronization": {
+    "backupManifestSHA256": "71f1c7e17ed0f2479a01a3b6dcd2f97b3338af74e7daed0730affa91dfa6ef64",
+    "pathCount": 57,
+    "preimageConflictCount": 0,
+    "status": "applied-and-byte-verified",
+    "syncPlanSHA256": "f2fbe21874aadcacc7f5f744bd084190606645f61b3d5d89b120bf0198f518c6",
+    "syncResultSHA256": "04a1fec32c8a656c013a53a7bd0bb9a0a84a26b34bf34aab6135537619f43f30",
+    "unexpectedPostSyncDifferenceCount": 0
+  },
+  "onlyProductionOriginalEncodedImplementation": "Sources/FoveaPersistence/AkashicOriginalEncodedStore.swift",
+  "releaseBuild": "passed-main-and-isolated",
+  "remainingHostConfiguration": "Sources/FoveaPersistence/OriginalEncodedStoreLimits.swift",
+  "removedProductionFiles": [
+    "Sources/FoveaPersistence/OriginalEncodedStore.swift",
+    "Sources/FoveaPersistence/OriginalEncodedStoreIdentity.swift",
+    "Sources/FoveaPersistence/OriginalEncodedAccessJournal.swift",
+    "Sources/FoveaPersistence/OriginalEncodedPhysicalRemovalSummary.swift",
+    "Sources/AkashicMemory/CompactSieveCache.swift"
+  ],
+  "schemaVersion": 1,
+  "status": "passed-main-synchronized-and-verified",
+  "verifiedFoveaCommit": "7768ed083eee9c54ad86b7124a96f73a202d4c65"
+}

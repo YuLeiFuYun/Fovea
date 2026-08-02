@@ -1,6 +1,6 @@
 # AI 主导开发质量保障规范
 
-> **状态：Proposed，Phase 0a 起生效。**  
+> **状态：Proposed，Phase 0a 起生效。**
 > 本规范约束 AI-assisted/agent-authored 的实现、测试、文档、依赖和发布。人类编写的高风险变更使用相同产品质量门禁；AI 来源额外触发 agent 权限、provenance 和独立 oracle 控制。
 
 ## 1. 不变量
@@ -280,12 +280,37 @@ R2/R3 至少使用一类，R3 至少使用三类：
 | **AIQA-MUT-042** | 从 full configuration fingerprint 删除 decode working-set 预算 |
 | **AIQA-MUT-043** | 官方系统组合根默认放开全部 profile |
 | **AIQA-MUT-044** | 已完成共享任务在 registry 清理前发布结果 |
+| **AIQA-MUT-045** | retry backoff 取消时遗漏 correlated fetch cancellation 终止事件 |
+| **AIQA-MUT-046** | 保留 URLSession 环境 credential storage |
+| **AIQA-MUT-047** | handoff lease 到期后仍保留零订阅者共享任务 |
+| **AIQA-MUT-048** | 严格代理策略接受缺失指标或代理 transaction |
+| **AIQA-MUT-049** | 删除 namespace identity 字节上限 |
+| **AIQA-MUT-050** | namespace generation 从 `UInt64.max` 回绕到零 |
+| **AIQA-MUT-051** | 初始 URLSession task 绕过 destination policy |
+| **AIQA-MUT-052** | redirect 绕过精确 origin allowlist |
+| **AIQA-MUT-053** | 缓存访问前绕过 destination policy |
+| **AIQA-MUT-054** | transport identity 删除 destination policy fingerprint |
+| **AIQA-MUT-055** | namespace registry 到达容量后仍接纳新的高基数 identity |
+| **AIQA-MUT-056** | 进程 registry 强引用 store actor 与 writer lease，导致生命周期泄漏 |
+| **AIQA-MUT-057** | 生产默认启用按 key 的高基数 cancellation 计数 |
+| **AIQA-MUT-058** | signpost 活动区间按 stage 分别限额而非使用全局上限 |
+| **AIQA-MUT-059** | remembered credential scope 超出上限后不淘汰 |
+| **AIQA-MUT-060** | transport redirect metrics 在进入结构化 diagnostics 前丢失 |
+| **AIQA-MUT-061** | 暂时性 blob I/O 故障被误判为内容损坏并触发删除 |
+| **AIQA-MUT-062** | 已释放的弱 registry 元数据在高基数 cache root 下永久累积 |
+| **AIQA-MUT-063** | 已取消调用者仍消费 remembered credential 并执行认证重放 |
+| **AIQA-MUT-064** | namespace 请求绕过正在执行的 revoke cleanup barrier |
+| **AIQA-MUT-065** | 内存压力 monitor 随临时组合根 wrapper 释放 |
+| **AIQA-MUT-066** | diagnostics reason 接受自由文本 |
+| **AIQA-MUT-067** | 内存清理把 item count 当作释放字节数 |
+| **AIQA-MUT-068** | 接受未知序列化 diagnostics schema |
+| **AIQA-MUT-069** | diagnostics drop count 写入 byteCount |
 
 新增关键不变量时必须同步新增 mutant、活动规格 ID 和 traceability evidence。通过大量无关 mutant 获得高 mutation percentage 不能替代上述目录全部被杀死。
 
 ### 8.1 Phase 0a curated mutant runner
 
-当前 curated required mutants `001...029` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定，并由零依赖的 `scripts/validate-critical-mutation-report.py` 复核 commit、结果集合、日志存在性和 SHA-256。
+当前 curated required mutants `001...099` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。每个结果完成后都会原子写入 tree-bound checkpoint；`--resume` 只复用 commit/tree 一致、状态为 killed 且日志 SHA-256 匹配的结果。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定，并由零依赖的 `scripts/validate-critical-mutation-report.py` 复核 commit、实际工作树 tree hash、是否包含未提交修改、Xcode/Swift 版本、结果集合、日志存在性和 SHA-256。本地 dirty workspace 会先被快照到隔离 worktree；可信 CI 只接受 `includesWorkingTreeChanges == false` 且 tree hash 等于 `HEAD^{tree}` 的报告。
 
 该 runner 是 visible oracle，仍不能替代 protected CI、held-out evaluator 或 human attestation。
 
@@ -425,6 +450,9 @@ comprehensionAttestationFailure
 - **AIQA-GATE-008**：agent/tool/model/base/verified commit 进入 evidence；
 - **AIQA-GATE-010**：输出不含 secret 或未脱敏敏感数据；
 - **AIQA-GATE-011**：工具超时会终止完整子进程组，不能留下孤立测试/编译进程。
+- **AIQA-GATE-012**：统一门禁对全部 Python 工具执行 AST 解析、对 POSIX shell 执行 `sh -n`、解析受管 JSON，并将 `Tools`/`Examples` 纳入严格 swift-format；人工单次检查不能替代持续工具语法门。
+- **AIQA-GATE-013**：关键标准、官方文档、论文与竞品实现必须进入机器校验的 provenance manifest，区分 adopted/reference/candidate/deferred；候选研究不得被 README 或实现状态页冒充为已交付能力。
+- **AIQA-GATE-014**：长运行验证工具在测试超时以及 runner 自身收到 SIGINT/SIGTERM 时都必须终止当前子进程组并执行 worktree `finally` 清理；只验证内部 timeout 不足以证明不会留下孤立编译或测试进程。
 
 `AIQA-GATE-007` 的 mutation harness 与 `AIQA-GATE-009` 的 rollback harness 可以标记为 `scaffolded`，但不得标记 `pass`。若仓库尚无远程 CI，第一条基础设施提交可由人类在全新本地 checkout 中运行固定 bootstrap 脚本；在第一个产品实现 PR 合并前，必须建立远程 required check 和受保护 control path。bootstrap 不是 Phase 0a 完成，不允许发布、宣称质量门通过或扩大 surface。
 
@@ -434,7 +462,7 @@ comprehensionAttestationFailure
 
 - **AIQA-GATE-007**：mutation harness 真实执行指定 critical mutants 并输出可信证明；
 - **AIQA-GATE-009**：`scripts/verify-rollback.py` 在隔离 worktree 回滚到 base commit，surface、格式、测试与 Release build 全部恢复，并输出绑定 base/head/log digest 的报告；
-- `AIQA-GATE-001...011` 全部通过；
+- `AIQA-GATE-001...014` 全部通过；
 - `AIQA-MUT-001`、`002`、`007`、`008`、`009`、`015` 被真实执行并杀死；
 - required evidence 针对最终 `verifiedCommit`，由可信 producer 生成；`trusted-ci` 结果必须绑定持久化 CI run locator，Evidence Bundle 自身不能自证其可信来源；
 - rollback 到 base commit 后 clean build 恢复；
@@ -445,3 +473,9 @@ Phase 0b 再启用完整 R3 mutant catalog、FoveaAgentEval、供应链和发布
 ### 19.1 生产代码覆盖率防回退
 
 - **AIQA-COV-001**：统一门禁必须生成排除 `FoveaTesting` 与生成文件的生产源码覆盖率报告；行/函数/区域覆盖率分别不得低于 85%/85%/78%。覆盖率只作为回退报警，不替代场景追踪、mutation、sanitizer 或 held-out evaluator。
+
+- **DOCS-PT-001**: trusted verification must compile DocC archives for every production module, document 100% of public type/protocol declarations, retain at least 50% source-authored public-symbol documentation coverage and remain within reviewed per-module API budgets, and bind the report and log digest to the verified tree.
+
+## 当前关键变异扩展
+
+当前 required critical mutation catalog 为 `AIQA-MUT-001...099`。082–099 专门覆盖第二次反向复审发现的插件后置条件、严格 HTTP、强制重验证、取消语义、representation 冲突、decoder probe、retry sleeper、owner 析构、OSLog 回绕、staging 所有权、metadata fail-closed、统一注销与 GC 证据。新增定义必须通过全 catalog anchor 预检；无法应用的 mutant 视为治理漂移而不是 killed。

@@ -4,6 +4,8 @@ import CryptoKit
 import Foundation
 import FoveaCore
 import FoveaHTTP
+import FoveaPersistence
+import FoveaStorage
 import FoveaTesting
 import ImageCraftCore
 import ImageCraftImageIO
@@ -26,17 +28,221 @@ final class StagingAndStorageTests: XCTestCase {
     try assertSecureCacheItem(directory.appendingPathComponent(stagedName))
 
     let result = try accumulator.finalize()
-    XCTAssertEqual(result.data, Data("hello world".utf8))
+    let materialized = try result.materializedData()
+    XCTAssertEqual(materialized, Data("hello world".utf8))
     XCTAssertTrue(result.metrics.spilledToDisk)
-    let expected = SHA256.hash(data: result.data).map { String(format: "%02x", $0) }.joined()
+    let expected = SHA256.hash(data: materialized).map { String(format: "%02x", $0) }.joined()
     XCTAssertEqual(result.digestHex, expected)
+  }
+
+  func testMappedTransportBodySurvivesAccumulatorDestruction_HTTP_PT_005() throws {
+    let directory = try makeTemporaryDirectory()
+    let expected = Data(repeating: 0x5A, count: 16 * 1024)
+    let retained: Data
+    do {
+      let accumulator = try BoundedStagingAccumulator(
+        maximumBytes: expected.count,
+        memoryThreshold: 0,
+        stagingDirectory: directory
+      )
+      try accumulator.append(expected)
+      let staged = try accumulator.finalize()
+      XCTAssertTrue(staged.metrics.spilledToDisk)
+      retained = try staged.materializedData()
+    }
+
+    XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), [])
+    XCTAssertEqual(retained, expected)
+  }
+
+  func testFinalizedMemoryBodyUsesValueSemanticsAndRejectsFurtherMutation_HTTP_PT_007()
+    throws
+  {
+    let expected = Data(repeating: 0x41, count: 1024 * 1024)
+    let accumulator = try BoundedStagingAccumulator(
+      maximumBytes: expected.count + 1,
+      memoryThreshold: expected.count + 1,
+      stagingDirectory: makeTemporaryDirectory()
+    )
+    try accumulator.append(expected)
+
+    let staged = try accumulator.finalize()
+    var callerCopy = try staged.materializedData()
+    callerCopy[callerCopy.startIndex] = 0x42
+
+    XCTAssertEqual(try staged.materializedData(), expected)
+    XCTAssertThrowsError(try accumulator.append(Data([0x43]))) { error in
+      XCTAssertEqual(error as? TransportError, .incompleteBody)
+    }
+    XCTAssertThrowsError(try accumulator.finalize()) { error in
+      XCTAssertEqual(error as? TransportError, .incompleteBody)
+    }
+  }
+
+  func testStagedFileLeaseOutlivesTransportSessionAndDeletesOnRelease_HTTP_PT_006()
+    async throws
+  {
+    let root = try makeTemporaryDirectory()
+    let expected = Data(repeating: 0x6B, count: 16 * 1024)
+    var sessionLease: StagingDirectoryLease? = try await StagingDirectoryLease.acquire(
+      root: root
+    )
+    let sessionDirectory = try XCTUnwrap(sessionLease?.directory)
+    var bodyLease: TransportStagedFileLease?
+    var fileURL: URL?
+
+    do {
+      let accumulator = try BoundedStagingAccumulator(
+        maximumBytes: expected.count,
+        memoryThreshold: 0,
+        stagingLease: XCTUnwrap(sessionLease)
+      )
+      try accumulator.append(expected)
+      let staged = try accumulator.finalize(bodyDelivery: .deferredFileIfStaged)
+      bodyLease = try XCTUnwrap(staged.stagedFileLease)
+      fileURL = bodyLease?.fileURL
+      XCTAssertEqual(try bodyLease?.mappedData(), expected)
+    }
+
+    sessionLease = nil
+    let retainedFileURL = try XCTUnwrap(fileURL)
+    XCTAssertTrue(FileManager.default.fileExists(atPath: retainedFileURL.path))
+    XCTAssertTrue(FileManager.default.fileExists(atPath: sessionDirectory.path))
+    XCTAssertEqual(try bodyLease?.mappedData(), expected)
+
+    bodyLease = nil
+    XCTAssertFalse(FileManager.default.fileExists(atPath: retainedFileURL.path))
+    XCTAssertFalse(FileManager.default.fileExists(atPath: sessionDirectory.path))
+  }
+
+  func testOriginalEncodedStageIsInvisibleUntilPublish_CACHE_PT_041() async throws {
+    let store = try await AkashicOriginalEncodedStore.open(root: makeTemporaryDirectory())
+    let data = Data("staged-original".utf8)
+    let contentID = ContentID(data: data).description
+    let stage = try await store.stage(
+      data: data,
+      contentID: contentID,
+      namespace: "stage-invisible"
+    )
+
+    let unpublishedPhysicalID = await store.physicalID(
+      contentID: contentID,
+      namespace: "stage-invisible"
+    )
+    XCTAssertNil(unpublishedPhysicalID)
+    do {
+      _ = try await store.read(contentID: contentID, namespace: "stage-invisible")
+      XCTFail("An unpublished stage must not be readable")
+    } catch let error as AkashicError {
+      XCTAssertEqual(error, .notFound)
+    }
+
+    let stored = try await store.publish(stage)
+    XCTAssertTrue(stored.wasCreated)
+    XCTAssertEqual(stored.byteCount, data.count)
+    let publishedData = try await store.read(
+      contentID: contentID,
+      namespace: "stage-invisible"
+    )
+    XCTAssertEqual(publishedData, data)
+  }
+
+  func testOriginalEncodedDiscardRemovesUnpublishedStage_CACHE_PT_041() async throws {
+    let store = try await AkashicOriginalEncodedStore.open(root: makeTemporaryDirectory())
+    let data = Data("discarded-original".utf8)
+    let contentID = ContentID(data: data).description
+    let stage = try await store.stage(
+      data: data,
+      contentID: contentID,
+      namespace: "stage-discard"
+    )
+
+    await store.discard(stage)
+    await store.discard(stage)
+    let discardedPhysicalID = await store.physicalID(
+      contentID: contentID,
+      namespace: "stage-discard"
+    )
+    XCTAssertNil(discardedPhysicalID)
+    do {
+      _ = try await store.publish(stage)
+      XCTFail("A discarded stage must not be publishable")
+    } catch let error as AkashicError {
+      XCTAssertEqual(error, .transactionConflict)
+    }
+  }
+
+  func testEquivalentOriginalStagesShareOnePhysicalBlob_CACHE_PT_042() async throws {
+    let root = try makeTemporaryDirectory()
+    let store = try await AkashicOriginalEncodedStore.open(root: root)
+    let data = Data("shared-staged-original".utf8)
+    let contentID = ContentID(data: data).description
+
+    let firstStage = try await store.stage(
+      data: data,
+      contentID: contentID,
+      namespace: "stage-shared"
+    )
+    let secondStage = try await store.stage(
+      data: data,
+      contentID: contentID,
+      namespace: "stage-shared"
+    )
+    XCTAssertEqual(try akashicBlobPayloadURLs(root: root).count, 1)
+
+    await store.discard(firstStage)
+    XCTAssertEqual(try akashicBlobPayloadURLs(root: root).count, 1)
+    let published = try await store.publish(secondStage)
+    XCTAssertTrue(published.wasCreated)
+    let publishedData = try await store.read(
+      contentID: contentID,
+      namespace: "stage-shared"
+    )
+    XCTAssertEqual(publishedData, data)
+    XCTAssertEqual(try akashicBlobPayloadURLs(root: root).count, 1)
+
+    let thirdStage = try await store.stage(
+      data: data,
+      contentID: contentID,
+      namespace: "stage-shared"
+    )
+    let reused = try await store.publish(thirdStage)
+    XCTAssertFalse(reused.wasCreated)
+    XCTAssertEqual(reused.physicalID, published.physicalID)
+    XCTAssertEqual(try akashicBlobPayloadURLs(root: root).count, 1)
+  }
+
+  func testGarbageCollectionDoesNotDeleteInFlightOriginalStage_CACHE_PT_041() async throws {
+    let store = try await AkashicOriginalEncodedStore.open(root: makeTemporaryDirectory())
+    let data = Data("gc-protected-stage".utf8)
+    let contentID = ContentID(data: data).description
+    let stage = try await store.stage(
+      data: data,
+      contentID: contentID,
+      namespace: "stage-gc"
+    )
+
+    let result = try await store.garbageCollect(retaining: [])
+    XCTAssertEqual(result.removedBlobCount, 0)
+    _ = try await store.publish(stage)
+    let publishedData = try await store.read(contentID: contentID, namespace: "stage-gc")
+    XCTAssertEqual(publishedData, data)
+  }
+
+  func testEncodedStoreLimitsClampHostileBudgets() {
+    let limits = OriginalEncodedStoreLimits(
+      softTotalBytes: Int.max,
+      maximumBlobBytes: Int.max
+    )
+    XCTAssertEqual(limits.softTotalBytes, 1024 * 1024 * 1024 * 1024)
+    XCTAssertEqual(limits.maximumBlobBytes, 1024 * 1024 * 1024)
   }
 
   func testAccumulatorRejectsHardLimit() throws {
     let accumulator = try BoundedStagingAccumulator(
       maximumBytes: 4,
       memoryThreshold: 4,
-      stagingDirectory: try makeTemporaryDirectory()
+      stagingDirectory: makeTemporaryDirectory()
     )
     XCTAssertThrowsError(try accumulator.append(Data("12345".utf8))) { error in
       XCTAssertEqual(error as? TransportError, .bodyTooLarge)
@@ -89,36 +295,24 @@ final class StagingAndStorageTests: XCTestCase {
     XCTAssertNil(revoked)
   }
 
-  func testLegacyRecordSchemaReturnsStableMissWithoutRewritingFile_CACHE_PT_018() async throws {
+  func testPreReleaseRecordSchemaFailsWithoutRewritingFile_CACHE_PT_018() async throws {
     let root = try makeTemporaryDirectory()
     let fileURL = root.appendingPathComponent("representation-records.json")
-    let legacy = LegacyRecordV4Fixture(
-      recordSchemaVersion: 4,
-      securityNamespaceFingerprint: StorageNamespaceFingerprint(namespace: "public:tests"),
-      namespaceGeneration: 0,
-      variantKeyDigest: "legacy-variant",
-      statusCode: 200,
-      requestTime: Date(timeIntervalSince1970: 10),
-      responseTime: Date(timeIntervalSince1970: 11),
-      expiresAt: Date(timeIntervalSince1970: 3_600),
-      etag: "legacy-etag",
-      lastModified: nil,
-      disposition: .reusable,
-      contentID: "sha256:\(String(repeating: "a", count: 64)):12",
-      payloadLength: 12,
-      contentType: "image/png"
+    let original = try JSONSerialization.data(
+      withJSONObject: [
+        "schemaVersion": 4,
+        "records": [:],
+      ],
+      options: [.sortedKeys]
     )
-    let original = try JSONEncoder().encode([legacy.variantKeyDigest: legacy])
     try original.write(to: fileURL, options: [.atomic])
 
-    let store = try await RepresentationRecordStore.open(root: root)
-    let records = await store.records(
-      for: "legacy-base-that-schema-4-cannot-represent",
-      namespace: "public:tests",
-      namespaceGeneration: 0
-    )
-
-    XCTAssertTrue(records.isEmpty)
+    do {
+      _ = try await RepresentationRecordStore.open(root: root)
+      XCTFail("A pre-release record schema must not be interpreted by the current store")
+    } catch let error as AkashicError {
+      XCTAssertEqual(error, .invalidManifest)
+    }
     XCTAssertEqual(try Data(contentsOf: fileURL), original)
   }
 
@@ -147,11 +341,15 @@ final class StagingAndStorageTests: XCTestCase {
 
   func testCommitRepairsCorruptExistingBlobInsteadOfTrustingFileExistence() async throws {
     let root = try makeTemporaryDirectory()
-    let store = try await OriginalEncodedStore.open(root: root, softLimitBytes: 1024 * 1024)
+    let store = try await AkashicOriginalEncodedStore.open(
+      root: root, softLimitBytes: 1024 * 1024
+    )
     let data = Data("expected-content".utf8)
     let contentID = ContentID(data: data).description
-    let first = try await store.commit(data: data, contentID: contentID, namespace: "public:tests")
-    let firstURL = root.appendingPathComponent("blobs/\(first.physicalID.description)")
+    let first = try await store.commit(
+      data: data, contentID: contentID, namespace: "public:tests"
+    )
+    let firstURL = root.appendingPathComponent("blobs/\(first.physicalID.foveaStorageFileName)")
     try Data("corrupt".utf8).write(to: firstURL, options: [.atomic])
 
     let repaired = try await store.commit(
@@ -170,7 +368,7 @@ final class StagingAndStorageTests: XCTestCase {
     let namespace = "account-sensitive-stable-id"
     let encodedRoot = root.appendingPathComponent("encoded")
     let recordsRoot = root.appendingPathComponent("records")
-    let encoded = try await OriginalEncodedStore.open(root: encodedRoot)
+    let encoded = try await reopenAkashicOriginalEncodedStore(root: encodedRoot)
     let records = try await RepresentationRecordStore.open(root: recordsRoot)
     let data = Data("private-image".utf8)
     let contentID = ContentID(data: data).description
@@ -186,23 +384,30 @@ final class StagingAndStorageTests: XCTestCase {
       )
     )
 
-    let manifest = try String(
-      contentsOf: encodedRoot.appendingPathComponent("manifest.json"),
-      encoding: .utf8
-    )
+    let manifest = try akashicManifestMetadataData(root: encodedRoot)
+      .map { String(decoding: $0, as: UTF8.self) }
+      .joined(separator: "\n")
     let recordFile = try String(
       contentsOf: recordsRoot.appendingPathComponent("representation-records.json"),
       encoding: .utf8
     )
     XCTAssertFalse(manifest.contains(namespace))
     XCTAssertFalse(recordFile.contains(namespace))
-    XCTAssertTrue(manifest.contains(StorageNamespaceFingerprint(namespace: namespace).value))
+    let entries = try akashicEffectiveManifestEntries(root: encodedRoot)
+    let entry = try storageDictionary(XCTUnwrap(entries.values.first))
+    let partition = try storageDictionary(entry["partition"])
+    let partitionValue = try XCTUnwrap(partition["value"] as? String)
+    XCTAssertEqual(Data(base64Encoded: partitionValue)?.count, 32)
+    XCTAssertNotEqual(
+      partitionValue,
+      StorageNamespaceFingerprint(namespace: namespace).value
+    )
     XCTAssertTrue(recordFile.contains(StorageNamespaceFingerprint(namespace: namespace).value))
   }
 
   func testRemoveDoesNotDeleteBlobWhenManifestPublicationFails_CACHE_PT_013() async throws {
     let root = try makeTemporaryDirectory()
-    let store = try await OriginalEncodedStore.open(root: root)
+    let store = try await AkashicOriginalEncodedStore.open(root: root)
     let data = Data("remove-transaction".utf8)
     let contentID = ContentID(data: data).description
     let stored = try await store.commit(
@@ -210,10 +415,10 @@ final class StagingAndStorageTests: XCTestCase {
       contentID: contentID,
       namespace: "public:tests"
     )
-    let blobURL = root.appendingPathComponent("blobs/\(stored.physicalID.description)")
-    let manifestURL = root.appendingPathComponent("manifest.json")
-    try FileManager.default.removeItem(at: manifestURL)
-    try FileManager.default.createDirectory(at: manifestURL, withIntermediateDirectories: false)
+    let blobURL = root.appendingPathComponent("blobs/\(stored.physicalID.foveaStorageFileName)")
+    let metadataURL = try akashicSingleEntryMetadataURL(root: root)
+    try FileManager.default.removeItem(at: metadataURL)
+    try FileManager.default.createDirectory(at: metadataURL, withIntermediateDirectories: false)
 
     do {
       try await store.remove(contentID: contentID, namespace: "public:tests")
@@ -230,7 +435,7 @@ final class StagingAndStorageTests: XCTestCase {
 
   func testRemoveAllDoesNotDeleteBlobsWhenManifestPublicationFails_CACHE_PT_013() async throws {
     let root = try makeTemporaryDirectory()
-    let store = try await OriginalEncodedStore.open(root: root)
+    let store = try await AkashicOriginalEncodedStore.open(root: root)
     let firstData = Data("namespace-first".utf8)
     let secondData = Data("namespace-second".utf8)
     let firstID = ContentID(data: firstData).description
@@ -245,8 +450,10 @@ final class StagingAndStorageTests: XCTestCase {
       contentID: secondID,
       namespace: "private:account"
     )
-    let firstURL = root.appendingPathComponent("blobs/\(first.physicalID.description)")
-    let secondURL = root.appendingPathComponent("blobs/\(second.physicalID.description)")
+    let firstURL = root.appendingPathComponent("blobs/\(first.physicalID.foveaStorageFileName)")
+    let secondURL = root.appendingPathComponent(
+      "blobs/\(second.physicalID.foveaStorageFileName)"
+    )
     let manifestURL = root.appendingPathComponent("manifest.json")
     try FileManager.default.removeItem(at: manifestURL)
     try FileManager.default.createDirectory(at: manifestURL, withIntermediateDirectories: false)
@@ -270,8 +477,44 @@ final class StagingAndStorageTests: XCTestCase {
     }
   }
 
+  func testTransientBlobReadFailureDoesNotDeleteValidManifestEntry() async throws {
+    let root = try makeTemporaryDirectory("blob-read-permission")
+    let store = try await AkashicOriginalEncodedStore.open(root: root)
+    let data = Data("permission-protected-content".utf8)
+    let contentID = ContentID(data: data).description
+    let stored = try await store.commit(
+      data: data,
+      contentID: contentID,
+      namespace: "public:permission"
+    )
+    let blob = root.appendingPathComponent("blobs", isDirectory: true)
+      .appendingPathComponent(stored.physicalID.foveaStorageFileName)
+    try FileManager.default.setAttributes(
+      [.posixPermissions: NSNumber(value: Int16(0o000))],
+      ofItemAtPath: blob.path
+    )
+    defer {
+      try? FileManager.default.setAttributes(
+        [.posixPermissions: NSNumber(value: Int16(0o600))],
+        ofItemAtPath: blob.path
+      )
+    }
+
+    do {
+      _ = try await store.read(contentID: contentID, namespace: "public:permission")
+      XCTFail("An unreadable blob must not be reported as a content mismatch")
+    } catch let error as AkashicError {
+      XCTAssertEqual(error, .storageUnavailable)
+    }
+    let retained = await store.physicalID(
+      contentID: contentID,
+      namespace: "public:permission"
+    )
+    XCTAssertEqual(retained, stored.physicalID)
+  }
+
   func testStoreRejectsMismatchedContentID() async throws {
-    let store = try await OriginalEncodedStore.open(root: try makeTemporaryDirectory())
+    let store = try await AkashicOriginalEncodedStore.open(root: makeTemporaryDirectory())
     let data = Data("actual".utf8)
     do {
       _ = try await store.commit(
@@ -286,8 +529,9 @@ final class StagingAndStorageTests: XCTestCase {
   }
 
   func testSoftCapEvictsOldestWithoutBlockingNewBlob_GC_PT_011() async throws {
-    let store = try await OriginalEncodedStore.open(
-      root: try makeTemporaryDirectory(), softLimitBytes: 8)
+    let store = try await AkashicOriginalEncodedStore.open(
+      root: makeTemporaryDirectory(), softLimitBytes: 8
+    )
     let first = Data("123456".utf8)
     let second = Data("abcdef".utf8)
     let firstID = ContentID(data: first).description
@@ -307,8 +551,8 @@ final class StagingAndStorageTests: XCTestCase {
   }
 
   func testBlobLargerThanSoftCapIsNotPublished() async throws {
-    let store = try await OriginalEncodedStore.open(
-      root: try makeTemporaryDirectory(),
+    let store = try await AkashicOriginalEncodedStore.open(
+      root: makeTemporaryDirectory(),
       softLimitBytes: 4
     )
     let data = Data("12345".utf8)
@@ -335,17 +579,20 @@ final class StagingAndStorageTests: XCTestCase {
   func testIncompleteTransportDoesNotCreateRecord_CACHE_PT_010() async throws {
     let root = try makeTemporaryDirectory()
     let records = try await RepresentationRecordStore.open(
-      root: root.appendingPathComponent("records"))
-    let pipeline = FoveaPipeline(
+      root: root.appendingPathComponent("records")
+    )
+    let pipeline = try FoveaPipeline(
       transport: ThrowingTransport(error: TransportError.incompleteBody),
-      encodedStore: try await OriginalEncodedStore.open(
-        root: root.appendingPathComponent("encoded")),
+      encodedStore: await AkashicOriginalEncodedStore.open(
+        root: root.appendingPathComponent("encoded")
+      ),
       recordStore: records,
+      profileAccessPolicy: .unrestricted,
       decoder: ImageIOImageDecoder()
     )
     let request = try ImageRequest.publicImage(
-      url: try XCTUnwrap(URL(string: "https://example.com/incomplete.png")),
-      target: try TargetPixels(width: 20, height: 20),
+      url: XCTUnwrap(URL(string: "https://example.com/incomplete.png")),
+      target: TargetPixels(width: 20, height: 20),
       appID: "tests"
     )
     await assertThrowsErrorAsync { try await pipeline.image(for: request) }
@@ -357,7 +604,7 @@ final class StagingAndStorageTests: XCTestCase {
     let root = try makeTemporaryDirectory()
     let encodedRoot = root.appendingPathComponent("encoded", isDirectory: true)
     let recordRoot = root.appendingPathComponent("records", isDirectory: true)
-    let encoded = try await OriginalEncodedStore.open(root: encodedRoot)
+    let encoded = try await reopenAkashicOriginalEncodedStore(root: encodedRoot)
     let records = try await RepresentationRecordStore.open(root: recordRoot)
     let data = Data("secure-cache-content".utf8)
     let contentID = ContentID(data: data)
@@ -380,7 +627,7 @@ final class StagingAndStorageTests: XCTestCase {
       encodedRoot,
       encodedRoot.appendingPathComponent("blobs", isDirectory: true),
       encodedRoot.appendingPathComponent("manifest.json"),
-      encodedRoot.appendingPathComponent("blobs/\(stored.physicalID.description)"),
+      encodedRoot.appendingPathComponent("blobs/\(stored.physicalID.foveaStorageFileName)"),
       recordRoot,
       recordRoot.appendingPathComponent("representation-records.json"),
     ]
@@ -389,11 +636,26 @@ final class StagingAndStorageTests: XCTestCase {
     }
   }
 
+  func testGarbageCollectionRetriesOrphanCleanupWithoutManifestVictims() async throws {
+    let root = try makeTemporaryDirectory()
+    let store = try await AkashicOriginalEncodedStore.open(root: root)
+    let orphan = root.appendingPathComponent("blobs/orphaned-after-manifest-commit")
+    try Data("orphan".utf8).write(to: orphan)
+    XCTAssertTrue(FileManager.default.fileExists(atPath: orphan.path))
+
+    let result = try await store.garbageCollect(retaining: [])
+
+    XCTAssertEqual(result.removedBlobCount, 1)
+    XCTAssertEqual(result.removedByteCount, Data("orphan".utf8).count)
+    XCTAssertFalse(FileManager.default.fileExists(atPath: orphan.path))
+  }
+
   func testGarbageCollectionRejectsStoresWithoutMaintenanceCapability() async throws {
     let pipeline = FoveaPipeline(
       transport: FakeHTTPTransport(stubs: []),
       encodedStore: FailingEncodedStore(),
       recordStore: InMemoryRecordStore(),
+      profileAccessPolicy: .unrestricted,
       decoder: ImageIOImageDecoder()
     )
 
@@ -415,22 +677,177 @@ final class StagingAndStorageTests: XCTestCase {
         statusCode: 200,
         headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
         body: body
-      )
+      ),
     ])
     let pipeline = FoveaPipeline(
       transport: transport,
       encodedStore: FailingEncodedStore(),
       recordStore: InMemoryRecordStore(),
+      profileAccessPolicy: .unrestricted,
       decoder: ImageIOImageDecoder()
     )
     let request = try ImageRequest.publicImage(
-      url: try XCTUnwrap(URL(string: "https://example.com/cache-failure.png")),
-      target: try TargetPixels(width: 20, height: 20),
+      url: XCTUnwrap(URL(string: "https://example.com/cache-failure.png")),
+      target: TargetPixels(width: 20, height: 20),
       appID: "tests"
     )
     let image = try await pipeline.image(for: request)
     XCTAssertEqual(image.pixelWidth, 20)
     XCTAssertEqual(image.pixelHeight, 10)
+  }
+
+  func testReadAccessSurvivesReopenAndControlsLRUEviction() async throws {
+    let root = try makeTemporaryDirectory()
+    let limits = OriginalEncodedStoreLimits(softTotalBytes: 12, maximumBlobBytes: 6)
+    let namespace = "public:tests"
+    let first = Data("111111".utf8)
+    let second = Data("222222".utf8)
+    let third = Data("333333".utf8)
+    let firstID = ContentID(data: first).description
+    let secondID = ContentID(data: second).description
+    let thirdID = ContentID(data: third).description
+
+    var store: AkashicOriginalEncodedStore? = try await AkashicOriginalEncodedStore.open(
+      root: root,
+      limits: limits
+    )
+    let firstBlob: StoredBlob
+    do {
+      let activeStore = try XCTUnwrap(store)
+      firstBlob = try await activeStore.commit(
+        data: first, contentID: firstID, namespace: namespace
+      )
+      try await Task.sleep(for: .milliseconds(20))
+      _ = try await activeStore.commit(
+        data: second, contentID: secondID, namespace: namespace
+      )
+    }
+    let firstBlobURL =
+      root
+        .appendingPathComponent("blobs", isDirectory: true)
+        .appendingPathComponent(firstBlob.physicalID.foveaStorageFileName)
+    try FileManager.default.setAttributes(
+      [.modificationDate: Date(timeIntervalSinceNow: -10 * 60)],
+      ofItemAtPath: firstBlobURL.path
+    )
+    do {
+      let activeStore = try XCTUnwrap(store)
+      _ = try await activeStore.read(contentID: firstID, namespace: namespace)
+    }
+    store = nil
+    await Task.yield()
+
+    let reopened = try await reopenAkashicOriginalEncodedStore(root: root, limits: limits)
+    try await Task.sleep(for: .milliseconds(20))
+    _ = try await reopened.commit(data: third, contentID: thirdID, namespace: namespace)
+
+    let retainedFirst = try await reopened.read(contentID: firstID, namespace: namespace)
+    let retainedThird = try await reopened.read(contentID: thirdID, namespace: namespace)
+    XCTAssertEqual(retainedFirst, first)
+    XCTAssertEqual(retainedThird, third)
+    do {
+      _ = try await reopened.read(contentID: secondID, namespace: namespace)
+      XCTFail("重启后仍应按持久化访问时间淘汰真正最冷的条目")
+    } catch let error as AkashicError {
+      XCTAssertEqual(error, .notFound)
+    }
+  }
+
+  func testRepeatedReadsWithinPersistenceBucketDoNotRewriteBlobMetadata() async throws {
+    let root = try makeTemporaryDirectory()
+    let namespace = "public:tests"
+    let data = Data("bucket".utf8)
+    let contentID = ContentID(data: data).description
+    let store = try await AkashicOriginalEncodedStore.open(root: root)
+    let blob = try await store.commit(data: data, contentID: contentID, namespace: namespace)
+    let blobURL =
+      root
+        .appendingPathComponent("blobs", isDirectory: true)
+        .appendingPathComponent(blob.physicalID.foveaStorageFileName)
+    try FileManager.default.setAttributes(
+      [.modificationDate: Date(timeIntervalSinceNow: -10 * 60)],
+      ofItemAtPath: blobURL.path
+    )
+
+    _ = try await store.read(contentID: contentID, namespace: namespace)
+    let firstPersistedAccess = try XCTUnwrap(
+      FileManager.default.attributesOfItem(atPath: blobURL.path)[.modificationDate] as? Date
+    )
+    try await Task.sleep(for: .milliseconds(20))
+    _ = try await store.read(contentID: contentID, namespace: namespace)
+    let secondPersistedAccess = try XCTUnwrap(
+      FileManager.default.attributesOfItem(atPath: blobURL.path)[.modificationDate] as? Date
+    )
+
+    XCTAssertEqual(secondPersistedAccess, firstPersistedAccess)
+  }
+
+  func testLowerTotalLimitTrimsImmediatelyOnReopen() async throws {
+    let root = try makeTemporaryDirectory()
+    let namespace = "public:tests"
+    let first = Data("111111".utf8)
+    let second = Data("222222".utf8)
+    let firstID = ContentID(data: first).description
+    let secondID = ContentID(data: second).description
+    var initial: AkashicOriginalEncodedStore? = try await AkashicOriginalEncodedStore.open(
+      root: root,
+      limits: OriginalEncodedStoreLimits(softTotalBytes: 12, maximumBlobBytes: 6)
+    )
+    do {
+      let activeStore = try XCTUnwrap(initial)
+      _ = try await activeStore.commit(
+        data: first, contentID: firstID, namespace: namespace
+      )
+      try await Task.sleep(for: .milliseconds(20))
+      _ = try await activeStore.commit(
+        data: second, contentID: secondID, namespace: namespace
+      )
+    }
+    initial = nil
+    await Task.yield()
+
+    let tightened = try await reopenAkashicOriginalEncodedStore(
+      root: root,
+      limits: OriginalEncodedStoreLimits(softTotalBytes: 6, maximumBlobBytes: 6)
+    )
+    let retainedSecond = try await tightened.read(contentID: secondID, namespace: namespace)
+    XCTAssertEqual(retainedSecond, second)
+    do {
+      _ = try await tightened.read(contentID: firstID, namespace: namespace)
+      XCTFail("降低总预算后应在打开阶段立即淘汰最冷条目")
+    } catch let error as AkashicError {
+      XCTAssertEqual(error, .notFound)
+    }
+  }
+
+  func testLowerRuntimeBlobLimitReconcilesEntriesWithoutInvalidatingManifest() async throws {
+    let root = try makeTemporaryDirectory()
+    let namespace = "public:tests"
+    let data = Data("123456".utf8)
+    let contentID = ContentID(data: data).description
+    var initial: AkashicOriginalEncodedStore? = try await AkashicOriginalEncodedStore.open(
+      root: root,
+      limits: OriginalEncodedStoreLimits(softTotalBytes: 12, maximumBlobBytes: 6)
+    )
+    do {
+      let activeStore = try XCTUnwrap(initial)
+      _ = try await activeStore.commit(
+        data: data, contentID: contentID, namespace: namespace
+      )
+    }
+    initial = nil
+    await Task.yield()
+
+    let tightened = try await reopenAkashicOriginalEncodedStore(
+      root: root,
+      limits: OriginalEncodedStoreLimits(softTotalBytes: 12, maximumBlobBytes: 4)
+    )
+    do {
+      _ = try await tightened.read(contentID: contentID, namespace: namespace)
+      XCTFail("超过新单对象限制的旧条目应在启动时收敛为 miss")
+    } catch let error as AkashicError {
+      XCTAssertEqual(error, .notFound)
+    }
   }
 }
 
@@ -477,21 +894,26 @@ private struct ThrowingTransport: HTTPTransporting {
   )
 
   let error: any Error & Sendable
-  func execute(_ request: TransportRequest) async throws -> TransportResponse { throw error }
+  func execute(_: TransportRequest) async throws -> TransportResponse {
+    throw error
+  }
 }
 
 private actor FailingEncodedStore: OriginalEncodedStoring {
-  func read(contentID: String, namespace: String) async throws -> Data {
+  func read(contentID _: String, namespace _: String) async throws -> Data {
     throw AkashicError.storageUnavailable
   }
 
-  func commit(data: Data, contentID: String, namespace: String) async throws -> StoredBlob {
+  func commit(data _: Data, contentID _: String, namespace _: String) async throws -> StoredBlob {
     throw AkashicError.storageUnavailable
   }
 
-  func physicalID(contentID: String, namespace: String) async -> PhysicalBlobID? { nil }
-  func remove(contentID: String, namespace: String) async throws {}
-  func removeAll(namespace: String) async throws {}
+  func physicalID(contentID _: String, namespace _: String) async -> PhysicalBlobID? {
+    nil
+  }
+
+  func remove(contentID _: String, namespace _: String) async throws {}
+  func removeAll(namespace _: String) async throws {}
 }
 
 private actor InMemoryRecordStore: RepresentationRecordStoring {
@@ -509,9 +931,11 @@ private actor InMemoryRecordStore: RepresentationRecordStoring {
         && record.namespaceGeneration == namespaceGeneration
     }
   }
+
   func put(_ record: RepresentationRecord) async throws {
     records[record.variantKeyDigest] = record
   }
+
   func containsReference(
     to contentID: String,
     namespace: String,
@@ -524,42 +948,44 @@ private actor InMemoryRecordStore: RepresentationRecordStoring {
         && record.variantKeyDigest != excludingVariantDigest
     }
   }
+
   func remove(
     _ variantDigest: String,
     namespace: String,
     namespaceGeneration: UInt64
   ) async throws {
     guard let record = records[variantDigest],
-      record.securityNamespaceFingerprint == StorageNamespaceFingerprint(namespace: namespace),
-      record.namespaceGeneration == namespaceGeneration
+          record.securityNamespaceFingerprint
+          == StorageNamespaceFingerprint(namespace: namespace),
+          record.namespaceGeneration == namespaceGeneration
     else { return }
     records.removeValue(forKey: variantDigest)
   }
+
   func removeAll(namespace: String) async throws {
     records = records.filter {
-      $0.value.securityNamespaceFingerprint != StorageNamespaceFingerprint(namespace: namespace)
+      $0.value.securityNamespaceFingerprint
+        != StorageNamespaceFingerprint(namespace: namespace)
     }
   }
-}
-
-private struct LegacyRecordV4Fixture: Encodable {
-  let recordSchemaVersion: UInt16
-  let securityNamespaceFingerprint: StorageNamespaceFingerprint
-  let namespaceGeneration: UInt64
-  let variantKeyDigest: String
-  let statusCode: Int
-  let requestTime: Date
-  let responseTime: Date
-  let expiresAt: Date?
-  let etag: String?
-  let lastModified: String?
-  let disposition: CacheDisposition
-  let contentID: String
-  let payloadLength: Int
-  let contentType: String?
 }
 
 private struct FutureRecordManifest: Encodable {
   let schemaVersion: UInt16
   let records: [String: RepresentationRecord]
+}
+
+private enum StorageManifestFixtureError: Error {
+  case invalidObject
+}
+
+private func storageJSONObject(_ data: Data) throws -> [String: Any] {
+  try storageDictionary(JSONSerialization.jsonObject(with: data))
+}
+
+private func storageDictionary(_ value: Any?) throws -> [String: Any] {
+  guard let value = value as? [String: Any] else {
+    throw StorageManifestFixtureError.invalidObject
+  }
+  return value
 }

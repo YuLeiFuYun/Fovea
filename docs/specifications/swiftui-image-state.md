@@ -120,4 +120,7 @@ Reduce Motion 开启时禁用非必要 transition。当前 `FoveaImageTransition
 - **UI-PT-016**: UIKit/AppKit 身份替换拒绝旧结果；重复同 identity 不重订阅；复用、离窗和析构取消不会让旧像素或任务泄漏到下一展示身份。
 - **UI-PT-017**: responsive 几何解析或 request builder 失败必须清除旧请求并进入结构化 failure；`ImageCraftError` 保留为安全限制语义，未知 builder 错误归一化为 request-validation 内部失败，不得静默停留在 placeholder。
 - **UI-PT-018**: UIKit/AppKit 平台图像必须保留 CGImage 像素尺寸，同时按 trait/backing scale 计算 point size；AppKit backing scale 变化时重建当前显示对象，不重复加载。
-- **UI-PT-019**: `FoveaImage.body` 对每次 phase 只发布一份内容树，不得因重复相邻 `content` 表达式生成双重视图输出。
+- **UI-PT-019**: `FoveaImage.body` 对每次 phase 只发布一份内容树，不得因重复相邻 `content` 表达式生成双重视图输出；empty/loading/cancelled、preview/success 的 decorative/label 分支和 failure/retry context 均须直接构造验证。
+- **UI-PT-020**: 同一 display identity 的显式 retry/load token 变化必须强制建立新订阅，不得被 identity 去重短路。
+- **UI-PT-021**: SwiftUI phase 渲染必须保留请求的 fit/fill 几何语义；非方形图片不得被容器拉伸，像素级渲染验证 letterbox 与 crop 差异。
+- **UI-PT-024**: 完整像素 preview 与 durable final 必须使用独立可见回调；preview 可建立首个完整可见帧，但不能被记录为 terminal final，取消或 revoke 后不得继续保留。

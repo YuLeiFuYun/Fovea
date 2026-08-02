@@ -1,0 +1,1022 @@
+{
+  "authority": {
+    "conflictPolicy": "fail-closed-and-record-conflict",
+    "conversationSummaryIsAdvisory": true,
+    "repositoryMemoryIsAuthoritative": true,
+    "silentSupersessionForbidden": true
+  },
+  "capabilityGaps": [
+    {
+      "id": "GAP-PROGRESSIVE",
+      "status": "release-claim-blocking-for-capability",
+      "summary": "Strict progressive-generation value semantics and model checks exist, but production progressive JPEG events, incremental budgeting, UI promotion and W4 comparative evidence are not implemented.",
+      "workloads": [
+        "W4"
+      ]
+    },
+    {
+      "id": "GAP-ANIMATED",
+      "status": "release-claim-blocking-for-capability",
+      "summary": "Animated track and frame-timing contract vocabulary exists, but GIF/APNG/WebP scheduling, disposal/blend, bounded frame cache, playback and W5 evidence are not implemented.",
+      "workloads": [
+        "W5"
+      ]
+    },
+    {
+      "id": "GAP-RESUMABLE",
+      "status": "release-claim-blocking-for-capability",
+      "summary": "Resumable transfer and interruption recovery are not implemented as a complete production capability.",
+      "workloads": [
+        "W6"
+      ]
+    },
+    {
+      "id": "GAP-BROAD-FORMATS",
+      "status": "explicit-capability-gap",
+      "summary": "The ImageIO reference adapter remains limited to PNG/JPEG/GIF complete primary frames; broad animated/exotic formats, HDR outputs and hostile corpus coverage remain incomplete.",
+      "workloads": [
+        "W5",
+        "W9"
+      ]
+    },
+    {
+      "id": "GAP-CODEC-CONFORMANCE-KIT",
+      "status": "explicit-capability-gap",
+      "summary": "Codec conformance and finite model tests exist inside Fovea, but have not yet been extracted into a cross-repository kit runnable independently by ImageIO and the future codec.",
+      "workloads": [
+        "W2",
+        "W4",
+        "W5",
+        "W9"
+      ]
+    },
+    {
+      "id": "GAP-INDEPENDENT-CODEC",
+      "status": "external-project-not-integrated",
+      "summary": "The independently developed codec has no Fovea adapter, corpus result, differential evidence, performance evidence, canary or default-selection certificate yet.",
+      "workloads": [
+        "W2",
+        "W4",
+        "W5",
+        "W9"
+      ]
+    }
+  ],
+  "completedEvidence": [
+    {
+      "id": "EVID-FIVE-ADAPTER-BUILD",
+      "status": "completed-local",
+      "summary": "Five isolated comparator adapters and apps build for macOS/iOS Simulator under the selected Xcode 27 beta toolchain."
+    },
+    {
+      "id": "EVID-W1-W3-SCHEMA3-SIMULATOR",
+      "status": "completed-provisional",
+      "summary": "W1-W3 schema 3 Simulator calibration exists for Fovea and four external libraries; Simulator evidence is provisional and cannot support release performance claims."
+    },
+    {
+      "id": "EVID-CACHE-LAB-V2-HISTORICAL",
+      "status": "schema2-schema3-historical-schema4-v4-local-formal-current",
+      "summary": "Schema 2 and 3 artifacts remain historical and component-source-identity-unbound. Cache Lab V4 uses schema 4, twenty clean process blocks and passes all thirteen applicable dominance comparisons. Edited/dirty source still prevents a trusted release certificate."
+    },
+    {
+      "id": "EVID-ROOT-TESTS",
+      "status": "completed-local-public-pin-478",
+      "summary": "The public exact-revision Fovea root suite passes 478/478. A temporary Akashic v2 edit also passes the four dual-schema manifest/fault tests, then automatically returns to the public checkout. Local success is not release or physical-device evidence."
+    },
+    {
+      "id": "EVID-W1-W15-RESTORATION",
+      "status": "completed-local-governance",
+      "summary": "The accepted W1-W15 names and purposes were restored from digest-bound user-provided prior discussion material; the registry is gap-free and Adaptive Representation is preserved as adjunct X1."
+    },
+    {
+      "id": "EVID-PROJECT-CONTINUITY-GATES",
+      "status": "completed-local-governance",
+      "summary": "Repository-backed project memory, source manifest, discussion ledger, mandatory context rendering, local verify and CI continuity gates are active."
+    },
+    {
+      "id": "EVID-W1-W3-SCHEMA3-FULL-AGGREGATE",
+      "status": "completed-provisional",
+      "summary": "A 25-run schema 3 Simulator aggregate covers Fovea plus four locked external loaders across W1, W2 cold/warm-disk/warm-memory, and W3. Fovea hard-check failures are zero; eight external W3 semantic contract failures remain explicit. Simulator evidence is not release evidence."
+    },
+    {
+      "id": "EVID-CACHE-LAB-V2-SCHEMA4-LOCAL",
+      "status": "historical-v2-twelve-of-thirteen-dominance",
+      "summary": "The final V2 tree-bound schema 4 campaign collected twenty clean process blocks and passed 12/13 applicable comparisons. Memory hot-scan throughput versus LRUCache had median ratio about 1.268x but 95% lower bound about 1.149x, so V2 did not pass the complete dominance portfolio. V2 was archived after a timing-boundary defect was identified."
+    },
+    {
+      "id": "EVID-A-TIER-SEVEN-INTEGRATIONS",
+      "status": "completed-local-build-final-calibration-pending",
+      "summary": "All seven accepted A-tier Apple-platform comparators are represented in the unified Xcode project: six use the common headless adapter contract and Apple AsyncImage is paired with FoveaResponsiveImage on an independent SwiftUI surface. AlamofireImage remains B-tier."
+    },
+    {
+      "id": "EVID-W7-CANCELLATION-COHORT-FIX",
+      "status": "completed-targeted-local-final-aggregate-pending",
+      "summary": "W7 V6 reproduced a 16-survivor cancellation poisoning bug. Admission-aware cancellation tombstones now preserve one replacement cohort for calls that began before cancellation while post-cutoff callers remain non-revivable; SCHED-PT-021/022 and a targeted Fovea W7 run pass."
+    },
+    {
+      "id": "EVID-W7-V6-OBSERVABLE-BOUND-COUNTEREXAMPLE",
+      "status": "completed-methodology-negative-result",
+      "summary": "W7 V6 observed nine newer origin starts although the internal scheduler admitted the background probe after at most eight newer grants. V7 separates internal grant fairness from downstream black-box start ordering and derives the latter bound as fifteen for the fixed eight-slot client budget."
+    },
+    {
+      "id": "EVID-CODEC-CONTRACT-LOCAL",
+      "status": "completed-local-contract",
+      "summary": "A package-internal versioned codec descriptor, finite capability algebra, conservative resource estimate, progressive generation/frame timing values, backend-specific identity and conservative ImageIO adapter are implemented and tested; Stable public ImageDecoding remains unchanged."
+    },
+    {
+      "id": "EVID-CODEC-CONFORMANCE-MODEL-LOCAL",
+      "status": "completed-local-model",
+      "summary": "Swift conformance tests exhaust 2,304 finite capability requests; the independent Python model checks 2,304 capability cases, 262,144 generation triples, 49 resource joins and 25 timing boundaries with zero errors."
+    },
+    {
+      "id": "EVID-CODEC-RESEARCH-ROADMAP",
+      "status": "completed-local-governance",
+      "summary": "ADR-0011, a primary-source research dossier and a parallel Fovea/codec roadmap define adopted, reserved and speculative mechanisms plus conformance, corpus, rollout and rollback gates."
+    },
+    {
+      "id": "EVID-CODEC-PUBLIC-API-CONTRACTION",
+      "status": "completed-local-governance",
+      "summary": "The initial public codec algebra was rejected by the API budget and reduced to package access. ImageCraftCore and ImageCraftImageIO returned exactly to their existing public budgets; the total budget is now a zero-slack current-tree ceiling documented by the 2026-07 public API review."
+    },
+    {
+      "id": "EVID-PLUGGABLE-STACK-ACTION-PLAN",
+      "status": "completed-local-governance",
+      "summary": "A repository-backed action plan records the current ImageCraft extraction state, required Akashic neutralization, physical dependency migrations, cautious plugin boundaries, cross-repository gates, scoped Pareto comparison rules and future cross-platform direction."
+    },
+    {
+      "id": "EVID-IMAGECRAFT-RELEASE-READINESS-LOCAL",
+      "status": "completed-local-clean-package",
+      "summary": "On 2026-07-28 the clean ImageCraft repository passed scripts/verify-release-readiness.sh: 55 ImageCraftImageIO tests and 8 ImageCraftCore tests had zero failures, followed by Release build, external consumer, macOS/iOS platform matrix, libjpeg-turbo 3.2.0/libpng 1.6.58 independent oracles and retained-corpus reproducibility. Remote, tag, protected CI and physical-device evidence remain pending."
+    },
+    {
+      "id": "EVID-LONG-HORIZON-ROADMAP-CONTROL-PLANE",
+      "status": "completed-local-governance",
+      "summary": "The accepted P0-P9 route skeleton is represented by a machine-readable roadmap manifest, included in mandatory task context, and protected by project-memory validation against silent deletion, renumbering and omission of unfinished work."
+    },
+    {
+      "id": "EVID-P0-PLUGGABLE-STACK-BASELINE",
+      "status": "completed-local-nontrusted",
+      "summary": "The P0 capture records Fovea HEAD 7768ed083eee9c54ad86b7124a96f73a202d4c65 with its dirty status entries, package inputs, embedded ImageCraft/Akashic source-tree digests and storage schema inputs, plus clean ImageCraft HEAD 05ab068c851d32a028f8556b2085a3266f0ee78c. Stable source-identity digest: 94fa7a76dee3063c5757931143629d83f028e06f04bdd330b1945ec830330179; generatedAt is excluded and dirty Fovea source prevents trusted migration or release claims."
+    },
+    {
+      "id": "EVID-P0-DECODE-RESOURCE-COMPOSITION-COUNTEREXAMPLES",
+      "status": "completed-local-model",
+      "summary": "The retained decode-resource composition model passes four cases: two demonstrate max(generic, backend) under-reporting when coverage is disjoint or partially overlapping, two show max is exact only under stronger premises, and three demonstrate naive summation over-reporting. The model is now part of scripts/verify.sh; real backend lifecycle and device evidence remain open."
+    },
+    {
+      "id": "EVID-AKASHIC-NEUTRAL-CONTRACT-DRAFT",
+      "status": "superseded-by-accepted-contract",
+      "summary": "The initial ADR-0014 design draft is retained historically and superseded by the accepted typed contract, field migration manifest and named conformance plan."
+    },
+    {
+      "id": "EVID-IMAGECRAFT-GOVERNANCE-AUDIT",
+      "status": "completed-local-audit-external-blocked",
+      "summary": "The clean ImageCraft repository at 05ab068c851d32a028f8556b2085a3266f0ee78c has no Git remote, no tags and no .github workflows. This precisely identifies why local release-readiness is insufficient for a pinned Fovea dependency and preserves remote ownership, release channel and protected CI as explicit blockers."
+    },
+    {
+      "id": "EVID-P0-IMAGEIO-RESOURCE-LIFETIME-LEDGER",
+      "status": "completed-local-static-audit",
+      "summary": "A machine-checked seven-phase ImageIO decode lifetime ledger records thirteen resources and five unresolved gaps. It proves the current scalar admission rule lacks declared coverage for prepared-state accumulation, opaque framework scratch, aliasing, final-output ownership transfer and operation-boundary reclaim tails; measurement and held-out backend evidence remain pending."
+    },
+    {
+      "id": "EVID-AKASHIC-NEUTRAL-CONTRACT-ACCEPTED",
+      "status": "completed-local-contract",
+      "summary": "ADR-0014 is Accepted with SHA-256 BlobDigest, opaque CachePartitionID, partition-scoped physical deduplication, one active writer per StoreGeneration, a new generation for first extraction, and AKASHIC-CT-001 through AKASHIC-CT-030."
+    },
+    {
+      "id": "EVID-AKASHIC-CORE-MEMORY-VERTICAL-SLICE",
+      "status": "superseded-by-three-product-local-slice",
+      "summary": "The earlier Core/Memory-only prototype evidence is retained historically and superseded by the independent Core/Memory/Disk local vertical slice."
+    },
+    {
+      "id": "EVID-AKASHIC-INDEPENDENT-THREE-PRODUCT-LOCAL",
+      "status": "completed-local-committed-nonrelease",
+      "summary": "The independent Akashic 74-file source identity f3acdcfcf6b8333869748158d41d17fc386a4eacaf8071be554a9d5242c04be1 at commit f04060fbd01b9745b7caa87f389bdb0324874854 passes 41 tests, 8 controlled syscall fault tests, 1 permission-transition test, 3 real mounted-APFS full-volume cases, 11 exact process-crash switch points and a three-round 78-case random SIGKILL campaign with 72 random timing samples, 12-process generation contention, six Apple Release platform cases, three local resource workloads, positive and negative consumers, clean-copy replay, a 128-symbol domain-neutral public API, Privacy Manifest, structure and stable-identity gates. Real full-volume evidence uses sparse disk images and does not establish quota, physical-device or power-loss claims."
+    },
+    {
+      "id": "EVID-EXTERNAL-COMPONENT-REVISION-REHEARSAL",
+      "status": "completed-local-clean-copy-nonrelease",
+      "summary": "A fresh temporary Fovea package removed ImageCraftCore, ImageCraftImageIO, AkashicCore, AkashicMemory and AkashicDisk embedded sources; exact Git revisions b17a8b9060f75d8ad75eab7accf48cffd5637171 and f04060fbd01b9745b7caa87f389bdb0324874854 resolved from temporary bare repositories; the serial run passed all 475 host tests and the FoveaStoreProbe product build. The retained concurrent-build timing failure remains classified as NEG-EXTERNAL-REHEARSAL-CONCURRENT-BUILD-001. Real remotes, immutable tags, protected CI and rollback remain required."
+    },
+    {
+      "id": "EVID-IMAGECRAFT-JPEG-MARKER-SCAN",
+      "status": "completed-local-committed-nonrelease",
+      "summary": "ImageCraft b17a8b9060f75d8ad75eab7accf48cffd5637171 replaces the JPEG entropy-region byte loop with Darwin memchr while preserving marker, byte-stuffing, restart-marker and metadata semantics. The clean package passes 64 component tests, Release, consumer/platform, retained-corpus and independent-oracle gates. A 588-sample interleaved A/B experiment across six JPEG paths records five 7/7 wins and one 6/7 win, with paired process-median reductions of about 8.9% to 16.9%. This is local macOS/ImageIO evidence, not a cross-device or non-ImageIO claim."
+    },
+    {
+      "id": "EVID-APPLE-PLATFORM-COMPARATORS",
+      "status": "completed-local-contracts-runtime-and-install-passed-aggregate-host-gated",
+      "summary": "The mandatory Apple baselines remain distinct. The headless URLSession + automatic URLCache + ImageIO contract and the paired AsyncImage surface pass local verification. The dedicated iOS 26.4.1 simulator completed all 35 first-boot migrators, live process paths verified build 23E254a, and all six headless apps installed. The current W2 attempt was rejected before measurement because CPU idle and disk-throughput host-quiescence thresholds were not met; no ranking is claimed."
+    },
+    {
+      "id": "EVID-SIMULATOR-R26-RUNTIME-INSTALL",
+      "status": "historical-device-archived-runtime-regression-diagnosed",
+      "summary": "The first R26 device completed 35/35 migrators and installed six headless apps, but later regular boot/install failures caused it to be retained in a non-destructive diagnostic archive. A replacement exact-23E254a device timed out during first boot at 00LaunchServicesMigrator while root simdiskimaged and more than 70 CoreSimulator processes entered uninterruptible state. New health gates reject this state before simctl work, failed first boots are recorded and cannot be reused, and no performance result was produced."
+    },
+    {
+      "id": "EVID-SWIFTUI-INSTALL-STAGING",
+      "status": "completed-installation-preparation-only",
+      "summary": "Apple AsyncImage and Fovea SwiftUI apps are normalized symmetrically with ditto --noextattr --norsrc, recursive xattr clearing, post-resource ad-hoc signing and deep strict verification. Original DerivedData apps fail strict resource verification; both staged apps pass. Installation and runtime claims remain blocked by CoreSimulator health."
+    },
+    {
+      "id": "EVID-PUBLIC-COMPONENTS-ALPHA2",
+      "status": "completed-public-ci-green-required-checks",
+      "summary": "ImageCraft a26d49f20796ce93539dd497c9a81f58fbfc02af and Akashic 07d43af89014eaa266390f21cbc9a6c481627cfb are public MIT repositories, tagged 0.1.0-alpha.2, authored through GitHub noreply identities and green under required core checks. Fovea Package.swift, Package.resolved, comparator resolution, dependency allowlist and component-pins.json agree on the exact full revisions."
+    },
+    {
+      "id": "EVID-EXTERNAL-COMPONENT-CURRENT-PIN-ROLLBACK",
+      "status": "completed-serial-clean-copy-and-rollback",
+      "summary": "A privacy-sanitized source copy resolved the public current pins and passed 475 host tests with source digest 5f7c22a74aa063b9dd5d8a6470d1edb78e0dc49086d00aace0d4617ef6458c57. ImageCraft previous-green rollback, Akashic previous host-compatible rollback and required forward-current recovery each passed 475 tests; combined rollback log digest 8786580868a023ee4bbb1b9df11edc3d93b3fbe99890b085781304c538ee8cf6. Component CI eligibility remains distinct from host compatibility."
+    },
+    {
+      "id": "EVID-CANCELLATION-TOMBSTONE-ABSOLUTE-EXPIRY",
+      "status": "completed-regression-fixed-and-modeled",
+      "summary": "A clean-copy run exposed that timer-only tombstone cleanup could be delayed beyond its semantic lease. SharedTaskRegistry now records an absolute monotonic expiry and lazily expires on subscribe; the focused test passed 30/30 replays, all 14 SharedTaskTests passed, and the 705-state/8,346-transition model killed 6/6 mutants."
+    },
+    {
+      "id": "EVID-PUBLIC-COMPONENTS-ALPHA3-SWIFT64",
+      "status": "completed-public-xcode27-ci-green-required-checks",
+      "summary": "ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 and Akashic e138b4425688cb0ce32fba7788adcc944c936b53 are public MIT Swift 6.4 repositories, tagged 0.1.0-alpha.3 and green on required core checks using the explicit GitHub Hosted xcode-27 preview runner. The prior alpha.2 commits remain immutable previous-green rollback baselines."
+    },
+    {
+      "id": "EVID-EXTERNAL-COMPONENT-ALPHA3-CLEAN-COPY-ROLLBACK",
+      "status": "completed-alpha3-clean-copy-alpha2-rollback-forward",
+      "summary": "A privacy-sanitized source copy resolved both alpha.3 exact revisions and passed 475 host tests with source digest 4d92d7a96cf7840eb82d8704220fd62c9bd190901c60128db3ac341773d65d75. ImageCraft alpha.2 rollback, Akashic alpha.2 rollback and required forward alpha.3 recovery each passed 475 tests; combined rollback log digest 43730412f4aefec1b47184ed137f975e712631416da6b9d9fb9fde679934f303. Mutation application remained 101/101 on alpha.3 component source."
+    },
+    {
+      "id": "EVID-CACHE-LAB-V3-HOT20-LOCAL",
+      "status": "historical-v3-plan-implementation-mismatch",
+      "summary": "V3 precomputed memory corpora but declared twenty hot-scan rounds while executing one. Its final full campaign also left hot throughput, hot p99 and disk p99 below the complete dominance rule. V3 artifacts remain historical research evidence only."
+    },
+    {
+      "id": "EVID-CACHE-LAB-V4-SHARD8-RETENTION",
+      "status": "completed-local-formal-thirteen-of-thirteen-dominance",
+      "summary": "V4 implements twenty fresh-cache rounds and selects eight shards after sixteen shards retained 619/640 hot probes and thirty-two shards retained 21/32. The twenty-block full campaign passes all thirteen applicable endpoint comparisons with zero correctness, inferior, inconclusive or dominance failures."
+    },
+    {
+      "id": "EVID-AKASHIC-V4-CANDIDATE-CLEAN-COPY",
+      "status": "completed-local-git-free-release-mechanics-and-fovea-integration",
+      "summary": "The 81-file Git-free Akashic candidate 91608c55745b333bf28b923bf0bf64744541b5e81344f061a251adea483bdb92 passes complete local release-readiness mechanics and an independent Fovea source-copy integration with 478/478 tests. This is content-addressed local candidate evidence, not a public revision or trusted CI certificate."
+    }
+  ],
+  "currentState": {
+    "aTierComparatorMatrix": [
+      "Apple URLSession + URLCache + ImageIO",
+      "Apple AsyncImage",
+      "Nuke",
+      "Kingfisher",
+      "SDWebImage",
+      "PINRemoteImage",
+      "Fovea"
+    ],
+    "aTierHeadlessComparators": [
+      "Apple URLSession + URLCache + ImageIO",
+      "Fovea",
+      "Nuke",
+      "Kingfisher",
+      "SDWebImage",
+      "PINRemoteImage"
+    ],
+    "aTierMatrixStatus": "seven-integrations-build-complete-w7-cancellation-cohort-fix-validated-final-aggregates-pending",
+    "aTierSwiftUISurfaceComparators": [
+      "Apple AsyncImage",
+      "Fovea"
+    ],
+    "actionsBudgetGovernance": {
+      "checker": "scripts/check-actions-budget-governance.py",
+      "nextHostedAction": "none-until-explicit-budget-restoration",
+      "policy": "docs/governance/github-actions-budget-policy.md",
+      "remoteWorkflows": {
+        "Diagnostic Workbench Product Patterns": "disabled_manually-branch-deleted",
+        "Fovea Live Network Lab": "disabled_manually",
+        "Fovea Verification": "disabled_manually"
+      },
+      "status": "active-budget-exhausted-hosted-runs-prohibited"
+    },
+    "activeRoadmapFrontier": [
+      "P0",
+      "P2",
+      "P4",
+      "P5",
+      "P6",
+      "P7"
+    ],
+    "adaptiveCancellationWarmup": {
+      "exactIdentity": "namespace-generation-fetch-execution-digest",
+      "fixtureWorstCaseTransportAttempts": 5,
+      "fullHostTestsPassed": 476,
+      "negativeResults": [
+        "NEG-ADAPTIVE-WARMUP-FRESH-ADMISSION-001",
+        "NEG-ASYNC-REQUEST-COUNT-WARMUP-ORACLE-001"
+      ],
+      "nonPromotingContainsTest": "passed-CACHE_PT_053",
+      "status": "resolved-local-20-of-20-and-host-476-green",
+      "targetedReplaysPassed": 20,
+      "visibleConsumerRefetches": 0
+    },
+    "additionalRequiredFutureBaselines": [],
+    "akashicConformanceStatus": "30-obligations-22-component-local-2-partial-6-planned-host-ct022-ct026-open",
+    "akashicContractStatus": "adr-0014-accepted-independent-three-product-local-implementation",
+    "akashicDiskStatus": "independent-local-41-tests-3-full-volume-3-quota-11-exact-process-crash-3-round-78-random-sigkill-12-process-generation-contention-6-platform-3-resource-clean-copy-passed-nonrelease",
+    "akashicFaultInjectionArtifactSHA256": "d553eed78fdd50827c3c4f4d3df2dadaa4b6ac8f565b7df62860134ef3fd6780",
+    "akashicFaultInjectionStatus": "v5-passed-syscall8-permission1-switch11-random78-full3-quota3",
+    "akashicFoveaIntegrationStatus": "git-free-candidate-478-of-478-passed-public-pin-switch-pending",
+    "akashicGenerationContentionArtifactSHA256": "f5f46b2392df4e584f0cc9c46b52e56087580a33cd36708fe3b64330cb562f49",
+    "akashicIndependentEvidence": "docs/research/akashic-independent-local-evidence-2026-07.json",
+    "akashicIndependentPackageStatus": "git-free-81-file-candidate-release-readiness-passed-publication-pending",
+    "akashicLocalResourceEnvelopeStatus": "schema2-three-of-three-passed-payload-metadata-separated",
+    "akashicNeutralContractADR": "docs/adr/0014-domain-neutral-akashic-contract.md",
+    "akashicNeutralContractStatus": "adr-0014-accepted",
+    "akashicPinnedCommit": "e138b4425688cb0ce32fba7788adcc944c936b53",
+    "akashicPlatformMatrixArtifactSHA256": "a1912709d8cef7d22e0f44832ebd35efd483fc0e517c6aa418880b2421457951",
+    "akashicRealAPFSQuotaArtifactSHA256": "51f939460ee80cab25110d21b86173d9092240ecd3edf7a13882ce01879f1e6a",
+    "akashicRealAPFSQuotaStatus": "3-real-quota-cases-passed-2-kernel-enospc-1-foundation-metadata-prewrite-container-not-full",
+    "akashicRealFullVolumeArtifactSHA256": "37c27e22436892131f1900f3b8deda57e5e508d2deadc6db6d1e36e464fbc2df",
+    "akashicRealFullVolumeStatus": "3-mounted-apfs-sparse-image-kernel-enospc-cases-passed-quota-physical-device-powerloss-false",
+    "appleAsyncImageComparatorStatus": "required-independent-paired-swiftui-surface-w1-w2-w10-plan-passed",
+    "appleNativeHeadlessComparator": "Apple URLSession + URLCache + ImageIO",
+    "appleNativeURLCacheContractStatus": "automatic-use-protocol-cache-policy-real-loopback-test-passed-no-manual-cache-io",
+    "applePlatformComparatorEvidence": "docs/research/apple-platform-comparator-evidence-2026-07.json",
+    "applePlatformIOSCrossBuildArtifact": ".artifacts/comparators/apple-platform-cross-build.json",
+    "applePlatformIOSCrossBuildArtifactSHA256": "f5260470a996979099f60dd229f9b9df5b312034e7cbf4e60989d678a7c2c392",
+    "applePlatformIOSCrossBuildStatus": "passed-ios15-arm64-simulator-apple-headless-asyncimage-fovea-swiftui-compile-only",
+    "bTierRetainedComparators": [
+      "AlamofireImage 4.4.0"
+    ],
+    "cacheLabStatus": "v4-local-formal-thirteen-of-thirteen-dominance-publication-and-trusted-ci-blocked",
+    "canonicalActionPlan": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
+    "codecConformanceKitStatus": "in-repository-package-internal-baseline-cross-repository-neutral-kit-pending",
+    "codecContractStatus": "implemented-local-package-internal-imageio-reference-only",
+    "codecContractVersion": 1,
+    "codecDefaultSelectionPermitted": false,
+    "componentCleanCopyStatus": "passed-alpha3-public-https-exact-revision-475-tests-no-sibling-required",
+    "componentPins": "docs/project-memory/component-pins.json",
+    "criticalMutationHarnessStatus": "exact-component-checkouts-representative-4-killed-application-audit-101-of-101-full-protected-ci-pending",
+    "crossPlatformMechanismAudit": {
+      "adopted": [
+        "immutable composition",
+        "join-cancel-release challenge tests",
+        "ownership ledger",
+        "fixed-revision cache-policy oracle"
+      ],
+      "artifact": "docs/research/cross-platform-pipeline-cache-audit-2026-08.md",
+      "experimental": [
+        "region/tile execution",
+        "S4-FIFO control plane",
+        "weak future-signal prefetch"
+      ],
+      "rejected": [
+        "global mutable registry",
+        "implicit singleton",
+        "public generic producer DAG",
+        "default learned cache policy without fallback"
+      ],
+      "status": "research-adoption-recorded-runtime-deferred"
+    },
+    "currentExecutableWorkloads": [
+      "W1",
+      "W2",
+      "W3"
+    ],
+    "currentPhase": "Phase 0b comparative and evidence infrastructure",
+    "decodeResourceCompositionArtifact": ".artifacts/resource-contract/decode-resource-composition.json",
+    "decodeResourceCompositionModel": "docs/research/decode-resource-composition-model.json",
+    "decodeResourceCompositionStatus": "four-retained-cases-passed-lifecycle-ledgers-and-device-calibration-pending",
+    "decodeResourceContractStatus": "single-scalar-max-composition-not-proven-complete-live-set-audit-active",
+    "defaultCodecBackend": "ImageIO",
+    "directExternalComparators": [
+      "Apple URLSession + URLCache + ImageIO (platform build)",
+      "Apple AsyncImage (paired SwiftUI surface)",
+      "Nuke 13.0.6",
+      "Kingfisher 8.11.0",
+      "SDWebImage 5.21.7",
+      "PINRemoteImage releases/p14.31"
+    ],
+    "documentationBuildLifecycle": {
+      "cliExitCode": 124,
+      "completeRerun": "failed-closed-at-180-second-inactivity-boundary",
+      "finalReportProduced": false,
+      "hostCounterexample": "xcodebuild-pid-93247-state-?NE-after-success-marker",
+      "inactivityTimeoutSeconds": 180,
+      "negativeResult": "NEG-DOCC-XCODEBUILD-EXIT-WAIT-001",
+      "normalRegression": "passed",
+      "remaining": "recover-or-reboot-host-then-rerun-both-platform-docbuilds",
+      "silentChildRegression": "passed",
+      "status": "watchdog-verified-bounded-host-environment-failure-final-report-pending",
+      "totalTimeoutSeconds": 900
+    },
+    "externalComponentIntegrationStatus": "swift64-alpha3-public-ci-green-exact-pins-clean-copy-and-alpha2-rollback-forward-475-each",
+    "externalComponentValidation": {
+      "akashicPreviousRevision": "07d43af89014eaa266390f21cbc9a6c481627cfb",
+      "akashicRevision": "e138b4425688cb0ce32fba7788adcc944c936b53",
+      "cleanCopyArtifactSHA256": "872071d5970b8c13f895e4839681d672f8c7c6e31bbba1791597fcd667a4eed8",
+      "cleanCopyLogSHA256": "2b4855ed6c49e014442fed17be2aaffd9f7c7a085b85b9d75efbfedceaec1e34",
+      "cleanCopySourceDigest": "4d92d7a96cf7840eb82d8704220fd62c9bd190901c60128db3ac341773d65d75",
+      "hostTestsPerScenario": 475,
+      "imageCraftPreviousRevision": "a26d49f20796ce93539dd497c9a81f58fbfc02af",
+      "imageCraftRevision": "4507da936ef348fa198652c2e4314a1f393b2c90",
+      "rollbackArtifactSHA256": "81039fe4fef6a541bd9d856524f2617169d8a84c953659c0f6590d9448f3d5d4",
+      "rollbackCombinedLogSHA256": "43730412f4aefec1b47184ed137f975e712631416da6b9d9fb9fde679934f303",
+      "rollbackScenarioCount": 3,
+      "status": "alpha3-current-pins-clean-copy-alpha2-previous-and-forward-alpha3-passed"
+    },
+    "finalATierHeadlessAggregateStatus": "pending-new-plan-real-loopback-rerun-host-quiescence-gate-blocked",
+    "finalSwiftUISurfaceAggregateStatus": "pending-new-plan-real-loopback-rerun-host-quiescence-gate-blocked",
+    "foveaCompositeStoreContentionArtifactSHA256": "1855b08a6cf1efe4fa82268347909842b16f20e69f0e4ece5a9ba2294362fff6",
+    "foveaMainHostTestsAfterLegacyRemoval": 475,
+    "foveaMainReleaseBuildAfterLegacyRemoval": "passed",
+    "fullAcceptedWorkloadRange": "W1-W15",
+    "imageCraftGovernanceArtifacts": [
+      "docs/project-memory/component-pins.json",
+      "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
+      "https://github.com/YuLeiFuYun/ImageCraft/actions"
+    ],
+    "imageCraftGovernanceStatus": "public-mit-ci-green-alpha-tagged-exact-pin-required-check-device-pending",
+    "imageCraftIndependentPackageStatus": "public-current-source-ci-green-alpha-tagged-exact-fovea-pin-physical-device-pending",
+    "imageCraftJPEGMarkerScanEvidence": "../ImageCraft/Evidence/Experiments/jpeg-marker-scan-ab-2026-07-31.json",
+    "imageCraftJPEGMarkerScanEvidenceSHA256": "d00753208ed7b04954f0e7df9d030c2dc0704eac97b5cfc05f47374b34c65f88",
+    "imageCraftJPEGMarkerScanStatus": "interleaved-ab-588-samples-6-paths-paired-median-improvement-8.9-to-16.9-percent",
+    "imageCraftPinnedCommit": "4507da936ef348fa198652c2e4314a1f393b2c90",
+    "imageIOCodecCapabilities": "PNG-JPEG-GIF-complete-primary-frame-SDR-CGImage-operation-boundary-cancellation",
+    "independentCodecStatus": "external-development-not-integrated",
+    "latestCacheLabAnalysis": ".artifacts/cache-lab/formal-analysis.json",
+    "latestCacheLabInconclusiveMetrics": 0,
+    "latestCacheLabInferiorMetrics": 0,
+    "latestCacheLabRunCount": 20,
+    "latestCacheLabStatisticalGatePassed": true,
+    "latestCacheLabTrustedCleanSource": false,
+    "latestComparativePlanCanonicalSHA256": "078206a957e4a44e4b5126543011d61a2746384ce6f87e693cee67c6ab5df8d3",
+    "latestComparatorVerificationArtifact": ".artifacts/comparators/verification.json",
+    "latestComparatorVerificationArtifactSHA256": "02ab9db195c1b41bac33235cf12ce73d47134931740654d2a7be70506d0e3d47",
+    "latestComparatorVerificationStatus": "passed-apple-native-urlcache-fovea-visible-latency-core-contracts",
+    "latestFiveLibrarySimulatorAggregateHistorical": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
+    "latestRootReleaseBuildStatus": "passed-local",
+    "latestRootSwiftTestCount": 475,
+    "latestSimulatorAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
+    "latestSimulatorAggregateRunCount": 25,
+    "latestSimulatorAggregateTrust": "historical-only-plan-digest-mismatch-no-current-ranking",
+    "latestSimulatorExternalContractFailures": 8,
+    "latestSimulatorFoveaFailures": 0,
+    "latestSimulatorHostPreflightArtifact": ".artifacts/comparative-host-preflight.json",
+    "latestSimulatorHostPreflightCPUIdlePercent": [
+      39.91,
+      36.31,
+      41.16
+    ],
+    "latestSimulatorHostPreflightCompetingProcessCount": 0,
+    "latestSimulatorHostPreflightDiskMBps": [
+      23.75,
+      15.76,
+      21.25
+    ],
+    "latestSimulatorHostPreflightStatus": "rejected-host-cpu-and-disk-not-quiescent",
+    "legacyOriginalEncodedStoreRemoval": "passed-main-synchronized-57-paths-zero-conflicts",
+    "longHorizonRoadmap": "docs/project-memory/long-horizon-roadmap.json",
+    "longHorizonRoadmapID": "FOVEA-LONG-HORIZON-ROADMAP-V1",
+    "nextActionDirection": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
+    "pluggableImageStackPlan": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
+    "pluggableStackBaseline": ".artifacts/pluggable-stack/baseline.json",
+    "pluggableStackBaselineSourceIdentitySHA256": "94fa7a76dee3063c5757931143629d83f028e06f04bdd330b1945ec830330179",
+    "pluggableStackBaselineTrust": "non-trusted-dirty-local-baseline",
+    "privatePublicationQualification": {
+      "eighthRootCommit": "b30cb00ebd389510269c9ce87ce92a3c7276ba00",
+      "eighthRunID": 30688814140,
+      "eighthRunResult": {
+        "arm64Identity": "passed-on-xcode27",
+        "continuityFailure": "Swift 6.4 discussion repositoryTargets required three sibling ImageCraft/Akashic paths absent from the isolated Fovea root",
+        "resolvedBy": [
+          "repository-local continuity targets with external components represented by exact pins and source provenance",
+          "strict Swift runner architecture prefix that launches the resolved Swift executable and entire SwiftPM process through /usr/bin/arch"
+        ],
+        "retainedNegativeResults": [
+          "NEG-CONTINUITY-SIBLING-REPOSITORY-TARGET-001",
+          "NEG-SWIFT64-X86-IDENTITY-RUNTIME-001"
+        ],
+        "x86Failure": "Rosetta installed and x86_64 bundle built, but the arm64 SwiftPM host launched swiftpm-xctest-helper natively and rejected the x86_64-only bundle"
+      },
+      "eleventhRootCommit": "49c34224fd354578e3ea5c3e1b07bb26fd30d4ba",
+      "eleventhRunID": 30690150522,
+      "eleventhRunResult": {
+        "arm64Identity": "passed-on-xcode27",
+        "coldBootReadiness": "passed-bounded-bootstatus-and-proceeded-to-workbench",
+        "resolvedBy": [
+          "stream visual xcodebuild progress directly to the retained family log",
+          "inner 720-second total and 240-second inactivity watchdogs",
+          "outer 1200-second fallback that cannot pre-empt the inner evidence oracle",
+          "disable automatic Xcode diagnostics for visual capture",
+          "remove unbounded second wait after bounded subprocess cleanup"
+        ],
+        "retainedNegativeResults": [
+          "NEG-PROCESS-TIMEOUT-SECOND-WAIT-001",
+          "NEG-VISUAL-NESTED-WATCHDOG-001"
+        ],
+        "rootCause": "outer family timeout was shorter than the inner xcodebuild bound and inner output was buffered until completion; visual xcodebuild also allowed automatic diagnostics",
+        "verifyFailure": "iPad visual family outer 600-second watchdog fired on both attempts",
+        "verifyProgress": "passed continuity, mathematical/model gates, comparator core, CacheLab, docs, traceability, privacy, supply chain, format, HTTP conformance and demos",
+        "x86Identity": "passed-direct-rosetta-xctest-exact-selector"
+      },
+      "entryPortabilityVerification": {
+        "cacheLab": "passed-7-of-7-tests",
+        "cacheLabAdapter": "FoveaPersistentStores plus public OriginalEncodedMaintaining capability",
+        "ciGate": "CacheLab plan and package tests added after exact comparator preparation",
+        "documentation": "passed-types-110-of-110-symbols-386-of-723"
+      },
+      "fifthRootCommit": "a57234eccb1ae77ce6a44f88381338c1f58d3948",
+      "fifthRunID": 30678910931,
+      "fifthRunResult": {
+        "failure": "UIUserInterfaceIdiom.vision was a known Xcode 26.6 case missing from evidence mapping",
+        "resolvedBy": "explicit vision mapping plus unit coverage for every known idiom",
+        "status": "failed-after-docc-cachelab-and-static-gates-at-workbench-visual-build"
+      },
+      "firstRootCommit": "842f7f8bb43541dbf828cad6f6e3f84f59b0383c",
+      "firstRunID": 30677920991,
+      "fourthRootCommit": "486f2cebb8f3a4bdcf03fcd772d2a84ae9b620cf",
+      "fourthRunID": 30678442167,
+      "fourthRunResult": {
+        "failure": "FoveaGalleryDemo still used @main in literal main.swift",
+        "resolvedBy": "repository-wide @main/main.swift prohibition and three entry renames",
+        "status": "failed-after-comparator-and-static-gates-at-macos-docc"
+      },
+      "hostedActionsControl": {
+        "automaticTriggers": "removed-from-local-candidate",
+        "budget": "configured-100-usd-usage-budget-exhausted",
+        "dispatchDefault": "budget-approved-false",
+        "localPushGuard": "active-in-publication-worktree",
+        "profiles": [
+          "identity-maximum-30-runner-minutes",
+          "full-maximum-60-runner-minutes-mutually-exclusive"
+        ],
+        "publicationEffect": "blocked-until-budget-restored-and-one-exact-candidate-qualified",
+        "status": "all-fovea-workflows-disabled-remotely"
+      },
+      "localCandidateQualification": {
+        "adaptiveWarmupAdmission": "original-top-level-admission-propagated-to-replacement-warmup",
+        "adaptiveWarmupOracle": "exact-final-request-handoff-and-no-visible-refetch",
+        "adaptiveWarmupReplay": "20-of-20-passed",
+        "cacheLab": "7-of-7-passed",
+        "comparativeCore": "passed",
+        "documentationBuildCounterexample": "complete rerun failed closed at 180 seconds after macOS DocC success marker because xcodebuild remained in ?NE exit state; no documentation report was accepted",
+        "hostTests": "476-of-476-passed-after-adaptive-warmup-and-nonpromoting-query-tests",
+        "mathematicalAndModelGates": "passed-through-delayed-hit-cache",
+        "mutationApplications": "101-of-101-valid",
+        "privacyAndStructure": "passed",
+        "resolvedBy": "streamed per-platform DocC runner with 900-second total, 180-second inactivity, isolated process group, and bounded cleanup",
+        "simulator": "environment-blocked-unhealthy-CoreSimulator-host-reboot-required",
+        "staticGates": "passed",
+        "status": "post-docc-non-xcode-gates-in-progress-host-recovery-required-for-docs-and-simulator"
+      },
+      "ninthRootCommit": "ee598df0eec15a97fbc7dc4fffff7e51f49fa25e",
+      "ninthRunID": 30689046903,
+      "ninthRunResult": {
+        "arm64Identity": "passed-on-xcode27",
+        "continuity": "passed-in-isolated-root",
+        "resolvedBy": [
+          "repository-local evidence paths for retained ImageCraft experiments",
+          "native strict x86_64 test cross-build followed by direct Rosetta xctest execution with exact selector and platform runtime paths",
+          "back-deployable custom identity-change modifier replacing deprecated SwiftUI onChange API"
+        ],
+        "retainedNegativeResults": [
+          "NEG-SWIFT64-RAWSPAN-HOTPATH-001",
+          "NEG-SWIFT64-NONCOPYABLE-PREPARATION-001",
+          "NEG-SWIFT64-X86-IDENTITY-RUNTIME-001"
+        ],
+        "verifyFailure": "two Swift 6.4 negative-result entries retained sibling ImageCraft source paths as mandatory local evidence",
+        "x86Failure": "Xcode 27 Swift driver is arm64-only and cannot itself run under Rosetta even though xctest and platform XCTest frameworks contain x86_64 slices"
+      },
+      "privacyStatus": "sanitized-single-root-no-private-history-pushed",
+      "repository": "YuLeiFuYun/Fovea",
+      "retainedNegativeResults": [
+        "NEG-FRESH-CLONE-EVIDENCE-ORDER-001",
+        "NEG-SWIFT-MAIN-FILENAME-001",
+        "NEG-HARDCODED-COMPONENT-TAG-001",
+        "NEG-COMPARATOR-CHECKOUT-ORDER-001",
+        "NEG-BENCHMARK-LEGACY-STORE-001",
+        "NEG-MUTATION-HARNESS-EMBEDDED-COMPONENT-001",
+        "NEG-WORKBENCH-KNOWN-IDIOM-001",
+        "NEG-XCUI-ORIENTATION-ACTOR-001",
+        "NEG-SIMULATOR-LIST-STATE-AS-BOOT-ORACLE-001",
+        "NEG-PROCESS-TIMEOUT-SECOND-WAIT-001",
+        "NEG-VISUAL-NESTED-WATCHDOG-001",
+        "NEG-HOSTED-ACTIONS-BUDGET-001",
+        "NEG-DOCC-XCODEBUILD-EXIT-WAIT-001",
+        "NEG-ADAPTIVE-WARMUP-FRESH-ADMISSION-001",
+        "NEG-ASYNC-REQUEST-COUNT-WARMUP-ORACLE-001"
+      ],
+      "secondRootCommit": "e86200b21b3582031e647307fe870c304900b8b2",
+      "secondRunID": 30678114745,
+      "seventhRootCommit": "389f3f5756ab41d0ad4ad4ac8d8fcd738d957bc7",
+      "seventhRunID": 30681768345,
+      "seventhRunResult": {
+        "failure": "testProductPatternsUseDistinctHostLayouts failed as fifth test in ui-tests-core-shard-1",
+        "identity": "arm64-and-x86_64-passed",
+        "interpretation": "order-or-state-dependence-unresolved-no-retry-masking",
+        "isolatedDiagnosticResult": "passed",
+        "isolatedDiagnosticRunID": 30683785352,
+        "localResolution": {
+          "change": "test-scoped-main-actor-XCUIApplication-termination",
+          "exactOriginalShard": "5-of-5-passed",
+          "productPatternsDurationSeconds": 90.572,
+          "remaining": "new-sanitized-root-full-Xcode27-required-checks"
+        },
+        "strictVisualAudit": "passed"
+      },
+      "sixthRootCandidateEvidence": {
+        "hardLinkCoverage": "Akashic writer-lock and manifest hard links isolated with private permissions",
+        "mutationApplicationAudit": "101-of-101-valid",
+        "mutationApplicationCommand": "python3 scripts/run-critical-mutants.py --validate-applications",
+        "remainingGate": "full GitHub Actions on the sanitized current root",
+        "representativeMutationTests": "AIQA-MUT-009-024-056-096-killed-together",
+        "workbenchKnownIdiomUnitTest": "passed-local-xcode27-before-local-xcode-removal"
+      },
+      "sixthRootCommit": "7efcbc0cb5628dc8f932d99a572e2e72fd2bda24",
+      "sixthRunID": 30681290235,
+      "sixthRunResult": {
+        "failure": "XCUIDevice orientation mutation in XCTest lifecycle overrides violated Xcode 26.6 main-actor isolation",
+        "resolvedBy": "move orientation setup and defer restoration into the @MainActor visual test method plus a static lifecycle guard",
+        "status": "failed-after-docc-cachelab-static-http-and-demo-gates-at-workbench-visual-build"
+      },
+      "status": "actions-budget-exhausted-workflows-disabled-twelfth-local-candidate-in-progress",
+      "tenthRootCommit": "36b764d225da474ee13ac6105e87963b3385fcde",
+      "tenthRunID": 30689587302,
+      "tenthRunResult": {
+        "arm64Identity": "passed-on-xcode27",
+        "resolvedBy": "bounded simctl bootstatus -b -d as terminal readiness oracle with list state retained only for fast path and diagnostics",
+        "retainedNegativeResult": "NEG-SIMULATOR-LIST-STATE-AS-BOOT-ORACLE-001",
+        "verifyFailure": "hosted cold Simulator selection returned Shutdown and simctl boot exit 0, but repeated list-state polling remained unknown before any Workbench test started",
+        "verifyProgress": "passed continuity, mathematical/model gates, comparator core, CacheLab, docs, traceability, privacy, supply chain, format, HTTP conformance and demos",
+        "x86Identity": "passed-direct-rosetta-xctest-exact-selector",
+        "x86IdentityEvidence": {
+          "failures": 0,
+          "jobID": 91341807599,
+          "logSHA256": "ea1ea74f2bc0e372acf6b8e7a5e3e7ea11b13d02559366d840cd379adf748c1d",
+          "selector": "FoveaTests.IdentityTests/testPersistentIdentityGoldenVectorsAreArchitectureStable_CACHE_PT_017",
+          "testCount": 1
+        }
+      },
+      "thirdRootCommit": "fe75e6cc745e59611e1152de1ca992c2c3217bb8",
+      "thirdRunID": 30678211984,
+      "visibility": "private-until-green"
+    },
+    "qualifiedCompositionStatus": "codec-entry-and-persistent-store-bundle-specified-implementation-pending",
+    "releaseClaimPermitted": false,
+    "roadmapExecutionStatus": "public-component-migration-complete-fovea-publication-and-p6-next",
+    "sharedTaskTombstoneExpiry": {
+      "finiteModelStates": 705,
+      "finiteModelTransitions": 8346,
+      "mutantsKilled": "6/6",
+      "negativeResult": "NEG-CANCELLATION-TOMBSTONE-TIMER-001",
+      "sharedTaskSuiteTestsPassed": 14,
+      "status": "absolute-deadline-lazy-admission-cleanup-verified",
+      "targetedReplaysPassed": 30
+    },
+    "simulatorBuildMeasurementSeparation": "build-only-then-skip-build-skip-prepare",
+    "simulatorCoreHealthArtifact": ".artifacts/comparative-coresimulator-health.json",
+    "simulatorCoreHealthArtifactSHA256": "ebda951f7a85a4e757afd66accb63caa0b623d01db1d21ef2f2235eaf7ec5e60",
+    "simulatorCoreHealthBlockedProcessCount": 0,
+    "simulatorCoreHealthStatus": "healthy",
+    "simulatorCurrentDeviceRegistry": ".artifacts/comparative-simulator-device.json",
+    "simulatorCurrentDeviceRegistrySHA256": "70dfde9a7bb1f46ddcf4c6be0be052bac6947517079a0ba4ed9ec0c875ffec56",
+    "simulatorCurrentDeviceStatus": "incomplete-first-boot-recorded-do-not-reuse",
+    "simulatorCurrentDeviceUDID": "redacted-local-simulator-device",
+    "simulatorCurrentFirstBootFailure": "900-second-timeout-00LaunchServicesMigrator-launchd_sim-and-backboardd-uninterruptible",
+    "simulatorDedicatedDeviceName": "Fovea Comparative iPhone 17e R26",
+    "simulatorDuplicateRuntimeFinding": "23E244 and 23E254a share an identifier; device creation uses exact 23E254a bundle and every boot verifies live process paths before install or measurement",
+    "simulatorExecutionBlocker": "initialization-host-not-quiescent-active-MeetingCaptureKit-build-low-cpu-idle-high-disk-throughput",
+    "simulatorFirstBootStatus": "completed-35-migrators-CoreLocationMigrator-296.287-seconds-success",
+    "simulatorHealthCheckScript": "scripts/check-comparative-coresimulator-health.py",
+    "simulatorInitializationHostGate": "required-65-percent-minimum-idle-12-MBps-maximum-disk-no-competing-build-or-simctl-before-create-or-first-boot",
+    "simulatorInitializationHostPreflightArtifact": ".artifacts/comparative-initialization-host-preflight.json",
+    "simulatorInitializationHostPreflightArtifactSHA256": "712b3cbd030adcd0d0d9f4ab29abb188b8204108419a6c45940d9ae5c220df13",
+    "simulatorInitializationHostPreflightCPUIdlePercent": [
+      5.41,
+      2.84,
+      23.95
+    ],
+    "simulatorInitializationHostPreflightCompetingProcessCount": 2,
+    "simulatorInitializationHostPreflightDiskMBps": [
+      5.78,
+      13.25,
+      21.490000000000002
+    ],
+    "simulatorInitializationHostPreflightStatus": "rejected-before-create-or-first-boot",
+    "simulatorInstalledHeadlessApps": "six-of-six-installed-apple-native-fovea-nuke-kingfisher-sdwebimage-pinremoteimage",
+    "simulatorMeasurementHostGate": "required-65-percent-minimum-idle-12-MBps-maximum-disk-no-competing-build-or-simctl",
+    "simulatorPriorDeviceArchive": ".artifacts/simulator-archives/20260731T130128Z",
+    "simulatorPriorDeviceArchiveSummarySHA256": "31e0db4be551e05cb95ec4b696391c149dba3123c8ac93f435a317d782e06bdd",
+    "simulatorRecoveryScript": "scripts/recover-comparative-simulator.sh",
+    "simulatorRootSimdiskimagedState": "healthy-non-U",
+    "simulatorRunnerContract": "dedicated-fovea-ios26-4-1-exact-build-binding-live-build-verification-two-phase-bounded-process-groups-core-health-initialization-and-measurement-host-gated",
+    "simulatorRuntime": "iOS 26.4.1 build 23E254a stable simulator runtime",
+    "simulatorRuntimeBinding": "exact-runtime-bundle-path-plus-machine-readable-device-registry",
+    "simulatorRuntimeFallbackReason": "iOS 27 beta simctl install entered uninterruptible I/O on both generic and dedicated devices",
+    "simulatorRuntimeStorageIdentifier": "redacted-local-runtime-storage",
+    "simulatorRuntimeValidation": "passed-live-device-process-path-23E254a",
+    "simulatorSupportTestStatus": "passed-13-tests",
+    "simulatorW2CurrentAttempt": "no-current-result-current-device-incomplete-new-device-initialization-host-gated",
+    "sourceState": "dirty-worktree",
+    "swift64Migration": {
+      "adopted": [
+        "tools-6.4",
+        "async-defer",
+        "weak-let",
+        "noncopyable-writer-lease",
+        "swift-build-path-discovery",
+        "scoped-warning-policy"
+      ],
+      "audit": "docs/research/swift-6.4-adoption-audit-2026-08.md",
+      "comparativeCompatibility": {
+        "externalSources": 5,
+        "iOSAdapters": "7-of-7",
+        "macOSAdapters": "7-of-7",
+        "performanceClaimPermitted": false,
+        "phase1DeclarationAllowed": false,
+        "status": "passed-build-contract-only",
+        "swiftUISurfaces": [
+          "Apple AsyncImage",
+          "Fovea SwiftUI"
+        ]
+      },
+      "componentReleases": {
+        "Akashic": {
+          "ci": "passed-xcode27-main",
+          "commit": "e138b4425688cb0ce32fba7788adcc944c936b53",
+          "tag": "0.1.0-alpha.3"
+        },
+        "ImageCraft": {
+          "ci": "passed-xcode27-main",
+          "commit": "4507da936ef348fa198652c2e4314a1f393b2c90",
+          "tag": "0.1.0-alpha.3"
+        }
+      },
+      "deferred": [
+        "rawspan-hot-parser",
+        "noncopyable-decode-preparation",
+        "task-cancellation-shield",
+        "spdx3-release-certificate",
+        "manual-specialization-and-forced-inline"
+      ],
+      "deploymentBaseline": "iOS-15-macOS-12-unchanged",
+      "hostedCI": "fovea-eleventh-root-dual-identity-green-full-verify-failed-actions-budget-exhausted-next-candidate-local-only",
+      "localTests": {
+        "Akashic": 41,
+        "CacheLab": 7,
+        "Fovea": 475,
+        "FoveaIOSPackage": 474,
+        "FoveaLocalComponents": 475,
+        "ImageCraft": 64
+      },
+      "matrix": "docs/research/swift-6.4-adoption-matrix.json",
+      "mutationApplications": "101-of-101",
+      "platformEvidence": {
+        "Akashic": "six-macOS-12-and-iOS-15-cases-passed",
+        "Fovea": "macOS-475+iOS-Simulator-474+original-five-test-Workbench-shard-passed",
+        "ImageCraft": "macOS-12-universal+iOS-15-simulator-universal+iOS-15-device-arm64-passed"
+      },
+      "status": "three-repository-local-core-composition-platform-and-ui-shard-green-trusted-ci-pending",
+      "swiftUICompatibility": "backdeployable-state-guarded-identity-change-modifier-strict-475-green",
+      "targetedMutants": "AIQA-MUT-039-056-069-killed",
+      "toolchain": "Xcode-27.0-beta-27A5228h-Apple-Swift-6.4",
+      "uiOrderDependence": "resolved-locally-by-test-scoped-app-termination-private-root-rerun-pending",
+      "x86Identity": "passed-hosted-direct-rosetta-xctest-run-30689587302-job-91341807599",
+      "x86IdentityLogSHA256": "ea1ea74f2bc0e372acf6b8e7a5e3e7ea11b13d02559366d840cd379adf748c1d",
+      "xcode27SimulatorDiagnostics": "default-sysdiagnose-hang-resolved-by-collect-test-diagnostics-never"
+    },
+    "swiftUIInstallStagingStatus": "passed-symmetric-staging-strict-signatures-current-device-incomplete-new-device-initialization-host-gated",
+    "swiftUIInstallStagingVerificationArtifact": ".artifacts/asyncimage-lab/install-staging-verification.json",
+    "swiftUIInstallStagingVerificationArtifactSHA256": "7092a6c89aec086c33037d5629faac421ef2c9419fb797bcc4887b8fbff9ba4a",
+    "swiftUISimulatorInstallNormalization": "symmetric-ditto-noextattr-xattr-clear-post-resource-ad-hoc-sign-deep-strict-verify",
+    "swiftUISimulatorInstallStaging": ".artifacts/asyncimage-lab/InstallStaging",
+    "swiftUISimulatorStagingStatus": "apple-asyncimage-and-fovea-staged-signatures-valid-retry-pending-after-competing-build",
+    "w2NetworkOriginStatus": "shared-real-loopback-http-nwlistener-all-headless-and-swiftui-surfaces",
+    "w7V6Status": "archived-calibration-observable-bound-invalid",
+    "w7V7Status": "preregistered-same-trace-derived-origin-bound-final-six-comparator-calibration-pending",
+    "workloadRegistry": "Benchmarks/workload-registry.json"
+  },
+  "mandatoryTaskProtocol": {
+    "afterWork": [
+      "Update completed evidence, capability gaps and open obligations.",
+      "Run project-memory and workload-registry gates.",
+      "Report both completed and still-open work.",
+      "Update long-horizon roadmap phase and queue status when evidence or blockers change."
+    ],
+    "beforeWork": [
+      "Run scripts/check-project-memory.py.",
+      "Run scripts/render-project-context.py.",
+      "Read .artifacts/project-memory/current-context.md.",
+      "Confirm the requested task does not contradict active decisions or silently drop open obligations.",
+      "Read the long-horizon roadmap section in .artifacts/project-memory/current-context.md.",
+      "Map the requested work to a roadmap phase and an active obligation before changing files."
+    ],
+    "duringWork": [
+      "Record newly accepted decisions and negative results as soon as they become stable.",
+      "Keep planned, implemented, calibrated and formally verified statuses distinct.",
+      "Do not renumber or replace accepted workloads without an explicit supersession entry.",
+      "Keep the roadmap execution queue current and preserve blocked or deferred phases.",
+      "Do not materially reorder P0-P9 without an explicit discussion-ledger supersession."
+    ]
+  },
+  "memoryID": "FOVEA-PROJECT-MEMORY-V1",
+  "openObligations": [
+    {
+      "id": "OPEN-RESTORE-W1-W15",
+      "priority": 0,
+      "status": "completed",
+      "summary": "Restore the exact accepted W1-W15 matrix from user-provided discussion sources, remove the incorrect reconstruction and add gap-free validation."
+    },
+    {
+      "id": "OPEN-CONTINUITY-GATES",
+      "priority": 0,
+      "status": "completed",
+      "summary": "Add mandatory project-memory validation and context rendering to local and CI verification."
+    },
+    {
+      "id": "OPEN-FINAL-W1-W3-AGGREGATE",
+      "priority": 1,
+      "status": "completed",
+      "summary": "Aggregate the final schema 3 five-library Simulator calibration under one unchanged source-tree digest, preserving W3 semantic gaps."
+    },
+    {
+      "id": "OPEN-CACHE-V4-FULL-FORMAL-TRUSTED-REBIND",
+      "priority": 1,
+      "status": "pending-published-akashic-exact-fovea-pin-clean-trusted-ci",
+      "summary": "The V4 local full-formal gate is complete. Publish the measured Akashic candidate, update Fovea to that exact revision, and repeat from clean protected trusted CI before any release certificate or production sharded-cache switch."
+    },
+    {
+      "id": "OPEN-W4-W15-PLANS",
+      "priority": 2,
+      "status": "pending",
+      "summary": "Create dedicated immutable experiment plans and claim-family activation records for W4-W15 in dependency order; no workload may be silently omitted."
+    },
+    {
+      "id": "OPEN-PHYSICAL-EVIDENCE",
+      "priority": 2,
+      "status": "blocked-external",
+      "summary": "Complete signed stable-iOS physical runs on iPhone 16e and a lower-performance device with whole-block thermal invalidation."
+    },
+    {
+      "id": "OPEN-A-TIER-COMPARATOR-INTEGRATION",
+      "priority": 0,
+      "status": "in-progress-final-rerun-after-w7-fix",
+      "summary": "All seven A-tier integrations build. W7 V6 exposed and fixed cancellation-cohort poisoning, then invalidated the direct mapping from an eight-grant client fairness bound to black-box origin start order. W7 V7 keeps the trace and budgets, derives the observable bound as 8 + (8 - 1) = 15, and awaits the final six-comparator W1-W3, paired SwiftUI and W7 V7 aggregates under one unchanged source digest."
+    },
+    {
+      "id": "OPEN-CODEC-CONFORMANCE-KIT",
+      "priority": 1,
+      "status": "pending",
+      "summary": "Extract the in-repository codec conformance/model tests into a versioned cross-repository kit with fixture manifests, backend factories and contract-version compatibility policy."
+    },
+    {
+      "id": "OPEN-INDEPENDENT-CODEC-ADAPTER",
+      "priority": 2,
+      "status": "blocked-external-codec",
+      "summary": "After the independent codec has bounded probe and reference still decode, implement an opt-in Fovea adapter and run the unchanged conformance, hostile-corpus, differential, resource and lifecycle gates."
+    },
+    {
+      "id": "OPEN-CODEC-DEFAULT-EVIDENCE",
+      "priority": 2,
+      "status": "pending-prerequisites",
+      "summary": "Do not make the independent codec default until format-scoped shadow/canary evidence, same-device quality/performance/resource results, physical-device workloads and rollback drills satisfy the roadmap gates."
+    },
+    {
+      "id": "OPEN-IMAGECRAFT-PHYSICAL-INTEGRATION",
+      "priority": 1,
+      "status": "public-ci-green-alpha3-exact-pin-clean-copy-alpha2-rollback-device-pending",
+      "summary": "ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 is public under MIT, tagged 0.1.0-alpha.3 and green on required xcode-27 core checks. Fovea consumes it by exact revision; alpha.3 clean-copy and alpha.2 rollback/forward each pass 475 tests. Physical-device resource evidence remains open."
+    },
+    {
+      "id": "OPEN-AKASHIC-INDEPENDENT-PACKAGE",
+      "priority": 1,
+      "status": "public-ci-green-alpha3-exact-pin-clean-copy-alpha2-rollback-fault-rebind-powerloss-device-pending",
+      "summary": "Akashic e138b4425688cb0ce32fba7788adcc944c936b53 is public under MIT, tagged 0.1.0-alpha.3 and green on required xcode-27 core checks. Fovea alpha.3 clean-copy and alpha.2 rollback/forward each pass 475 tests. The historical full fault campaign remains bound to alpha.2; alpha.3 full campaign rebind, true power-loss and physical-device qualification remain open."
+    },
+    {
+      "id": "OPEN-DECODE-RESOURCE-CONTRACT-AUDIT",
+      "priority": 0,
+      "status": "imageio-lifetime-ledger-passed-heldout-and-device-pending",
+      "summary": "The four-case composition model and seven-phase ImageIO lifetime ledger pass. The audit retains five unresolved gaps covering prepared-state accumulation, framework-private memory, output transfer, alias/branch composition and cancellation reclaim; held-out backend and real-device calibration remain required before second-codec production admission."
+    },
+    {
+      "id": "OPEN-AKASHIC-PHYSICAL-RESOURCE-EVIDENCE",
+      "priority": 1,
+      "status": "partial-local-process-envelope-device-and-fault-program-pending",
+      "summary": "Three retained macOS workloads now report peak process RSS, sampled file descriptors, exact logical payload/read bytes, manifest rewrite bytes, final footprint and reopen latency under local bounds. Stable physical-device I/O and energy, ENOSPC, short-write, permission-transition, wrong-owner and power-loss/kill-at-random evidence remain required."
+    },
+    {
+      "id": "OPEN-AKASHIC-MANIFEST-WRITE-AMPLIFICATION",
+      "priority": 1,
+      "status": "retained-small-object-counterexample-design-investigation-pending",
+      "summary": "The local resource envelope shows object-count-sensitive flat-manifest rewriting: 64 x 4 KiB produces about 3.8033x total logical write upper bound, versus about 1.0016x for 8 x 1 MiB. Investigate batching, segmented manifests or append/checkpoint designs without weakening process-crash, bounded recovery, future-schema or partition guarantees."
+    },
+    {
+      "id": "OPEN-QUALIFIED-COMPOSITION-SEAMS",
+      "priority": 1,
+      "status": "specified-implementation-pending",
+      "summary": "Make new production codec injection require ImageCodec rather than the legacy ImageDecoding compatibility path, and design an immutable qualified persistent-store bundle that preserves StoreGeneration, writer lifetime, namespace-generation persistence and cross-store transaction obligations."
+    },
+    {
+      "id": "OPEN-SWIFT64-THREE-REPOSITORY-MIGRATION",
+      "priority": 0,
+      "status": "components-green-fovea-local-candidate-actions-budget-blocked",
+      "summary": "ImageCraft and Akashic alpha.3 remain protected and green. Fovea hosted arm64 and Rosetta x86_64 identity evidence is green, but the full private-root path exposed the visual watchdog defect and then exhausted the hosted budget. The corrected candidate must be completed locally before any single approved hosted rerun."
+    },
+    {
+      "id": "OPEN-FOVEA-PUBLICATION",
+      "priority": 0,
+      "status": "blocked-actions-budget-exhausted-local-qualification-in-progress",
+      "summary": "Fovea remains private and untagged. Hosted workflows are disabled after the Actions budget was exhausted. Static gates, 101 mutation applications, the adaptive warmup 20/20 replay and the complete 476/476 host suite pass. Final DocC, Workbench and Simulator evidence remain blocked by the unhealthy local Xcode/CoreSimulator host; remaining non-Simulator release, sanitizer and component compatibility gates continue locally."
+    }
+  ],
+  "reviewedOn": "2026-08-01",
+  "schemaVersion": 1,
+  "standingRequirements": [
+    {
+      "id": "REQ-WORLD-CLASS-SCOPE",
+      "requirement": "Fovea aims to be the strongest evidence-backed Apple-platform network image pipeline. Every implemented capability must pass hard invariants and be first or statistically equivalent to the best semantically eligible comparator on all preregistered primary endpoints.",
+      "status": "active",
+      "targets": [
+        "Benchmarks/claim-policy.json",
+        "Benchmarks/statistical-claim-families.json",
+        "docs/specifications/comparability-contract.md"
+      ]
+    },
+    {
+      "id": "REQ-COMPLETE-WORKLOAD-MATRIX",
+      "requirement": "The accepted workload matrix is gap-free W1-W15. W1-W3 are only the current executable Phase 0b subset. No phase report may imply comprehensive completion from W1-W3 alone.",
+      "status": "active",
+      "targets": [
+        "Benchmarks/workload-registry.json",
+        "docs/project-memory/accepted-workload-matrix.md",
+        "docs/specifications/benchmark-workloads.md"
+      ]
+    },
+    {
+      "id": "REQ-NATIVE-UPSTREAM-TESTS",
+      "requirement": "Competitor native tests must be preserved and reported independently. Fovea semantic ports and Challenge Suite tests do not replace or erase native failures.",
+      "status": "active",
+      "targets": [
+        "scripts/run-upstream-image-loader-tests.py",
+        "Benchmarks/ComparativeLab/challenge-suite.json"
+      ]
+    },
+    {
+      "id": "REQ-SEMANTIC-COMPARABILITY",
+      "requirement": "Performance ranking is permitted only inside a requirement-relative semantic equivalence class. Stronger contracts, capability gaps, unsupported features and missing metrics remain separately visible.",
+      "status": "active",
+      "targets": [
+        "docs/specifications/comparability-contract.md",
+        "docs/research/comparison-ontology.json",
+        "scripts/check-comparison-governance.py"
+      ]
+    },
+    {
+      "id": "REQ-BOUNDED-CLAIMS",
+      "requirement": "Unbounded global world-best marketing claims are forbidden. Only machine-generated, evidence-digest-bound best-within-scope or weaker certificates are allowed.",
+      "status": "active",
+      "targets": [
+        "Benchmarks/claim-policy.json",
+        "docs/specifications/mathematical-assurance.md"
+      ]
+    },
+    {
+      "id": "REQ-CONTINUITY",
+      "requirement": "Every accepted discussion decision, capability gap, negative result and open obligation must be persisted before a long-running task is considered complete. Future tasks must load the generated continuity context before changes.",
+      "status": "active",
+      "targets": [
+        "AGENTS.md",
+        "docs/project-memory/discussion-ledger.json",
+        "scripts/check-project-memory.py",
+        "scripts/render-project-context.py"
+      ]
+    },
+    {
+      "id": "REQ-NO-UNREQUESTED-GIT-PUBLISH",
+      "requirement": "Do not reset, commit, tag or push unless the user explicitly requests it.",
+      "status": "active",
+      "targets": [
+        "AGENTS.md"
+      ]
+    },
+    {
+      "id": "REQ-A-TIER-COMPARATOR-MATRIX",
+      "requirement": "The complete A-tier Apple-platform comparison matrix must contain Apple URLSession + URLCache + ImageIO, Apple AsyncImage, Nuke, Kingfisher, SDWebImage, PINRemoteImage, and Fovea. AlamofireImage remains B-tier and cannot satisfy a missing A-tier slot.",
+      "status": "active",
+      "targets": [
+        "docs/research/comparator-lock.json",
+        "docs/research/comparator-registry.json",
+        "Benchmarks/ComparativeLab/Apps/project.yml",
+        "scripts/verify-comparative-lab.py"
+      ]
+    },
+    {
+      "id": "REQ-LONG-HORIZON-ROADMAP",
+      "requirement": "The accepted P0-P9 long-horizon roadmap is mandatory task context. Every multi-step task must preserve its phases, map work to an active phase and obligation, and record any material route change through explicit supersession.",
+      "status": "active",
+      "targets": [
+        "docs/project-memory/long-horizon-roadmap.json",
+        "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
+        "scripts/check-project-memory.py",
+        "scripts/render-project-context.py"
+      ]
+    }
+  ]
+}

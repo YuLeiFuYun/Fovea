@@ -1,10 +1,14 @@
 # 公共 API、发布与依赖治理
 
-> **状态：Proposed，首个公开版本前必须裁决。**
+> **状态：Proposed，Phase 1 / Core v1 Candidate Hardening 入口规格；首个公开版本前必须裁决。**
 
 ## 1. 目标
 
 Fovea、ImageCraft 和 Akashic 的源码实现可以快速重构，但一旦发布稳定产品，就必须区分源码兼容、行为兼容、磁盘格式兼容和二进制分发兼容。安全修复不能以“签名没变”为理由静默改变关键语义而不记录。
+
+## Phase 1 与发布阶段的关系
+
+Phase 1 等同于 Core v1 Candidate Hardening，不等同于 1.0 Stable。它允许 breaking API 变化，主要工作是公共面收缩、Source 补全、真实宿主兼容周期、Profile v1 Candidate、迁移和发布证据。只有 Phase 1 结果经过至少一个兼容周期并由 Accepted ADR 承担兼容承诺，才可进入 Stable Core。
 
 ## 2. 发布阶段
 

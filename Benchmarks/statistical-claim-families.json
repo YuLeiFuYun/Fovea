@@ -1,0 +1,204 @@
+{
+  "families": [
+    {
+      "activation": "next-formal-run-must-bind-family-digest",
+      "certificateLevel": "L2-primary-portfolio",
+      "comparatorScope": {
+        "aTierEligible": [
+          "Apple URLSession + URLCache + ImageIO",
+          "Nuke",
+          "Kingfisher",
+          "SDWebImage",
+          "PINRemoteImage"
+        ],
+        "bTierExcludedFromATierMultiplicity": true,
+        "bTierSupplemental": [
+          "AlamofireImage"
+        ],
+        "independentSurfaceRegistry": "Benchmarks/AsyncImageLab/claim-families.json",
+        "systemUnderTest": "Fovea"
+      },
+      "gateOrder": [
+        "W1-hard-correctness",
+        "all-primary-substantial-superiority-or-optimal-floor",
+        "secondary-frontier-no-material-inferiority"
+      ],
+      "id": "CLAIM-COMP-W1-USER-EXPERIENCE",
+      "multiplicityFamily": "a-tier-headless-five-comparators-x-three-primary-endpoints",
+      "primaryEndpoints": [
+        "cancel-waste-bytes",
+        "main-thread-hitch-time",
+        "peak-dirty-memory"
+      ],
+      "resamplingUnit": "run-session-cluster",
+      "secondaryEndpoints": [
+        "request-latency-distribution",
+        "energy",
+        "cpu-time"
+      ],
+      "sourcePlan": "Benchmarks/ComparativeLab/experiment-plan.json",
+      "workloadIDs": [
+        "W1-SCROLL-V1"
+      ]
+    },
+    {
+      "activation": "next-formal-run-must-bind-family-digest",
+      "certificateLevel": "L2-primary-portfolio",
+      "comparatorScope": {
+        "aTierEligible": [
+          "Apple URLSession + URLCache + ImageIO",
+          "Nuke",
+          "Kingfisher",
+          "SDWebImage",
+          "PINRemoteImage"
+        ],
+        "bTierExcludedFromATierMultiplicity": true,
+        "bTierSupplemental": [
+          "AlamofireImage"
+        ],
+        "independentSurfaceRegistry": "Benchmarks/AsyncImageLab/claim-families.json",
+        "systemUnderTest": "Fovea"
+      },
+      "gateOrder": [
+        "W2-pixel-correctness",
+        "all-primary-substantial-superiority-or-optimal-floor",
+        "secondary-frontier-no-material-inferiority"
+      ],
+      "id": "CLAIM-COMP-W2-DECODE-EFFICIENCY",
+      "multiplicityFamily": "a-tier-headless-five-comparators-x-two-primary-endpoints",
+      "primaryEndpoints": [
+        "decoded-megapixels",
+        "peak-dirty-memory"
+      ],
+      "resamplingUnit": "run-session-cluster",
+      "secondaryEndpoints": [
+        "decode-duration-distribution",
+        "cpu-time"
+      ],
+      "sourcePlan": "Benchmarks/ComparativeLab/experiment-plan.json",
+      "workloadIDs": [
+        "W2-HERO-V1"
+      ]
+    },
+    {
+      "activation": "active",
+      "applicabilityBoundary": "Apple AsyncImage is not comparable; B-tier AlamofireImage is supplemental and cannot satisfy an A-tier slot.",
+      "certificateLevel": "L1-hard",
+      "comparatorScope": {
+        "aTierEligible": [
+          "Apple URLSession + URLCache + ImageIO",
+          "Nuke",
+          "Kingfisher",
+          "SDWebImage",
+          "PINRemoteImage"
+        ],
+        "bTierExcludedFromATierMultiplicity": true,
+        "bTierSupplemental": [
+          "AlamofireImage"
+        ],
+        "independentSurfaceRegistry": "Benchmarks/AsyncImageLab/claim-families.json",
+        "systemUnderTest": "Fovea"
+      },
+      "gateOrder": [
+        "all-zero-leak-and-revocation-invariants"
+      ],
+      "id": "CLAIM-COMP-W3-SECURITY-CORRECTNESS",
+      "multiplicityFamily": "not-applicable-hard-gate",
+      "primaryEndpoints": [],
+      "resamplingUnit": "scenario-run",
+      "secondaryEndpoints": [],
+      "sourcePlan": "Benchmarks/ComparativeLab/experiment-plan.json",
+      "workloadIDs": [
+        "W3-AUTH-V1"
+      ]
+    },
+    {
+      "activation": "next-formal-run-must-bind-family-digest",
+      "certificateLevel": "L2-primary-portfolio",
+      "gateOrder": [
+        "memory-hard-correctness",
+        "all-primary-substantial-superiority-or-optimal-floor",
+        "secondary-frontier-no-material-inferiority"
+      ],
+      "id": "CLAIM-CACHE-MEMORY-SCAN",
+      "multiplicityFamily": "all-primary-memory-comparators-x-three-endpoints",
+      "primaryEndpoints": [
+        "memory-hot-scan-hit-rate",
+        "memory-hot-scan-throughput",
+        "memory-hot-scan-p99-latency"
+      ],
+      "resamplingUnit": "process-run",
+      "secondaryEndpoints": [
+        "metadata-updates",
+        "distribution-distance"
+      ],
+      "sourcePlan": "Benchmarks/CacheLab/cache-plan.json",
+      "workloadIDs": [
+        "MEM-HOT-SCAN-V4"
+      ]
+    },
+    {
+      "activation": "next-formal-run-must-bind-family-digest",
+      "certificateLevel": "L2-primary-portfolio",
+      "gateOrder": [
+        "memory-concurrency-correctness",
+        "all-primary-substantial-superiority-or-optimal-floor",
+        "secondary-frontier-no-material-inferiority"
+      ],
+      "id": "CLAIM-CACHE-MEMORY-CONCURRENT",
+      "multiplicityFamily": "all-primary-memory-comparators-x-two-endpoints",
+      "primaryEndpoints": [
+        "memory-concurrent-throughput",
+        "memory-concurrent-p99-latency"
+      ],
+      "resamplingUnit": "process-run",
+      "secondaryEndpoints": [
+        "lock-wait-distribution",
+        "cpu-time"
+      ],
+      "sourcePlan": "Benchmarks/CacheLab/cache-plan.json",
+      "workloadIDs": [
+        "MEM-CONCURRENT-V3"
+      ]
+    },
+    {
+      "activation": "next-formal-run-must-bind-family-digest",
+      "certificateLevel": "L2-primary-portfolio",
+      "gateOrder": [
+        "D5-hard-correctness",
+        "all-primary-substantial-superiority-or-optimal-floor",
+        "secondary-frontier-no-material-inferiority"
+      ],
+      "id": "CLAIM-CACHE-DISK-D5",
+      "multiplicityFamily": "D5-primary-comparators-x-three-endpoints",
+      "primaryEndpoints": [
+        "disk-write-throughput",
+        "disk-read-throughput",
+        "disk-p99-read-latency"
+      ],
+      "resamplingUnit": "process-run",
+      "secondaryEndpoints": [
+        "native-D1-throughput",
+        "write-amplification"
+      ],
+      "sourcePlan": "Benchmarks/CacheLab/cache-plan.json",
+      "workloadIDs": [
+        "DISK-MIXED-V4",
+        "DISK-ADVERSARIAL-V2"
+      ]
+    }
+  ],
+  "policy": "Benchmarks/claim-policy.json",
+  "registryID": "FOVEA-STATISTICAL-CLAIM-FAMILIES-V1",
+  "rules": {
+    "defaultRelativeDominanceMargin": 0.2,
+    "dominanceTargetRequiredForBestWithinScope": true,
+    "familyMembershipImmutableAfterFormalData": true,
+    "inconclusiveBlocksOnlyFamilyAndAncestors": true,
+    "primaryEndpointsRequireMargins": true,
+    "priorArtifactsWithoutFamilyDigest": "descriptive-only",
+    "secondaryEndpointsCannotCreateBestClaim": true
+  },
+  "schemaVersion": 1,
+  "status": "active-before-next-formal-results"
+}

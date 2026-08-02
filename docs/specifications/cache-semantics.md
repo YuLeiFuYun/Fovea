@@ -1,6 +1,6 @@
 # 缓存、身份与 HTTP 语义规范
 
-> **状态：Proposed，Phase 0a 子集 / Phase 0b 完整可执行规范。**  
+> **状态：Proposed，Phase 0a 子集 / Phase 0b 完整可执行规范。**
 > 本文规定稳定 key 构造、执行期合并键、Vary/auth 处理、partial 内容、原子提交、逻辑/物理 blob 身份、持久格式演进和派生缓存失效。实现不得用“等价优化”绕过这些规则。
 
 ## 1. 时序模型
@@ -164,7 +164,7 @@ stable rendition = w=600
 - `Vary: *` 的响应不得用于常规缓存复用。
 - record 选择由 FoveaHTTP 完成，Akashic 只按指定索引读写。
 - 已知 Vary 字段的原请求值保存在 RepresentationRecord；敏感字段只保存安全 fingerprint。
-- field name 大小写不敏感，值按对应 HTTP field 语义规范化，不能只比较原始字符串。
+- field name 大小写不敏感；`Accept-Encoding`/`Accept-Language` 由唯一共享实现规范逗号 OWS 与大小写，未知扩展字段只移除首尾 OWS，不擅自改写引号或自定义语义；公开构造、record 选择与 Codable 持久化必须产生同一 canonical 表示，非规范持久值失败关闭。
 - 多个匹配 record 时按 HTTP 语义和日期选择，不能简单按“最近访问”覆盖。
 
 ## 6. 所有权
@@ -267,7 +267,7 @@ ContentID 未确定前可以向当前 fetch task 的订阅者交付 preview，�
 
 - 304 不创建新 ContentID；FoveaHTTP 按 profile merge metadata；
 - 更新后的 RepresentationRecord 继续引用原 blob；
-- record 更新原子化，失败时保留旧可用 record；
+- record 更新原子化；同 variant 的 304 metadata 覆盖或 200 新内容覆盖若在 namespace 仍有效时取消/失败，必须恢复旧 record；若 generation 已撤销，则只删除新状态，绝不恢复旧 generation；
 - 每个任务捕获 `NamespaceGeneration`；logout/revoke 后 Commit 必须再次校验；
 - 被撤销 generation 的旧任务即使完成，也不得提交 memory、blob、record、Derived 或 Analysis；
 - 物理清理可异步，逻辑不可达必须立即生效。
@@ -410,7 +410,7 @@ v1 不让 App 与 Widget 并发写同一个 Akashic generation。需要 Widget �
 - **CACHE-PT-015**: logout/revoke 与 Commit 竞态下旧 generation 写入始终为零；旧 generation record 即使物理残留也不能被新 generation 查询命中；
 - **CACHE-PT-016**: Analysis model/revision 变化必然 miss；
 - **CACHE-PT-017**: 持久 key golden vectors 跨进程/架构一致；
-- **CACHE-PT-018**: 旧 schema 兼容读或稳定 miss，不 crash；
+- **CACHE-PT-018**: 未发布的旧 record schema 不再解析或静默降级；直接打开旧目录时失败关闭且不重写原文件，正式组合根通过 StoreGeneration 切换；
 - **CACHE-PT-019**: StoreGeneration 切换任意 crash point 可恢复；
 - **CACHE-PT-020**: 多 record 引用时删除一个 record 不提前删除 blob；
 - **CACHE-PT-021**: unknown future schema 不被当前版本修改；
@@ -431,4 +431,6 @@ v1 不让 App 与 Widget 并发写同一个 Akashic generation。需要 Widget �
 - **CACHE-PT-036**: progressive preview 未通过最小 Probe/Security gate 时不向 UI 交付像素；
 - **CACHE-PT-037**: Widget 导出目录不包含 auth OriginalEncoded、ContentID 或敏感 metadata，Widget 不能写主 store；
 - **CACHE-PT-038**: namespace revoke 后的新 200 必须写入当前 NamespaceGeneration；重建内存 pipeline 后仍可选择该 fresh record，不永久退化为网络 miss；
-- **CACHE-PT-039**: 同 variant 的 304 metadata 覆盖若在 namespace 仍有效时被调用方取消，事务必须恢复旧 record；namespace 已撤销时则删除新 record，不能复活旧 generation。
+- **CACHE-PT-039**: 同 variant 的 304 metadata 覆盖或 200 新内容覆盖若在 namespace 仍有效时被调用方取消，事务必须恢复旧 record；namespace 已撤销时则删除新 record，不能复活旧 generation。
+- **CACHE-PT-041**: OriginalEncoded staging 写入不得在显式 publish 前通过逻辑清单可见；decode/安全验证失败、取消或 revoke 必须 discard，GC 不得误删仍在途 stage；只有 stage 与 RepresentationRecord 均原子发布后，成功 completion 才成立。
+- **CACHE-PT-042**: 已通过安全探测、目标解码、transform 与 namespace fence 的完整像素可作为 preview 先显示；final 事件与 `image(for:)` completion 仍必须等待 OriginalEncoded 与 RepresentationRecord 的耐久发布。

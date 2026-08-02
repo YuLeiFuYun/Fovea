@@ -1,0 +1,216 @@
+{
+  "entries": [
+    {
+      "appliesTo": [
+        "docs/TECHNOLOGY_RADAR.md",
+        "docs/research/image-pipeline-reference-audit-2026-07.md"
+      ],
+      "authority": "Apple",
+      "disposition": "candidate",
+      "evidenceNote": "ImageIO provides a cumulative incremental source for chunked data. Fovea does not claim production progressive decoding until bounded preview cadence, working-set accounting, cancellation, validation, and final-identity tests exist.",
+      "id": "REF-APPLE-IMAGEIO-INCREMENTAL",
+      "kind": "officialDocumentation",
+      "title": "CGImageSourceCreateIncremental and CGImageSourceUpdateData",
+      "url": "https://developer.apple.com/documentation/imageio/cgimagesourcecreateincremental(_:)"
+    },
+    {
+      "appliesTo": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/App/WorkbenchNetworkMonitor.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/WorkbenchSettingsView.swift"
+      ],
+      "authority": "Apple",
+      "disposition": "adopted",
+      "evidenceNote": "The workbench presents path status, interface, expensive and constrained signals as observations only; request success remains determined by the actual URLSession transaction.",
+      "id": "REF-APPLE-NWPATHMONITOR",
+      "kind": "officialDocumentation",
+      "title": "NWPathMonitor",
+      "url": "https://developer.apple.com/documentation/network/nwpathmonitor"
+    },
+    {
+      "appliesTo": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/ScenarioCatalogView.swift",
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/WorkbenchRootView.swift"
+      ],
+      "authority": "Apple",
+      "disposition": "adopted",
+      "evidenceNote": "The example retains NavigationView and TabView so its navigation contract matches the package iOS 15 minimum rather than requiring newer NavigationStack APIs.",
+      "id": "REF-APPLE-SWIFTUI-NAVIGATION",
+      "kind": "officialDocumentation",
+      "title": "SwiftUI NavigationView",
+      "url": "https://developer.apple.com/documentation/swiftui/navigationview"
+    },
+    {
+      "appliesTo": [
+        "docs/specifications/auth-context-integration.md",
+        "Sources/FoveaHTTP/URLSessionTransport.swift",
+        "Sources/FoveaHTTP/URLSessionTransportPolicy.swift"
+      ],
+      "authority": "Apple",
+      "disposition": "adopted",
+      "evidenceNote": "The official transport copies configuration and removes ambient cache, cookie, credential-store and session-wide header state before creating the session.",
+      "id": "REF-APPLE-URLSESSION-CONFIG",
+      "kind": "officialDocumentation",
+      "title": "URLSessionConfiguration",
+      "url": "https://developer.apple.com/documentation/foundation/urlsessionconfiguration"
+    },
+    {
+      "appliesTo": [
+        "Sources/FoveaCore/FetchStage.swift",
+        "Sources/FoveaHTTP/URLSessionEventRouter.swift",
+        "Sources/FoveaHTTP/URLSessionTransportPolicy.swift",
+        "Tools/FoveaNetworkLab/NetworkLabRunner.swift",
+        "docs/specifications/diagnostics-contract.md"
+      ],
+      "authority": "Apple",
+      "disposition": "adopted",
+      "evidenceNote": "The transport records taskInterval and redirectCount plus optional transaction phase timings. The network lab requires the task-level summary while preserving unavailable reused/proxy phase timestamps as nil; metrics remain post-observation evidence, not preconnection isolation.",
+      "id": "REF-APPLE-URLSESSION-METRICS",
+      "kind": "officialDocumentation",
+      "title": "URLSessionTaskMetrics and URLSessionTaskTransactionMetrics",
+      "url": "https://developer.apple.com/documentation/foundation/urlsessiontaskmetrics"
+    },
+    {
+      "appliesTo": [
+        "docs/TECHNOLOGY_RADAR.md",
+        "docs/ARCHITECTURE.md"
+      ],
+      "authority": "C2PA",
+      "disposition": "deferred",
+      "evidenceNote": "Provenance verification remains an explicit optional capability; ordinary image loading must not pay verification cost or imply trust without a dedicated module and policy.",
+      "id": "REF-C2PA",
+      "kind": "standard",
+      "title": "C2PA Technical Specification 2.4",
+      "url": "https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html"
+    },
+    {
+      "appliesTo": [
+        "docs/TECHNOLOGY_RADAR.md",
+        "docs/ARCHITECTURE.md"
+      ],
+      "authority": "JPEG Committee",
+      "disposition": "candidate",
+      "evidenceNote": "Tracked as a codec research direction. No production decoder, platform availability claim or default-path cost is currently accepted.",
+      "id": "REF-JPEG-AI",
+      "kind": "standard",
+      "title": "ISO/IEC 6048 JPEG AI",
+      "url": "https://jpeg.org/jpegai/"
+    },
+    {
+      "appliesTo": [
+        "docs/COMPETITIVE_CONTRACTS.md",
+        "docs/research/image-pipeline-reference-audit-2026-07.md",
+        "docs/research/comparator-lock.json",
+        "Benchmarks/ComparativeLab/README.md",
+        "Benchmarks/ComparativeLab/Adapters/KingfisherAdapterPackage/Sources/KingfisherComparatorAdapter/KingfisherComparatorAdapter.swift"
+      ],
+      "authority": "onevcat/Kingfisher",
+      "disposition": "reference",
+      "evidenceNote": "Pinned to Kingfisher 8.11.0 commit 410984bf301f4fa224fe56277b3f8672cc465c79 for the Phase 0b required adapter; reviewed for downsampling, cache/downloader isolation, shared-task cancellation, SwiftUI state, disk indexing and current Xcode 27 compiler warnings.",
+      "id": "REF-KINGFISHER",
+      "kind": "referenceImplementation",
+      "title": "Kingfisher image downloading and caching library",
+      "url": "https://github.com/onevcat/Kingfisher"
+    },
+    {
+      "appliesTo": [
+        "docs/COMPETITIVE_CONTRACTS.md",
+        "docs/research/image-pipeline-reference-audit-2026-07.md",
+        "docs/research/comparator-lock.json",
+        "Benchmarks/ComparativeLab/README.md",
+        "Benchmarks/ComparativeLab/Adapters/NukeAdapterPackage/Sources/NukeComparatorAdapter/NukeComparatorAdapter.swift"
+      ],
+      "authority": "kean/Nuke",
+      "disposition": "reference",
+      "evidenceNote": "Pinned to Nuke 13.0.6 commit 63a8fcbd6621340a2410bc3e9575ac97058615f4 for the Phase 0b required adapter; reviewed for pipeline configuration, task coalescing, target-pixel thumbnailing, cancellation, cache layers and Swift concurrency compatibility.",
+      "id": "REF-NUKE",
+      "kind": "referenceImplementation",
+      "title": "Nuke image loading system",
+      "url": "https://github.com/kean/Nuke"
+    },
+    {
+      "appliesTo": [
+        "docs/specifications/http-cache-conformance.md",
+        "Sources/FoveaHTTP/HTTPCachePolicy.swift",
+        "Sources/FoveaHTTP/RepresentationRecord.swift"
+      ],
+      "authority": "IETF",
+      "disposition": "adopted",
+      "evidenceNote": "Freshness, validators, Age, Vary, private/no-store and collapsed request boundaries are implemented as a deliberately narrower private image cache profile.",
+      "id": "REF-RFC9111",
+      "kind": "standard",
+      "title": "RFC 9111: HTTP Caching",
+      "url": "https://www.rfc-editor.org/rfc/rfc9111"
+    },
+    {
+      "appliesTo": [
+        "docs/COMPETITIVE_CONTRACTS.md",
+        "docs/research/image-pipeline-reference-audit-2026-07.md",
+        "docs/research/comparator-lock.json",
+        "Benchmarks/ComparativeLab/README.md"
+      ],
+      "authority": "SDWebImage/SDWebImage",
+      "disposition": "reference",
+      "evidenceNote": "Pinned to SDWebImage 5.21.7 commit 2de3a496eaf6df9a1312862adcfd54acd73c39c0 as a reference comparator for progressive loading, animated images, thumbnail decoding, coder/loader plugins, transforms and broad platform coverage.",
+      "id": "REF-SDWEBIMAGE",
+      "kind": "referenceImplementation",
+      "title": "SDWebImage",
+      "url": "https://github.com/SDWebImage/SDWebImage"
+    },
+    {
+      "appliesTo": [
+        "docs/TECHNOLOGY_RADAR.md",
+        "docs/specifications/cache-budget-gc.md"
+      ],
+      "authority": "USENIX NSDI",
+      "disposition": "candidate",
+      "evidenceNote": "Candidate for offline trace replay only. Fovea keeps approximate persistent LRU until project-specific traces demonstrate a superior policy without unacceptable metadata or concurrency costs.",
+      "id": "REF-SIEVE",
+      "kind": "paper",
+      "title": "SIEVE is Simpler than LRU: an Efficient Turn-Key Eviction Algorithm for Web Caches",
+      "url": "https://www.usenix.org/conference/nsdi24/presentation/zhang-yazhuo"
+    },
+    {
+      "appliesTo": [
+        "Package.swift",
+        "docs/specifications/concurrency-contracts.md"
+      ],
+      "authority": "Swift",
+      "disposition": "adopted",
+      "evidenceNote": "The package enables NonisolatedNonsendingByDefault and uses explicit @concurrent boundaries for work that must leave the caller's actor.",
+      "id": "REF-SWIFT-SE0461",
+      "kind": "languageProposal",
+      "title": "SE-0461: Run nonisolated async functions on the caller's actor by default",
+      "url": "https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md"
+    },
+    {
+      "appliesTo": [
+        "Package.swift",
+        "docs/specifications/concurrency-contracts.md"
+      ],
+      "authority": "Swift",
+      "disposition": "adopted",
+      "evidenceNote": "The package enables InferIsolatedConformances and keeps UI lifecycle state on MainActor.",
+      "id": "REF-SWIFT-SE0470",
+      "kind": "languageProposal",
+      "title": "SE-0470: Global-actor isolated conformances",
+      "url": "https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md"
+    },
+    {
+      "appliesTo": [
+        "Examples/FoveaWorkbenchApp/project.yml",
+        "Examples/FoveaWorkbenchApp/.xcodegen-version",
+        "scripts/generate-ios-example.sh",
+        "scripts/verify-ios-example.py"
+      ],
+      "authority": "yonaskolb/XcodeGen",
+      "disposition": "adopted",
+      "evidenceNote": "The generator version is pinned, the generated project is committed, and verification requires byte-for-byte regeneration before build, unit, integration and UI tests.",
+      "id": "REF-XCODEGEN",
+      "kind": "buildTool",
+      "title": "XcodeGen",
+      "url": "https://github.com/yonaskolb/XcodeGen"
+    }
+  ],
+  "reviewedOn": "2026-07-25",
+  "schemaVersion": 1
+}

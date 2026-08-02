@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "evidenceID": "FOVEA-IMAGECRAFT-INTEGRATION-EVIDENCE-2026-07",
+  "status": "passed-local-nonrelease",
+  "imageCraft": {
+    "commit": "b17a8b9060f75d8ad75eab7accf48cffd5637171",
+    "workingTreeClean": true,
+    "componentTestsPassed": 64,
+    "releaseReadinessPassed": true,
+    "sourceTreeSHA256": "e989d0943b48e66a20b6b091f3d5de17d6f1b033b9376c6263bb931e50d48454",
+    "embeddedFileCount": 10,
+    "jpegMarkerScanExperiment": {
+      "path": "../ImageCraft/Evidence/Experiments/jpeg-marker-scan-ab-2026-07-31.json",
+      "sha256": "d00753208ed7b04954f0e7df9d030c2dc0704eac97b5cfc05f47374b34c65f88",
+      "timedSampleCount": 588,
+      "jpegPathCount": 6,
+      "sevenOfSevenWins": 5,
+      "sixOfSevenWins": 1,
+      "pairedProcessMedianReductionPercentRange": [
+        8.87,
+        16.87
+      ],
+      "claimBoundary": "local-macos-imageio-fixed-corpus-no-cross-device-or-non-imageio-generalization"
+    }
+  },
+  "fovea": {
+    "embeddedMirrorByteIdentical": true,
+    "hostTestsPassed": 475,
+    "releaseBuildPassed": true,
+    "sourceLock": "docs/project-memory/component-pins.json",
+    "externalRevisionRehearsal": {
+      "artifact": ".artifacts/external-components/rehearsal.json",
+      "artifactSHA256": "ca0f05b0880003884601e1dd9ba45ab982436798c2eaacdd0e547c05ce82aece",
+      "testLog": ".artifacts/external-components/swift-test.log",
+      "testLogSHA256": "198ce331b2d91a7586e903280f20299d5b97e4da316674ddf5fd72d249ea3cb4",
+      "hostTestsPassed": 475,
+      "embeddedComponentSourcesRemoved": 5,
+      "imageCraftCommit": "b17a8b9060f75d8ad75eab7accf48cffd5637171",
+      "akashicCommit": "f04060fbd01b9745b7caa87f389bdb0324874854"
+    }
+  },
+  "limitations": [
+    "No real remote or immutable release tag exists for ImageCraft.",
+    "Protected CI and remote clean-clone verification remain pending.",
+    "The performance result is not a physical-device, energy, thermal or cross-OS qualification.",
+    "The evidence does not claim ImageIO rasterization itself is accelerated by the same percentage."
+  ]
+}

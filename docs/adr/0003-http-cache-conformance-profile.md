@@ -1,7 +1,10 @@
 # ADR-0003：Fovea HTTP 缓存 Profile 与外部一致性测试
 
-- **状态：Proposed**
+- **状态：Accepted**
+- **接受日期：2026-07-20**
 - **日期：2026-07-18**
+
+- **接受依据：** 34 个 required HTTP conformance cases、固定 upstream revision 与 manifest 已进入门禁。
 
 ## 背景
 

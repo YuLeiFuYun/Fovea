@@ -1,0 +1,104 @@
+{
+  "$id": "https://fovea.invalid/schemas/documentation-verification.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "archives": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "generatedAt": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "includesWorkingTreeChanges": {
+      "type": "boolean"
+    },
+    "log": {
+      "type": "string"
+    },
+    "logSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "missingModules": {
+      "type": "array"
+    },
+    "missingPublicTypes": {
+      "type": "array"
+    },
+    "modules": {
+      "type": "object"
+    },
+    "publicAPIBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "const": "docs/public-api-budget.json"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "violations": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "violations"
+      ],
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed"
+      ]
+    },
+    "totals": {
+      "type": "object"
+    },
+    "undocumentedSymbols": {
+      "type": "array"
+    },
+    "verifiedCommit": {
+      "pattern": "^[0-9a-f]{40,64}$",
+      "type": "string"
+    },
+    "verifiedTree": {
+      "pattern": "^[0-9a-f]{40,64}$",
+      "type": "string"
+    },
+    "xcodeVersion": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "verifiedCommit",
+    "verifiedTree",
+    "includesWorkingTreeChanges",
+    "status",
+    "xcodeVersion",
+    "log",
+    "logSha256",
+    "archives",
+    "modules",
+    "totals",
+    "missingModules",
+    "missingPublicTypes",
+    "undocumentedSymbols",
+    "publicAPIBudget"
+  ],
+  "title": "Fovea Documentation Verification",
+  "type": "object"
+}
