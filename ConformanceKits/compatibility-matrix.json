@@ -1,0 +1,28 @@
+{
+  "contracts": {
+    "codec": {
+      "classification": "local-contract-extraction-pending",
+      "contractVersion": 1,
+      "currentRevision": "4507da936ef348fa198652c2e4314a1f393b2c90",
+      "currentStatus": "in-repository-model-and-conformance-only",
+      "kit": null,
+      "previousContractVersion": null,
+      "releaseQualified": false
+    },
+    "persistentStoreProvider": {
+      "classification": "initial-versioned-baseline",
+      "contractVersion": 1,
+      "currentStatus": "self-hosted-independent-consumer-passed",
+      "kit": "PersistentStoreProvider/v1/manifest.json",
+      "previousContractVersion": null,
+      "releaseQualified": false
+    }
+  },
+  "policy": {
+    "componentEvidenceDoesNotReplaceCompositionEvidence": true,
+    "inconclusiveFailsClosed": true,
+    "previousNullMeansInitialBaseline": true,
+    "unsupportedFailsClosed": true
+  },
+  "schemaVersion": 1
+}

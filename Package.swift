@@ -23,8 +23,8 @@ let package = Package(
         .library(
             name: "FoveaAdvanced",
             targets: [
-                "FoveaAdvancedSystem", "FoveaCore", "FoveaHTTP", "FoveaPersistence",
-                "FoveaStorage",
+                "FoveaAdvancedSystem", "FoveaSystem", "FoveaCore", "FoveaHTTP",
+                "FoveaPersistence", "FoveaStorage",
             ]
         ),
         .executable(name: "FoveaNetworkLab", targets: ["FoveaNetworkLab"]),

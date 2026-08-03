@@ -93,8 +93,8 @@
     {
       "id": "P6-CROSS-REPOSITORY-CONFORMANCE-001",
       "phase": "P6",
-      "status": "active-public-components-and-rollback-foundation-complete",
-      "summary": "Public exact component pins, required component CI, current-pin host clean-copy and previous/current compatibility drills are complete. Build separate versioned codec/storage conformance kits and current/previous contract matrices next."
+      "status": "provider-kit-v1-self-hosted-codec-kit-pending",
+      "summary": "The versioned persistent-store provider conformance v1 kit now runs as an independent SwiftPM consumer and passes five source-bound obligations against the external fixture. The compatibility matrix records provider v1 as the initial baseline and codec contract v1 as extraction-pending. Extract the codec kit and add current/previous contract classification next."
     },
     {
       "id": "P6-QUALIFIED-COMPOSITION-SEAMS-001",
@@ -313,7 +313,7 @@
         "Run exact version matrices across Fovea, ImageCraft and Akashic.",
         "Keep component evidence distinct from composition evidence."
       ],
-      "status": "pending",
+      "status": "active-partial",
       "title": "Cross-repository conformance and compatibility governance"
     },
     {

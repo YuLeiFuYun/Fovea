@@ -393,3 +393,7 @@ COMP-PT-025       PINRemoteImage is exact-commit locked, adapter/app integrated,
 MEM-PT-001       user-provided discussion sources are digest-bound; active decisions, standing requirements, capability gaps, and unresolved obligations are machine-validated without treating conversation summaries as authoritative
 MEM-PT-002       the accepted workload catalog remains gap-free W1-W15 with exact names/purposes, explicit capability gaps, current W1-W3 subset boundaries, and Adaptive Representation preserved only as adjunct X1
 MEM-PT-003       every multi-step task has a mandatory repository-backed session bootstrap that renders active decisions, workload status, negative results, blockers, and open obligations; local verify and CI enforce the continuity gate
+
+## 跨仓持久化 Provider Conformance v1
+
+- `FOVEA-PSP-CT-001...005`：独立 SwiftPM consumer 验证 provider descriptor 稳定性、首次 fetch/decode/publish、释放后同 root 无网络重开、namespace revoke 后不复活，以及有界打开参数。该 kit 明确不是 crash-consistency、跨进程 writer exclusion 或发布资格证明。

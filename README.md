@@ -94,6 +94,17 @@ FOVEA_VERIFY_PROFILE=release scripts/verify.sh
 
 默认 `smart` profile 根据实际变更选择测试；未知路径自动升级，不会静默漏测。完整 UI、双 sanitizer、clean-copy、rollback 和 mutation 只在源码绑定的 qualification 中执行。详细契约见 [`docs/specifications/verification-profiles.md`](docs/specifications/verification-profiles.md)。
 
+持久化 provider 的跨仓合约由独立 consumer kit 验证：
+
+```sh
+python3 ConformanceKits/PersistentStoreProvider/v1/run.py \
+  --provider-package-path /path/to/provider \
+  --provider-product ProviderProduct \
+  --factory-source /path/to/ProviderUnderTest.swift
+```
+
+该报告绑定 Fovea/provider/ImageCraft/工具链和日志身份；通过不等于 crash-consistency、跨进程 writer exclusion 或发布资格。
+
 示例与外部网络实验：
 
 ```sh

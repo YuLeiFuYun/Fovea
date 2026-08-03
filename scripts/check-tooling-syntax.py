@@ -966,6 +966,49 @@ try:
     ):
         errors.append("Workbench verifier changes must rely on tooling contracts in smart mode")
 
+    provider_impact = profile_module.classify(
+        [
+            "ConformanceKits/PersistentStoreProvider/v1/manifest.json",
+            "Fixtures/QualifiedStoreProvider/Package.swift",
+        ]
+    )
+    provider_effective, provider_phases, provider_reasons = profile_module.phase_plan(
+        "smart", provider_impact
+    )
+    provider_names = {phase.name for phase in provider_phases}
+    if (
+        provider_effective != "smart"
+        or provider_reasons
+        or "provider-conformance" not in provider_impact["categories"]
+        or "persistent-store-provider-conformance" not in provider_names
+        or "cross-repository-conformance-kits" not in provider_names
+        or provider_names.intersection({"cache-lab", "loopback-network", "release-build"})
+    ):
+        errors.append(
+            "provider kit changes must run the dedicated validator and external harness without escalating"
+        )
+
+    provider_seam_impact = profile_module.classify(
+        ["Sources/FoveaAdvancedSystem/FoveaAdvancedSystemPipeline.swift"]
+    )
+    _, provider_seam_phases, _ = profile_module.phase_plan(
+        "smart", provider_seam_impact
+    )
+    provider_seam_names = {phase.name for phase in provider_seam_phases}
+    if (
+        "provider-conformance" not in provider_seam_impact["categories"]
+        or "root-tests" not in provider_seam_names
+        or "persistent-store-provider-conformance" not in provider_seam_names
+    ):
+        errors.append("qualified provider seam changes must run root and external conformance tests")
+
+    unrelated_impact = profile_module.classify(
+        ["Tests/FoveaTests/DiagnosticsTests.swift"]
+    )
+    _, unrelated_phases, _ = profile_module.phase_plan("smart", unrelated_impact)
+    if "persistent-store-provider-conformance" in {phase.name for phase in unrelated_phases}:
+        errors.append("unrelated test-only changes must not pay the provider conformance cost")
+
     verify_profile_source = profile_path.read_text()
     verify_entry_source = (ROOT / "scripts/verify.sh").read_text()
     certificate_writer_source = (
@@ -973,6 +1016,12 @@ try:
     ).read_text()
     receipt_writer_source = (
         ROOT / "scripts/write-qualification-receipt.py"
+    ).read_text()
+    cross_repository_validator_source = (
+        ROOT / "scripts/check-cross-repository-conformance-kits.py"
+    ).read_text()
+    provider_runner_source = (
+        ROOT / "ConformanceKits/PersistentStoreProvider/v1/run.py"
     ).read_text()
     workflow_source = (ROOT / ".github/workflows/verify.yml").read_text()
     profile_contracts = {
@@ -1016,12 +1065,26 @@ try:
             "qualification stage receipts must reject inactive invocation",
         'FOVEA_VERIFY_PROFILE: "qualification"':
             "hosted qualification workflow must request the maximal profile explicitly",
+        '"cross-repository-conformance-kits"':
+            "every verification profile must statically validate cross-repository kits",
+        'categories.add("provider-conformance")':
+            "provider seams and kit assets must have a dedicated impact category",
+        '"persistent-store-provider-conformance"':
+            "provider-relevant changes must execute the external consumer harness",
+        'ConformanceKits/PersistentStoreProvider/v1/run.py':
+            "provider conformance must use the versioned external runner",
+        'unsupportedOrSkippedFailsClosed':
+            "provider conformance manifest must fail closed for skipped or unsupported cases",
+        'working_tree_identity':
+            "provider conformance report must bind the Fovea working tree",
     }
     combined_profile_source = (
         verify_profile_source
         + verify_entry_source
         + certificate_writer_source
         + receipt_writer_source
+        + cross_repository_validator_source
+        + provider_runner_source
         + workflow_source
     )
     for fragment, message in profile_contracts.items():

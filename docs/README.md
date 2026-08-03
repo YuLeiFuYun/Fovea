@@ -112,3 +112,7 @@
 - [竞品契约证据 JSON Schema](schemas/competitive-contract-evidence.schema.json)
 - [AI-Assisted Change Review 模板](templates/AI_CHANGE_REVIEW.md)
 - [竞品契约证据模板](templates/COMPETITIVE_CONTRACT_EVIDENCE.json)
+
+## 跨仓 Conformance
+
+- [Persistent Store Provider Conformance v1](../ConformanceKits/PersistentStoreProvider/v1/README.md)

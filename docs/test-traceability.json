@@ -5284,6 +5284,61 @@
       ],
       "id": "W3-Auth-Gallery-Smoke",
       "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testProviderDescriptorAndFingerprintAreStable_PSP_CT_001"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testFirstLoadAndNetworkFreeReopen_PSP_CT_002_003"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-002",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testFirstLoadAndNetworkFreeReopen_PSP_CT_002_003"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-003",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testRevocationPersistsAcrossReopen_PSP_CT_004"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-004",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testProviderReceivesBoundedOpenRequest_PSP_CT_005"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-005",
+      "status": "implemented"
     }
   ],
   "schemaVersion": 1

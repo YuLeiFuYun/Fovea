@@ -154,6 +154,14 @@ def classify(paths: list[str]) -> dict[str, object]:
             categories.add("workbench")
             if any(token in path for token in ("View", "Screen", "Style", "Assets.xcassets")):
                 categories.add("visual")
+        elif path.startswith("ConformanceKits/PersistentStoreProvider/"):
+            categories.add("provider-conformance")
+            categories.add("tooling")
+        elif path == "ConformanceKits/compatibility-matrix.json":
+            categories.add("provider-conformance")
+            categories.add("governance")
+        elif path.startswith("Fixtures/QualifiedStoreProvider/"):
+            categories.add("provider-conformance")
         elif path.startswith("Benchmarks/CacheLab/"):
             categories.add("cache-lab")
         elif path.startswith("Benchmarks/"):
@@ -164,6 +172,7 @@ def classify(paths: list[str]) -> dict[str, object]:
             categories.add("governance")
         elif path in {"Package.swift", "Package.resolved"} or path.startswith(".swiftpm/"):
             categories.add("dependencies")
+            categories.add("provider-conformance")
         elif path.startswith("scripts/"):
             categories.add("tooling")
             name = Path(path).name
@@ -191,6 +200,19 @@ def classify(paths: list[str]) -> dict[str, object]:
         else:
             unknown.append(path)
 
+    provider_seam_paths = (
+        "Sources/FoveaAdvancedSystem/",
+        "Sources/FoveaPersistence/FoveaPersistentStoreBundle.swift",
+        "Sources/FoveaSystem/FoveaSystemPipeline.swift",
+    )
+    if any(
+        path == provider_seam_paths[1]
+        or path == provider_seam_paths[2]
+        or path.startswith(provider_seam_paths[0])
+        for path in paths
+    ):
+        categories.add("provider-conformance")
+
     network_tokens = ("HTTP", "Transport", "Network", "URLSession", "Redirect")
     storage_tokens = ("Storage", "Persistence", "Cache", "Manifest", "File", "Disk")
     if any(any(token in path for token in network_tokens) for path in paths):
@@ -217,6 +239,11 @@ def static_phases(include_docs: bool) -> list[Phase]:
         Phase("actions-governance", ("python3", "scripts/check-actions-budget-governance.py"), 120),
         Phase("architecture", ("python3", "scripts/check-architecture-boundaries.py"), 120),
         Phase("component-pins", ("python3", "scripts/check-component-pins.py"), 120),
+        Phase(
+            "cross-repository-conformance-kits",
+            ("python3", "scripts/check-cross-repository-conformance-kits.py"),
+            120,
+        ),
         Phase("traceability", ("python3", "scripts/check-test-traceability.py"), 180),
         Phase("tooling-contract", ("python3", "scripts/check-tooling-syntax.py"), 240),
         Phase("sensitive-material", ("python3", "scripts/check-sensitive-material.py"), 120),
@@ -377,6 +404,26 @@ def phase_plan(profile: str, impact: dict[str, object]) -> tuple[str, list[Phase
         )
     else:
         raise ValueError(f"unsupported profile: {effective}")
+
+    if "provider-conformance" in categories:
+        phases.append(
+            Phase(
+                "persistent-store-provider-conformance",
+                (
+                    "python3",
+                    "ConformanceKits/PersistentStoreProvider/v1/run.py",
+                    "--provider-package-path",
+                    "Fixtures/QualifiedStoreProvider",
+                    "--provider-product",
+                    "QualifiedStoreProviderFixture",
+                    "--factory-source",
+                    "Fixtures/QualifiedStoreProvider/ConformanceFactory.swift",
+                    "--timeout",
+                    "900",
+                ),
+                1_200,
+            )
+        )
 
     deduplicated: dict[str, Phase] = {}
     for phase in phases:

@@ -257,6 +257,11 @@
       "id": "EVID-AKASHIC-V4-CANDIDATE-CLEAN-COPY",
       "status": "completed-local-git-free-release-mechanics-and-fovea-integration",
       "summary": "The 81-file Git-free Akashic candidate 91608c55745b333bf28b923bf0bf64744541b5e81344f061a251adea483bdb92 passes complete local release-readiness mechanics and an independent Fovea source-copy integration with 478/478 tests. This is content-addressed local candidate evidence, not a public revision or trusted CI certificate."
+    },
+    {
+      "id": "EVID-PERSISTENT-STORE-PROVIDER-CONFORMANCE-KIT-V1",
+      "status": "completed-local-independent-consumer",
+      "summary": "PersistentStoreProvider conformance v1 runs in an independently generated SwiftPM consumer against the public FoveaAdvanced product. Five obligations cover stable provider identity, first fetch/decode/publish, network-free same-root reopen, persisted namespace revocation, and bounded open parameters. The source-bound report records exact ImageCraft/provider/Fovea/toolchain identities and explicitly remains non-release-qualified; crash consistency and cross-process writer exclusion are not claimed."
     }
   ],
   "currentState": {
@@ -915,8 +920,8 @@
     {
       "id": "OPEN-QUALIFIED-COMPOSITION-SEAMS",
       "priority": 1,
-      "status": "implemented-local-cross-repository-conformance-pending",
-      "summary": "Qualified composition seams are implemented locally: ImageCodec is required by new production entry points; legacy ImageDecoding is explicit compatibility; FoveaAdvancedSystem accepts only a descriptor-checked immutable persistent-store provider bundle and the pipeline retains its lifetime. Independent third-party provider conformance kits and protected release evidence remain pending under P6-CROSS-REPOSITORY-CONFORMANCE-001."
+      "status": "provider-kit-v1-self-hosted-third-party-and-release-evidence-pending",
+      "summary": "Qualified codec and persistent-store composition seams are implemented. Persistent-store provider conformance v1 now passes in an independent generated SwiftPM consumer against the public FoveaAdvanced product and records source-bound evidence. A real third-party provider, crash-consistency and cross-process writer evidence, current/previous compatibility runs, and protected release qualification remain pending; codec kit extraction is tracked separately."
     },
     {
       "id": "OPEN-SWIFT64-THREE-REPOSITORY-MIGRATION",

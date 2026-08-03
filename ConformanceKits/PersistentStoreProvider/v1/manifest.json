@@ -1,0 +1,54 @@
+{
+  "componentDependencies": {
+    "imageCraft": {
+      "packageIdentity": "ImageCraft",
+      "product": "ImageCraftCore",
+      "revision": "4507da936ef348fa198652c2e4314a1f393b2c90",
+      "url": "https://github.com/YuLeiFuYun/ImageCraft.git"
+    }
+  },
+  "contractVersion": 1,
+  "factoryContract": {
+    "method": "make() throws -> any FoveaPersistentStoreBundleProviding",
+    "symbol": "ProviderUnderTest"
+  },
+  "harness": "Harness/PersistentStoreProviderConformanceTests.swift",
+  "kitID": "FOVEA-PERSISTENT-STORE-PROVIDER-CONFORMANCE-V1",
+  "obligations": [
+    {
+      "id": "FOVEA-PSP-CT-001",
+      "summary": "Provider descriptor and cache fingerprint are stable across independent factory instances.",
+      "testName": "testProviderDescriptorAndFingerprintAreStable_PSP_CT_001"
+    },
+    {
+      "id": "FOVEA-PSP-CT-002",
+      "summary": "A first system composition can fetch, decode and publish through the provider bundle.",
+      "testName": "testFirstLoadAndNetworkFreeReopen_PSP_CT_002_003"
+    },
+    {
+      "id": "FOVEA-PSP-CT-003",
+      "summary": "After releasing the first pipeline, the same root reopens and serves the representation without network access.",
+      "testName": "testFirstLoadAndNetworkFreeReopen_PSP_CT_002_003"
+    },
+    {
+      "id": "FOVEA-PSP-CT-004",
+      "summary": "Namespace revocation persists across reopen and prevents stale record or blob resurrection.",
+      "testName": "testRevocationPersistsAcrossReopen_PSP_CT_004"
+    },
+    {
+      "id": "FOVEA-PSP-CT-005",
+      "summary": "Provider limits and roots are passed through a bounded qualified system composition entry.",
+      "testName": "testProviderReceivesBoundedOpenRequest_PSP_CT_005"
+    }
+  ],
+  "rules": {
+    "componentEvidenceDoesNotReplaceHostEvidence": true,
+    "inMemoryFixtureDoesNotProveCrashConsistency": true,
+    "releaseQualified": false,
+    "unsupportedOrSkippedFailsClosed": true
+  },
+  "schemaVersion": 1,
+  "supportedPlatforms": [
+    "macOS-12+"
+  ]
+}

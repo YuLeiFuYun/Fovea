@@ -113,7 +113,7 @@
       ],
       "id": "DISC-2026-07-27-CODEC-PARALLEL-EVOLUTION",
       "openItems": [
-        "Extract the codec conformance suite into a cross-repository package and fixture manifest.",
+        "Extract the codec conformance suite into a cross-repository package and fixture manifest; the persistent-store provider v1 pattern is now the reference runner shape.",
         "When the independent codec reaches bounded probe and reference still decode, build an opt-in adapter and run differential, hostile-corpus, sanitizer, resource and lifecycle evidence.",
         "Implement W4 progressive delivery, W5 animation and HDR/output surfaces only through separate ADRs and workload gates.",
         "Preserve ImageIO rollback and prohibit default selection before shadow/canary/physical-device evidence."
@@ -216,7 +216,7 @@
       ],
       "openItems": [
         "Publish the privacy-sanitized Fovea root, observe public CI, protect main and create the first immutable Fovea alpha tag.",
-        "Build separate versioned cross-repository codec and persistent-store provider conformance kits and current/previous contract matrices.",
+        "Extract the versioned codec conformance kit and extend the current/previous contract compatibility classifier; persistent-store provider conformance v1 is self-hosted and source-bound.",
         "Repeat W1/W2/W3/W7/W8/W10/W13 on protected clean source and stable physical devices."
       ],
       "repositoryTargets": [
@@ -225,7 +225,10 @@
         "docs/project-memory/project-memory.json",
         "Sources/FoveaCore/FoveaImageDecoderPolicy.swift",
         "Sources/FoveaSystem/FoveaSystemPipeline.swift",
-        "Sources/FoveaPersistence/FoveaPersistentStores.swift"
+        "Sources/FoveaPersistence/FoveaPersistentStores.swift",
+        "ConformanceKits/PersistentStoreProvider/v1/manifest.json",
+        "ConformanceKits/PersistentStoreProvider/v1/run.py",
+        "ConformanceKits/compatibility-matrix.json"
       ]
     },
     {

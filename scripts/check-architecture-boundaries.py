@@ -255,8 +255,13 @@ for forbidden in (
 advanced_product = re.search(
     r'\.library\(\s*name:\s*"FoveaAdvanced",(?P<body>[\s\S]*?)\n\s*\),', package
 )
-if advanced_product is None or '"FoveaAdvancedSystem"' not in advanced_product.group("body"):
-    errors.append("FoveaAdvanced product must include FoveaAdvancedSystem")
+if advanced_product is None:
+    errors.append("FoveaAdvanced product declaration not found")
+else:
+    advanced_product_body = advanced_product.group("body")
+    for required_target in ("FoveaAdvancedSystem", "FoveaSystem"):
+        if f'"{required_target}"' not in advanced_product_body:
+            errors.append(f"FoveaAdvanced product must include {required_target}")
 safe_product = re.search(
     r'\.library\(\s*name:\s*"Fovea",(?P<body>[\s\S]*?)\n\s*\),', package
 )
