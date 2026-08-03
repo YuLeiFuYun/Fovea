@@ -32,22 +32,35 @@ private final class SDOperationBox: @unchecked Sendable {
     }
 }
 
-private final class SDCompletionGate: @unchecked Sendable {
+private final class SDResultBox: @unchecked Sendable {
     private let lock = NSLock()
-    private var completed = false
+    private var output: ComparatorLoadOutput?
+    private var waiters: [CheckedContinuation<ComparatorLoadOutput, Never>] = []
 
-    func resume(
-        _ continuation: CheckedContinuation<ComparatorLoadOutput, Never>,
-        returning output: ComparatorLoadOutput
-    ) {
+    func complete(_ output: ComparatorLoadOutput) {
         lock.lock()
-        guard !completed else {
+        guard self.output == nil else {
             lock.unlock()
             return
         }
-        completed = true
+        self.output = output
+        let waiters = self.waiters
+        self.waiters.removeAll(keepingCapacity: false)
         lock.unlock()
-        continuation.resume(returning: output)
+        for waiter in waiters { waiter.resume(returning: output) }
+    }
+
+    func value() async -> ComparatorLoadOutput {
+        await withCheckedContinuation { continuation in
+            lock.lock()
+            if let output {
+                lock.unlock()
+                continuation.resume(returning: output)
+            } else {
+                waiters.append(continuation)
+                lock.unlock()
+            }
+        }
     }
 }
 
@@ -109,55 +122,53 @@ public final class SDWebImageComparatorAdapter: ComparatorAdapter, @unchecked Se
         ]
         let started = DispatchTime.now().uptimeNanoseconds
         let box = SDOperationBox()
-        let completionGate = SDCompletionGate()
-        let task = Task<ComparatorLoadOutput, Never> { [manager] in
-            await withCheckedContinuation { continuation in
-                let operation = manager.loadImage(
-                    with: request.url,
-                    options: [.scaleDownLargeImages],
-                    context: context,
-                    progress: nil
-                ) { image, _, error, cacheType, finished, _ in
-                    guard finished else { return }
-                    let latency = DispatchTime.now().uptimeNanoseconds &- started
-                    if let image {
-                        let dimensions = Self.pixelDimensions(image)
-                        completionGate.resume(
-                            continuation,
-                            returning: ComparatorLoadOutput(
-                                measurement: try! ComparatorLoadResult(
-                                    outcome: .completed,
-                                    cacheSource: Self.cacheSource(cacheType),
-                                    latencyNanoseconds: latency,
-                                    pixelWidth: dimensions.width,
-                                    pixelHeight: dimensions.height
-                                ),
-                                image: Self.renderImage(image)
-                            )
-                        )
-                    } else {
-                        let nsError = error as NSError?
-                        let cancelled = nsError.map(Self.isCancellation) ?? false
-                        completionGate.resume(
-                            continuation,
-                            returning: ComparatorLoadOutput(
-                                measurement: try! ComparatorLoadResult(
-                                    outcome: cancelled ? .cancelled : .failed,
-                                    cacheSource: .unknown,
-                                    latencyNanoseconds: latency,
-                                    failureCategory: cancelled ? nil : "transport-or-decode"
-                                ),
-                                image: nil
-                            )
-                        )
-                    }
-                }
-                box.install(operation)
+        let resultBox = SDResultBox()
+        // Install the native SDWebImage operation before makeLoad returns. W7 prepares
+        // every subscriber before cancellation; deferring operation creation to an
+        // unstructured Task would make a nominally prepared subscriber arrive late and
+        // could restart a just-cancelled shared download.
+        let operation = manager.loadImage(
+            with: request.url,
+            options: [.scaleDownLargeImages],
+            context: context,
+            progress: nil
+        ) { image, _, error, cacheType, finished, _ in
+            guard finished else { return }
+            let latency = DispatchTime.now().uptimeNanoseconds &- started
+            if let image {
+                let dimensions = Self.pixelDimensions(image)
+                resultBox.complete(
+                    ComparatorLoadOutput(
+                        measurement: try! ComparatorLoadResult(
+                            outcome: .completed,
+                            cacheSource: Self.cacheSource(cacheType),
+                            latencyNanoseconds: latency,
+                            pixelWidth: dimensions.width,
+                            pixelHeight: dimensions.height
+                        ),
+                        image: Self.renderImage(image)
+                    )
+                )
+            } else {
+                let nsError = error as NSError?
+                let cancelled = nsError.map(Self.isCancellation) ?? false
+                resultBox.complete(
+                    ComparatorLoadOutput(
+                        measurement: try! ComparatorLoadResult(
+                            outcome: cancelled ? .cancelled : .failed,
+                            cacheSource: .unknown,
+                            latencyNanoseconds: latency,
+                            failureCategory: cancelled ? nil : "transport-or-decode"
+                        ),
+                        image: nil
+                    )
+                )
             }
         }
+        box.install(operation)
         return ComparatorLoad(
             cancel: { box.cancel() },
-            result: { await task.value }
+            result: { await resultBox.value() }
         )
     }
 
