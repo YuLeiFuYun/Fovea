@@ -24,6 +24,7 @@ CORESIMULATOR_HEALTH_ARTIFACT = Path(".artifacts/comparative-coresimulator-healt
 MINIMUM_CPU_IDLE_PERCENT = 65.0
 MAXIMUM_DISK_MEGABYTES_PER_SECOND = 12.0
 HOST_SAMPLE_COUNT = 3
+PROCESS_ENUMERATION_TIMEOUT_SECONDS = 45
 FIRST_BOOT_TIMEOUT_SECONDS = 900
 REGULAR_BOOT_TIMEOUT_SECONDS = 240
 XCODEBUILD_RESOLVED_PACKAGE_FLAGS = [
@@ -44,7 +45,7 @@ def assert_coresimulator_healthy(
     output = run_command(
         ["ps", "-axo", "pid=,ppid=,state=,etime=,command="],
         env=env,
-        timeout=15,
+        timeout=PROCESS_ENUMERATION_TIMEOUT_SECONDS,
     ).stdout
     relevant_markers = (
         "simdiskimaged",
@@ -227,7 +228,7 @@ def _process_ancestry() -> set[int]:
         ["ps", "-axo", "pid=,ppid="],
         text=True,
         capture_output=True,
-        timeout=10,
+        timeout=PROCESS_ENUMERATION_TIMEOUT_SECONDS,
         check=True,
     ).stdout
     for line in output.splitlines():
@@ -246,7 +247,7 @@ def _competing_processes() -> list[dict[str, Any]]:
         ["ps", "-axo", "pid=,ppid=,state=,%cpu=,command="],
         text=True,
         capture_output=True,
-        timeout=10,
+        timeout=PROCESS_ENUMERATION_TIMEOUT_SECONDS,
         check=True,
     ).stdout
     patterns = (
@@ -397,7 +398,7 @@ def recover_dedicated_simulator_user_services(
         ["ps", "-axo", "pid=,ppid=,state=,command="],
         text=True,
         capture_output=True,
-        timeout=10,
+        timeout=PROCESS_ENUMERATION_TIMEOUT_SECONDS,
         check=True,
     )
     rows: list[tuple[int, int, str, str]] = []
@@ -485,7 +486,7 @@ def _critical_device_services(
     output = run_command(
         ["ps", "-axo", "pid=,ppid=,command="],
         env=env,
-        timeout=15,
+        timeout=PROCESS_ENUMERATION_TIMEOUT_SECONDS,
     ).stdout
     rows: list[tuple[int, int, str]] = []
     for line in output.splitlines():
@@ -563,7 +564,7 @@ def _live_device_runtime_builds(
     output = run_command(
         ["ps", "-axo", "pid=,ppid=,command="],
         env=env,
-        timeout=15,
+        timeout=PROCESS_ENUMERATION_TIMEOUT_SECONDS,
     ).stdout
     rows: list[tuple[int, int, str]] = []
     for line in output.splitlines():
