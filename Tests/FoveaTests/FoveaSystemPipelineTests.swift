@@ -56,7 +56,7 @@ final class FoveaSystemPipelineTests: XCTestCase {
         weak let monitor = system?.memoryPressureMonitor
 
         let anchorCount = await pipeline?.lifetimeAnchorCountForTesting()
-        XCTAssertEqual(anchorCount, 1)
+        XCTAssertEqual(anchorCount, 2)
         system = nil
         for _ in 0..<20 where monitor == nil { await Task.yield() }
         XCTAssertNotNil(monitor)

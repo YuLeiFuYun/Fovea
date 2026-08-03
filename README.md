@@ -61,7 +61,7 @@ SwiftPM 集成默认只选择官方产品；只有自定义 transport/store/deco
 
 只消费 codec 契约或 Apple ImageIO 实现时，应直接依赖独立的 `https://github.com/YuLeiFuYun/ImageCraft.git`，而不是假设 Fovea 重新导出其产品。
 
-`Fovea` 是安全默认分发面，包含 System、UI、Observability 及其公开签名所需模块；`FoveaAdvanced` 明确表示调用方承担组合边界与安全策略。默认持久化已经使用 typed Akashic adapter，但具体 adapter 保持 package-only；Akashic 的通用 Core/Memory/Disk 能力只通过高级入口暴露。外部精确依赖已经落地；完成当前 pin 的 clean-copy、回滚、required-check 与设备证据前，不把该组合描述为稳定发布。
+`Fovea` 是安全默认分发面，包含 System、UI、Observability 及其公开签名所需模块；`FoveaAdvanced` 明确表示调用方承担组合边界与安全策略。默认持久化使用 typed Akashic adapter；高级持久化替换必须实现 `FoveaPersistentStoreBundleProviding`，一次交付同代际 encoded、records、namespace generation 与 lifetime，不能分别注入裸 store。Akashic 的通用 Core/Memory/Disk 能力只通过高级入口暴露。外部精确依赖已经落地；完成当前 pin 的 clean-copy、回滚、required-check 与设备证据前，不把该组合描述为稳定发布。
 
 生产 OSLog / Instruments 诊断出口：
 

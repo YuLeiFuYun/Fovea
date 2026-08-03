@@ -126,7 +126,8 @@ AxiomRaster 或其他 codec 成为默认前，至少必须：
 - FoveaCore 不再依赖具体 codec；
 - ImageIO 与未来 AxiomRaster 可以独立版本化和比较；
 - 普通用户保持单一 `Fovea` 导入路径；高级用户可只依赖 contract 或指定 adapter；
-- 自定义缓存可以替换算法和存储实现，但不能改变安全身份；
+- 自定义渲染缓存可以替换算法；持久化替换只通过 `FoveaAdvancedSystem` 的不可变 provider bundle 进入，不能分别注入 encoded/records/namespace store；
+- bundle descriptor 必须与 generation compatibility fingerprint 一致，系统管线保留整个 bundle lifetime，默认 `Fovea` product 不暴露该 seam；
 - public API 增加，需要精确 DocC 预算、兼容性审查和 contract version 治理；
 - 显式注入比 registry 更简单，但同一个 pipeline 暂不支持按格式自动选择多个后端；
 - ImageIO 优化必须继续以正确性、资源和真机数据为约束，不能用单一 microbenchmark 宣称整体最优。
@@ -137,6 +138,8 @@ AxiomRaster 或其他 codec 成为默认前，至少必须：
 - **CODEC-PT-011**：官方组合根接受自定义 codec 与渲染缓存，并公开实际 descriptor；
 - **CODEC-PT-012**：官方组合根的默认/新入口要求完整 `ImageCodec`，旧 decoder 必须通过显式 `legacyDecoder` 兼容边界并获得 legacy descriptor；
 - **CACHE-PT-043**：自定义 `RenderedImageCaching` 接管插入、命中和 purge；
+- **CACHE-PT-044**：`FoveaAdvancedSystem` 只接受完整 qualified persistent-store bundle，并由 pipeline 保留 provider lifetime；
+- **CACHE-PT-045**：provider 声明与返回 bundle descriptor 不一致时，在 namespace registry 与 transport 组合前失败；
 - **DIAG-PT-014**：ImageIO prepared decode 与普通 prepared decode 结果一致，且重复 source/type/frame 阶段耗时为零；
 - capability 有限域、资源上界、identity 分离和 unsupported failure 继续由 ADR-0011 的模型与测试验证；
 - Release 二进制、完整 Swift 套件、DocC、架构边界、结构质量和生产覆盖持续作为合并门。

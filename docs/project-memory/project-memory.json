@@ -915,8 +915,8 @@
     {
       "id": "OPEN-QUALIFIED-COMPOSITION-SEAMS",
       "priority": 1,
-      "status": "codec-seam-complete-persistent-bundle-pending",
-      "summary": "FoveaSystemPipeline and the advanced FoveaPipeline surface now provide ImageCodec-qualified entry points; the system default is compile-time qualified, and legacy ImageDecoding requires an explicit compatibility label with a legacy descriptor. The immutable persistent-store bundle preserving StoreGeneration, writer lifetime, namespace-generation persistence and cross-store transaction obligations remains open."
+      "status": "implemented-local-cross-repository-conformance-pending",
+      "summary": "Qualified composition seams are implemented locally: ImageCodec is required by new production entry points; legacy ImageDecoding is explicit compatibility; FoveaAdvancedSystem accepts only a descriptor-checked immutable persistent-store provider bundle and the pipeline retains its lifetime. Independent third-party provider conformance kits and protected release evidence remain pending under P6-CROSS-REPOSITORY-CONFORMANCE-001."
     },
     {
       "id": "OPEN-SWIFT64-THREE-REPOSITORY-MIGRATION",

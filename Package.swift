@@ -22,7 +22,10 @@ let package = Package(
         ),
         .library(
             name: "FoveaAdvanced",
-            targets: ["FoveaCore", "FoveaHTTP", "FoveaPersistence", "FoveaStorage"]
+            targets: [
+                "FoveaAdvancedSystem", "FoveaCore", "FoveaHTTP", "FoveaPersistence",
+                "FoveaStorage",
+            ]
         ),
         .executable(name: "FoveaNetworkLab", targets: ["FoveaNetworkLab"]),
         .executable(name: "FoveaGalleryDemo", targets: ["FoveaGalleryDemo"]),
@@ -76,6 +79,16 @@ let package = Package(
             name: "FoveaSystem",
             dependencies: [
                 "FoveaCore", "FoveaHTTP", "FoveaPersistence",
+                .product(name: "ImageCraftCore", package: "ImageCraft"),
+                .product(name: "ImageCraftImageIO", package: "ImageCraft"),
+            ],
+            swiftSettings: concurrencySettings
+        ),
+        .target(
+            name: "FoveaAdvancedSystem",
+            dependencies: [
+                "FoveaCore", "FoveaHTTP", "FoveaPersistence", "FoveaStorage", "FoveaSystem",
+                .product(name: "AkashicCore", package: "Akashic"),
                 .product(name: "ImageCraftCore", package: "ImageCraft"),
                 .product(name: "ImageCraftImageIO", package: "ImageCraft"),
             ],
@@ -155,7 +168,8 @@ let package = Package(
                 .product(name: "AkashicMemory", package: "Akashic"),
                 .product(name: "AkashicDisk", package: "Akashic"),
                 "FoveaStorage", "FoveaHTTP", "FoveaCore", "FoveaPersistence",
-                "FoveaSystem", "FoveaObservability", "FoveaUIKit", "FoveaAppKit",
+                "FoveaSystem", "FoveaAdvancedSystem", "FoveaObservability", "FoveaUIKit",
+                "FoveaAppKit",
                 "FoveaSwiftUI", "FoveaTesting",
             ],
             resources: [.copy("Conformance")],

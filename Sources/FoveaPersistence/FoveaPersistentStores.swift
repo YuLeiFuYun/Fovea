@@ -24,6 +24,13 @@ public struct FoveaPersistentStores: Sendable {
     public static let currentCompatibilityFingerprint =
         "fovea-store-v2:akashic-file-\(AkashicOriginalEncodedStore.currentSchemaVersion):partition-1:representation-\(RepresentationRecord.currentSchemaVersion):namespace-generation-\(NamespaceGenerationStore.currentSchemaVersion)"
 
+    /// 官方 Akashic bundle 的稳定 provider 身份。
+    package static let defaultProviderIdentity = FoveaPersistentStoreProviderIdentity(
+        validatedIdentifier: "dev.fovea.persistence.akashic",
+        implementationVersion: 1,
+        compatibilityFingerprint: currentCompatibilityFingerprint
+    )
+
     /// 当前活动持久化代际。
     public let generation: StoreGenerationHandle
     /// 该代际的原始编码字节存储。
@@ -64,6 +71,17 @@ public struct FoveaPersistentStores: Sendable {
             encoded: bundle.encoded,
             records: bundle.records,
             namespaceGenerations: bundle.namespaceGenerations
+        )
+    }
+
+    package func qualifiedBundle() throws -> FoveaPersistentStoreBundle {
+        try FoveaPersistentStoreBundle(
+            providerIdentity: Self.defaultProviderIdentity,
+            generation: generation.descriptor,
+            encoded: encoded,
+            records: records,
+            namespaceGenerations: namespaceGenerations,
+            lifetimeAnchor: self
         )
     }
 

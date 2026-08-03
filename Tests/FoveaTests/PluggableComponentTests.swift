@@ -1,7 +1,10 @@
+import AkashicCore
 import AkashicMemory
 import Foundation
+import FoveaAdvancedSystem
 import FoveaCore
 import FoveaPersistence
+import FoveaStorage
 import FoveaSystem
 import FoveaTesting
 import ImageCraftCore
@@ -118,6 +121,167 @@ final class PluggableComponentTests: XCTestCase {
         )
     }
 
+    func testQualifiedPersistentStoreProviderDrivesSystemAndRetainsBundle_CACHE_PT_044()
+        async throws
+    {
+        let probe = StoreLifetimeProbe()
+        let provider = try QualifiedTestStoreProvider(lifetimeProbe: probe)
+        var system: FoveaSystemPipeline? = try await FoveaSystemPipeline.open(
+            cacheRoot: try makeTemporaryDirectory("qualified-store-provider"),
+            persistentStoreProvider: provider,
+            automaticallyPurgesMemoryOnPressure: false,
+            codec: DelegatingTestCodec()
+        )
+        var pipeline: FoveaPipeline? = try XCTUnwrap(system?.pipeline)
+
+        XCTAssertEqual(
+            system?.persistentStoreProviderFingerprint,
+            provider.descriptor.cacheFingerprint
+        )
+        XCTAssertFalse(system?.storageGenerationIdentifier.isEmpty ?? true)
+        let bundleAlive = await probe.isAlive()
+        XCTAssertTrue(bundleAlive)
+        let anchorCount = await pipeline?.lifetimeAnchorCountForTesting()
+        XCTAssertEqual(anchorCount, 1)
+
+        system = nil
+        let retainedAfterWrapperRelease = await probe.isAlive()
+        XCTAssertTrue(retainedAfterWrapperRelease)
+        pipeline = nil
+        try await waitUntil("pipeline 释放 qualified persistent bundle") {
+            !(await probe.isAlive())
+        }
+        let released = await probe.isAlive()
+        XCTAssertFalse(released)
+    }
+
+    func testQualifiedPersistentStoreProviderRejectsDescriptorSubstitution_CACHE_PT_045()
+        async throws
+    {
+        let provider = try QualifiedTestStoreProvider(
+            lifetimeProbe: StoreLifetimeProbe(),
+            substitutesDescriptor: true
+        )
+
+        do {
+            _ = try await FoveaSystemPipeline.open(
+                cacheRoot: try makeTemporaryDirectory("qualified-store-mismatch"),
+                persistentStoreProvider: provider,
+                automaticallyPurgesMemoryOnPressure: false,
+                codec: DelegatingTestCodec()
+            )
+            XCTFail("Provider must not substitute a different bundle descriptor")
+        } catch let error as AkashicError {
+            XCTAssertEqual(error, .invalidIdentity)
+        }
+    }
+
+}
+
+private final class StoreLifetimeToken: Sendable {}
+
+private actor StoreLifetimeProbe {
+    private weak var token: StoreLifetimeToken?
+
+    func isAlive() -> Bool {
+        token != nil
+    }
+
+    func capture(_ token: StoreLifetimeToken) {
+        self.token = token
+    }
+}
+
+private actor QualifiedTestStoreProvider: FoveaPersistentStoreBundleProviding {
+    nonisolated let descriptor: FoveaPersistentStoreProviderDescriptor
+
+    private let lifetimeProbe: StoreLifetimeProbe
+    private let substitutesDescriptor: Bool
+
+    init(
+        lifetimeProbe: StoreLifetimeProbe,
+        substitutesDescriptor: Bool = false
+    ) throws {
+        self.descriptor = try FoveaPersistentStoreProviderDescriptor(
+            identifier: "test.qualified-store-provider",
+            implementationVersion: 1,
+            compatibilityFingerprint: "test-qualified-store-v1"
+        )
+        self.lifetimeProbe = lifetimeProbe
+        self.substitutesDescriptor = substitutesDescriptor
+    }
+
+    func open(
+        root: URL,
+        encodedSoftTotalBytes: Int,
+        maximumEncodedBlobBytes: Int,
+        maximumTrackedNamespaces: Int
+    ) async throws -> FoveaQualifiedPersistentStoreBundle {
+        let returnedDescriptor =
+            substitutesDescriptor
+            ? try FoveaPersistentStoreProviderDescriptor(
+                identifier: "test.substituted-store-provider",
+                implementationVersion: 1,
+                compatibilityFingerprint: "test-substituted-store-v1"
+            )
+            : descriptor
+        let generation = try StoreGenerationDescriptor(
+            identifier: StoreGenerationID(),
+            compatibilityFingerprint: returnedDescriptor.compatibilityFingerprint
+        )
+        let encoded = try await AkashicOriginalEncodedStore.open(
+            root: root.appendingPathComponent("encoded", isDirectory: true),
+            limits: OriginalEncodedStoreLimits(
+                softTotalBytes: encodedSoftTotalBytes,
+                maximumBlobBytes: maximumEncodedBlobBytes
+            )
+        )
+        let records = try await RepresentationRecordStore.open(
+            root: root.appendingPathComponent("records", isDirectory: true)
+        )
+        let namespaceStore = InMemoryNamespaceGenerationPersistence()
+        let namespaceGenerations = FoveaNamespaceGenerationPersistence(
+            load: { maximumCount in
+                try await namespaceStore.load(maximumCount: maximumCount)
+            },
+            persist: { generation, namespace in
+                try await namespaceStore.persist(generation, for: namespace)
+            }
+        )
+        let lifetime = StoreLifetimeToken()
+        await lifetimeProbe.capture(lifetime)
+        return try FoveaQualifiedPersistentStoreBundle(
+            descriptor: returnedDescriptor,
+            generation: generation,
+            encoded: encoded,
+            records: records,
+            namespaceGenerations: namespaceGenerations,
+            lifetimeAnchor: lifetime
+        )
+    }
+}
+
+private actor InMemoryNamespaceGenerationPersistence {
+    private var generations: [StorageNamespaceFingerprint: UInt64] = [:]
+
+    func load(
+        maximumCount: Int
+    ) async throws -> [StorageNamespaceFingerprint: UInt64] {
+        guard generations.count <= maximumCount else {
+            throw AkashicError.invalidIdentity
+        }
+        return generations
+    }
+
+    func persist(
+        _ generation: UInt64,
+        for namespace: StorageNamespaceFingerprint
+    ) async throws {
+        if let existing = generations[namespace], generation < existing {
+            throw AkashicError.invalidIdentity
+        }
+        generations[namespace] = generation
+    }
 }
 
 private struct LegacyDelegatingDecoder: ImageDecoding {

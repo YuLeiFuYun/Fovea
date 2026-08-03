@@ -27,6 +27,7 @@ DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = 180
 REPORT = ARTIFACT_ROOT / "documentation.json"
 PUBLIC_API_BUDGET = ROOT / "docs/public-api-budget.json"
 PRODUCTION_MODULES = {
+    "FoveaAdvancedSystem",
     "FoveaAppKit",
     "FoveaCore",
     "FoveaHTTP",

@@ -40,6 +40,10 @@ EXTERNAL_COMPONENT_MODULES = {
     "ImageCraftCore", "ImageCraftImageIO",
 }
 ALLOWED_PROJECT_IMPORTS = {
+    "FoveaAdvancedSystem": {
+        "AkashicCore", "FoveaCore", "FoveaHTTP", "FoveaPersistence", "FoveaStorage",
+        "FoveaSystem", "ImageCraftCore", "ImageCraftImageIO",
+    },
     "FoveaAppKit": {"FoveaCore", "ImageCraftCore"},
     "FoveaStorage": {"AkashicCore"},
     "FoveaCore": {"AkashicCore", "AkashicMemory", "FoveaHTTP", "FoveaStorage", "ImageCraftCore"},

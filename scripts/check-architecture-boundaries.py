@@ -13,6 +13,7 @@ allowed = {
     "FoveaHTTP",
     "FoveaPersistence",
     "FoveaSystem",
+    "FoveaAdvancedSystem",
     "FoveaObservability",
     "FoveaUIKit",
     "FoveaAppKit",
@@ -209,6 +210,58 @@ else:
 for path in sorted((source_root / "FoveaCore").rglob("*.swift")):
     if "import OSLog" in path.read_text():
         errors.append(f"FoveaCore must not depend directly on OSLog: {path.relative_to(root)}")
+
+# FoveaAdvancedSystem 是唯一允许公开 qualified persistent bundle seam 的模块。
+# 默认 Fovea product 不包含它；高级模块只能把完整 provider bundle 交回 FoveaSystem，
+# 不能重新暴露 encoded/record/namespace 三个裸 hook 或直接打开默认 registry。
+advanced_target = re.search(
+    r'\.target\(\s*name:\s*"FoveaAdvancedSystem",(?P<body>[\s\S]*?)\n\s*\),', package
+)
+if advanced_target is None:
+    errors.append("FoveaAdvancedSystem target declaration not found")
+else:
+    advanced_body = advanced_target.group("body")
+    for required_dependency in (
+        "AkashicCore", "FoveaCore", "FoveaHTTP", "FoveaPersistence", "FoveaStorage",
+        "FoveaSystem", "ImageCraftCore", "ImageCraftImageIO",
+    ):
+        if f'"{required_dependency}"' not in advanced_body:
+            errors.append(
+                f"FoveaAdvancedSystem dependency is missing: {required_dependency}"
+            )
+    for forbidden_dependency in ("AkashicDisk", "AkashicMemory", "FoveaTesting"):
+        if f'"{forbidden_dependency}"' in advanced_body:
+            errors.append(
+                f"FoveaAdvancedSystem must not depend on {forbidden_dependency}"
+            )
+advanced_source = "\n".join(
+    path.read_text() for path in sorted((source_root / "FoveaAdvancedSystem").rglob("*.swift"))
+)
+for required in (
+    "persistentStoreProvider: any FoveaPersistentStoreBundleProviding",
+    "stores.descriptor == persistentStoreProvider.descriptor",
+    "openQualified(",
+):
+    if required not in advanced_source:
+        errors.append(f"FoveaAdvancedSystem qualified bundle boundary is incomplete: {required}")
+for forbidden in (
+    "FoveaPersistentStores.open",
+    "PersistentStoreRegistry",
+    "encodedStore:",
+    "recordStore:",
+):
+    if forbidden in advanced_source:
+        errors.append(f"FoveaAdvancedSystem exposes or opens a forbidden raw store path: {forbidden}")
+advanced_product = re.search(
+    r'\.library\(\s*name:\s*"FoveaAdvanced",(?P<body>[\s\S]*?)\n\s*\),', package
+)
+if advanced_product is None or '"FoveaAdvancedSystem"' not in advanced_product.group("body"):
+    errors.append("FoveaAdvanced product must include FoveaAdvancedSystem")
+safe_product = re.search(
+    r'\.library\(\s*name:\s*"Fovea",(?P<body>[\s\S]*?)\n\s*\),', package
+)
+if safe_product is not None and '"FoveaAdvancedSystem"' in safe_product.group("body"):
+    errors.append("safe Fovea product must not expose FoveaAdvancedSystem")
 
 observability_target = re.search(
     r'\.target\(\s*name:\s*"FoveaObservability",(?P<body>[\s\S]*?)\n\s*\),', package

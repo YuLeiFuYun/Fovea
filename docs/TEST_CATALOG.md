@@ -85,7 +85,7 @@ CACHE-PT-039    同 variant 的 200/304 覆盖取消时恢复旧 record，revoke
 CACHE-PT-040    representation base-key/reference indexes remain consistent after replacement, removal, and reopen
 CACHE-PT-041    staged OriginalEncoded 在显式 publish 前不可读；discard/GC/revoke 不得泄漏或误删在途 stage
 CACHE-PT-042    完整目标像素 preview 可先于 durable final 可见，但 final 必须等待 blob/record 原子发布
-CACHE-PT-043    自定义 RenderedImageCaching 接管派生像素插入、命中和 purge
+CACHE-PT-043...045    自定义 RenderedImageCaching 接管派生像素插入、命中和 purge
 GC-PT-005       PhysicalBlobID 不泄漏 ContentID
 GC-PT-011       0a soft cap 触发保守清理且不阻塞 final
 SEC-CASE-001    delegate 分块流受 hard limit 与逐块背压约束
@@ -164,7 +164,7 @@ IMG-PT-011
 IMG-PT-006...008
 CODEC-PT-001...008
 CODEC-PT-010...012
-CACHE-PT-043
+CACHE-PT-043...045
 ```
 
 此外：

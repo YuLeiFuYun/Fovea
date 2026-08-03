@@ -34,7 +34,7 @@
 ## SwiftPM 分发面
 
 - 普通应用只依赖 `Fovea` product；它是 System、UI 与 Observability 的官方安全集成面。
-- `FoveaAdvanced` 是显式逃生口，仅供自定义 transport/store/decoder、缓存基础设施或 codec 实验；选择它意味着宿主承担 ACL、destination、凭证、资源与生命周期组合责任。
+- `FoveaAdvanced` 是显式逃生口。新的 codec 入口要求完整 `ImageCodec`；持久化替换通过 `FoveaAdvancedSystem` 的 qualified provider bundle 进入，encoded、records、namespace generation、generation identity 与 lifetime 不可拆分注入。选择它仍意味着宿主承担 provider conformance、ACL、destination、凭证、资源与生命周期组合责任。
 - 内部按职责保留 9 个 Fovea production target，但不再把每个 target 单独发布为顶层 library product；模块边界与分发产品边界不混为一谈。
 
 ## FoveaWorkbench 示例边界

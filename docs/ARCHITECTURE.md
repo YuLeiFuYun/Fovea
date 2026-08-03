@@ -323,7 +323,7 @@ ImageCraftCore     独立、技术中立的公共 codec contract
 ImageCraftImageIO  只依赖 ImageCraftCore 的独立 ImageIO 参考实现
 ```
 
-源码仍按 ImageCraft、Akashic、FoveaStorage、FoveaHTTP/Core/Persistence/System/Observability/UIKit/AppKit/SwiftUI 的职责 target 拆分；target 是依赖边界，不再等同于对集成者暴露的顶层产品菜单。`FoveaStoreProbe` 只用于跨进程竞争门禁，不是运行时 product。OSLog/Signpost 适配器位于独立 `FoveaObservability` target，`FoveaCore` 不直接依赖 OSLog。`FoveaSources` 与历史候选名 `FoveaDiagnostics` 不得在未实现时列入当前产品。格式解码插件属于 ImageCraft，不以 `FoveaAVIF` 等名称倒置职责。
+源码仍按 ImageCraft、Akashic、FoveaStorage、FoveaHTTP/Core/Persistence/System/AdvancedSystem/Observability/UIKit/AppKit/SwiftUI 的职责 target 拆分；target 是依赖边界，不再等同于对集成者暴露的顶层产品菜单。`FoveaStoreProbe` 只用于跨进程竞争门禁，不是运行时 product。OSLog/Signpost 适配器位于独立 `FoveaObservability` target，`FoveaCore` 不直接依赖 OSLog。`FoveaSources` 与历史候选名 `FoveaDiagnostics` 不得在未实现时列入当前产品。格式解码插件属于 ImageCraft，不以 `FoveaAVIF` 等名称倒置职责。
 
 Phase 0a 已落实该边界：`AkashicMemory` 提供图片无关的 `MemoryCache<Key, Value>`，值成本由 Fovea 插入时显式传入；当前决策见 ADR-0001。
 
@@ -360,7 +360,7 @@ let image = try await system.pipeline.image(for: request)
 await system.invalidateAndCancel() // 宿主确定结束该 runtime 时，取消网络任务并释放 staging lease
 ```
 
-它固定组合禁用 `URLCache`/Cookie 的 transport与同一 StoreGeneration 下的持久存储，并以独立 `ImageCraftImageIO` 产品作为当前默认 decoder。`FoveaSystemPipeline.open` 可显式注入自定义 decoder、transformer 和 `RenderedImageCaching`；自定义 transport/store 仍通过 `FoveaPipeline` 注入，且公共构造器必须显式选择 `ProfileAccessPolicy`。SwiftUI 使用 `FoveaImage(request:loader:accessibility:)`；UIKit/AppKit 使用平台 `FoveaImageView.setImage(request:loader:accessibility:)`。所有 UI surface 都要求显式 decorative 或 label。尚未提供只接收 URL 并猜测 target 的便利 API。 生产可观测性通过 `FoveaObservability.OSLogDiagnosticsSink` 显式注入；它只消费已脱敏事件，不改变 pipeline 配置、身份或调度。
+它固定组合禁用 `URLCache`/Cookie 的 transport 与同一 StoreGeneration 下的 Akashic 持久 bundle，并以独立 `ImageCraftImageIO` 产品作为当前默认 codec。默认与新的高级 codec 入口要求完整 `ImageCodec`；旧 `ImageDecoding` 只保留显式 compatibility 标签。`FoveaSystemPipeline.open` 可显式注入 qualified codec、transformer 和 `RenderedImageCaching`。持久化替换只由 `FoveaAdvancedSystem` 扩展接受 `FoveaPersistentStoreBundleProviding`：provider 必须一次返回 encoded、records、namespace generation persistence、generation descriptor 和 lifetime，descriptor/compatibility 不匹配时失败；默认 `Fovea` product 不包含该模块。自定义 transport 仍通过 `FoveaPipeline` 注入，且公共构造器必须显式选择 `ProfileAccessPolicy`。SwiftUI 使用 `FoveaImage(request:loader:accessibility:)`；UIKit/AppKit 使用平台 `FoveaImageView.setImage(request:loader:accessibility:)`。所有 UI surface 都要求显式 decorative 或 label。尚未提供只接收 URL 并猜测 target 的便利 API。 生产可观测性通过 `FoveaObservability.OSLogDiagnosticsSink` 显式注入；它只消费已脱敏事件，不改变 pipeline 配置、身份或调度。
 
 当前不存在 `Fovea.shared`、通用 `Source` enum 或只接收 URL 的便利入口。下列形态仅是 Core v1 Candidate 的易用性方向，不是可编译 API：
 

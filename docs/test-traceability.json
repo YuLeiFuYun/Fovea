@@ -1906,6 +1906,28 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/PluggableComponentTests.swift",
+          "kind": "swiftTest",
+          "method": "testQualifiedPersistentStoreProviderDrivesSystemAndRetainsBundle_CACHE_PT_044"
+        }
+      ],
+      "id": "CACHE-PT-044",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/PluggableComponentTests.swift",
+          "kind": "swiftTest",
+          "method": "testQualifiedPersistentStoreProviderRejectsDescriptorSubstitution_CACHE_PT_045"
+        }
+      ],
+      "id": "CACHE-PT-045",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "scripts/model-check-image-codec-contract.py",
           "kind": "script"
         },
