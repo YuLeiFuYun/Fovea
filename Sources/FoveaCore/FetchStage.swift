@@ -68,6 +68,28 @@ final class FetchStage: Sendable {
         _ = await registry.cancelAll { $0.namespace == namespace }
     }
 
+    func invalidateCompletionHandoff(
+        for request: ImageRequest,
+        conditionalRecord: RepresentationRecord?
+    ) async {
+        guard transport.reusePolicy.allowsCrossRequestReuse else { return }
+        let selectedVariant = conditionalRecord.map { request.fetchVariantKey(for: $0.vary) }
+        let executionKey = request.fetchExecutionKey(
+            selectedVariant: selectedVariant,
+            revalidationFingerprint: FetchRequestPreparation.revalidationFingerprint(
+                for: conditionalRecord
+            ),
+            transportPolicyFingerprint:
+                "\(configuration.transportPolicyFingerprint):\(transport.reusePolicy.executionFingerprint)"
+        )
+        _ = await registry.removeCompleted(
+            for: ScopedFetchExecutionKey(
+                namespace: request.namespace,
+                execution: executionKey
+            )
+        )
+    }
+
     /// 测试缝：查询无条件 fetch 执行身份的当前订阅者数量。
     /// 只读取 registry 控制面，不创建任务、不改变优先级或取消租约。
     package func subscriberCountForTesting(request: ImageRequest) async -> Int {
@@ -210,7 +232,17 @@ final class FetchStage: Sendable {
             do {
                 let result = try await subscription.value()
                 try Task.checkCancellation()
-                await subscription.cancel()
+                let completionHandoff = FetchCompletionHandoffPolicy.retentionNanoseconds(
+                    head: result.head,
+                    requestTime: result.requestTime,
+                    responseTime: result.responseTime,
+                    request: request
+                )
+                if completionHandoff > 0 {
+                    await subscription.detach(handoffGraceNanoseconds: completionHandoff)
+                } else {
+                    await subscription.cancel()
+                }
                 return result
             } catch {
                 if Self.isCancellation(error) || Task.isCancelled {

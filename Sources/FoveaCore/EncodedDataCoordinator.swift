@@ -96,6 +96,10 @@ final class EncodedDataCoordinator: Sendable {
                 namespace: request.namespace,
                 generation: generation
             )
+            await fetchStage.invalidateCompletionHandoff(
+                for: request,
+                conditionalRecord: nil
+            )
             return nil
         }
     }

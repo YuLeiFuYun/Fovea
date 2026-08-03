@@ -177,8 +177,9 @@ v1 只对幂等 GET 的明确瞬态 transport error 做有限重试；统一 dis
 - **SCHED-PT-012**: 同级任务和不同 pipeline/namespace 不永久饥饿；
 - **SCHED-PT-013**: 某 subscriber 取消后立即结束自身等待，不等待共享底层任务完成；其他 subscriber 和底层任务不受影响；
 - **SCHED-PT-014**: 固定种子生成的多订阅者退出序列中，subscriber count、effective priority、底层 operation 次数与最终 cancellation 次数始终满足不变量，并可由 seed 重放；
-- **SCHED-PT-015**: 底层共享任务完成后，registry entry 必须先按 taskID 清理，再向订阅者发布结果；后续订阅不得加入已完成任务；
+- **SCHED-PT-015**: 底层共享任务完成后，仍由现存订阅者持有的 exact-key entry 可供同一并发 cohort 加入；最后一个订阅者 release 后必须立即移除，除非存在显式有界 handoff/cancellation lease；
 - **SCHED-PT-016**: 允许 late handoff 的共享任务必须绑定有界 lease；lease token 失效、任务完成、新订阅加入或租约到期的任意竞态都不能误取消活跃任务，也不能留下永久零订阅者条目。
 - **SCHED-PT-017**: 相同 namespace generation 与 RenderKey 的并发请求必须共享 transform task；namespace revoke 必须取消对应 transform，不得发布迟到 RenderedMemory。
 - **SCHED-PT-021**: 最后订阅者取消后，底层任务立即取消且进入有界 cancellation tombstone；窗口内迟到订阅不得启动第二个 operation，completion 不得提前删除墓碑，租约到期后新请求才可创建任务。
 - **SCHED-PT-022**: cancellation tombstone 以顶层 admission cutoff 区分取消前已开始的调用与取消后新调用；前者只允许形成一个 replacement cohort 并复用其终态，后者仍不得复活已取消任务。
+- **SCHED-PT-025**: 下游获得缓存损坏或 probe/decode 非法的负证明时，只能按 exact key 移除 completed handoff；不得删除或取消仍在执行的 active task，也不得影响其他 key。

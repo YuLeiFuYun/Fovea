@@ -240,6 +240,14 @@ package actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
         )
     }
 
+    @discardableResult
+    package func removeCompleted(for key: Key) async -> Bool {
+        guard let entry = entries[key], entry.completed else { return false }
+        entries.removeValue(forKey: key)
+        await entry.priorityControl.finish()
+        return true
+    }
+
     package func subscriberCount(for key: Key) -> Int {
         entries[key]?.subscribers.count ?? 0
     }

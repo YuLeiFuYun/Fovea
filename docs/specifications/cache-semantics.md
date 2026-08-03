@@ -434,3 +434,8 @@ v1 不让 App 与 Widget 并发写同一个 Akashic generation。需要 Widget �
 - **CACHE-PT-039**: 同 variant 的 304 metadata 覆盖或 200 新内容覆盖若在 namespace 仍有效时被调用方取消，事务必须恢复旧 record；namespace 已撤销时则删除新 record，不能复活旧 generation。
 - **CACHE-PT-041**: OriginalEncoded staging 写入不得在显式 publish 前通过逻辑清单可见；decode/安全验证失败、取消或 revoke 必须 discard，GC 不得误删仍在途 stage；只有 stage 与 RepresentationRecord 均原子发布后，成功 completion 才成立。
 - **CACHE-PT-042**: 已通过安全探测、目标解码、transform 与 namespace fence 的完整像素可作为 preview 先显示；final 事件与 `image(for:)` completion 仍必须等待 OriginalEncoded 与 RepresentationRecord 的耐久发布。
+
+- **CACHE-PT-046**: transport-verified handoff 的字节若在 probe/decode 被证明非法，必须删除 handoff，禁止持久化；下一消费者重新回源并只提交通过完整图像门禁的字节。
+- **CACHE-PT-047**: 明确可复用、无需立即再验证且仍新鲜的 200 响应，可在完整 FetchExecutionKey 下保留最多 250 ms 的进程内 completion handoff，以覆盖 fetch 完成到 decode/persist 可见之间的 delayed-hit 窗口；它不得成为无界或跨身份缓存。
+- **CACHE-PT-048**: `no-store`、`no-cache`、`max-age=0`、不可表示/通配 `Vary` 与非 200 响应不得进入 completion handoff。
+- **CACHE-PT-049**: 持久缓存损坏或 probe/decode 负证明必须撤销对应 completed handoff；撤销只作用于 exact key 的已完成条目，不得取消 active fetch。租约到期后新调用必须重新执行。

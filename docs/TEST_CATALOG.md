@@ -85,7 +85,8 @@ CACHE-PT-039    同 variant 的 200/304 覆盖取消时恢复旧 record，revoke
 CACHE-PT-040    representation base-key/reference indexes remain consistent after replacement, removal, and reopen
 CACHE-PT-041    staged OriginalEncoded 在显式 publish 前不可读；discard/GC/revoke 不得泄漏或误删在途 stage
 CACHE-PT-042    完整目标像素 preview 可先于 durable final 可见，但 final 必须等待 blob/record 原子发布
-CACHE-PT-043...045    自定义 RenderedImageCaching 接管派生像素插入、命中和 purge
+CACHE-PT-043...045    自定义 RenderedImageCaching 与 qualified persistent-store provider 的所有权/描述符门禁
+CACHE-PT-046...049    非法 handoff 删除、新鲜 completion handoff、禁止范围与负证明撤销
 GC-PT-005       PhysicalBlobID 不泄漏 ContentID
 GC-PT-011       0a soft cap 触发保守清理且不阻塞 final
 SEC-CASE-001    delegate 分块流受 hard limit 与逐块背压约束
@@ -364,6 +365,7 @@ SCHED-PT-019      after eight ordinary bypasses, unit-weight waiters enter a FIF
 SCHED-PT-020      weighted starved waiters reserve future capacity, drain fragments, and cannot be bypassed by later fast-path arrivals
 SCHED-PT-021      a cancelled zero-subscriber shared task retains a bounded non-revivable tombstone; late subscribers cannot restart the operation before lease expiry
 SCHED-PT-022      cancellation tombstones distinguish pre-cancellation admissions from truly fresh callers; surviving pre-existing cohorts share one bounded replacement operation while fresh callers cannot revive the cancelled task
+SCHED-PT-025      completed-only negative evidence removal cannot delete or cancel an active exact-key task
 STYLE-PT-001      repository Swift formatting is fixed to four-space indentation and enforced by the strict gate
 STYLE-PT-002      comment governance rejects English-only comments and preserves useful rationale without requiring line-by-line narration
 MATH-PT-006       Workbench prefetch uses a bounded empirical distribution with DKW–Massart risk adjustment and respects monotonicity, sample, and hard-window limits

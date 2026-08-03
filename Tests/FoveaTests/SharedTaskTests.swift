@@ -463,6 +463,37 @@ final class SharedTaskTests: XCTestCase {
         XCTAssertEqual(freshValue, 3)
         XCTAssertEqual(countAfterRelease, 2)
         await fresh.cancel()
+        let cancellationCount = await registry.cancellationCount(for: key)
+        XCTAssertEqual(cancellationCount, 0)
+    }
+
+    func testRemoveCompletedDropsOnlyCompletedEntry_SCHED_PT_025() async throws {
+        let registry = SharedTaskRegistry<FetchExecutionKey, Int>()
+        let completedKey = makeKey("https://example.com/completed-removal")
+        let completed = await registry.subscribe(key: completedKey) { 1 }
+        let completedValue = try await completed.value()
+        let removedCompleted = await registry.removeCompleted(for: completedKey)
+        XCTAssertEqual(completedValue, 1)
+        XCTAssertTrue(removedCompleted)
+
+        let replacement = await registry.subscribe(key: completedKey) { 2 }
+        XCTAssertFalse(replacement.wasJoined)
+        let replacementValue = try await replacement.value()
+        XCTAssertEqual(replacementValue, 2)
+        await replacement.cancel()
+
+        let activeKey = makeKey("https://example.com/active-removal")
+        let gate = HandoffOperationGate()
+        let active = await registry.subscribe(key: activeKey) {
+            try await gate.run()
+        }
+        await gate.waitUntilStarted()
+        let removedActive = await registry.removeCompleted(for: activeKey)
+        XCTAssertFalse(removedActive)
+        await gate.release()
+        let activeValue = try await active.value()
+        XCTAssertEqual(activeValue, 42)
+        await active.cancel()
     }
 
     private func makeKey(_ locator: String) -> FetchExecutionKey {

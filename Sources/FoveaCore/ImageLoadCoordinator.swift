@@ -184,6 +184,10 @@ final class ImageLoadCoordinator: Sendable {
                 && (failure.stage == .probe || failure.stage == .decode)
             if provesInvalidEncodedBytes {
                 await cache.removeTransportVerifiedHandoff(for: request, generation: generation)
+                await fetchStage.invalidateCompletionHandoff(
+                    for: request,
+                    conditionalRecord: nil
+                )
             }
             throw failure
         } catch is CancellationError {
@@ -348,6 +352,14 @@ final class ImageLoadCoordinator: Sendable {
                 onFullQualityPreview: onFullQualityPreview
             )
         } catch let failure as PipelineFailure {
+            if failure.disposition != .cancelled,
+                failure.stage == .probe || failure.stage == .decode
+            {
+                await fetchStage.invalidateCompletionHandoff(
+                    for: request,
+                    conditionalRecord: conditionalRecord
+                )
+            }
             if let conditionalRecord,
                 let stale = try await staleFallback(
                     record: conditionalRecord,
@@ -453,6 +465,10 @@ final class ImageLoadCoordinator: Sendable {
                 record.variantKeyDigest,
                 namespace: request.namespace,
                 generation: generation
+            )
+            await fetchStage.invalidateCompletionHandoff(
+                for: request,
+                conditionalRecord: nil
             )
             return nil
         }

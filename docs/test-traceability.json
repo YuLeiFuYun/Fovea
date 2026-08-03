@@ -1928,6 +1928,70 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+          "kind": "swiftTest",
+          "method": "testMalformedTransportVerifiedHandoffCannotPersistAndIsRemoved_CACHE_PT_046"
+        }
+      ],
+      "id": "CACHE-PT-046",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/FetchCompletionHandoffTests.swift",
+          "kind": "swiftTest",
+          "method": "testFreshReusableResponseReceivesBoundedCompletionHandoff_CACHE_PT_047"
+        }
+      ],
+      "id": "CACHE-PT-047",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/FetchCompletionHandoffTests.swift",
+          "kind": "swiftTest",
+          "method": "testNoStoreAndImmediatelyStaleResponsesNeverReceiveHandoff_CACHE_PT_048"
+        },
+        {
+          "file": "Tests/FoveaTests/FetchCompletionHandoffTests.swift",
+          "kind": "swiftTest",
+          "method": "testUnrepresentableVaryAndNon200ResponsesNeverReceiveHandoff_CACHE_PT_048"
+        }
+      ],
+      "id": "CACHE-PT-048",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/EncodedDataCoordinatorTests.swift",
+          "kind": "swiftTest",
+          "method": "testCorruptFreshBlobIsRemovedBeforeNetworkFallback"
+        },
+        {
+          "file": "Tests/FoveaTests/PipelineTests.swift",
+          "kind": "swiftTest",
+          "method": "testCorruptFreshBlobFallsBackToNetwork"
+        },
+        {
+          "file": "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+          "kind": "swiftTest",
+          "method": "testMalformedTransportVerifiedHandoffCannotPersistAndIsRemoved_CACHE_PT_046"
+        },
+        {
+          "file": "Tests/FoveaTests/SharedTaskTests.swift",
+          "kind": "swiftTest",
+          "method": "testRemoveCompletedDropsOnlyCompletedEntry_SCHED_PT_025"
+        }
+      ],
+      "id": "CACHE-PT-049",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "scripts/model-check-image-codec-contract.py",
           "kind": "script"
         },
@@ -4356,7 +4420,7 @@
         {
           "file": "Tests/FoveaTests/SharedTaskTests.swift",
           "kind": "swiftTest",
-          "method": "testCompletedTaskCannotBeJoinedByNewSubscriber_SCHED_PT_015"
+          "method": "testCompletedTaskRemainsJoinableOnlyWhileExistingSubscriberHoldsIt_SCHED_PT_015"
         }
       ],
       "id": "SCHED-PT-015",
@@ -4455,6 +4519,17 @@
         }
       ],
       "id": "SCHED-PT-022",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/SharedTaskTests.swift",
+          "kind": "swiftTest",
+          "method": "testRemoveCompletedDropsOnlyCompletedEntry_SCHED_PT_025"
+        }
+      ],
+      "id": "SCHED-PT-025",
       "status": "implemented"
     },
     {

@@ -758,11 +758,13 @@
         "MATH-PT-011",
         "SCHED-PT-010",
         "SCHED-PT-015",
-        "SCHED-PT-016"
+        "SCHED-PT-016",
+        "SCHED-PT-025",
+        "CACHE-PT-049"
       ],
-      "extractedAsset": "single-flight 状态机显式绑定 taskID/leaseID，并用有限模型生成旧完成、旧租约和未清租约的最短 ABA 反例。",
+      "extractedAsset": "single-flight 状态机显式绑定 taskID/leaseID；exact-key completed handoff 只有有界租约，并可被下游负证明安全撤销而不触及 active task。",
       "id": "FOVEA-EGG-028",
-      "observation": "有限历史显示最小安全条件是 completion 检查 taskID、lease expiry 检查 leaseID、join 清除 orphan lease；subscriber-empty 检查在这些不变量下属于防御性冗余。",
+      "observation": "有限历史显示最小安全条件包括 completion 检查 taskID、lease expiry 检查 leaseID、join 清除 orphan lease，以及负证明仅删除 completed exact-key 条目；active task 与其他 key 必须保持不可达。",
       "overgeneralizationRisk": "有限模型不证明 Swift Task 调度器本身，也不覆盖无限 key、外部存储或任意回调重入。",
       "principleIDs": [
         "FOVEA-LAW-001",
