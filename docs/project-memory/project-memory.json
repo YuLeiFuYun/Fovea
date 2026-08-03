@@ -99,14 +99,19 @@
       "summary": "A 25-run schema 3 Simulator aggregate covers Fovea plus four locked external loaders across W1, W2 cold/warm-disk/warm-memory, and W3. Fovea hard-check failures are zero; eight external W3 semantic contract failures remain explicit. Simulator evidence is not release evidence."
     },
     {
+      "id": "EVID-W1-W3-A-TIER-FUNCTIONAL-DIAGNOSTIC",
+      "status": "completed-current-clean-source-functional-only",
+      "summary": "Clean public-main commit 5a836c43566a completed all 30 W1-W3 structural specifications for the six A-tier headless comparators. Fovea and Apple Native have zero hard failures; eight external W3 semantic failures remain explicit. Three W3 repetitions per comparator reproduce the same 0/0/3/1/3/1 failure counts. Host quiescence was bypassed only in a separate diagnostic artifact, so no latency, throughput, resource or release ranking is permitted."
+    },
+    {
       "id": "EVID-CACHE-LAB-V2-SCHEMA4-LOCAL",
       "status": "historical-v2-twelve-of-thirteen-dominance",
       "summary": "The final V2 tree-bound schema 4 campaign collected twenty clean process blocks and passed 12/13 applicable comparisons. Memory hot-scan throughput versus LRUCache had median ratio about 1.268x but 95% lower bound about 1.149x, so V2 did not pass the complete dominance portfolio. V2 was archived after a timing-boundary defect was identified."
     },
     {
       "id": "EVID-A-TIER-SEVEN-INTEGRATIONS",
-      "status": "completed-local-build-final-calibration-pending",
-      "summary": "All seven accepted A-tier Apple-platform comparators are represented in the unified Xcode project: six use the common headless adapter contract and Apple AsyncImage is paired with FoveaResponsiveImage on an independent SwiftUI surface. AlamofireImage remains B-tier."
+      "status": "completed-local-build-and-six-headless-functional-contract",
+      "summary": "All seven accepted A-tier Apple-platform comparators are represented in the unified Xcode project. Six headless implementations completed the clean-source 30-spec W1-W3 structural diagnostic; Apple AsyncImage remains paired with FoveaResponsiveImage on the independent SwiftUI surface. Quiet-host performance, paired SwiftUI and cross-library W7 aggregates remain pending. AlamofireImage remains B-tier."
     },
     {
       "id": "EVID-W7-CANCELLATION-COHORT-FIX",
@@ -185,13 +190,13 @@
     },
     {
       "id": "EVID-APPLE-PLATFORM-COMPARATORS",
-      "status": "completed-local-contracts-runtime-and-install-passed-aggregate-host-gated",
-      "summary": "The mandatory Apple baselines remain distinct. The headless URLSession + automatic URLCache + ImageIO contract and the paired AsyncImage surface pass local verification. The dedicated iOS 26.4.1 simulator completed all 35 first-boot migrators, live process paths verified build 23E254a, and all six headless apps installed. The current W2 attempt was rejected before measurement because CPU idle and disk-throughput host-quiescence thresholds were not met; no ranking is claimed."
+      "status": "completed-local-contracts-runtime-install-and-headless-functional-passed-performance-host-gated",
+      "summary": "The mandatory Apple baselines remain distinct. Apple URLSession + automatic URLCache + ImageIO passed all five current W1-W3 structural specifications, while the paired AsyncImage surface passes local verification. The dedicated iOS 26.4.1 device completed first boot, verified live build 23E254a and installed all six headless apps. Host quiescence still blocks performance ranking."
     },
     {
       "id": "EVID-SIMULATOR-R26-RUNTIME-INSTALL",
-      "status": "historical-device-archived-runtime-regression-diagnosed",
-      "summary": "The first R26 device completed 35/35 migrators and installed six headless apps, but later regular boot/install failures caused it to be retained in a non-destructive diagnostic archive. A replacement exact-23E254a device timed out during first boot at 00LaunchServicesMigrator while root simdiskimaged and more than 70 CoreSimulator processes entered uninterruptible state. New health gates reject this state before simctl work, failed first boots are recorded and cannot be reused, and no performance result was produced."
+      "status": "current-exact-device-operational-critical-health-scoped",
+      "summary": "The exact iOS 26.4.1 build 23E254a dedicated device is operational, has all six headless apps installed and completed the clean-source 30-spec structural diagnostic. One launch-blocking nsurlsessiond stall was recovered by restarting only the target device tree. A later callservicesd U state did not block container lookup or SpringBoard, proving that noncritical descendants cannot be treated as automatic device failure. Health schema 3 blocks global CoreSimulator services, target launchd_sim and SpringBoard/backboardd/runningboardd/lsd while recording other anomalies. No performance result is claimed."
     },
     {
       "id": "EVID-SWIFTUI-INSTALL-STAGING",
@@ -257,7 +262,7 @@
       "SDWebImage",
       "PINRemoteImage"
     ],
-    "aTierMatrixStatus": "seven-integrations-build-complete-w7-cancellation-cohort-fix-validated-final-aggregates-pending",
+    "aTierMatrixStatus": "seven-integrations-complete-six-headless-functional-contract-passed-performance-swiftui-w7-pending",
     "aTierSwiftUISurfaceComparators": [
       "Apple AsyncImage",
       "Fovea"
@@ -394,7 +399,7 @@
       "imageCraftRevision": "e147b349d4ff440af6f257c3fb8a7cb4788c953b",
       "status": "current-imagecraft-alpha4-akashic-alpha5-clean-copy-478-passed"
     },
-    "finalATierHeadlessAggregateStatus": "pending-new-plan-real-loopback-rerun-host-quiescence-gate-blocked",
+    "finalATierHeadlessAggregateStatus": "current-clean-source-functional-30-spec-complete-performance-host-quiescence-blocked",
     "finalSwiftUISurfaceAggregateStatus": "pending-new-plan-real-loopback-rerun-host-quiescence-gate-blocked",
     "foveaCompositeStoreContentionArtifactSHA256": "1855b08a6cf1efe4fa82268347909842b16f20e69f0e4ece5a9ba2294362fff6",
     "fullAcceptedWorkloadRange": "W1-W15",
@@ -423,29 +428,29 @@
     "latestCacheLabTrustedCleanSource": true,
     "latestComparativePlanCanonicalSHA256": "078206a957e4a44e4b5126543011d61a2746384ce6f87e693cee67c6ab5df8d3",
     "latestComparatorVerificationArtifact": ".artifacts/comparators/verification.json",
-    "latestComparatorVerificationArtifactSHA256": "02ab9db195c1b41bac33235cf12ce73d47134931740654d2a7be70506d0e3d47",
-    "latestComparatorVerificationStatus": "passed-apple-native-urlcache-fovea-visible-latency-core-contracts",
+    "latestComparatorVerificationArtifactSHA256": "9524865ef507ed78df5a98a8b73ce2ac3324873442e0a7386ec2252ebfc7a98a",
+    "latestComparatorVerificationStatus": "passed-complete-external-and-ios-seven-adapters-zero-local-warnings-17-support-tests",
     "latestFiveLibrarySimulatorAggregateHistorical": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
     "latestRootReleaseBuildStatus": "passed-local",
     "latestRootSwiftTestCount": 478,
-    "latestSimulatorAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
-    "latestSimulatorAggregateRunCount": 25,
-    "latestSimulatorAggregateTrust": "historical-only-plan-digest-mismatch-no-current-ranking",
+    "latestSimulatorAggregate": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
+    "latestSimulatorAggregateRunCount": 30,
+    "latestSimulatorAggregateTrust": "current-clean-source-functional-contract-only-no-performance-ranking",
     "latestSimulatorExternalContractFailures": 8,
     "latestSimulatorFoveaFailures": 0,
     "latestSimulatorHostPreflightArtifact": ".artifacts/comparative-host-preflight.json",
     "latestSimulatorHostPreflightCPUIdlePercent": [
-      39.91,
-      36.31,
-      41.16
+      52.92,
+      56.79,
+      54.41
     ],
     "latestSimulatorHostPreflightCompetingProcessCount": 0,
     "latestSimulatorHostPreflightDiskMBps": [
-      23.75,
-      15.76,
-      21.25
+      8.64,
+      10.92,
+      16.69
     ],
-    "latestSimulatorHostPreflightStatus": "rejected-host-cpu-and-disk-not-quiescent",
+    "latestSimulatorHostPreflightStatus": "rejected-host-not-quiescent-functional-diagnostics-completed-separately",
     "longHorizonRoadmap": "docs/project-memory/long-horizon-roadmap.json",
     "longHorizonRoadmapID": "FOVEA-LONG-HORIZON-ROADMAP-V1",
     "nextActionDirection": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
@@ -647,17 +652,17 @@
     },
     "simulatorBuildMeasurementSeparation": "build-only-then-skip-build-skip-prepare",
     "simulatorCoreHealthArtifact": ".artifacts/comparative-coresimulator-health.json",
-    "simulatorCoreHealthArtifactSHA256": "ebda951f7a85a4e757afd66accb63caa0b623d01db1d21ef2f2235eaf7ec5e60",
+    "simulatorCoreHealthArtifactSHA256": "6afa5e996c89e151c1fee354cd58fd89506ec332c91ed39854fd245f2938c93b",
     "simulatorCoreHealthBlockedProcessCount": 0,
-    "simulatorCoreHealthStatus": "healthy",
+    "simulatorCoreHealthStatus": "healthy-schema3-global-and-device-critical",
     "simulatorCurrentDeviceRegistry": ".artifacts/comparative-simulator-device.json",
-    "simulatorCurrentDeviceRegistrySHA256": "70dfde9a7bb1f46ddcf4c6be0be052bac6947517079a0ba4ed9ec0c875ffec56",
-    "simulatorCurrentDeviceStatus": "incomplete-first-boot-recorded-do-not-reuse",
+    "simulatorCurrentDeviceRegistrySHA256": "b69231c3b20d868a07f1177a18915fbb062896fd353009464c26e65c57a0e39a",
+    "simulatorCurrentDeviceStatus": "exact-r26-device-operational-six-apps-installed",
     "simulatorCurrentDeviceUDID": "redacted-local-simulator-device",
-    "simulatorCurrentFirstBootFailure": "900-second-timeout-00LaunchServicesMigrator-launchd_sim-and-backboardd-uninterruptible",
+    "simulatorCurrentFirstBootFailure": null,
     "simulatorDedicatedDeviceName": "Fovea Comparative iPhone 17e R26",
     "simulatorDuplicateRuntimeFinding": "23E244 and 23E254a share an identifier; device creation uses exact 23E254a bundle and every boot verifies live process paths before install or measurement",
-    "simulatorExecutionBlocker": "initialization-host-not-quiescent-active-MeetingCaptureKit-build-low-cpu-idle-high-disk-throughput",
+    "simulatorExecutionBlocker": "performance-host-quiescence-cpu-and-disk-thresholds",
     "simulatorFirstBootStatus": "completed-35-migrators-CoreLocationMigrator-296.287-seconds-success",
     "simulatorHealthCheckScript": "scripts/check-comparative-coresimulator-health.py",
     "simulatorInitializationHostGate": "required-65-percent-minimum-idle-12-MBps-maximum-disk-no-competing-build-or-simctl-before-create-or-first-boot",
@@ -675,21 +680,21 @@
       21.490000000000002
     ],
     "simulatorInitializationHostPreflightStatus": "rejected-before-create-or-first-boot",
-    "simulatorInstalledHeadlessApps": "six-of-six-installed-apple-native-fovea-nuke-kingfisher-sdwebimage-pinremoteimage",
+    "simulatorInstalledHeadlessApps": "six-of-six-installed-and-30-spec-functional-diagnostic-completed",
     "simulatorMeasurementHostGate": "required-65-percent-minimum-idle-12-MBps-maximum-disk-no-competing-build-or-simctl",
     "simulatorPriorDeviceArchive": ".artifacts/simulator-archives/20260731T130128Z",
     "simulatorPriorDeviceArchiveSummarySHA256": "31e0db4be551e05cb95ec4b696391c149dba3123c8ac93f435a317d782e06bdd",
     "simulatorRecoveryScript": "scripts/recover-comparative-simulator.sh",
     "simulatorRootSimdiskimagedState": "healthy-non-U",
-    "simulatorRunnerContract": "dedicated-fovea-ios26-4-1-exact-build-binding-live-build-verification-two-phase-bounded-process-groups-core-health-initialization-and-measurement-host-gated",
+    "simulatorRunnerContract": "dedicated-fovea-ios26-4-1-exact-build-binding-resolved-only-builds-live-runtime-verification-two-phase-bounded-process-groups-critical-service-health-and-host-quiescence-gates",
     "simulatorRuntime": "iOS 26.4.1 build 23E254a stable simulator runtime",
     "simulatorRuntimeBinding": "exact-runtime-bundle-path-plus-machine-readable-device-registry",
     "simulatorRuntimeFallbackReason": "iOS 27 beta simctl install entered uninterruptible I/O on both generic and dedicated devices",
     "simulatorRuntimeStorageIdentifier": "redacted-local-runtime-storage",
     "simulatorRuntimeValidation": "passed-live-device-process-path-23E254a",
-    "simulatorSupportTestStatus": "passed-13-tests",
-    "simulatorW2CurrentAttempt": "no-current-result-current-device-incomplete-new-device-initialization-host-gated",
-    "sourceState": "dirty-worktree",
+    "simulatorSupportTestStatus": "passed-17-tests-resolved-only-six-app-builds-and-runtime-probes",
+    "simulatorW2CurrentAttempt": "current-clean-source-functional-cold-warm-disk-warm-memory-passed-performance-host-quiescence-pending",
+    "sourceState": "clean-committed-public-main-local-evidence-protected-ci-pending",
     "swift64Adoption": {
       "adopted": [
         "tools-6.4",
@@ -766,7 +771,16 @@
     "w2NetworkOriginStatus": "shared-real-loopback-http-nwlistener-all-headless-and-swiftui-surfaces",
     "w7V6Status": "archived-calibration-observable-bound-invalid",
     "w7V7Status": "preregistered-same-trace-derived-origin-bound-final-six-comparator-calibration-pending",
-    "workloadRegistry": "Benchmarks/workload-registry.json"
+    "workloadRegistry": "Benchmarks/workload-registry.json",
+    "latestATierFunctionalDiagnostic": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
+    "latestATierFunctionalDiagnosticSHA256": "d170973c5625de7c7909520a2e027fbec9c33e5188ce9f8665755ce78285d7e2",
+    "latestATierFunctionalDiagnosticSourceCommit": "5a836c43566ae6915b85790fed358b35d134db6a",
+    "latestATierFunctionalDiagnosticSourceTreeDigest": "98130cdbbf00739fe9f618638df4b3ae7def02ef5611b0c7c421edaa6394a8e5",
+    "latestATierFunctionalDiagnosticClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+    "latestW3RepeatSummary": ".artifacts/comparative-functional-diagnostics/w3-repeats/summary.json",
+    "latestW3RepeatSummarySHA256": "97e8b9cdfc15da71a78fc918f9bb7a0c6b4bc4206cc6cce5392cc1cc4c9d9d9f",
+    "latestW3RepetitionsPerComparator": 3,
+    "latestW3FailurePatternStable": true
   },
   "mandatoryTaskProtocol": {
     "afterWork": [
@@ -808,8 +822,8 @@
     {
       "id": "OPEN-FINAL-W1-W3-AGGREGATE",
       "priority": 1,
-      "status": "completed",
-      "summary": "Aggregate the final schema 3 five-library Simulator calibration under one unchanged source-tree digest, preserving W3 semantic gaps."
+      "status": "six-headless-functional-complete-performance-formal-pending",
+      "summary": "The six-headless 30-spec W1-W3 structural diagnostic is complete under clean source and preserves eight stable external W3 semantic gaps. A quiet-host performance aggregate and formal repeated physical-device evidence remain pending."
     },
     {
       "id": "OPEN-CACHE-V4-FULL-FORMAL-TRUSTED-REBIND",
@@ -832,8 +846,8 @@
     {
       "id": "OPEN-A-TIER-COMPARATOR-INTEGRATION",
       "priority": 0,
-      "status": "in-progress-fovea-v7-hard-pass-six-comparator-rerun-pending",
-      "summary": "All seven A-tier integrations build. W7 V7 current-tree Fovea calibration exposed and fixed cancellation misclassification plus pre-actor warmup scheduling duplication. Fovea now passes the 1,000-request hard contract with 16 shared-origin requests, 256 cancelled subscribers, zero failures, origin peak concurrency 8 and no hard-check failure. The final six-comparator W1-W3, paired SwiftUI and W7 V7 aggregates remain pending under one committed unchanged source digest and a passing host-quiet preflight."
+      "status": "in-progress-six-headless-functional-complete-swiftui-w7-performance-pending",
+      "summary": "All seven A-tier integrations build. The six headless comparators completed the clean-source W1-W3 structural matrix with zero Fovea failures and eight stable external W3 contract failures; W3 repeated 3/3 per comparator. Fovea also passes its W7 1,000-request hard contract. Quiet-host six-comparator performance, paired SwiftUI, cross-library W7 and physical evidence remain pending."
     },
     {
       "id": "OPEN-CODEC-CONFORMANCE-KIT",

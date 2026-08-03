@@ -38,7 +38,7 @@
     "targetTriple": "arm64-apple-ios15.0-simulator"
   },
   "limitations": [
-    "No post-change simulator ranking is claimed.",
+    "No quiet-host simulator performance ranking is claimed; the current 30-spec result is structural-contract diagnostics only.",
     "Historical simulator artifacts use the previous plan and are descriptive only.",
     "AsyncImage is not merged into the headless adapter ranking because its public surface and observability differ.",
     "Physical-device, stable-OS, energy, thermal and independent replication remain pending."
@@ -66,31 +66,31 @@
       "--install-only",
       "--skip-build --skip-prepare"
     ],
-    "coreSimulatorHealthGate": "rejects-before-simctl-when-any-relevant-U-state-process-exists",
-    "currentDeviceStatus": "incomplete-first-boot-do-not-reuse",
+    "coreSimulatorHealthGate": "global-services-target-launchd-and-install-critical-services; records target-noncritical and unrelated anomalies",
+    "currentDeviceStatus": "exact-r26-device-operational-six-headless-apps-installed",
     "currentDeviceUDID": "redacted-local-simulator-device",
     "dedicatedDeviceName": "Fovea Comparative iPhone 17e R26",
     "duplicateRuntimeMitigation": "older-23E244-unmounted",
     "failedFirstBootPolicy": "records-evidence-and-rejects-device-reuse",
     "failedRuntime": "iOS 27 beta generic and dedicated install paths",
     "firstBootCoreLocationMigratorSeconds": 296.287041,
-    "headlessInstallStatus": "historical-prior-device-passed-six-of-six-current-device-incomplete",
+    "headlessInstallStatus": "current-device-passed-six-of-six",
     "healthCheckScript": "scripts/check-comparative-coresimulator-health.py",
     "liveRuntimeBuildVerification": "passed-23E254a-only",
     "measurementHostGate": {
       "artifact": ".artifacts/comparative-host-preflight.json",
       "latestCPUIdlePercentSamples": [
-        39.91,
-        36.31,
-        41.16
+        52.92,
+        56.79,
+        54.41
       ],
       "latestCompetingProcessCount": 0,
       "latestDiskMegabytesPerSecondSamples": [
-        23.75,
-        15.76,
-        21.25
+        8.64,
+        10.92,
+        16.69
       ],
-      "latestStatus": "blocked-by-CoreSimulator-health-before-host-quiescence",
+      "latestStatus": "rejected-host-not-quiescent-functional-diagnostics-completed-separately",
       "maximumDiskMegabytesPerSecond": 12.0,
       "measurementResultCreated": false,
       "minimumCPUIdlePercent": 65.0,
@@ -101,12 +101,12 @@
     "runtime": "iOS 26.4.1 stable",
     "runtimeBinding": "exact-bundle-path-plus-.artifacts/comparative-simulator-device.json",
     "runtimeBuild": "23E254a",
-    "runtimeStatus": "healthy-current-device-incomplete-new-device-initialization-host-gated",
+    "runtimeStatus": "exact-23E254a-device-operational-functional-diagnostic-complete-performance-host-gated",
     "runtimeStorageIdentifier": "redacted-local-runtime-storage",
     "sharedGenericDeviceReused": false,
     "staticContractStatus": "passed-7-tests",
     "subprocessIsolation": "start-new-session-process-group",
-    "supportTests": "passed-13-tests",
+    "supportTests": "passed-17-tests",
     "swiftUIInstallNormalization": "symmetric-ditto-noextattr-xattr-clear-post-resource-ad-hoc-sign-deep-strict-verify",
     "swiftUIInstallStagingVerification": ".artifacts/asyncimage-lab/install-staging-verification.json",
     "swiftUIInstallStagingVerificationSHA256": "7092a6c89aec086c33037d5629faac421ef2c9419fb797bcc4887b8fbff9ba4a",
@@ -132,9 +132,10 @@
       "minimumCPUIdlePercent": 65.0,
       "requiresNoCompetingBuildOrSimulatorProcess": true,
       "simulatorOperationStarted": false
-    }
+    },
+    "buildDependencyResolution": "resolved-file-only-no-package-updates"
   },
-  "status": "passed-local-contracts-install-staging-runtime-health-blocked",
+  "status": "passed-local-contracts-runtime-install-functional-diagnostic-performance-host-gated",
   "swiftUIAppleBaseline": {
     "comparisonSurface": "paired independent SwiftUI surface against FoveaResponsiveImage",
     "headlessRankingMerged": false,
@@ -149,10 +150,13 @@
   "verification": {
     "adapterCountBuiltByDefault": 2,
     "appleAdapterLog": ".artifacts/comparators/apple urlsession + urlcache + imageio-macos-build.log",
-    "appleAdapterLogSHA256": "0c9261f81a8c48f42e9d9cb263b941f5aae14f7e609f94e7b0e68c5bebec31bf",
+    "appleAdapterLogSHA256": "add96f63a3583d1ecd89f78246f4548e9f189913ebee1c5b32ab18df90468838",
     "artifact": ".artifacts/comparators/verification.json",
-    "artifactSHA256": "02ab9db195c1b41bac33235cf12ce73d47134931740654d2a7be70506d0e3d47",
-    "status": "passed"
+    "artifactSHA256": "9524865ef507ed78df5a98a8b73ce2ac3324873442e0a7386ec2252ebfc7a98a",
+    "status": "passed-complete-external-and-ios",
+    "completeAdapterCount": 7,
+    "localArtifact": ".artifacts/comparators/verification-local.json",
+    "canonicalReportScope": "complete-external-and-ios"
   },
   "w2NetworkOrigin": {
     "cacheControl": "public, max-age=3600",
@@ -170,5 +174,15 @@
     ],
     "source": "Benchmarks/ComparativeLab/Apps/Shared/LoopbackBenchmarkOriginServer.swift",
     "sourceSHA256": "3522d71dd63baa54e9d6589b831c32f4056e8ef6491de7283904c82bfe712f3f"
+  },
+  "functionalDiagnostic": {
+    "artifact": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
+    "artifactSHA256": "d170973c5625de7c7909520a2e027fbec9c33e5188ce9f8665755ce78285d7e2",
+    "sourceCommit": "5a836c43566ae6915b85790fed358b35d134db6a",
+    "sourceTreeDigest": "98130cdbbf00739fe9f618638df4b3ae7def02ef5611b0c7c421edaa6394a8e5",
+    "runCount": 30,
+    "foveaFailures": 0,
+    "externalW3ContractFailures": 8,
+    "claimScope": "simulator-structural-contract-only-no-performance-ranking"
   }
 }

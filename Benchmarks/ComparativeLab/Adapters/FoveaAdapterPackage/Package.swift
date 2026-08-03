@@ -25,7 +25,7 @@ let package = Package(
                 "FoveaComparatorAdapter",
                 .product(name: "ComparativeLabCore", package: "FoveaComparativeLab"),
             ]
-        )
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

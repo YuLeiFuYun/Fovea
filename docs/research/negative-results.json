@@ -1004,6 +1004,22 @@
       ],
       "exitCondition": "Any replacement must retain exact cancelled outcome mapping, zero failed loads, no more than one origin execution per W7 shared identity, bounded pre-actor scheduling, cancelAll coverage of pending claims, and the no-durability-before-visible-consumer invariant.",
       "id": "NEG-W7-CANCELLATION-WARMUP-001"
+    },
+    {
+      "area": "comparative-simulator-health-scoping",
+      "claimRejected": "Any uninterruptible process anywhere in the target simulator process tree proves that app installation, container lookup or launch is unsafe and must block the experiment.",
+      "counterexample": "The dedicated iOS 26.4.1 device exposed callservicesd in state Us for several minutes while simctl get_app_container and a SpringBoard launchctl probe both completed within 15 seconds. Treating every target descendant as critical therefore blocked a usable device. By contrast, target launchd_sim and a prior nsurlsessiond stall coincided with actual simctl launch failure and required targeted recovery.",
+      "decision": "Keep the standalone administrator health check global. For an experiment, fail closed on global simdiskimaged/CoreSimulatorService, the target launchd_sim, and the four install/launch-critical services SpringBoard, backboardd, runningboardd and lsd. Record target noncritical and unrelated-device U-state processes separately; do not silently discard them or treat them as proof of target-path failure.",
+      "evidencePaths": [
+        "scripts/comparative_simulator_support.py",
+        "scripts/check-comparative-coresimulator-health.py",
+        "Benchmarks/ComparativeLab/README.md",
+        ".artifacts/comparative-coresimulator-health.json",
+        ".artifacts/comparative-simulator-recovery.json",
+        ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json"
+      ],
+      "exitCondition": "Any replacement must continue to reject global service, target launchd_sim and install-critical U states; preserve a global administrator mode; record ignored target-noncritical and unrelated anomalies; and prove container plus SpringBoard availability before using a noncritical anomaly as non-blocking evidence.",
+      "id": "NEG-SIMULATOR-ANY-DESCENDANT-U-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",

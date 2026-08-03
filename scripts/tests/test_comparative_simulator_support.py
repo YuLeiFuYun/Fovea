@@ -125,6 +125,104 @@ def runtime_records(
 
 
 class CoreSimulatorHealthTests(unittest.TestCase):
+    @staticmethod
+    def _runner_for_processes(output: str):
+        def run(
+            command: list[str],
+            *,
+            env: dict[str, str],
+            timeout: int,
+            check: bool = True,
+        ) -> subprocess.CompletedProcess[str]:
+            del env, timeout, check
+            if command[0] != "ps":
+                raise AssertionError(f"unexpected command: {command}")
+            return subprocess.CompletedProcess(command, 0, output, "")
+
+        return run
+
+    @staticmethod
+    def _scoped_process_fixture() -> str:
+        return """1 0 Ss 1:00 /sbin/launchd
+10 1 S 0:20 launchd_sim /Users/test/Library/Developer/CoreSimulator/Devices/TARGET/data/var/run/launchd_bootstrap.plist
+11 10 Us 0:10 /Library/Developer/CoreSimulator/Volumes/iOS/RuntimeRoot/usr/libexec/callservicesd
+12 10 Ss 0:10 /Library/Developer/CoreSimulator/Volumes/iOS/RuntimeRoot/System/Library/CoreServices/SpringBoard.app/SpringBoard
+20 1 U 0:20 launchd_sim /Users/test/Library/Developer/CoreSimulator/Devices/OTHER/data/var/run/launchd_bootstrap.plist
+21 20 Us 0:10 /Library/Developer/CoreSimulator/Volumes/iOS/RuntimeRoot/System/Other
+"""
+
+    def test_target_noncritical_u_state_is_recorded_without_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            artifact = support.assert_coresimulator_healthy(
+                run_command=self._runner_for_processes(self._scoped_process_fixture()),
+                env={},
+                root=Path(directory),
+                device_udid="TARGET",
+            )
+            self.assertEqual(artifact["status"], "healthy")
+            self.assertEqual(
+                artifact["ignoredTargetNonCriticalUninterruptibleProcessCount"],
+                1,
+            )
+            self.assertEqual(artifact["ignoredUnrelatedUninterruptibleProcessCount"], 2)
+
+    def test_target_critical_u_state_is_rejected(self) -> None:
+        output = self._scoped_process_fixture().replace("12 10 Ss", "12 10 Us")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(RuntimeError, "health gate rejected"):
+                support.assert_coresimulator_healthy(
+                    run_command=self._runner_for_processes(output),
+                    env={},
+                    root=root,
+                    device_udid="TARGET",
+                )
+            artifact = json.loads(
+                (root / support.CORESIMULATOR_HEALTH_ARTIFACT).read_text()
+            )
+            self.assertEqual(
+                [item["pid"] for item in artifact["uninterruptibleProcesses"]],
+                [12],
+            )
+
+    def test_target_launchd_u_state_is_rejected(self) -> None:
+        output = self._scoped_process_fixture().replace("10 1 S", "10 1 U")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(RuntimeError, "health gate rejected"):
+                support.assert_coresimulator_healthy(
+                    run_command=self._runner_for_processes(output),
+                    env={},
+                    root=root,
+                    device_udid="TARGET",
+                )
+            artifact = json.loads(
+                (root / support.CORESIMULATOR_HEALTH_ARTIFACT).read_text()
+            )
+            self.assertEqual(
+                [item["pid"] for item in artifact["uninterruptibleProcesses"]],
+                [10],
+            )
+
+    def test_global_mode_rejects_all_relevant_u_states(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(RuntimeError, "health gate rejected"):
+                support.assert_coresimulator_healthy(
+                    run_command=self._runner_for_processes(
+                        self._scoped_process_fixture()
+                    ),
+                    env={},
+                    root=root,
+                )
+            artifact = json.loads(
+                (root / support.CORESIMULATOR_HEALTH_ARTIFACT).read_text()
+            )
+            self.assertEqual(
+                {item["pid"] for item in artifact["uninterruptibleProcesses"]},
+                {11, 20, 21},
+            )
+
     def test_rejects_uninterruptible_coresimulator_process(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -11,6 +11,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from comparative_simulator_support import XCODEBUILD_RESOLVED_PACKAGE_FLAGS
+
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT_ROOT = ROOT / ".artifacts/comparators"
 CORE_PACKAGE = "Benchmarks/ComparativeLab"
@@ -429,6 +431,7 @@ def ios_simulator_build(spec: AdapterSpec) -> tuple[int, str]:
     shutil.rmtree(derived_data, ignore_errors=True)
     command = [
         "xcodebuild",
+        *XCODEBUILD_RESOLVED_PACKAGE_FLAGS,
         "-scheme",
         spec.scheme,
         "-destination",
@@ -566,7 +569,9 @@ def main() -> int:
         ):
             surface_build = invoke(
                 [
-                    "xcodebuild", "-project",
+                    "xcodebuild",
+                    *XCODEBUILD_RESOLVED_PACKAGE_FLAGS,
+                    "-project",
                     "Benchmarks/ComparativeLab/Apps/FoveaComparativeApps.xcodeproj",
                     "-scheme", scheme,
                     "-destination", "generic/platform=iOS Simulator",
@@ -591,10 +596,10 @@ def main() -> int:
         "coreContractTests": "passed",
         "foveaVisibleLatencyContract": "first-full-quality-preview-drain-to-final",
         "simulatorRunnerContract": (
-            "exact-runtime-build-dedicated-device-two-phase-bounded-process-groups-"
-            "host-quiescence-gated"
+            "exact-runtime-build-dedicated-device-resolved-only-two-phase-bounded-"
+            "process-groups-critical-service-health-and-host-quiescence-gated"
         ),
-        "simulatorSupportTests": "passed-11-tests",
+        "simulatorSupportTests": "passed-17-tests",
         "challengeSuite": "passed",
         "experimentPlan": "passed",
         "asyncImagePlan": "passed",
@@ -607,14 +612,25 @@ def main() -> int:
         "phase1PreparationAllowed": True,
         "productionDependencyGraphModified": False,
     }
-    (ARTIFACT_ROOT / "verification.json").write_text(
-        json.dumps(report, indent=2, sort_keys=True) + "\n"
-    )
+    complete_report = external_requested and ios_requested
+    if complete_report:
+        artifact_name = "verification.json"
+        report_scope = "complete-external-and-ios"
+    elif external_requested:
+        artifact_name = "verification-external-macos.json"
+        report_scope = "external-macos-only"
+    else:
+        artifact_name = "verification-local.json"
+        report_scope = "local-core-only"
+    report["reportScope"] = report_scope
+    report["canonicalArtifactWritten"] = complete_report
+    artifact_path = ARTIFACT_ROOT / artifact_name
+    artifact_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     print(
         "Comparative lab verification passed: "
         f"adapters={len(adapter_records)} external={external_requested} ios={ios_requested}"
     )
-    print("Artifact: .artifacts/comparators/verification.json")
+    print(f"Artifact: {artifact_path.relative_to(ROOT)}")
     return 0
 
 

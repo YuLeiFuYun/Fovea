@@ -2,8 +2,8 @@
   "blockers": [
     {
       "id": "P0B-COMP-ADAPTERS",
-      "status": "a-tier-seven-integrations-build-complete-final-calibration-refresh-pending",
-      "summary": "All seven accepted A-tier comparators are integrated in the unified project: six headless apps plus a paired Apple AsyncImage/Fovea SwiftUI surface. Final unchanged-source Simulator aggregates and formal repeated physical-device evidence remain incomplete."
+      "status": "six-headless-functional-contract-complete-performance-swiftui-w7-pending",
+      "summary": "All seven accepted A-tier integrations build. The six headless comparators completed a clean-source 30-spec W1-W3 structural diagnostic with zero Fovea failures and eight explicit external W3 contract failures. Quiet-host performance, paired SwiftUI, cross-library W7 and physical evidence remain incomplete."
     },
     {
       "id": "P0B-DEVICE-PRIMARY",
@@ -27,8 +27,8 @@
     },
     {
       "id": "P0B-TRUSTED-EVIDENCE",
-      "status": "blocked-dirty-tree",
-      "summary": "The current working tree is not represented by a clean final commit and protected trusted-CI evidence."
+      "status": "local-clean-public-main-evidence-protected-ci-pending",
+      "summary": "The latest structural diagnostic is bound to clean public-main commit 5a836c43566a with no working-tree changes. Protected trusted CI, quiet-host performance blocks and physical-device evidence remain required before a release certificate."
     },
     {
       "id": "P0B-INDEPENDENT-REVIEW",
@@ -42,8 +42,8 @@
     },
     {
       "id": "P0B-SIMULATOR-RUNTIME",
-      "status": "environment-blocked-uninterruptible-coresimulator-processes",
-      "summary": "CoreSimulator health evidence records 71 uninterruptible processes, including root simdiskimaged and the replacement exact-build device process tree. The replacement device timed out after 900 seconds during 00LaunchServicesMigrator and is marked incomplete/do-not-reuse. Recovery requires an administrator simdiskimaged restart or host reboot; after recovery the incomplete device must be archived and recreated. No performance result was generated."
+      "status": "exact-r26-device-operational-functional-diagnostics-complete-performance-host-noise-blocked",
+      "summary": "The exact iOS 26.4.1 build 23E254a dedicated device completed first boot, verified live runtime paths, installed all six headless apps and completed the current 30-spec structural diagnostic. A launch-blocking nsurlsessiond stall was recovered by restarting only the target device tree; a later callservicesd U-state counterexample remained container- and SpringBoard-responsive and motivated the critical-service health scope. Performance measurement remains blocked by the unchanged host-quiescence thresholds."
     }
   ],
   "componentEvidence": {
@@ -130,17 +130,17 @@
       ],
       "envelopeSchemaVersion": 3,
       "experimentPlanCanonicalSHA256": "078206a957e4a44e4b5126543011d61a2746384ce6f87e693cee67c6ab5df8d3",
-      "finalATierHeadlessAggregate": "pending-post-w7-fix-rerun",
+      "finalATierHeadlessAggregate": "current-clean-source-functional-30-spec-completed-performance-host-quiescence-pending",
       "finalPairedSwiftUISurfaceAggregate": "pending-post-w7-fix-rerun",
       "finalW7V6Aggregate": "archived-observable-bound-invalid",
       "finalW7V7Aggregate": "fovea-current-tree-hard-pass-six-comparator-rerun-pending",
       "historicalFiveLibraryAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
-      "latestSimulatorAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
-      "latestSimulatorAggregateTrust": "historical-only-current-plan-rerun-pending",
+      "latestSimulatorAggregate": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
+      "latestSimulatorAggregateTrust": "current-clean-source-functional-contract-only-no-performance-ranking",
       "latestSimulatorExternalContractFailures": 8,
       "latestSimulatorFoveaFailures": 0,
       "latestSimulatorIsProvisional": true,
-      "latestSimulatorRunCount": 25,
+      "latestSimulatorRunCount": 30,
       "pairedSwiftUISurface": [
         "Apple AsyncImage",
         "Fovea"
@@ -148,11 +148,11 @@
       "releaseClaimPermitted": false,
       "simulatorRunner": {
         "coreSimulatorHealthArtifact": ".artifacts/comparative-coresimulator-health.json",
-        "coreSimulatorHealthArtifactSHA256": "ebda951f7a85a4e757afd66accb63caa0b623d01db1d21ef2f2235eaf7ec5e60",
-        "coreSimulatorHealthStatus": "healthy",
-        "currentDeviceStatus": "incomplete-first-boot-do-not-reuse",
+        "coreSimulatorHealthArtifactSHA256": "6afa5e996c89e151c1fee354cd58fd89506ec332c91ed39854fd245f2938c93b",
+        "coreSimulatorHealthStatus": "healthy-schema3-global-and-device-critical",
+        "currentDeviceStatus": "exact-r26-device-operational-six-apps-installed",
         "currentDeviceUDID": "redacted-local-simulator-device",
-        "currentFailure": "900-second-first-boot-timeout-00LaunchServicesMigrator",
+        "currentFailure": "performance-host-quiescence-rejected-functional-diagnostics-completed-separately",
         "dedicatedDeviceName": "Fovea Comparative iPhone 17e R26",
         "deviceType": "iPhone 17e",
         "duplicateRuntimeMitigation": "exact-23E254a-bundle-creation-plus-live-device-runtime-build-verification",
@@ -179,26 +179,27 @@
           "minimumCPUIdlePercent": 65.0,
           "simulatorOperationStarted": false
         },
-        "installStatus": "historical-prior-device-passed-six-of-six-current-device-not-installable",
+        "installStatus": "current-device-passed-six-of-six",
         "installedHeadlessComparators": 6,
         "measurementHostGate": {
           "artifact": ".artifacts/comparative-host-preflight.json",
           "competingBuildOrSimulatorProcessesAllowed": 0,
           "latestCPUIdlePercentSamples": [
-            39.91,
-            36.31,
-            41.16
+            52.92,
+            56.79,
+            54.41
           ],
           "latestCompetingProcessCount": 0,
           "latestDiskMegabytesPerSecondSamples": [
-            23.75,
-            15.76,
-            21.25
+            8.64,
+            10.92,
+            16.69
           ],
-          "latestStatus": "not-run-after-CoreSimulator-health-blocker",
+          "latestStatus": "rejected-host-not-quiescent-functional-diagnostics-completed-separately",
           "maximumDiskMegabytesPerSecond": 12.0,
           "measurementResultCreated": false,
-          "minimumCPUIdlePercent": 65.0
+          "minimumCPUIdlePercent": 65.0,
+          "artifactSHA256": "a79bf4da9094e5549393482acf28d1320e685b66894d2714baa3d89013f529e5"
         },
         "priorDeviceArchive": ".artifacts/simulator-archives/20260731T130128Z",
         "processIsolation": "new-process-group-term-kill-bounded-reap",
@@ -207,21 +208,24 @@
         "runtimeBinding": "exact-runtime-bundle-path-and-device-registry",
         "runtimeBuild": "23E254a",
         "runtimeStorageIdentifier": "redacted-local-runtime-storage",
-        "runtimeValidation": "historical-first-device-passed-current-incomplete-device-do-not-reuse",
+        "runtimeValidation": "passed-live-device-process-path-23E254a",
         "staticGate": "passed",
-        "supportTestStatus": "passed-13-tests",
+        "supportTestStatus": "passed-17-tests-resolved-only-six-app-builds-and-runtime-probes",
         "swiftUIInstallNormalization": "symmetric-post-resource-ad-hoc-signature-deep-strict-verified",
         "swiftUIInstallNormalizationArtifact": ".artifacts/asyncimage-lab/install-staging-verification.json",
         "swiftUIInstallNormalizationArtifactSHA256": "7092a6c89aec086c33037d5629faac421ef2c9419fb797bcc4887b8fbff9ba4a",
         "swiftUIInstallStatus": "staging-signatures-passed-runtime-install-blocked",
         "swiftUIStagingManifestRoot": ".artifacts/asyncimage-lab/InstallStaging",
         "twoPhaseMode": "initialize-only-install-only-then-skip-build-skip-prepare",
-        "uninterruptibleProcessCount": 0
+        "uninterruptibleProcessCount": 0,
+        "buildDependencyResolution": "resolved-file-only-no-package-updates",
+        "healthScope": "global-services-target-launchd-and-install-critical-services",
+        "currentDeviceRegistrySHA256": "b69231c3b20d868a07f1177a18915fbb062896fd353009464c26e65c57a0e39a"
       },
-      "status": "apple-native-urlcache-and-asyncimage-required-contracts-passed-final-runtime-aggregates-pending-formal-physical-blocked",
+      "status": "six-headless-functional-contract-complete-performance-swiftui-w7-and-physical-evidence-pending",
       "thermalWholeBlockRerun": true,
       "verificationArtifact": ".artifacts/comparators/verification.json",
-      "verificationArtifactSHA256": "02ab9db195c1b41bac33235cf12ce73d47134931740654d2a7be70506d0e3d47",
+      "verificationArtifactSHA256": "9524865ef507ed78df5a98a8b73ce2ac3324873442e0a7386ec2252ebfc7a98a",
       "w2NetworkOrigin": "shared-real-loopback-http-nwlistener",
       "latestW7V7FoveaHardContract": {
         "logicalRequests": 1000,
@@ -231,7 +235,16 @@
         "originPeakConcurrency": 8,
         "hardFailures": 0,
         "claimScope": "simulator-functional-calibration-only"
-      }
+      },
+      "latestFunctionalDiagnostic": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
+      "latestFunctionalDiagnosticSHA256": "d170973c5625de7c7909520a2e027fbec9c33e5188ce9f8665755ce78285d7e2",
+      "latestFunctionalDiagnosticSourceCommit": "5a836c43566ae6915b85790fed358b35d134db6a",
+      "latestFunctionalDiagnosticSourceTreeDigest": "98130cdbbf00739fe9f618638df4b3ae7def02ef5611b0c7c421edaa6394a8e5",
+      "latestFunctionalDiagnosticClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+      "latestW3RepeatSummary": ".artifacts/comparative-functional-diagnostics/w3-repeats/summary.json",
+      "latestW3RepeatSummarySHA256": "97e8b9cdfc15da71a78fc918f9bb7a0c6b4bc4206cc6cce5392cc1cc4c9d9d9f",
+      "latestW3RepetitionsPerComparator": 3,
+      "latestW3FailurePatternStable": true
     },
     "projectMemory": {
       "discussionLedger": "docs/project-memory/discussion-ledger.json",
