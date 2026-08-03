@@ -60,7 +60,7 @@ final class ProgressiveImageLoadingTests: XCTestCase {
             encodedStore: commitBarrier,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://example.test/full-quality-preview.png")),
@@ -120,7 +120,7 @@ final class ProgressiveImageLoadingTests: XCTestCase {
             encodedStore: stageBarrier,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://example.test/stage-preview.png")),
@@ -186,7 +186,7 @@ final class ProgressiveImageLoadingTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let requests = try (0..<3).map { index in
             try ImageRequest.publicImage(
@@ -272,7 +272,7 @@ final class ProgressiveImageLoadingTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://example.test/repeated-warmup.png")),
@@ -327,7 +327,7 @@ final class ProgressiveImageLoadingTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://example.test/malformed-handoff.png")),

@@ -21,7 +21,7 @@ final class ProfileAccessPolicyTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .allowOnly([allowedScope]),
-            decoder: AccessRejectingDecoder()
+            codec: AccessRejectingDecoder()
         )
         let denied = try ImageRequest(
             url: try XCTUnwrap(URL(string: "https://example.test/private.png")),
@@ -54,7 +54,7 @@ final class ProfileAccessPolicyTests: XCTestCase {
             encodedStore: AccessSpyEncodedStore(),
             recordStore: AccessSpyRecordStore(),
             profileAccessPolicy: .publicOnly,
-            decoder: AccessRejectingDecoder()
+            codec: AccessRejectingDecoder()
         )
         let request = try ImageRequest(
             url: try XCTUnwrap(URL(string: "https://example.test/private.png")),
@@ -84,7 +84,7 @@ final class ProfileAccessPolicyTests: XCTestCase {
             encodedStore: AccessSpyEncodedStore(),
             recordStore: AccessSpyRecordStore(),
             profileAccessPolicy: .publicOnly,
-            decoder: AccessRejectingDecoder()
+            codec: AccessRejectingDecoder()
         )
         let request = try ImageRequest(
             url: try XCTUnwrap(URL(string: "https://example.test/signed-private.png")),
@@ -116,7 +116,7 @@ final class ProfileAccessPolicyTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted.restrictingDestinations(destinationPolicy),
-            decoder: AccessRejectingDecoder()
+            codec: AccessRejectingDecoder()
         )
         let denied = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://other.example.test/denied.png")),
@@ -155,7 +155,7 @@ final class ProfileAccessPolicyTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .allowOnly([scope]),
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let allowed = try ImageRequest(
             url: try XCTUnwrap(URL(string: "https://example.test/private.png")),
@@ -261,7 +261,7 @@ private actor AccessSpyTransport: HTTPTransporting {
     }
 }
 
-private struct AccessRejectingDecoder: ImageDecoding {
+private struct AccessRejectingDecoder: TestImageCodec {
     func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
         throw ImageCraftError.decodeFailed
     }

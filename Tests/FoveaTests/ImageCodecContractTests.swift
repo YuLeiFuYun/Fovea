@@ -76,7 +76,7 @@ final class ImageCodecContractTests: XCTestCase {
         ) { XCTAssertEqual($0 as? ImageCodecContractError, .invalidResourceEstimate) }
     }
 
-    func testDecodeIdentitySeparatesBackendsWithSameLegacyVersion() throws {
+    func testDecodeIdentitySeparatesBackendsWithSameContractVersion() throws {
         let contentID = ContentID(data: Data("same-content".utf8))
         let first = DecodeKey(
             contentID: contentID,
@@ -84,8 +84,8 @@ final class ImageCodecContractTests: XCTestCase {
             targetHeight: 10,
             contentMode: .fit,
             geometryPolicyFingerprint: "exact-v1",
-            decoderVersion: 1,
-            decoderFingerprint: "codec.a#impl=1#contract=1"
+            codecContractVersion: 1,
+            codecFingerprint: "codec.a#impl=1#contract=1"
         )
         let second = DecodeKey(
             contentID: contentID,
@@ -93,8 +93,8 @@ final class ImageCodecContractTests: XCTestCase {
             targetHeight: 10,
             contentMode: .fit,
             geometryPolicyFingerprint: "exact-v1",
-            decoderVersion: 1,
-            decoderFingerprint: "codec.b#impl=1#contract=1"
+            codecContractVersion: 1,
+            codecFingerprint: "codec.b#impl=1#contract=1"
         )
         XCTAssertNotEqual(first, second)
     }

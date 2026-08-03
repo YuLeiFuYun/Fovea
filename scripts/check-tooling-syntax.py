@@ -988,6 +988,40 @@ try:
             "provider kit changes must run the dedicated validator and external harness without escalating"
         )
 
+    codec_impact = profile_module.classify(
+        [
+            "ConformanceKits/ImageCodec/v1/manifest.json",
+            "Fixtures/ImageIOCodec/Package.swift",
+        ]
+    )
+    codec_effective, codec_phases, codec_reasons = profile_module.phase_plan(
+        "smart", codec_impact
+    )
+    codec_names = {phase.name for phase in codec_phases}
+    if (
+        codec_effective != "smart"
+        or codec_reasons
+        or "codec-conformance" not in codec_impact["categories"]
+        or "image-codec-conformance" not in codec_names
+        or "cross-repository-conformance-kits" not in codec_names
+        or codec_names.intersection({"cache-lab", "loopback-network", "release-build"})
+    ):
+        errors.append(
+            "codec kit changes must run the dedicated validator and external harness without escalating"
+        )
+
+    codec_seam_impact = profile_module.classify(
+        ["Sources/FoveaCore/DecodeStage.swift"]
+    )
+    _, codec_seam_phases, _ = profile_module.phase_plan("smart", codec_seam_impact)
+    codec_seam_names = {phase.name for phase in codec_seam_phases}
+    if (
+        "codec-conformance" not in codec_seam_impact["categories"]
+        or "root-tests" not in codec_seam_names
+        or "image-codec-conformance" not in codec_seam_names
+    ):
+        errors.append("codec seam changes must run root and external conformance tests")
+
     provider_seam_impact = profile_module.classify(
         ["Sources/FoveaAdvancedSystem/FoveaAdvancedSystemPipeline.swift"]
     )
@@ -1006,8 +1040,11 @@ try:
         ["Tests/FoveaTests/DiagnosticsTests.swift"]
     )
     _, unrelated_phases, _ = profile_module.phase_plan("smart", unrelated_impact)
-    if "persistent-store-provider-conformance" in {phase.name for phase in unrelated_phases}:
-        errors.append("unrelated test-only changes must not pay the provider conformance cost")
+    unrelated_names = {phase.name for phase in unrelated_phases}
+    if unrelated_names.intersection(
+        {"persistent-store-provider-conformance", "image-codec-conformance"}
+    ):
+        errors.append("unrelated test-only changes must not pay cross-repository conformance costs")
 
     verify_profile_source = profile_path.read_text()
     verify_entry_source = (ROOT / "scripts/verify.sh").read_text()
@@ -1022,6 +1059,12 @@ try:
     ).read_text()
     provider_runner_source = (
         ROOT / "ConformanceKits/PersistentStoreProvider/v1/run.py"
+    ).read_text()
+    codec_runner_source = (
+        ROOT / "ConformanceKits/ImageCodec/v1/run.py"
+    ).read_text()
+    conformance_support_source = (
+        ROOT / "ConformanceKits/_support.py"
     ).read_text()
     workflow_source = (ROOT / ".github/workflows/verify.yml").read_text()
     profile_contracts = {
@@ -1076,7 +1119,17 @@ try:
         'unsupportedOrSkippedFailsClosed':
             "provider conformance manifest must fail closed for skipped or unsupported cases",
         'working_tree_identity':
-            "provider conformance report must bind the Fovea working tree",
+            "cross-repository conformance reports must bind the governing working tree",
+        'categories.add("codec-conformance")':
+            "codec seams and kit assets must have a dedicated impact category",
+        '"image-codec-conformance"':
+            "codec-relevant changes must execute the external consumer harness",
+        'ConformanceKits/ImageCodec/v1/run.py':
+            "codec conformance must use the versioned external runner",
+        'verify_same_contract_package':
+            "codec runner must verify a backend that is also the contract package",
+        'xctest_summary':
+            "all cross-repository runners must verify actual XCTest execution counts",
     }
     combined_profile_source = (
         verify_profile_source
@@ -1085,13 +1138,15 @@ try:
         + receipt_writer_source
         + cross_repository_validator_source
         + provider_runner_source
+        + codec_runner_source
+        + conformance_support_source
         + workflow_source
     )
     for fragment, message in profile_contracts.items():
         if fragment not in combined_profile_source:
             errors.append(message)
-    if verify_entry_source.count("record_qualification_assurance ") != 9:
-        errors.append("qualification must record exactly nine required assurance receipts")
+    if verify_entry_source.count("record_qualification_assurance ") != 8:
+        errors.append("qualification must record exactly eight required assurance receipts")
 
     synthetic_run_id = "20000101T000000Z-999999"
     synthetic_session = (

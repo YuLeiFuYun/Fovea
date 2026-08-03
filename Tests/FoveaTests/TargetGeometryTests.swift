@@ -384,7 +384,7 @@ final class TargetGeometryTests: XCTestCase {
             ),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let pixels = try TargetPixels(width: 100, height: 75)
         let transient = try ImageRequest.publicImage(
@@ -425,7 +425,8 @@ final class TargetGeometryTests: XCTestCase {
             targetHeight: target.pixels.height,
             contentMode: target.contentMode,
             geometryPolicyFingerprint: target.geometryPolicyFingerprint,
-            decoderVersion: 1
+            codecContractVersion: 1,
+            codecFingerprint: "test.codec#impl=1#contract=1"
         )
     }
 }

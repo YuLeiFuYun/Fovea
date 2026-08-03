@@ -40,7 +40,7 @@ final class CacheRefreshTransactionTests: XCTestCase {
             encodedStore: RefreshEncodedStore(data: body, contentID: contentID.description),
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         let refresh = Task { try await pipeline.image(for: request) }
@@ -93,7 +93,7 @@ final class CacheRefreshTransactionTests: XCTestCase {
             encodedStore: RefreshEncodedStore(data: oldBody, contentID: oldContentID.description),
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         let refresh = Task { try await pipeline.image(for: request) }

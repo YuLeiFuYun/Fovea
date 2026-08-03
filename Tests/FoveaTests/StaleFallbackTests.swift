@@ -359,7 +359,7 @@ final class StaleFallbackTests: XCTestCase {
             namespaceRegistry: NamespaceRegistry(),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder(),
+            codec: ImageIOImageDecoder(),
             clock: clock
         )
     }

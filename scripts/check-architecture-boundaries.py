@@ -365,11 +365,11 @@ for path in default_codec_boundary_paths:
 derivation_identity_requirements = {
     "Sources/FoveaCore/Identity.swift": (
         "public let contentID: ContentID",
-        "package let decoderFingerprint: String",
+        "package let codecFingerprint: String",
         "public let transformerFingerprint: String",
     ),
     "Sources/FoveaCore/ImageDeliveryCoordinator.swift": (
-        "decoderFingerprint: decodeStage.codecDescriptor.cacheFingerprint",
+        "codecFingerprint: decodeStage.codecDescriptor.cacheFingerprint",
         "transformerFingerprint: transformStage.fingerprint",
         "generation: generation",
     ),

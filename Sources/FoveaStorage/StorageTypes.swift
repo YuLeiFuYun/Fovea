@@ -2,7 +2,7 @@ import AkashicCore
 import CryptoKit
 import Foundation
 
-/// Fovea legacy 清单使用的 package 内部物理文件名表示。
+/// Fovea 当前持久层使用的 package 内部物理文件名表示。
 extension PhysicalBlobID {
     package var foveaStorageFileName: String { rawValue.uuidString.lowercased() }
 }

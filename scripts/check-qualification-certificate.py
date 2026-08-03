@@ -39,8 +39,7 @@ def main() -> int:
         required = {
             "deterministic-workbench-complete",
             "component-clean-copy",
-            "component-rollback-forward-recovery",
-            "production-coverage",
+                    "production-coverage",
             "release-build",
             "thread-sanitizer",
             "address-sanitizer",

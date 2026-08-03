@@ -17,7 +17,7 @@
         "aggregate diagnostics, failure mapping and cancellation"
       ],
       "reviewedLineCount": 688,
-      "sha256": "5f28c296500eaf2efa4d5fac241cdd78f09420670d63e42adce566f0ba19b96b",
+      "sha256": "283516d91f3ef2e1d70367cac6ffa0ff2fb6cd41d46866a1441b9dcbcb80105e",
       "splitTriggers": [
         "a stable responsibility can move without sharing mutable state or transaction ordering",
         "the file changes after this frozen review",
@@ -79,7 +79,7 @@
         "Tests/FoveaTests/PluggableComponentTests.swift",
         "scripts/verify-component-clean-copy.py"
       ],
-      "fileSetSha256": "c2c427beae15c303f20a00f8bd10ca5692cb5bc3ec187d3eac9115bab21c99a0",
+      "fileSetSha256": "17b1af22c695c7f021c22339e0072feac31af592499b83b0f14a032a35280781",
       "maximumReviewedSourceShare": 0.6,
       "module": "FoveaCore",
       "reason": "FoveaCore remains the Fovea-owned policy and orchestration layer for request identity, geometry, resource admission, fetch/decode execution, namespace lifecycle, shared work and diagnostics. PipelineCache was split into four files after its frozen oversized-file review triggered, reducing local review scope without changing the module boundary. The cache base, rendered aliases, transport-verified handoffs and original-publication transaction still share FoveaCore identities, namespace authority, diagnostics and mutation ordering; extracting them would either import FoveaCore back into the new module or duplicate host-owned authority. The 57-file set preserves one-way package dependencies and remains below the reviewed 0.60 source-share ceiling.",
@@ -87,9 +87,9 @@
         "request, geometry and execution identity",
         "pipeline orchestration and resource admission",
         "cache, transient handoff and namespace transaction coordination",
-        "codec host compatibility, shared-work lifecycle and diagnostics"
+        "codec host conformance, shared-work lifecycle and diagnostics"
       ],
-      "reviewedFileCount": 57,
+      "reviewedFileCount": 56,
       "splitTriggers": [
         "the reviewed file set changes",
         "source share exceeds the reviewed 0.60 ceiling",

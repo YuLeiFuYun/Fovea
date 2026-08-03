@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""比较同步重试、旧窄抖动与 full jitter 的定时器碰撞。"""
+"""验证当前 full-jitter 退避相对完全同步重试的碰撞边界。"""
 
 from __future__ import annotations
 
@@ -26,7 +26,6 @@ class Policy:
 
 POLICIES = (
     Policy("synchronized", 1.0, 1.0),
-    Policy("legacy-symmetric-20-percent", 0.8, 1.2),
     Policy("full-jitter", 0.0, 1.0),
 )
 
@@ -125,21 +124,17 @@ def main() -> int:
 
     by_name = {str(item["policy"]): item for item in results}
     full = by_name["full-jitter"]
-    legacy = by_name["legacy-symmetric-20-percent"]
     synchronized = by_name["synchronized"]
     invariants = {
-        "fullJitterUsesWiderSupportThanLegacy": (
-            full["supportMilliseconds"][1] - full["supportMilliseconds"][0]
-            > legacy["supportMilliseconds"][1] - legacy["supportMilliseconds"][0]
+        "fullJitterUsesPositiveSupportWidth": (
+            full["supportMilliseconds"][1] > full["supportMilliseconds"][0]
         ),
         "fullJitterReducesExactPairCollisionProbability": (
             full["exactPairCollisionProbability"]
-            < legacy["exactPairCollisionProbability"]
             < synchronized["exactPairCollisionProbability"]
         ),
         "fullJitterReducesEmpiricalPeak": (
             full["peakClientsInOneBin"]
-            < legacy["peakClientsInOneBin"]
             < synchronized["peakClientsInOneBin"]
         ),
         "retryAfterLowerBoundPreservedByProductionFormula": (
@@ -176,7 +171,11 @@ def main() -> int:
             f"pairs={item['collidingClientPairs']} "
             f"exact-p={item['exactPairCollisionProbability']:.6f}"
         )
-    print(f"Artifact: {output.relative_to(ROOT)}")
+    try:
+        displayed_output = output.relative_to(ROOT)
+    except ValueError:
+        displayed_output = output
+    print(f"Artifact: {displayed_output}")
     failed = [name for name, passed in invariants.items() if not passed]
     if failed:
         raise SystemExit(f"重试抖动不变量失败：{failed}")

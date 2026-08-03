@@ -102,25 +102,6 @@ final class PluggableComponentTests: XCTestCase {
         XCTAssertEqual(cache.count, 0)
     }
 
-    func testLegacySystemCompositionRequiresExplicitCompatibilityBoundary_CODEC_PT_012()
-        async throws
-    {
-        let system = try await FoveaSystemPipeline.open(
-            cacheRoot: try makeTemporaryDirectory("system-legacy-decoder"),
-            automaticallyPurgesMemoryOnPressure: false,
-            legacyDecoder: LegacyDelegatingDecoder()
-        )
-
-        XCTAssertTrue(
-            system.pipeline.codecDescriptor.identifier.rawValue.hasPrefix("legacy:")
-        )
-        XCTAssertEqual(system.pipeline.codecDescriptor.implementationVersion, 1)
-        XCTAssertEqual(
-            system.pipeline.codecDescriptor.capabilities.deliveryModes,
-            [.completeFrame]
-        )
-    }
-
     func testQualifiedPersistentStoreProviderDrivesSystemAndRetainsBundle_CACHE_PT_044()
         async throws
     {
@@ -281,23 +262,6 @@ private actor InMemoryNamespaceGenerationPersistence {
             throw AkashicError.invalidIdentity
         }
         generations[namespace] = generation
-    }
-}
-
-private struct LegacyDelegatingDecoder: ImageDecoding {
-    private let base = ImageIOImageDecoder()
-
-    func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
-        try base.probe(data: data, limits: limits)
-    }
-
-    func decode(
-        data: Data,
-        probe: ImageProbe,
-        request: ImageDecodeRequest,
-        limits: DecodeLimits
-    ) throws -> DecodedImage {
-        try base.decode(data: data, probe: probe, request: request, limits: limits)
     }
 }
 

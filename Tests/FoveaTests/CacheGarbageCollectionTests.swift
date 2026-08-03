@@ -146,7 +146,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         try await records.remove(
@@ -199,7 +199,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
             encodedStore: barrierStore,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/gc-cancel.png")),
@@ -251,7 +251,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
             encodedStore: reopenedEncoded,
             recordStore: reopenedRecords,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         let result = try await pipeline.garbageCollectCaches()
@@ -284,7 +284,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
             encodedStore: barrierStore,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/gc-commit-race.png")),

@@ -36,7 +36,7 @@ enum AuthGalleryScenarioRunner {
             recordStore: records,
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let url = URL(string: "https://images.example.test/avatar")!
         let target = try TargetPixels(width: 40, height: 40)
@@ -152,7 +152,7 @@ enum AuthGalleryScenarioRunner {
             recordStore: records,
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let imageRequest = try request(
             url: URL(string: "https://images.example.test/no-store")!,
@@ -210,7 +210,7 @@ enum AuthGalleryScenarioRunner {
             recordStore: records,
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let imageRequest = try request(
             url: URL(string: "https://images.example.test/delayed")!,

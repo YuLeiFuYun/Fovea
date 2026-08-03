@@ -271,9 +271,9 @@ public struct DecodeKey: Hashable, Sendable {
     public let contentMode: ImageContentMode
     public let geometryPolicyFingerprint: String
     public let colorPolicy: ImageColorPolicy
-    public let decoderVersion: UInt16
+    public let codecContractVersion: UInt16
     /// 区分具体后端及其像素语义版本，避免不同 codec 复用同一解码/渲染身份。
-    package let decoderFingerprint: String
+    package let codecFingerprint: String
 
     package init(
         contentID: ContentID,
@@ -282,8 +282,8 @@ public struct DecodeKey: Hashable, Sendable {
         contentMode: ImageContentMode,
         geometryPolicyFingerprint: String,
         colorPolicy: ImageColorPolicy = .preserveSource,
-        decoderVersion: UInt16,
-        decoderFingerprint: String? = nil
+        codecContractVersion: UInt16,
+        codecFingerprint: String
     ) {
         self.contentID = contentID
         self.targetWidth = targetWidth
@@ -291,8 +291,8 @@ public struct DecodeKey: Hashable, Sendable {
         self.contentMode = contentMode
         self.geometryPolicyFingerprint = geometryPolicyFingerprint
         self.colorPolicy = colorPolicy
-        self.decoderVersion = decoderVersion
-        self.decoderFingerprint = decoderFingerprint ?? "legacy-decoder-v\(decoderVersion)"
+        self.codecContractVersion = codecContractVersion
+        self.codecFingerprint = codecFingerprint
     }
 }
 

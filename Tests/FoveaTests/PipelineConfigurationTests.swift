@@ -104,34 +104,6 @@ final class PipelineConfigurationTests: XCTestCase {
         XCTAssertEqual(decoded.fullFingerprint, first.fullFingerprint)
     }
 
-    func testLegacyConfigurationWithoutWorkingSetBudgetUsesSafeDefault_PIPE_PT_010() throws {
-        let configuration = PipelineConfiguration(maximumDecodeWorkingSetBytes: 32 * 1024 * 1024)
-        let encoded = try JSONEncoder().encode(configuration)
-        var object = try XCTUnwrap(
-            JSONSerialization.jsonObject(with: encoded) as? [String: Any]
-        )
-        object.removeValue(forKey: "maximumDecodeWorkingSetBytes")
-        let legacy = try JSONSerialization.data(withJSONObject: object)
-
-        let decoded = try JSONDecoder().decode(PipelineConfiguration.self, from: legacy)
-
-        XCTAssertEqual(decoded.maximumDecodeWorkingSetBytes, 192 * 1024 * 1024)
-    }
-
-    func testLegacyConfigurationWithoutNamespaceCapacityUsesSafeDefault() throws {
-        let configuration = PipelineConfiguration(maximumTrackedNamespaces: 32)
-        let encoded = try JSONEncoder().encode(configuration)
-        var object = try XCTUnwrap(
-            JSONSerialization.jsonObject(with: encoded) as? [String: Any]
-        )
-        object.removeValue(forKey: "maximumTrackedNamespaces")
-        let legacy = try JSONSerialization.data(withJSONObject: object)
-
-        let decoded = try JSONDecoder().decode(PipelineConfiguration.self, from: legacy)
-
-        XCTAssertEqual(decoded.maximumTrackedNamespaces, 4_096)
-    }
-
     func testNamespaceCapacityIsOperationalAndChangesOnlyFullFingerprint() {
         let first = PipelineConfiguration(maximumTrackedNamespaces: 32)
         let second = PipelineConfiguration(maximumTrackedNamespaces: 64)
@@ -227,7 +199,7 @@ final class PipelineConfigurationTests: XCTestCase {
                 root: root.appendingPathComponent("old-records")
             ),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/config-generation.png")),
@@ -255,7 +227,7 @@ final class PipelineConfigurationTests: XCTestCase {
                 root: root.appendingPathComponent("new-records")
             ),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         do {
             _ = try await newPipeline.image(for: request)
@@ -285,7 +257,7 @@ final class PipelineConfigurationTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let second = FoveaPipeline(
             configuration: configuration,
@@ -293,7 +265,7 @@ final class PipelineConfigurationTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         XCTAssertNotEqual(first.id, second.id)
@@ -322,7 +294,7 @@ final class PipelineConfigurationTests: XCTestCase {
             ),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/memory-limit.png")),
@@ -366,14 +338,14 @@ final class PipelineConfigurationTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let second = FoveaPipeline(
             transport: transport,
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/pipeline-isolation.png")),

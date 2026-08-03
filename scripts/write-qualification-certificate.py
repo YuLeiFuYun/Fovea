@@ -15,7 +15,6 @@ ARTIFACT_ROOT = (ROOT / ".artifacts/verification/qualification-runs").resolve()
 REQUIRED_ASSURANCES = {
     "deterministic-workbench-complete",
     "component-clean-copy",
-    "component-rollback-forward-recovery",
     "production-coverage",
     "release-build",
     "thread-sanitizer",

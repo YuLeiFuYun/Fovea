@@ -92,7 +92,7 @@ FOVEA_VERIFY_PROFILE=qualification scripts/verify.sh
 FOVEA_VERIFY_PROFILE=release scripts/verify.sh
 ```
 
-默认 `smart` profile 根据实际变更选择测试；未知路径自动升级，不会静默漏测。完整 UI、双 sanitizer、clean-copy、rollback 和 mutation 只在源码绑定的 qualification 中执行。详细契约见 [`docs/specifications/verification-profiles.md`](docs/specifications/verification-profiles.md)。
+默认 `smart` profile 根据实际变更选择测试；未知路径自动升级，不会静默漏测。完整 UI、双 sanitizer、当前组件 clean-copy 和 mutation 只在源码绑定的 qualification 中执行。详细契约见 [`docs/specifications/verification-profiles.md`](docs/specifications/verification-profiles.md)。
 
 持久化 provider 的跨仓合约由独立 consumer kit 验证：
 
@@ -104,6 +104,17 @@ python3 ConformanceKits/PersistentStoreProvider/v1/run.py \
 ```
 
 该报告绑定 Fovea/provider/ImageCraft/工具链和日志身份；通过不等于 crash-consistency、跨进程 writer exclusion 或发布资格。
+
+Image codec backend 使用独立 contract kit：
+
+```sh
+python3 ConformanceKits/ImageCodec/v1/run.py \
+  --codec-package-path /path/to/codec \
+  --codec-product CodecProduct \
+  --factory-source /path/to/CodecUnderTest.swift
+```
+
+codec v1 覆盖 descriptor、2,304 项有限能力域、声明格式的 probe/decode、资源估计组合和硬限制；通过不替代 hostile corpus、fuzz、sanitizer、真机资源或 Fovea composition 证据。
 
 示例与外部网络实验：
 

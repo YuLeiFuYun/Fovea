@@ -32,7 +32,7 @@
 - `ImageCraftImageIO`：Apple ImageIO/Core Graphics 参考实现；
 - 独立消费者、公共 API、平台矩阵、retained corpus、oracle、性能与 release-readiness 门。
 
-ImageCraft 当前公共提交 `4507da936ef348fa198652c2e4314a1f393b2c90` 已通过 GitHub Hosted `xcode-27` required CI，并以 `0.1.0-alpha.3` 标记。Fovea 通过公共 HTTPS exact revision 使用它，内嵌 target/source 已删除；alpha.3 clean-copy、alpha.2 previous-green rollback 与 forward alpha.3 各通过 475 项宿主测试。剩余缺口是跨仓 conformance 和真机资源证据。
+ImageCraft 当前公共提交 `4507da936ef348fa198652c2e4314a1f393b2c90` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required CI，并以 `0.1.0-alpha.3` 标记。Fovea 通过公共 HTTPS exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy 通过。剩余缺口是真实独立 codec、hostile corpus 和真机资源证据。
 
 ### 2.2 缓存库也不需要从零拆分
 
@@ -42,7 +42,7 @@ ImageCraft 当前公共提交 `4507da936ef348fa198652c2e4314a1f393b2c90` 已通�
 - `AkashicMemory`：SIEVE 内存缓存；
 - `AkashicDisk`：stage/publish/discard、单 writer、恢复、损坏隔离和文件系统防御。
 
-Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 已通过 GitHub Hosted `xcode-27` required `core` CI（run `30741724985`），并以 `0.1.0-alpha.4` 标记。Fovea 通过 typed adapter 和公共 exact revision 使用它，内嵌 target/source 已删除；alpha.4 clean-copy、alpha.3 previous-green rollback 与 forward alpha.4 均通过 478 项宿主测试。当前源码身份已绑定 fault V5、resource V2 与六项平台构建；物理断电和稳定真机资源/能耗证据仍待完成。
+Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required `core` CI（run `30741724985`），并以 `0.1.0-alpha.4` 标记。Fovea 通过 typed adapter 和公共 exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy、fault V5、resource V2 与平台构建证据通过。物理断电和稳定真机资源/能耗证据仍待完成。
 
 ### 2.3 “整体帕累托优势”不能作为一个无条件目标
 
@@ -80,19 +80,15 @@ Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 已通过 
 
 这些不是“缺少扩展性”，而是 Fovea 能证明正确性的可信计算基。
 
-### 3.3 两个需要收紧的构造边界
+### 3.3 当前构造边界
 
-#### A. codec 入口当前过弱
+#### A. codec 入口已收紧
 
-`FoveaSystemPipeline.open` 和 `FoveaPipeline` 当前接收 `any ImageDecoding`。非 `ImageCodec` 实现会被包装为基于动态类型名的 legacy descriptor，并使用宿主通用资源估计。
+`FoveaSystemPipeline.open`、`FoveaPipeline` 和 package 内部 DecodeStage 现在统一接收 `any ImageCodec`。动态 legacy descriptor、通用资源估计 fallback 和旧构造标签均已删除。
 
-这适合作为迁移兼容层，不适合作为长期高级插件入口，因为它不能证明调用方提供了稳定 implementation identity、精确能力和后端资源声明。
+当前规则：
 
-方向：
-
-- 官方和高级新 API 以 `any ImageCodec` 为资格边界；
-- 旧 `ImageDecoding` 兼容构造器标为受限兼容路径，并明确不具备生产插件资格；
-- 在下一个允许破坏 API 的版本评估删除 legacy 路径；
+- descriptor、capability、resource estimate 和 cache fingerprint 均为必需契约；
 - 不建立全局 codec registry，直到第二个真实 backend 通过 conformance。
 
 #### B. 持久缓存不能以独立裸 hook 注入
@@ -112,7 +108,7 @@ Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 已通过 
 优先级从高到低：
 
 1. **发布 Fovea 隐私净化公共根，并让 required CI 全绿**；
-2. **执行组件 pin 升级/回退演练并固化兼容矩阵**；
+2. **保持当前 exact pin、clean-copy 与 conformance registry 一致**；
 3. **建立独立 codec/storage conformance kits 与 qualified composition seam**；
 4. **完成 Akashic 物理断电、真机 I/O/能耗和 ImageCraft 真机资源证据**；
 5. **重新锁定 A-tier，重跑 W1/W2/W3/W7/W8/W10/W13**；
@@ -124,9 +120,9 @@ Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 已通过 
 
 ### Gate 0：建立可迁移的干净基线（P0）
 
-状态：**组件迁移基线已完成；Fovea 公共根待发布。**
+状态：**当前组件边界已完成；Fovea 公共根待发布。**
 
-已完成：本地历史 bundle、隐私净化、MIT 边界、公共 exact pins、`Package.resolved`、零 sibling 依赖 clean-copy、475 项宿主回归。当前退出条件只剩 Fovea 根提交、公共 CI 与后续提交可执行 rollback。
+已完成：本地历史 bundle、隐私净化、MIT 边界、公共 exact pins、`Package.resolved`、零 sibling 依赖 clean-copy、475 项宿主回归。当前退出条件只剩 Fovea 根提交、公共 CI 与后续提交可执行源码回退。
 
 ### Workstream A：ImageCraft 正式发行与迁移（P1 → P2）
 
@@ -134,10 +130,10 @@ Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 已通过 
 
 - 公共 MIT 仓库、`0.1.0-alpha.4`、Hosted `xcode-27` required `core` check 已建立；
 - 公共 API、consumer、兼容与组件门在 GitHub CI 通过；
-- Fovea 固定到 `4507da936ef348fa198652c2e4314a1f393b2c90`，并以 alpha.2 `a26d49f20796ce93539dd497c9a81f58fbfc02af` 作为 previous-green rollback；
+- Fovea 只固定到 `4507da936ef348fa198652c2e4314a1f393b2c90`；
 - 内嵌源码已删除，宿主与 clean-copy 均为 475/475。
 
-剩余：跨仓 codec conformance、一次降级/升级回滚、稳定真机 RSS/能耗和格式范围扩展证据。
+剩余：真实独立 codec conformance、稳定真机 RSS/能耗和格式范围扩展证据。
 
 ### Workstream B：Akashic 正式发行与迁移（P4 → P5）
 
@@ -145,14 +141,14 @@ Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 已通过 
 
 - 公共 MIT 仓库、`0.1.0-alpha.4`、Hosted `xcode-27` required `core` check 已建立；
 - 55 项组件测试、fault V5、resource V2、崩溃/quota/contention/六项平台门和 GitHub CI 通过；
-- Fovea 固定到 `50e7032b155187b993b5a82f613c3a0410d32976`，并以 alpha.3 `e138b4425688cb0ce32fba7788adcc944c936b53` 作为 previous-green rollback；
-- typed adapter 是唯一原编码持久化路径，内嵌源码已删除，宿主、clean-copy、rollback 与 forward recovery 均为 478/478。
+- Fovea 只固定到 `50e7032b155187b993b5a82f613c3a0410d32976`；
+- typed adapter 是唯一原编码持久化路径，内嵌源码已删除，当前宿主与 clean-copy 均为 478/478。
 
 剩余：跨仓 storage conformance、物理断电和稳定真机 I/O/能耗；flat-manifest 写放大已由 manifest v2 增量记录方案替代。
 
-### Workstream C：跨仓 conformance 与 compatibility（P6）
+### Workstream C：跨仓 conformance（P6）
 
-现有 `ImageCodecConformanceKit` 与 `ImagePipelineWorkloadLab` 仍只是占位垂直切片，不能据此声称跨仓验证完成。
+当前 provider 与 ImageCodec v1 kit 已作为独立 SwiftPM consumer 运行；真实第三方实现和发布级证据仍未完成。
 
 应建立两个小而独立的 kit，避免一个万能测试框架：
 
@@ -167,7 +163,7 @@ Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 已通过 
 - format、尺寸、orientation、color、metadata 和失败分类；
 - ImageIO backend 与故意缺能力 fake backend 运行同一义务；
 - fixture manifest 与语言中立 observation schema；
-- 当前/上一版本 ImageCraft × 当前/上一版本 Fovea 矩阵。
+- 当前唯一版本 ImageCraft × 当前唯一版本 Fovea 矩阵。
 
 只吸收 `ImageCodecCapabilityAlgebra` 中必要的有限 request/offer、refinement 与反例生成；不把其完整 attestation/governance 系统放入运行时。
 
@@ -180,7 +176,7 @@ Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 已通过 
 - future schema、corruption、orphan/temp recovery；
 - ENOSPC、permission、owner、crash 与 reopen；
 - host adapter 的 revoke、record、cross-store transaction 义务；
-- 当前/上一版本 Akashic × 当前/上一版本 Fovea 矩阵。
+- 当前唯一版本 Akashic × 当前唯一版本 Fovea 矩阵。
 
 组件 conformance 和 Fovea host composition 必须作为不同证据层报告。
 
@@ -303,7 +299,7 @@ Afferent 的 strong-ETag/If-Range、request fingerprint、bounded amplification�
 
 #### AxiomRaster
 
-本阶段不改 AxiomRaster。未来顺序固定为 bounded probe、reference still decode、shared conformance、hostile corpus、differential、resource/cancellation、opt-in adapter、shadow、format canary、真机、rollback，再考虑默认选择。
+本阶段不改 AxiomRaster。未来顺序固定为 bounded probe、reference still decode、shared conformance、hostile corpus、differential、resource/cancellation、opt-in adapter、shadow、format canary、真机、ImageIO fallback 演练，再考虑默认选择。
 
 #### 跨平台
 
@@ -341,16 +337,15 @@ Afferent 的 strong-ETag/If-Range、request fingerprint、bounded amplification�
 
 1. **P0-FOVEA-PUBLIC-ROOT**：提交并推送隐私净化、MIT、exact-pin 的单一公共根。
 2. **P0-FOVEA-PUBLIC-CI**：修复首次根提交语义并让核心 required gates 全绿。
-3. **P6-COMPONENT-ROLLBACK**：ImageCraft 与 Akashic 各执行一次 previous/current pin 回退与恢复。
-4. **P6-CODEC-CONFORMANCE-KIT**：ImageIO + 缺能力 fake backend 共用的最小独立 kit。
-5. **P6-STORAGE-CONFORMANCE-KIT**：partition/generation/stage/publish/recovery 的最小独立 kit。
-6. **P6-QUALIFIED-COMPOSITION-SEAMS**：新 codec 入口要求 `ImageCodec`，设计 immutable persistent-store bundle。
-7. **P4-AKASHIC-PHYSICAL-EVIDENCE**：稳定设备 I/O、能耗、长期 kill 与物理断电计划。
-8. **P7-A-TIER-REPIN**：重新解析并锁定 Apple、Nuke、Kingfisher、SDWebImage、PINRemoteImage。
-9. **P7-POST-MIGRATION-PARETO-RERUN**：重跑 W1/W2/W3/W7/W8/W10/W13。
-10. **P2-W4-W15-PLANS**：按真实生产能力和依赖顺序建立不可变实验计划。
+3. **P6-CODEC-CONFORMANCE-KIT**：ImageIO + 缺能力 fake backend 共用的最小独立 kit。
+4. **P6-STORAGE-CONFORMANCE-KIT**：partition/generation/stage/publish/recovery 的最小独立 kit。
+5. **P6-QUALIFIED-COMPOSITION-SEAMS**：新 codec 入口要求 `ImageCodec`，设计 immutable persistent-store bundle。
+6. **P4-AKASHIC-PHYSICAL-EVIDENCE**：稳定设备 I/O、能耗、长期 kill 与物理断电计划。
+7. **P7-A-TIER-REPIN**：重新解析并锁定 Apple、Nuke、Kingfisher、SDWebImage、PINRemoteImage。
+8. **P7-CURRENT-STACK-PARETO-RERUN**：重跑 W1/W2/W3/W7/W8/W10/W13。
+9. **P2-W4-W15-PLANS**：按真实生产能力和依赖顺序建立不可变实验计划。
 
-任务 4、5、7 可并行；任务 8、9 必须在 Fovea 公共 CI 和回滚证据稳定后执行。
+任务 3、4、6 可并行；任务 7、8 必须在 Fovea 公共 CI 和当前组件证据稳定后执行。
 
 ## 8. 停止条件与复杂度预算
 

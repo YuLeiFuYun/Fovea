@@ -157,11 +157,21 @@ def classify(paths: list[str]) -> dict[str, object]:
         elif path.startswith("ConformanceKits/PersistentStoreProvider/"):
             categories.add("provider-conformance")
             categories.add("tooling")
-        elif path == "ConformanceKits/compatibility-matrix.json":
+        elif path.startswith("ConformanceKits/ImageCodec/"):
+            categories.add("codec-conformance")
+            categories.add("tooling")
+        elif path == "ConformanceKits/_support.py":
             categories.add("provider-conformance")
+            categories.add("codec-conformance")
+            categories.add("tooling")
+        elif path == "ConformanceKits/current-contracts.json":
+            categories.add("provider-conformance")
+            categories.add("codec-conformance")
             categories.add("governance")
         elif path.startswith("Fixtures/QualifiedStoreProvider/"):
             categories.add("provider-conformance")
+        elif path.startswith("Fixtures/ImageIOCodec/"):
+            categories.add("codec-conformance")
         elif path.startswith("Benchmarks/CacheLab/"):
             categories.add("cache-lab")
         elif path.startswith("Benchmarks/"):
@@ -173,6 +183,7 @@ def classify(paths: list[str]) -> dict[str, object]:
         elif path in {"Package.swift", "Package.resolved"} or path.startswith(".swiftpm/"):
             categories.add("dependencies")
             categories.add("provider-conformance")
+            categories.add("codec-conformance")
         elif path.startswith("scripts/"):
             categories.add("tooling")
             name = Path(path).name
@@ -212,6 +223,15 @@ def classify(paths: list[str]) -> dict[str, object]:
         for path in paths
     ):
         categories.add("provider-conformance")
+
+    codec_seam_paths = (
+        "Sources/FoveaCore/DecodeStage.swift",
+        "Sources/FoveaCore/FoveaPipeline.swift",
+        "Sources/FoveaSystem/FoveaSystemPipeline.swift",
+        "Tests/FoveaTests/ImageCodecConformanceTests.swift",
+    )
+    if any(path in codec_seam_paths for path in paths):
+        categories.add("codec-conformance")
 
     network_tokens = ("HTTP", "Transport", "Network", "URLSession", "Redirect")
     storage_tokens = ("Storage", "Persistence", "Cache", "Manifest", "File", "Disk")
@@ -418,6 +438,25 @@ def phase_plan(profile: str, impact: dict[str, object]) -> tuple[str, list[Phase
                     "QualifiedStoreProviderFixture",
                     "--factory-source",
                     "Fixtures/QualifiedStoreProvider/ConformanceFactory.swift",
+                    "--timeout",
+                    "900",
+                ),
+                1_200,
+            )
+        )
+    if "codec-conformance" in categories:
+        phases.append(
+            Phase(
+                "image-codec-conformance",
+                (
+                    "python3",
+                    "ConformanceKits/ImageCodec/v1/run.py",
+                    "--codec-package-path",
+                    "Fixtures/ImageIOCodec",
+                    "--codec-product",
+                    "ImageIOCodecFixture",
+                    "--factory-source",
+                    "Fixtures/ImageIOCodec/ConformanceFactory.swift",
                     "--timeout",
                     "900",
                 ),

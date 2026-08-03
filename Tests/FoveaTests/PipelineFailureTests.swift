@@ -386,7 +386,7 @@ extension PipelineFailureTests {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/metadata-limit.png")),

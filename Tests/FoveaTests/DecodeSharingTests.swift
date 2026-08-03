@@ -32,7 +32,7 @@ final class DecodeSharingTests: XCTestCase {
             ),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: decoder
+            codec: decoder
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/shared-decode.png")),
@@ -75,7 +75,7 @@ final class DecodeSharingTests: XCTestCase {
             ),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: decoder
+            codec: decoder
         )
         let url = try XCTUnwrap(URL(string: "https://example.test/distinct-decodes.png"))
         let small = try ImageRequest.publicImage(
@@ -99,7 +99,7 @@ final class DecodeSharingTests: XCTestCase {
     }
 }
 
-private struct DelayedDelegatingDecoder: ImageDecoding {
+private struct DelayedDelegatingDecoder: TestImageCodec {
     let delay: TimeInterval
     private let decoder = ImageIOImageDecoder()
 

@@ -24,7 +24,7 @@ final class PriorityPropagationTests: XCTestCase {
             ),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let url = try XCTUnwrap(URL(string: "https://example.test/priority-propagation.png"))
         let lowRequest = try ImageRequest.publicImage(

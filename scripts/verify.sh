@@ -15,7 +15,6 @@ case "$FOVEA_VERIFY_PROFILE" in
         export RUN_IOS_EXAMPLE=1
         export RUN_STORE_GENERATION_CONTENTION=1
         export RUN_COMPONENT_CLEAN_COPY=1
-        export RUN_COMPONENT_ROLLBACK=1
         export RUN_PRODUCTION_COVERAGE=1
         export RUN_RELEASE=1
         export RUN_THREAD_SANITIZER=1
@@ -74,8 +73,6 @@ python3 scripts/check-optimization-parameters.py
 python3 scripts/check-resource-envelope.py
 python3 scripts/model-check-decode-resource-composition.py
 python3 scripts/check-imageio-resource-lifetime-ledger.py
-python3 scripts/check-akashic-contract-migration.py
-python3 scripts/check-akashic-conformance-plan.py
 python3 scripts/prove-namespace-generation-manifest-bound.py
 python3 scripts/audit-numeric-constants.py
 python3 scripts/check-comparison-governance.py
@@ -136,10 +133,6 @@ fi
 if [ "${RUN_COMPONENT_CLEAN_COPY:-0}" = "1" ]; then
     scripts/verify-component-clean-copy.py
     record_qualification_assurance component-clean-copy
-fi
-if [ "${RUN_COMPONENT_ROLLBACK:-0}" = "1" ]; then
-    scripts/verify-component-rollback.py
-    record_qualification_assurance component-rollback-forward-recovery
 fi
 
 if [ "${RUN_PRODUCTION_COVERAGE:-1}" = "1" ]; then

@@ -397,3 +397,7 @@ MEM-PT-003       every multi-step task has a mandatory repository-backed session
 ## 跨仓持久化 Provider Conformance v1
 
 - `FOVEA-PSP-CT-001...005`：独立 SwiftPM consumer 验证 provider descriptor 稳定性、首次 fetch/decode/publish、释放后同 root 无网络重开、namespace revoke 后不复活，以及有界打开参数。该 kit 明确不是 crash-consistency、跨进程 writer exclusion 或发布资格证明。
+
+## 跨仓 Image Codec Conformance v1
+
+- `FOVEA-ICT-001...006`：独立 SwiftPM consumer 验证 descriptor 稳定性、2,304 项有限能力域、声明格式的 probe/decode、资源估计组合和硬限制失败关闭。该 kit 不替代 hostile corpus、fuzz、sanitizer、真机资源或 Fovea composition 证据。

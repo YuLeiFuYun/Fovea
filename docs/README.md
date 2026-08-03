@@ -116,3 +116,4 @@
 ## 跨仓 Conformance
 
 - [Persistent Store Provider Conformance v1](../ConformanceKits/PersistentStoreProvider/v1/README.md)
+- [Image Codec Conformance v1](../ConformanceKits/ImageCodec/v1/README.md)

@@ -2,7 +2,7 @@ import AkashicCore
 import Darwin
 import Foundation
 
-/// 建立并复核 Fovea 暂存、记录与 legacy 回滚文件的最小权限、不跟随链接和所有权边界。
+/// 建立并复核 Fovea 暂存、记录与 事务回滚文件的最小权限、不跟随链接和所有权边界。
 /// 路径安全不是一次性创建动作；每次发布或重新打开都必须重新验证。该策略属于 Fovea 宿主，不公开 Akashic 的 package-only 文件工具。
 package enum FoveaManagedFileSecurity {
     package static func prepareDirectory(_ url: URL) throws {

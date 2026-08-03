@@ -354,8 +354,8 @@ final class ImageDeliveryCoordinator: Sendable {
             contentMode: request.contentMode,
             geometryPolicyFingerprint: request.geometryPolicyFingerprint,
             colorPolicy: request.colorPolicy,
-            decoderVersion: decodeStage.codecDescriptor.contractVersion,
-            decoderFingerprint: decodeStage.codecDescriptor.cacheFingerprint
+            codecContractVersion: decodeStage.codecDescriptor.contractVersion,
+            codecFingerprint: decodeStage.codecDescriptor.cacheFingerprint
         )
         return ScopedRenderKey(
             namespace: request.namespace,

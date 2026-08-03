@@ -104,16 +104,16 @@ final class AkashicHostAdapterTests: XCTestCase {
 
     func testTypedDefaultUsesNewStoreGeneration_AKASHIC_CT_025() async throws {
         let root = try makeTemporaryDirectory("akashic-adapter-generation")
-        let legacyFingerprint =
+        let alternateFingerprint =
             "fovea-store-v1:original-4:representation-6:namespace-generation-1"
-        let legacy = try await StoreGenerationDirectory.open(
+        let alternate = try await StoreGenerationDirectory.open(
             root: root,
-            compatibilityFingerprint: legacyFingerprint
+            compatibilityFingerprint: alternateFingerprint
         )
         let current = try await FoveaPersistentStores.open(root: root)
 
-        XCTAssertNotEqual(legacy.identifier, current.generation.identifier)
-        XCTAssertNotEqual(legacy.root, current.generation.root)
+        XCTAssertNotEqual(alternate.identifier, current.generation.identifier)
+        XCTAssertNotEqual(alternate.root, current.generation.root)
         XCTAssertTrue(
             FoveaPersistentStores.currentCompatibilityFingerprint.hasPrefix(
                 "fovea-store-v2:akashic-file-"

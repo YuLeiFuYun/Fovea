@@ -173,14 +173,14 @@ final class URLSessionTransportTests: XCTestCase {
         try Data("private-response".utf8).write(
             to: abandoned.appendingPathComponent("stage-orphan")
         )
-        let legacy = root.appendingPathComponent("stage-legacy")
-        try Data("legacy-private-response".utf8).write(to: legacy)
-        try FoveaManagedFileSecurity.securePublishedFile(legacy)
+        let stale = root.appendingPathComponent("stage-stale")
+        try Data("stale-private-response".utf8).write(to: stale)
+        try FoveaManagedFileSecurity.securePublishedFile(stale)
 
         var first: StagingDirectoryLease? = try await StagingDirectoryLease.acquire(root: root)
         let firstDirectory = try XCTUnwrap(first?.directory)
         XCTAssertFalse(FileManager.default.fileExists(atPath: abandoned.path))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: legacy.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: stale.path))
 
         var second: StagingDirectoryLease? = try await StagingDirectoryLease.acquire(root: root)
         let secondDirectory = try XCTUnwrap(second?.directory)

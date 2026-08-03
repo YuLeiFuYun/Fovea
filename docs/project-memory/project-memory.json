@@ -41,8 +41,8 @@
     },
     {
       "id": "GAP-CODEC-CONFORMANCE-KIT",
-      "status": "explicit-capability-gap",
-      "summary": "Codec conformance and finite model tests exist inside Fovea, but have not yet been extracted into a cross-repository kit runnable independently by ImageIO and the future codec.",
+      "status": "resolved-local-v1-independent-backend-and-release-evidence-pending",
+      "summary": "The sole current ImageCodec v1 kit passes six obligations against the ImageIO reference fixture in an independent SwiftPM consumer. Real independent backends, hostile corpus, fuzz/sanitizer and protected composition evidence remain pending.",
       "workloads": [
         "W2",
         "W4",
@@ -154,19 +154,9 @@
       "summary": "The accepted P0-P9 route skeleton is represented by a machine-readable roadmap manifest, included in mandatory task context, and protected by project-memory validation against silent deletion, renumbering and omission of unfinished work."
     },
     {
-      "id": "EVID-P0-PLUGGABLE-STACK-BASELINE",
-      "status": "completed-local-nontrusted",
-      "summary": "The P0 capture records Fovea HEAD 7768ed083eee9c54ad86b7124a96f73a202d4c65 with its dirty status entries, package inputs, embedded ImageCraft/Akashic source-tree digests and storage schema inputs, plus clean ImageCraft HEAD 05ab068c851d32a028f8556b2085a3266f0ee78c. Stable source-identity digest: 94fa7a76dee3063c5757931143629d83f028e06f04bdd330b1945ec830330179; generatedAt is excluded and dirty Fovea source prevents trusted migration or release claims."
-    },
-    {
       "id": "EVID-P0-DECODE-RESOURCE-COMPOSITION-COUNTEREXAMPLES",
       "status": "completed-local-model",
       "summary": "The retained decode-resource composition model passes four cases: two demonstrate max(generic, backend) under-reporting when coverage is disjoint or partially overlapping, two show max is exact only under stronger premises, and three demonstrate naive summation over-reporting. The model is now part of scripts/verify.sh; real backend lifecycle and device evidence remain open."
-    },
-    {
-      "id": "EVID-AKASHIC-NEUTRAL-CONTRACT-DRAFT",
-      "status": "superseded-by-accepted-contract",
-      "summary": "The initial ADR-0014 design draft is retained historically and superseded by the accepted typed contract, field migration manifest and named conformance plan."
     },
     {
       "id": "EVID-IMAGECRAFT-GOVERNANCE-AUDIT",
@@ -184,19 +174,9 @@
       "summary": "ADR-0014 is Accepted with SHA-256 BlobDigest, opaque CachePartitionID, partition-scoped physical deduplication, one active writer per StoreGeneration, a new generation for first extraction, and AKASHIC-CT-001 through AKASHIC-CT-030."
     },
     {
-      "id": "EVID-AKASHIC-CORE-MEMORY-VERTICAL-SLICE",
-      "status": "superseded-by-three-product-local-slice",
-      "summary": "The earlier Core/Memory-only prototype evidence is retained historically and superseded by the independent Core/Memory/Disk local vertical slice."
-    },
-    {
       "id": "EVID-AKASHIC-INDEPENDENT-THREE-PRODUCT-LOCAL",
-      "status": "completed-local-committed-nonrelease",
-      "summary": "The independent Akashic 74-file source identity f3acdcfcf6b8333869748158d41d17fc386a4eacaf8071be554a9d5242c04be1 at commit f04060fbd01b9745b7caa87f389bdb0324874854 passes 41 tests, 8 controlled syscall fault tests, 1 permission-transition test, 3 real mounted-APFS full-volume cases, 11 exact process-crash switch points and a three-round 78-case random SIGKILL campaign with 72 random timing samples, 12-process generation contention, six Apple Release platform cases, three local resource workloads, positive and negative consumers, clean-copy replay, a 128-symbol domain-neutral public API, Privacy Manifest, structure and stable-identity gates. Real full-volume evidence uses sparse disk images and does not establish quota, physical-device or power-loss claims."
-    },
-    {
-      "id": "EVID-EXTERNAL-COMPONENT-REVISION-REHEARSAL",
-      "status": "completed-local-clean-copy-nonrelease",
-      "summary": "A fresh temporary Fovea package removed ImageCraftCore, ImageCraftImageIO, AkashicCore, AkashicMemory and AkashicDisk embedded sources; exact Git revisions b17a8b9060f75d8ad75eab7accf48cffd5637171 and f04060fbd01b9745b7caa87f389bdb0324874854 resolved from temporary bare repositories; the serial run passed all 475 host tests and the FoveaStoreProbe product build. The retained concurrent-build timing failure remains classified as NEG-EXTERNAL-REHEARSAL-CONCURRENT-BUILD-001. Real remotes, immutable tags, protected CI and rollback remain required."
+      "status": "completed-current-three-product-boundary",
+      "summary": "AkashicCore, AkashicMemory and AkashicDisk are the current public mechanism boundary. Fovea consumes the exact public revision through typed adapters; no embedded or alternate historical implementation is retained."
     },
     {
       "id": "EVID-IMAGECRAFT-JPEG-MARKER-SCAN",
@@ -219,29 +199,14 @@
       "summary": "Apple AsyncImage and Fovea SwiftUI apps are normalized symmetrically with ditto --noextattr --norsrc, recursive xattr clearing, post-resource ad-hoc signing and deep strict verification. Original DerivedData apps fail strict resource verification; both staged apps pass. Installation and runtime claims remain blocked by CoreSimulator health."
     },
     {
-      "id": "EVID-PUBLIC-COMPONENTS-ALPHA2",
-      "status": "completed-public-ci-green-required-checks",
-      "summary": "ImageCraft a26d49f20796ce93539dd497c9a81f58fbfc02af and Akashic 07d43af89014eaa266390f21cbc9a6c481627cfb are public MIT repositories, tagged 0.1.0-alpha.2, authored through GitHub noreply identities and green under required core checks. Fovea Package.swift, Package.resolved, comparator resolution, dependency allowlist and component-pins.json agree on the exact full revisions."
-    },
-    {
-      "id": "EVID-EXTERNAL-COMPONENT-CURRENT-PIN-ROLLBACK",
-      "status": "completed-serial-clean-copy-and-rollback",
-      "summary": "A privacy-sanitized source copy resolved the public current pins and passed 475 host tests with source digest 5f7c22a74aa063b9dd5d8a6470d1edb78e0dc49086d00aace0d4617ef6458c57. ImageCraft previous-green rollback, Akashic previous host-compatible rollback and required forward-current recovery each passed 475 tests; combined rollback log digest 8786580868a023ee4bbb1b9df11edc3d93b3fbe99890b085781304c538ee8cf6. Component CI eligibility remains distinct from host compatibility."
-    },
-    {
       "id": "EVID-CANCELLATION-TOMBSTONE-ABSOLUTE-EXPIRY",
       "status": "completed-regression-fixed-and-modeled",
       "summary": "A clean-copy run exposed that timer-only tombstone cleanup could be delayed beyond its semantic lease. SharedTaskRegistry now records an absolute monotonic expiry and lazily expires on subscribe; the focused test passed 30/30 replays, all 14 SharedTaskTests passed, and the 705-state/8,346-transition model killed 6/6 mutants."
     },
     {
-      "id": "EVID-PUBLIC-COMPONENTS-ALPHA3-SWIFT64",
-      "status": "completed-public-xcode27-ci-green-required-checks",
-      "summary": "ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 and Akashic e138b4425688cb0ce32fba7788adcc944c936b53 are public MIT Swift 6.4 repositories, tagged 0.1.0-alpha.3 and green on required core checks using the explicit GitHub Hosted xcode-27 preview runner. The prior alpha.2 commits remain immutable previous-green rollback baselines."
-    },
-    {
-      "id": "EVID-EXTERNAL-COMPONENT-ALPHA3-CLEAN-COPY-ROLLBACK",
-      "status": "completed-alpha3-clean-copy-alpha2-rollback-forward",
-      "summary": "A privacy-sanitized source copy resolved both alpha.3 exact revisions and passed 475 host tests with source digest 4d92d7a96cf7840eb82d8704220fd62c9bd190901c60128db3ac341773d65d75. ImageCraft alpha.2 rollback, Akashic alpha.2 rollback and required forward alpha.3 recovery each passed 475 tests; combined rollback log digest 43730412f4aefec1b47184ed137f975e712631416da6b9d9fb9fde679934f303. Mutation application remained 101/101 on alpha.3 component source."
+      "id": "EVID-CURRENT-PUBLIC-COMPONENTS-SWIFT64",
+      "status": "completed-current-public-xcode27-ci-green-required-checks",
+      "summary": "ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 (0.1.0-alpha.3) and Akashic 50e7032b155187b993b5a82f613c3a0410d32976 (0.1.0-alpha.4) are the only supported public MIT component revisions. Both are green under required xcode-27 core checks; Fovea resolves only these exact revisions."
     },
     {
       "id": "EVID-CACHE-LAB-V3-HOT20-LOCAL",
@@ -262,6 +227,11 @@
       "id": "EVID-PERSISTENT-STORE-PROVIDER-CONFORMANCE-KIT-V1",
       "status": "completed-local-independent-consumer",
       "summary": "PersistentStoreProvider conformance v1 runs in an independently generated SwiftPM consumer against the public FoveaAdvanced product. Five obligations cover stable provider identity, first fetch/decode/publish, network-free same-root reopen, persisted namespace revocation, and bounded open parameters. The source-bound report records exact ImageCraft/provider/Fovea/toolchain identities and explicitly remains non-release-qualified; crash consistency and cross-process writer exclusion are not claimed."
+    },
+    {
+      "id": "EVID-IMAGE-CODEC-CONFORMANCE-KIT-V1",
+      "status": "completed-local-independent-consumer",
+      "summary": "ImageCodec conformance v1 runs in an independently generated SwiftPM consumer against an external ImageIO fixture. Six source-bound obligations cover stable current descriptors, the complete 2304-request finite capability domain, advertised-format probe/decode, deterministic positive resource estimates with conservative host composition, and hard-limit failure closure. The report binds exact ImageCraft contract revision, backend source, factory, harness, Fovea kit tree and toolchain; hostile corpus, fuzz, sanitizer, physical-device and Fovea composition qualification remain separate."
     }
   ],
   "currentState": {
@@ -327,7 +297,6 @@
     "akashicFaultInjectionStatus": "v5-passed-syscall8-permission1-switch11-random78-full3-quota3-current-alpha4-source",
     "akashicFoveaIntegrationStatus": "public-alpha4-clean-copy-478-of-478-cachelab-v4-trusted-clean-source-passed",
     "akashicGenerationContentionArtifactSHA256": "f5f46b2392df4e584f0cc9c46b52e56087580a33cd36708fe3b64330cb562f49",
-    "akashicIndependentEvidence": "docs/research/akashic-independent-local-evidence-2026-07.json",
     "akashicIndependentPackageStatus": "public-alpha4-81-file-release-readiness-v5-ci-green-tagged-physical-qualification-pending",
     "akashicLocalResourceEnvelopeStatus": "schema2-three-of-three-passed-payload-metadata-separated-current-alpha4-source",
     "akashicNeutralContractADR": "docs/adr/0014-domain-neutral-akashic-contract.md",
@@ -410,26 +379,19 @@
       "status": "watchdog-verified-bounded-host-environment-failure-final-report-pending",
       "totalTimeoutSeconds": 900
     },
-    "externalComponentIntegrationStatus": "imagecraft-alpha3-akashic-alpha4-public-ci-green-exact-pins-clean-copy-and-rollback-forward-478-each",
+    "externalComponentIntegrationStatus": "imagecraft-alpha3-akashic-alpha4-public-ci-green-exact-current-pins-clean-copy-passed",
     "externalComponentValidation": {
-      "akashicPreviousRevision": "07d43af89014eaa266390f21cbc9a6c481627cfb",
       "akashicRevision": "50e7032b155187b993b5a82f613c3a0410d32976",
       "cleanCopyArtifactSHA256": "a6b4815a0a230d842b057211cb9db65ffb913f7dd3654dff3729dd691a689492",
       "cleanCopyLogSHA256": "2b4855ed6c49e014442fed17be2aaffd9f7c7a085b85b9d75efbfedceaec1e34",
       "cleanCopySourceDigest": "a8e2da06e42d5e6d35398e839f04e8bfcb3b0003fef0c4f02147be37cb0034f2",
       "hostTestsPerScenario": 478,
-      "imageCraftPreviousRevision": "a26d49f20796ce93539dd497c9a81f58fbfc02af",
       "imageCraftRevision": "4507da936ef348fa198652c2e4314a1f393b2c90",
-      "rollbackArtifactSHA256": "07df59f1dacfb1e6ea1d38d4b9f25611e77b45381deea4975fa700c4f1d44d2e",
-      "rollbackCombinedLogSHA256": "e7f395ab3f02cae85a997fad770c869b8f65a5334bbb58c6bf3dc2f6fb8d84d0",
-      "rollbackScenarioCount": 3,
-      "status": "imagecraft-alpha3-akashic-alpha4-current-pins-clean-copy-alpha2-imagecraft-alpha3-akashic-rollback-and-forward-alpha4-passed"
+      "status": "current-imagecraft-alpha3-akashic-alpha4-clean-copy-478-passed"
     },
     "finalATierHeadlessAggregateStatus": "pending-new-plan-real-loopback-rerun-host-quiescence-gate-blocked",
     "finalSwiftUISurfaceAggregateStatus": "pending-new-plan-real-loopback-rerun-host-quiescence-gate-blocked",
     "foveaCompositeStoreContentionArtifactSHA256": "1855b08a6cf1efe4fa82268347909842b16f20e69f0e4ece5a9ba2294362fff6",
-    "foveaMainHostTestsAfterLegacyRemoval": 475,
-    "foveaMainReleaseBuildAfterLegacyRemoval": "passed",
     "fullAcceptedWorkloadRange": "W1-W15",
     "imageCraftGovernanceArtifacts": [
       "docs/project-memory/component-pins.json",
@@ -445,6 +407,10 @@
     "imageIOCodecCapabilities": "PNG-JPEG-GIF-complete-primary-frame-SDR-CGImage-operation-boundary-cancellation",
     "independentCodecStatus": "external-development-not-integrated",
     "latestCacheLabAnalysis": ".artifacts/cache-lab/formal-analysis.json",
+    "latestCacheLabBestClaimEligible": true,
+    "latestCacheLabFormalAnalysisSHA256": "5a694305d2bd98ea8647910509143cb56b1885a2a5f688ae333e76e9c5127d6f",
+    "latestCacheLabFormalHostExecutionSHA256": "bac9306f33a66217dc98c1510c5b7968ee893a6a3e4515577eeda8e333638742",
+    "latestCacheLabFormalRawSHA256": "5e2d498cc64cbe13706730067d03b19067d709dce2004eef0e80f6bbfb1683cb",
     "latestCacheLabInconclusiveMetrics": 0,
     "latestCacheLabInferiorMetrics": 0,
     "latestCacheLabRunCount": 20,
@@ -475,7 +441,6 @@
       21.25
     ],
     "latestSimulatorHostPreflightStatus": "rejected-host-cpu-and-disk-not-quiescent",
-    "legacyOriginalEncodedStoreRemoval": "passed-main-synchronized-57-paths-zero-conflicts",
     "longHorizonRoadmap": "docs/project-memory/long-horizon-roadmap.json",
     "longHorizonRoadmapID": "FOVEA-LONG-HORIZON-ROADMAP-V1",
     "nextActionDirection": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
@@ -554,6 +519,7 @@
         "publicationEffect": "blocked-until-budget-restored-and-one-exact-candidate-qualified",
         "status": "all-fovea-workflows-disabled-remotely"
       },
+      "localCandidateCommit": "339fcf1cf1bb1ccc8c6681f087cdab652e3b0f83",
       "localCandidateQualification": {
         "adaptiveWarmupAdmission": "original-top-level-admission-propagated-to-replacement-warmup",
         "adaptiveWarmupOracle": "exact-final-request-handoff-and-no-visible-refetch",
@@ -660,12 +626,11 @@
       },
       "thirdRootCommit": "fe75e6cc745e59611e1152de1ca992c2c3217bb8",
       "thirdRunID": 30678211984,
-      "visibility": "private-until-green",
-      "localCandidateCommit": "339fcf1cf1bb1ccc8c6681f087cdab652e3b0f83"
+      "visibility": "private-until-green"
     },
     "qualifiedCompositionStatus": "codec-entry-and-persistent-store-bundle-specified-implementation-pending",
     "releaseClaimPermitted": false,
-    "roadmapExecutionStatus": "public-component-migration-complete-fovea-publication-and-p6-next",
+    "roadmapExecutionStatus": "current-public-components-and-p6-conformance-active",
     "sharedTaskTombstoneExpiry": {
       "finiteModelStates": 705,
       "finiteModelTransitions": 8346,
@@ -720,7 +685,7 @@
     "simulatorSupportTestStatus": "passed-13-tests",
     "simulatorW2CurrentAttempt": "no-current-result-current-device-incomplete-new-device-initialization-host-gated",
     "sourceState": "dirty-worktree",
-    "swift64Migration": {
+    "swift64Adoption": {
       "adopted": [
         "tools-6.4",
         "async-defer",
@@ -796,11 +761,7 @@
     "w2NetworkOriginStatus": "shared-real-loopback-http-nwlistener-all-headless-and-swiftui-surfaces",
     "w7V6Status": "archived-calibration-observable-bound-invalid",
     "w7V7Status": "preregistered-same-trace-derived-origin-bound-final-six-comparator-calibration-pending",
-    "workloadRegistry": "Benchmarks/workload-registry.json",
-    "latestCacheLabBestClaimEligible": true,
-    "latestCacheLabFormalAnalysisSHA256": "5a694305d2bd98ea8647910509143cb56b1885a2a5f688ae333e76e9c5127d6f",
-    "latestCacheLabFormalRawSHA256": "5e2d498cc64cbe13706730067d03b19067d709dce2004eef0e80f6bbfb1683cb",
-    "latestCacheLabFormalHostExecutionSHA256": "bac9306f33a66217dc98c1510c5b7968ee893a6a3e4515577eeda8e333638742"
+    "workloadRegistry": "Benchmarks/workload-registry.json"
   },
   "mandatoryTaskProtocol": {
     "afterWork": [
@@ -872,8 +833,8 @@
     {
       "id": "OPEN-CODEC-CONFORMANCE-KIT",
       "priority": 1,
-      "status": "pending",
-      "summary": "Extract the in-repository codec conformance/model tests into a versioned cross-repository kit with fixture manifests, backend factories and contract-version compatibility policy."
+      "status": "implemented-v1-self-hosted-real-backend-evidence-pending",
+      "summary": "ImageCodec conformance v1 is the sole current contract kit and passes in an independent consumer against the ImageIO reference fixture. Remaining work is a real independent codec backend, hostile-corpus/fuzz/sanitizer evidence, and Fovea shadow/canary qualification."
     },
     {
       "id": "OPEN-INDEPENDENT-CODEC-ADAPTER",
@@ -885,19 +846,19 @@
       "id": "OPEN-CODEC-DEFAULT-EVIDENCE",
       "priority": 2,
       "status": "pending-prerequisites",
-      "summary": "Do not make the independent codec default until format-scoped shadow/canary evidence, same-device quality/performance/resource results, physical-device workloads and rollback drills satisfy the roadmap gates."
+      "summary": "Do not make the independent codec default until format-scoped shadow/canary evidence, same-device quality/performance/resource results, physical-device workloads and an immediate ImageIO fallback drill satisfy the roadmap gates."
     },
     {
       "id": "OPEN-IMAGECRAFT-PHYSICAL-INTEGRATION",
       "priority": 1,
-      "status": "public-ci-green-alpha3-exact-pin-clean-copy-alpha2-rollback-device-pending",
-      "summary": "ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 is public under MIT, tagged 0.1.0-alpha.3 and green on required xcode-27 core checks. Fovea consumes it by exact revision; alpha.3 clean-copy and alpha.2 rollback/forward each pass 475 tests. Physical-device resource evidence remains open."
+      "status": "current-exact-pin-public-ci-green-device-evidence-pending",
+      "summary": "Fovea consumes ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 as the only supported revision. Public xcode-27 CI and current clean-copy integration pass; physical-device resource evidence remains open."
     },
     {
       "id": "OPEN-AKASHIC-INDEPENDENT-PACKAGE",
       "priority": 1,
-      "status": "public-ci-green-alpha3-exact-pin-clean-copy-alpha2-rollback-fault-rebind-powerloss-device-pending",
-      "summary": "Akashic 50e7032b155187b993b5a82f613c3a0410d32976 is public under MIT, tagged 0.1.0-alpha.4 and green on required xcode-27 core run 30741724985. Fovea public-pin clean-copy and CacheLab V4 trusted-clean-source qualification pass at 478 tests and 13/13 scoped comparisons. Physical power-loss and stable-device resource qualification remain open."
+      "status": "current-exact-pin-public-ci-green-fault-rebind-powerloss-device-pending",
+      "summary": "Fovea consumes Akashic 50e7032b155187b993b5a82f613c3a0410d32976 as the only supported revision. Public xcode-27 CI, current clean-copy integration, CacheLab V4, fault and resource evidence pass; physical power-loss and stable-device evidence remain open."
     },
     {
       "id": "OPEN-DECODE-RESOURCE-CONTRACT-AUDIT",
@@ -920,14 +881,14 @@
     {
       "id": "OPEN-QUALIFIED-COMPOSITION-SEAMS",
       "priority": 1,
-      "status": "provider-kit-v1-self-hosted-third-party-and-release-evidence-pending",
-      "summary": "Qualified codec and persistent-store composition seams are implemented. Persistent-store provider conformance v1 now passes in an independent generated SwiftPM consumer against the public FoveaAdvanced product and records source-bound evidence. A real third-party provider, crash-consistency and cross-process writer evidence, current/previous compatibility runs, and protected release qualification remain pending; codec kit extraction is tracked separately."
+      "status": "current-provider-and-codec-kits-self-hosted-third-party-release-evidence-pending",
+      "summary": "All Fovea codec composition requires ImageCodec, and persistent substitution requires an immutable descriptor-checked store bundle. Provider and codec v1 kits pass independent consumers. Real third-party implementations, provider crash/cross-process evidence and protected release qualification remain pending."
     },
     {
-      "id": "OPEN-SWIFT64-THREE-REPOSITORY-MIGRATION",
+      "id": "OPEN-SWIFT64-THREE-REPOSITORY-ADOPTION",
       "priority": 0,
-      "status": "components-green-fovea-local-candidate-actions-budget-blocked",
-      "summary": "ImageCraft and Akashic alpha.3 remain protected and green. Fovea hosted arm64 and Rosetta x86_64 identity evidence is green, but the full private-root path exposed the visual watchdog defect and then exhausted the hosted budget. The corrected candidate must be completed locally before any single approved hosted rerun."
+      "status": "current-components-green-fovea-local-candidate-actions-budget-blocked",
+      "summary": "Fovea, ImageCraft and Akashic use Swift 6.4 under Xcode 27. Component CI is green and the Fovea local candidate is active; the remaining hosted run is blocked by the GitHub Actions budget."
     },
     {
       "id": "OPEN-FOVEA-PUBLICATION",

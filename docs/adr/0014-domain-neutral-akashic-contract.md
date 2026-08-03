@@ -365,21 +365,21 @@ transactionConflict
 代价与风险：
 
 - 公共类型和 adapter 数量增加；
-- 需要决定旧磁盘格式是否兼容；
+- 当前缓存格式只支持当前 generation/schema；旧格式不读取、不迁移；
 - typed digest/partition canonical encoding 一旦发布就需要严格版本治理；
 - 多进程、机密去重和 anti-rollback 仍是显式缺口；
-- 在当前 dirty Fovea tree 上只能完成设计和审计，不能声称物理提取完成。
+- 物理包边界已完成；正式发布结论仍受当前源码绑定、真机资源和物理故障证据约束。
 
-## 接受依据与冻结决策
+## 当前冻结决策
 
-本 ADR 于 2026-07-29 依据字段级迁移清单和当前实现审计转为 Accepted。接受仅冻结 P3 合同，不表示 P4 独立仓库或 P5 Fovea 迁移已经完成。
+本 ADR 的当前实现边界如下：
 
-1. `docs/project-memory/akashic-contract-migration.json` 已记录当前 12 个公共符号、3 个 package-internal move、字段映射、领域泄漏位置和磁盘复用证明义务；
-2. Fovea adapter 继续表达 original encoded、GC、namespace generation、revoke 和 representation-record 事务，Akashic 不接管这些语义；
-3. `BlobDigest` 首版仅接受 SHA-256，并绑定规范 digest bytes 与精确 byte count；
-4. 首版只允许 partition-scoped 物理去重，跨 partition 去重禁止；
-5. 首版每个 StoreGeneration 只有一个活动 writer，只承诺同一进程/store 实例内的并发 reader，不承诺多进程 reader lease；
-6. 首个独立 Akashic 版本使用新的 StoreGeneration。旧缓存可重建，不以复杂原地迁移换取启动风险；
-7. `docs/project-memory/akashic-conformance-plan.json` 已分配 `AKASHIC-CT-001` 至 `AKASHIC-CT-030`，覆盖 P3 合同、P4 组件、P5 宿主组合和 P6 版本矩阵。
+1. FoveaStorage 拥有 original encoded、namespace fingerprint、revoke generation 和 representation-record 领域语义；
+2. AkashicCore/Memory/Disk 只提供 typed digest、partition、memory policy、blob store 与 store generation 机制；
+3. `BlobDigest` 只接受 SHA-256，并绑定规范 digest bytes 与精确 byte count；
+4. 只允许 partition-scoped 物理去重，跨 partition 去重禁止；
+5. 每个 StoreGeneration 只有一个活动 writer；并发与故障保证由当前 Akashic conformance 状态定义；
+6. Fovea 只消费当前精确 Akashic revision 和当前 store schema，不保留旧格式迁移或旧实现；
+7. `FoveaAdvancedSystem` 只接受完整 qualified bundle，provider identity、generation fingerprint、三类 persistence 与 lifetime 不可拆分。
 
 上述决定若改变，必须通过新的 ADR 和 discussion-ledger supersession；不能在实现过程中静默放宽。

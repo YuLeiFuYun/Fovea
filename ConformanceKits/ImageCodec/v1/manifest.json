@@ -1,0 +1,59 @@
+{
+  "componentDependencies": {
+    "imageCraftContract": {
+      "packageIdentity": "ImageCraft",
+      "product": "ImageCraftCore",
+      "revision": "4507da936ef348fa198652c2e4314a1f393b2c90",
+      "url": "https://github.com/YuLeiFuYun/ImageCraft.git"
+    }
+  },
+  "contractVersion": 1,
+  "factoryContract": {
+    "method": "make() -> any ImageCodec",
+    "symbol": "CodecUnderTest"
+  },
+  "harness": "Harness/ImageCodecConformanceTests.swift",
+  "kitID": "FOVEA-IMAGE-CODEC-CONFORMANCE-V1",
+  "obligations": [
+    {
+      "id": "FOVEA-ICT-001",
+      "summary": "Independent factory instances publish one stable, current and non-empty codec descriptor.",
+      "testName": "testDescriptorIsStableCurrentAndNonEmpty_ICT_001"
+    },
+    {
+      "id": "FOVEA-ICT-002",
+      "summary": "All 2304 finite capability requests agree with an independent membership oracle and exact failure precedence.",
+      "testName": "testFiniteCapabilityDomainMatchesIndependentOracle_ICT_002"
+    },
+    {
+      "id": "FOVEA-ICT-003",
+      "summary": "Every advertised encoded format is probed deterministically and agrees with the descriptor format claim.",
+      "testName": "testAdvertisedFormatsProbeDeterministically_ICT_003"
+    },
+    {
+      "id": "FOVEA-ICT-004",
+      "summary": "Every advertised encoded format decodes a reference still image into bounded deterministic output geometry.",
+      "testName": "testAdvertisedFormatsDecodeReferenceStillImage_ICT_004"
+    },
+    {
+      "id": "FOVEA-ICT-005",
+      "summary": "Backend resource estimates are deterministic and positive while conservative host composition preserves both lower bounds.",
+      "testName": "testResourceEstimatesArePositiveDeterministicAndComposable_ICT_005"
+    },
+    {
+      "id": "FOVEA-ICT-006",
+      "summary": "Encoded-byte, format, dimension and pixel hard limits fail closed with stable ImageCraft errors.",
+      "testName": "testProbeHardLimitsFailClosed_ICT_006"
+    }
+  ],
+  "rules": {
+    "backendEvidenceDoesNotReplaceFoveaCompositionEvidence": true,
+    "referenceFixturesDoNotProveHostileCorpusSafety": true,
+    "releaseQualified": false,
+    "unsupportedOrSkippedFailsClosed": true
+  },
+  "schemaVersion": 1,
+  "supportedPlatforms": [
+    "macOS-12+"
+  ]
+}

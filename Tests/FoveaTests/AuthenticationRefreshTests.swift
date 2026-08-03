@@ -383,7 +383,7 @@ final class AuthenticationRefreshTests: XCTestCase {
                 root: root.appendingPathComponent("records")
             ),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try authenticatedRequest(
             url: XCTUnwrap(URL(string: "https://example.test/private-refresh.png")),

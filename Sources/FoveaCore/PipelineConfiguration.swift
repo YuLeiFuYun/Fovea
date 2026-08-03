@@ -138,18 +138,16 @@ public struct PipelineConfiguration: Codable, Hashable, Sendable {
             Int.self,
             forKey: .maximumConcurrentDecodes
         )
-        let maximumDecodeWorkingSetBytes =
-            try values.decodeIfPresent(
-                Int.self,
-                forKey: .maximumDecodeWorkingSetBytes
-            ) ?? 192 * 1024 * 1024
+        let maximumDecodeWorkingSetBytes = try values.decode(
+            Int.self,
+            forKey: .maximumDecodeWorkingSetBytes
+        )
         let maximumQueuedFetches = try values.decode(Int.self, forKey: .maximumQueuedFetches)
         let maximumQueuedDecodes = try values.decode(Int.self, forKey: .maximumQueuedDecodes)
-        let maximumTrackedNamespaces =
-            try values.decodeIfPresent(
-                Int.self,
-                forKey: .maximumTrackedNamespaces
-            ) ?? 4_096
+        let maximumTrackedNamespaces = try values.decode(
+            Int.self,
+            forKey: .maximumTrackedNamespaces
+        )
 
         guard schemaVersion == PipelineConfiguration.currentSchemaVersion,
             (1...Self.maximumMemoryCostLimit).contains(memoryCostLimit),

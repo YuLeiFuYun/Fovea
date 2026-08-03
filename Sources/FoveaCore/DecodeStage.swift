@@ -19,7 +19,7 @@ package final class DecodeStage: Sendable {
         let durationNanoseconds: UInt64
     }
 
-    private let decoder: any ImageDecoding
+    private let codec: any ImageCodec
     package let codecDescriptor: ImageCodecDescriptor
     private let limits: DecodeLimits
     private let diagnostics: any DiagnosticsSink
@@ -30,7 +30,7 @@ package final class DecodeStage: Sendable {
     private let registry = SharedTaskRegistry<ScopedDecodeKey, DecodedImage>()
 
     package init(
-        decoder: any ImageDecoding,
+        codec: any ImageCodec,
         limits: DecodeLimits,
         diagnostics: any DiagnosticsSink,
         maximumConcurrentDecodes: Int,
@@ -39,8 +39,8 @@ package final class DecodeStage: Sendable {
         decodePermits: AsyncPermitPool? = nil,
         workingSetPermits: AsyncPermitPool? = nil
     ) {
-        self.decoder = decoder
-        self.codecDescriptor = decoder.pipelineCodecDescriptor
+        self.codec = codec
+        self.codecDescriptor = codec.codecDescriptor
         self.limits = limits
         self.diagnostics = diagnostics
         self.detailedDiagnosticsEnabled = detailedDiagnosticsAreEnabled(diagnostics)
@@ -77,8 +77,8 @@ package final class DecodeStage: Sendable {
             contentMode: request.contentMode,
             geometryPolicyFingerprint: request.geometryPolicyFingerprint,
             colorPolicy: request.colorPolicy,
-            decoderVersion: codecDescriptor.contractVersion,
-            decoderFingerprint: codecDescriptor.cacheFingerprint
+            codecContractVersion: codecDescriptor.contractVersion,
+            codecFingerprint: codecDescriptor.cacheFingerprint
         )
         let scopedKey = ScopedDecodeKey(
             namespace: request.namespace,
@@ -332,10 +332,10 @@ package final class DecodeStage: Sendable {
         permit: consuming AsyncPermitPool.Permit
     ) async throws -> TimedDecodePlan {
         try await permit.withPermit {
-            try await executor.run { [decoder, limits] in
+            try await executor.run { [codec, limits] in
                 let started = DispatchTime.now().uptimeNanoseconds
                 let plan = try Self.makeDecodePlan(
-                    decoder: decoder,
+                    codec: codec,
                     data: data,
                     limits: limits
                 )
@@ -348,16 +348,16 @@ package final class DecodeStage: Sendable {
     }
 
     private static func makeDecodePlan(
-        decoder: any ImageDecoding,
+        codec: any ImageCodec,
         data: Data,
         limits: DecodeLimits
     ) throws -> DecodePlan {
-        if let preparedDecoder = decoder as? any PreparedImageDecoding {
+        if let preparedDecoder = codec as? any PreparedImageDecoding {
             let preparation = try preparedDecoder.prepare(data: data, limits: limits)
             return DecodePlan(probe: preparation.probe, preparation: preparation)
         }
         return DecodePlan(
-            probe: try decoder.probe(data: data, limits: limits),
+            probe: try codec.probe(data: data, limits: limits),
             preparation: nil
         )
     }
@@ -497,9 +497,9 @@ package final class DecodeStage: Sendable {
             )
             return try await decodePermit.withPermit {
                 try Task.checkCancellation()
-                let result = try await executor.run { [decoder, limits] in
+                let result = try await executor.run { [codec, limits] in
                     try Self.rasterDecode(
-                        decoder: decoder,
+                        codec: codec,
                         data: data,
                         plan: plan,
                         request: decodeRequest,
@@ -513,7 +513,7 @@ package final class DecodeStage: Sendable {
     }
 
     private static func rasterDecode(
-        decoder: any ImageDecoding,
+        codec: any ImageCodec,
         data: Data,
         plan: DecodePlan,
         request: ImageDecodeRequest,
@@ -522,7 +522,7 @@ package final class DecodeStage: Sendable {
         let started = DispatchTime.now().uptimeNanoseconds
         let image: DecodedImage
         if let preparation = plan.preparation,
-            let preparedDecoder = decoder as? any PreparedImageDecoding
+            let preparedDecoder = codec as? any PreparedImageDecoding
         {
             image = try preparedDecoder.decode(
                 preparation: preparation,
@@ -530,7 +530,7 @@ package final class DecodeStage: Sendable {
                 limits: limits
             )
         } else {
-            image = try decoder.decode(
+            image = try codec.decode(
                 data: data,
                 probe: plan.probe,
                 request: request,
@@ -595,8 +595,8 @@ package final class DecodeStage: Sendable {
             probe: probe,
             request: request
         )
-        let backendEstimate = try await executor.run { [decoder] in
-            try decoder.pipelineResourceEstimate(probe: probe, request: request)
+        let backendEstimate = try await executor.run { [codec] in
+            try codec.resourceEstimate(probe: probe, request: request)
         }
         return try ImageDecodeResourceEstimate.conservativeMaximum(
             genericBytes: genericBytes,
@@ -606,7 +606,7 @@ package final class DecodeStage: Sendable {
 
     private func discardPreparation(_ preparation: ImageDecodePreparation?) async {
         guard let preparation,
-            let preparedDecoder = decoder as? any PreparedImageDecoding
+            let preparedDecoder = codec as? any PreparedImageDecoding
         else { return }
         _ = try? await executor.run {
             preparedDecoder.discard(preparation)

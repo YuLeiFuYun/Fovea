@@ -36,7 +36,7 @@ final class AuthGalleryTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let url = try XCTUnwrap(URL(string: "https://images.example.test/avatar"))
         let target = try TargetPixels(width: 40, height: 40)
@@ -130,7 +130,7 @@ final class AuthGalleryTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try authenticatedRequest(
             url: try XCTUnwrap(URL(string: "https://images.example.test/no-store")),
@@ -174,7 +174,7 @@ final class AuthGalleryTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try authenticatedRequest(
             url: try XCTUnwrap(URL(string: "https://images.example.test/delayed")),
@@ -228,7 +228,7 @@ final class AuthGalleryTests: XCTestCase {
             encodedStore: barrierStore,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try authenticatedRequest(
             url: try XCTUnwrap(URL(string: "https://images.example.test/commit-race")),
@@ -284,7 +284,7 @@ final class AuthGalleryTests: XCTestCase {
             recordStore: records,
             namespaceRegistry: registry,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try authenticatedRequest(
             url: try XCTUnwrap(URL(string: "https://images.example.test/pre-record-revoke")),
@@ -337,7 +337,7 @@ final class AuthGalleryTests: XCTestCase {
             recordStore: records,
             namespaceRegistry: registry,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try authenticatedRequest(
             url: try XCTUnwrap(URL(string: "https://images.example.test/post-record-revoke")),
@@ -398,7 +398,7 @@ final class AuthGalleryTests: XCTestCase {
             recordStore: records,
             namespaceRegistry: registry,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         _ = try await seed.image(for: request)
 
@@ -414,7 +414,7 @@ final class AuthGalleryTests: XCTestCase {
             recordStore: barrierRecords,
             namespaceRegistry: registry,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         let task = Task { try await pipeline.image(for: request) }
@@ -447,7 +447,7 @@ final class AuthGalleryTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         do {

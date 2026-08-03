@@ -436,7 +436,7 @@ final class RetryPolicyTests: XCTestCase {
             namespaceRegistry: NamespaceRegistry(),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder(),
+            codec: ImageIOImageDecoder(),
             retrySleeper: sleeper,
             retryJitter: FixedRetryJitter()
         )

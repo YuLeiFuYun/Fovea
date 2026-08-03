@@ -179,7 +179,7 @@ final class ImageCodecConformanceTests: XCTestCase {
     }
 
     func testCodecFingerprintSeparatesEveryIdentityDimension() {
-        let capabilities = ImageCodecCapabilities.foveaLegacyBaseline
+        let capabilities = ImageCodecCapabilities.foveaTestBaseline
         let base = ImageCodecDescriptor(
             identifier: ImageCodecIdentifier(rawValue: "test.a"),
             implementationVersion: 1,

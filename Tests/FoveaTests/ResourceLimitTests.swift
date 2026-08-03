@@ -27,7 +27,7 @@ final class ResourceLimitTests: XCTestCase {
                 root: root.appendingPathComponent("records")
             ),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://example.test/oversized-custom-transport.png")),
@@ -98,7 +98,7 @@ final class ResourceLimitTests: XCTestCase {
             recordStore: try await RepresentationRecordStore.open(
                 root: root.appendingPathComponent("records")),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         try await withThrowingTaskGroup(of: Void.self) { group in
@@ -136,7 +136,7 @@ final class ResourceLimitTests: XCTestCase {
                 root: root.appendingPathComponent("records")),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         let firstRequest = try makeRequest(path: "first")
@@ -208,7 +208,7 @@ final class ResourceLimitTests: XCTestCase {
             recordStore: records,
             namespaceRegistry: NamespaceRegistry(),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder(),
+            codec: ImageIOImageDecoder(),
             clock: clock
         )
         let firstRequest = try makeRequest(path: "clock-first")
@@ -257,7 +257,7 @@ final class ResourceLimitTests: XCTestCase {
             recordStore: try await RepresentationRecordStore.open(
                 root: root.appendingPathComponent("records")),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let firstRequest = try makeRequest(path: "queue-first")
         let rejectedRequest = try makeRequest(path: "queue-rejected")
@@ -298,7 +298,7 @@ final class ResourceLimitTests: XCTestCase {
             recordStore: try await RepresentationRecordStore.open(
                 root: root.appendingPathComponent("records")),
             profileAccessPolicy: .unrestricted,
-            decoder: DelayedDecoder(delay: 0.08)
+            codec: DelayedDecoder(delay: 0.08)
         )
 
         let started = ContinuousClock.now
@@ -323,7 +323,7 @@ final class ResourceLimitTests: XCTestCase {
         let workingSetPermits = AsyncPermitPool(limit: 2_000, queueLimit: 8)
         let externalReservation = try await workingSetPermits.acquire(units: 1_000)
         let stage = DecodeStage(
-            decoder: ImageIOImageDecoder(),
+            codec: ImageIOImageDecoder(),
             limits: DecodeLimits(),
             diagnostics: NullDiagnosticsSink(),
             maximumConcurrentDecodes: 1,
@@ -403,7 +403,7 @@ final class ResourceLimitTests: XCTestCase {
                 root: root.appendingPathComponent("records")),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: OverBudgetDecoder()
+            codec: OverBudgetDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/working-set.png")),
@@ -519,7 +519,7 @@ extension ResourceLimitTests {
                 root: root.appendingPathComponent("records")
             ),
             profileAccessPolicy: .unrestricted,
-            decoder: OverFrameProbeDecoder()
+            codec: OverFrameProbeDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://example.test/invalid-custom-probe.png")),
@@ -538,7 +538,7 @@ extension ResourceLimitTests {
     }
 }
 
-private struct OverFrameProbeDecoder: ImageDecoding {
+private struct OverFrameProbeDecoder: TestImageCodec {
     func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
         try ImageProbe(pixelWidth: 20, pixelHeight: 20, frameCount: 2)
     }
@@ -585,7 +585,7 @@ private actor SequenceWallClock: WallClock {
     }
 }
 
-private struct DelayedDecoder: ImageDecoding {
+private struct DelayedDecoder: TestImageCodec {
     let delay: TimeInterval
 
     func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
@@ -608,7 +608,7 @@ private struct DelayedDecoder: ImageDecoding {
     }
 }
 
-private struct OverBudgetDecoder: ImageDecoding {
+private struct OverBudgetDecoder: TestImageCodec {
     func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
         try ImageProbe(pixelWidth: 4_000, pixelHeight: 4_000, frameCount: 1)
     }
@@ -634,7 +634,7 @@ private actor CompletionFlag {
 extension ResourceLimitTests {
     func testInvalidBackendResourceEstimateFailsClosedBeforeDecode() async throws {
         let stage = DecodeStage(
-            decoder: InvalidResourceEstimateDecoder(),
+            codec: InvalidResourceEstimateDecoder(),
             limits: .coreV1,
             diagnostics: NullDiagnosticsSink(),
             maximumConcurrentDecodes: 1,
@@ -664,11 +664,11 @@ extension ResourceLimitTests {
     }
 }
 
-private struct InvalidResourceEstimateDecoder: ImageDecoding, ImageCodec {
+private struct InvalidResourceEstimateDecoder: ImageCodec {
     let codecDescriptor = ImageCodecDescriptor(
         identifier: ImageCodecIdentifier(rawValue: "test.invalid-resource-estimate"),
         implementationVersion: 1,
-        capabilities: .foveaLegacyBaseline
+        capabilities: .foveaTestBaseline
     )
 
     func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {

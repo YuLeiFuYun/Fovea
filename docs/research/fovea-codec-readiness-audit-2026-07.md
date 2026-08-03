@@ -59,9 +59,9 @@ public ImageCraftCore codec contract
 
 ### F-02：能力由类型转换和实现惯例隐式决定
 
-旧 `ImageDecoding` 只有 probe/decode；prepared 能力由运行时 cast 推断，progressive、animation、HDR、输出表示和取消保证完全没有统一语义。
+仅有 `ImageDecoding` 的 probe/decode 不足以进入 Fovea；所有后端必须通过 `ImageCodec` 显式声明 prepared 之外的能力、资源、输出与取消语义。
 
-**修复：** 有限 capability algebra；调用方显式提出 request；在像素分配前 fail closed。legacy decoder 只获得保守默认值。
+**修复：** 有限 capability algebra；调用方显式提出 request；在像素分配前 fail closed。Fovea 只接受完整 `ImageCodec`，缺少能力或资源契约的后端在组合边界被拒绝。
 
 ### F-03：后端 working-set 事实没有进入统一准入
 

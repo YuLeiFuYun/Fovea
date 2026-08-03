@@ -5,7 +5,7 @@
 
 ## 背景
 
-旧 `ImageDecoding` 只公开 `probe` 与 `decode`。是否支持一次性 prepared state、详细诊断和其他后端能力，由 `DecodeStage` 通过运行时协议转换推断；`DecodeKey` 与 `RenderKey` 又统一写死 `decoderVersion = 1`。这一模型在只有 ImageIO 静态主帧路径时可以工作，但无法安全承载第二个 codec：
+图像后端需要同时提供 probe/decode、稳定身份、有限能力声明和保守资源估计。只依赖最低 `ImageDecoding` 无法安全承载多个 codec：
 
 1. 不同后端可能对相同字节产生不同颜色、方向、动态范围或像素表示，却碰撞到同一共享/缓存身份；
 2. “能识别容器”会被误当成“能提供渐进代次、动画时间轴、HDR、指定输出表示或可中断取消”；
@@ -17,7 +17,7 @@
 
 ## 决策
 
-1. 在 `ImageCraftCore` 引入版本化的 `ImageCodecDescriptor`，其身份由以下三部分组成。`ImageDecoding` 继续提供最低 `probe/decode` 契约；ADR-0012 进一步将完整 `ImageCodec` 能力契约公开为独立产品，以支持 AxiomRaster 和第三方实现：
+1. `ImageCraftCore` 公开版本化 `ImageCodecDescriptor`。`ImageDecoding` 仍是 ImageCraft 内可复用的最低 probe/decode 协议，但 Fovea 的生产、package 和系统组合入口只接受完整 `ImageCodec`。descriptor 身份由以下三部分组成：
    - 后端稳定标识 `identifier`；
    - 像素/元数据语义变化时递增的 `implementationVersion`；
    - Fovea codec 契约变化时递增的 `contractVersion`。
@@ -30,7 +30,7 @@
    - `CGImage`、pixel buffer、planar pixels 输出；
    - 只在操作边界观察取消，或真正可中断后端工作。
 3. 调用方把所需语义表示为 `ImageDecodeCapabilityRequest`。后端必须在任何像素分配和 working-set reservation 前通过能力协商；缺口返回稳定、可枚举的 `ImageCodecSupportFailure`，然后映射为结构化 `PipelineFailure`。
-4. 现有最低 `ImageDecoding` 实现无需新增协议要求：Fovea 按其动态 Swift 类型生成 conservative legacy descriptor，并使用通用资源估计；它只能获得完整主帧、SDR、Core Graphics 与操作边界取消语义。需要精确能力、资源估算和 prepared-state 快路径的实现应直接遵循公共 `ImageCodec` 与 `PreparedImageDecoding`。
+4. Fovea 不为仅实现 `ImageDecoding` 的后端合成 descriptor 或资源估计；缺少完整 `ImageCodec` 契约的实现不能进入 Fovea 组合。
 5. ImageIO 适配器当前只声明已经由实现和测试兑现的能力：PNG/JPEG/GIF 容器探测、完整主帧、orientation/source color、SDR、`CGImage`、操作边界取消。它不声明 progressive、animated timeline、HDR、planar output 或 interruptible cancellation。
 6. working-set 准入采用：
 
@@ -75,7 +75,7 @@ supports(C, r)
 
 ### 直接用新 codec 替换 ImageIO
 
-拒绝。它会把 codec 成熟度与 Fovea 的网络、缓存、UI 和持久化演进锁在一起，并使回滚只能整体回滚。
+拒绝。它会把 codec 成熟度与 Fovea 的网络、缓存、UI 和持久化演进锁在一起，并使故障时只能整体切换整条图像管线。
 
 ### 只保留一个最低公分母 `decode(data) -> CGImage`
 
@@ -96,11 +96,11 @@ supports(C, r)
 ## 后果
 
 - Fovea 可以继续使用独立 ImageIO 产品，同时未来 codec 先对技术中立 conformance kit 验证，再直接遵循明确的公共 contract；
-- 不同后端不会再因统一的 `decoderVersion = 1` 共享错误像素；
+- 不同后端由 `codecContractVersion + codecFingerprint` 隔离，不会共享错误像素；
 - 未实现能力在分配前被拒绝，而不是在深层路径失败；
 - 后端仍可拥有 prepared state、SIMD、硬件或专有内存布局，但不得把这些实现细节泄漏到 fetch/cache/UI；
 - contract 增加了版本治理责任：语义变化而不递增版本会造成缓存污染；
-- legacy 默认值只用于兼容，不代表最低 `ImageDecoding` 实现已通过完整 conformance；公共 contract 在 1.0 前仍受 API review 与 contract version 治理；
+- Fovea 不接受缺少 descriptor、capability 和 resource estimate 的后端；公共 contract 继续受 API review 与 contract version 治理；
 - progressive/animation/HDR 类型的存在不是生产能力声明。
 
 ## 验证

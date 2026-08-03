@@ -8,7 +8,7 @@
 
 Fovea 的核心价值是网络获取、身份、缓存一致性、资源准入、共享任务、诊断和平台显示生命周期，而不是绑定某一个图像解码实现。ImageIO 当前是成熟且覆盖 Apple 平台的默认实现；AxiomRaster 尚在开发，未来可能在部分或全部格式上成为默认；用户也可能选择其他 codec。
 
-此前 `ImageDecoding` 虽然可以注入最低功能 decoder，但精确能力描述、资源估算和 prepared-state 复用仍是 package-only。结果是第三方后端可以“工作”，却不能完整参与 Fovea 的能力协商、缓存身份和保守资源准入。另一方面，RenderedMemory 直接绑定内部 SIEVE 实现，官方安全组合根也只接受固定 ImageIO decoder。
+Fovea 需要一个单一、完整且可执行的 codec 组合契约。任何后端都必须参与能力协商、缓存身份和保守资源准入；仅有 probe/decode 的实现不能进入 Fovea。RenderedMemory 则通过独立同步缓存契约替换算法，而 namespace、generation 和跨存储事务仍由 Fovea 控制。
 
 该状态不满足以下目标：
 
@@ -24,22 +24,22 @@ Fovea 的核心价值是网络获取、身份、缓存一致性、资源准入�
 
 `ImageCraftCore` 作为单 target SwiftPM library product 发布，公开：
 
-- `ImageDecoding`：最低 probe/decode 契约；
-- `ImageCodec`：稳定 descriptor、有限能力集合和资源估算；
+- `ImageDecoding`：ImageCraft 内可独立复用的最低 probe/decode 契约；
+- `ImageCodec`：Fovea 唯一接受的组合契约，包含稳定 descriptor、有限能力集合和资源估算；
 - `PreparedImageDecoding`：一次性 prepared state 的可选高性能路径；
 - capability、failure、resource、generation、timing 和输出值类型。
 
 FoveaCore 只依赖 `ImageCraftCore`。codec 不获得 URL、HTTP header、security namespace、持久提交、UI 或诊断后端权限。
 
-未采用 `ImageCodec` 的 legacy `ImageDecoding` 实现仍可使用，但只能获得按动态类型隔离的保守 descriptor 和 host 通用资源估算。完整插件应采用 `ImageCodec`，否则不能声明更强能力。
+Fovea 不提供 `ImageDecoding` 兼容构造器、动态 descriptor 或通用资源估计 fallback。
 
 ### 2. ImageIO 是独立参考实现
 
 `ImageCraftImageIO` 作为单 target SwiftPM library product 发布，只依赖 `ImageCraftCore`。它不依赖 FoveaCore、FoveaHTTP、Akashic 或平台 UI。
 
-顶层 `Fovea` 产品现阶段包含 `ImageCraftImageIO`，且 `FoveaSystemPipeline.open` 的默认 decoder 为 `ImageIOImageDecoder()`。因此普通用户仍只需导入 `Fovea`；需要独立使用或测试 ImageIO adapter 的调用方可以直接依赖 `ImageCraftImageIO`。
+顶层 `Fovea` 产品现阶段包含 `ImageCraftImageIO`，且 `FoveaSystemPipeline.open` 的默认 codec 为 `ImageIOImageDecoder()`。因此普通用户仍只需导入 `Fovea`；需要独立使用或测试 ImageIO adapter 的调用方可以直接依赖 `ImageCraftImageIO`。
 
-AxiomRaster 达到默认门后，只需改变官方组合根的默认 decoder。原始编码数据和 HTTP 表征记录不绑定 decoder；DecodeKey/RenderKey 已包含 codec fingerprint，旧派生像素不会与新后端碰撞。
+AxiomRaster 达到默认门后，只需改变官方组合根的默认 codec。原始编码数据和 HTTP 表征记录不绑定 decoder；DecodeKey/RenderKey 已包含 codec fingerprint，旧派生像素不会与新后端碰撞。
 
 ### 3. 选择是显式、不可变的装配决策
 
@@ -51,7 +51,7 @@ AxiomRaster 达到默认门后，只需改变官方组合根的默认 decoder。
 
 更底层的 `FoveaPipeline` 继续接受自定义 transport、原始编码存储、表征记录存储和安全策略。所有组件只在 composition root 注入，并在 pipeline 生命周期内冻结。
 
-当前不引入全局 mutable registry、按请求动态切换、基于负载的“最快后端”猜测或隐式 fallback 链。第二个生产后端出现后，如确有一个 pipeline 内多后端选择需求，再以独立 ADR 定义确定性 policy。
+当前不引入全局 mutable registry、按请求动态切换或基于负载的“最快后端”猜测。第二个生产后端出现后，如确有一个 pipeline 内多后端选择需求，再以独立 ADR 定义确定性 policy。
 
 `FoveaPipeline.codecDescriptor` 公开当前实际装配后端的只读描述，供诊断、证据和 rollout 检查；它不是修改入口。
 
@@ -105,7 +105,7 @@ ImageIO prepared 路径在 probe 时创建并验证 `CGImageSource`，decode 时
 
 该优化只消除已证明重复的 ImageIO 工作，不放宽容器、metadata、dimension、pixel、frame、color 或 trailing-byte 校验。
 
-## 默认后端迁移门
+## 默认后端切换门
 
 AxiomRaster 或其他 codec 成为默认前，至少必须：
 
@@ -117,9 +117,9 @@ AxiomRaster 或其他 codec 成为默认前，至少必须：
 6. prepared/cancellation/discard 生命周期无泄漏；
 7. codec fingerprint 与派生缓存隔离测试通过；
 8. 在同设备、同 corpus、同质量参数下给出延迟分布、CPU、峰值 RSS 和能耗证据；
-9. canary、关闭开关和 ImageIO 回滚演练通过。
+9. canary、关闭开关和即时 ImageIO fallback 演练通过。
 
-默认迁移不删除 ImageIO 产品。至少一个稳定发布周期内保留显式 ImageIO 回退能力。
+默认切换不删除 ImageIO 产品；ImageIO 作为当前安全 fallback 保留，直到新后端获得独立移除决策与证据。
 
 ## 后果
 
@@ -128,7 +128,7 @@ AxiomRaster 或其他 codec 成为默认前，至少必须：
 - 普通用户保持单一 `Fovea` 导入路径；高级用户可只依赖 contract 或指定 adapter；
 - 自定义渲染缓存可以替换算法；持久化替换只通过 `FoveaAdvancedSystem` 的不可变 provider bundle 进入，不能分别注入 encoded/records/namespace store；
 - bundle descriptor 必须与 generation compatibility fingerprint 一致，系统管线保留整个 bundle lifetime，默认 `Fovea` product 不暴露该 seam；
-- public API 增加，需要精确 DocC 预算、兼容性审查和 contract version 治理；
+- public API 增加，需要精确 DocC 预算、当前表面审查和 contract version 治理；
 - 显式注入比 registry 更简单，但同一个 pipeline 暂不支持按格式自动选择多个后端；
 - ImageIO 优化必须继续以正确性、资源和真机数据为约束，不能用单一 microbenchmark 宣称整体最优。
 
@@ -136,7 +136,6 @@ AxiomRaster 或其他 codec 成为默认前，至少必须：
 
 - **CODEC-PT-010**：外部公共 `ImageCodec + PreparedImageDecoding` 驱动完整 FoveaPipeline；
 - **CODEC-PT-011**：官方组合根接受自定义 codec 与渲染缓存，并公开实际 descriptor；
-- **CODEC-PT-012**：官方组合根的默认/新入口要求完整 `ImageCodec`，旧 decoder 必须通过显式 `legacyDecoder` 兼容边界并获得 legacy descriptor；
 - **CACHE-PT-043**：自定义 `RenderedImageCaching` 接管插入、命中和 purge；
 - **CACHE-PT-044**：`FoveaAdvancedSystem` 只接受完整 qualified persistent-store bundle，并由 pipeline 保留 provider lifetime；
 - **CACHE-PT-045**：provider 声明与返回 bundle descriptor 不一致时，在 namespace registry 与 transport 组合前失败；

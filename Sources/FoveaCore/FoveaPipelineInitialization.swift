@@ -21,7 +21,7 @@ struct FoveaPipelineInitialization {
         renderedImageCache: (any RenderedImageCaching)?,
         namespaceRegistry: NamespaceRegistry,
         diagnostics: any DiagnosticsSink,
-        decoder: any ImageDecoding,
+        codec: any ImageCodec,
         transformer: any ImageTransforming,
         clock: any WallClock,
         retrySleeper: any RetrySleeping,
@@ -46,7 +46,7 @@ struct FoveaPipelineInitialization {
             retryJitter: retryJitter
         )
         let decodeStage = Self.makeDecodeStage(
-            configuration: configuration, decoder: decoder, diagnostics: diagnostics
+            configuration: configuration, codec: codec, diagnostics: diagnostics
         )
         let delivery = Self.makeDelivery(
             configuration: configuration,
@@ -139,11 +139,11 @@ struct FoveaPipelineInitialization {
 
     private static func makeDecodeStage(
         configuration: PipelineConfiguration,
-        decoder: any ImageDecoding,
+        codec: any ImageCodec,
         diagnostics: any DiagnosticsSink
     ) -> DecodeStage {
         DecodeStage(
-            decoder: decoder,
+            codec: codec,
             limits: configuration.decodeLimits,
             diagnostics: diagnostics,
             maximumConcurrentDecodes: configuration.maximumConcurrentDecodes,

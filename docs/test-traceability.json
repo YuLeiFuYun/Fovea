@@ -2052,17 +2052,6 @@
     {
       "evidence": [
         {
-          "file": "Tests/FoveaTests/PluggableComponentTests.swift",
-          "kind": "swiftTest",
-          "method": "testLegacySystemCompositionRequiresExplicitCompatibilityBoundary_CODEC_PT_012"
-        }
-      ],
-      "id": "CODEC-PT-012",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
           "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
           "kind": "swiftTest",
           "method": "comparatorIdentityRequiresExactCommit_COMP_PT_001"
@@ -4031,11 +4020,6 @@
         {
           "file": "Tests/FoveaTests/PipelineConfigurationTests.swift",
           "kind": "swiftTest",
-          "method": "testLegacyConfigurationWithoutWorkingSetBudgetUsesSafeDefault_PIPE_PT_010"
-        },
-        {
-          "file": "Tests/FoveaTests/PipelineConfigurationTests.swift",
-          "kind": "swiftTest",
           "method": "testWorkingSetBudgetIsOperationalAndChangesFullFingerprint_PIPE_PT_010"
         }
       ],
@@ -5338,6 +5322,72 @@
         }
       ],
       "id": "FOVEA-PSP-CT-005",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testDescriptorIsStableCurrentAndNonEmpty_ICT_001"
+        }
+      ],
+      "id": "FOVEA-ICT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testFiniteCapabilityDomainMatchesIndependentOracle_ICT_002"
+        }
+      ],
+      "id": "FOVEA-ICT-002",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testAdvertisedFormatsProbeDeterministically_ICT_003"
+        }
+      ],
+      "id": "FOVEA-ICT-003",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testAdvertisedFormatsDecodeReferenceStillImage_ICT_004"
+        }
+      ],
+      "id": "FOVEA-ICT-004",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testResourceEstimatesArePositiveDeterministicAndComposable_ICT_005"
+        }
+      ],
+      "id": "FOVEA-ICT-005",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testProbeHardLimitsFailClosed_ICT_006"
+        }
+      ],
+      "id": "FOVEA-ICT-006",
       "status": "implemented"
     }
   ],

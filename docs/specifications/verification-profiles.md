@@ -34,7 +34,7 @@ python3 scripts/run-verification-profile.py --profile smart --plan
 FOVEA_VERIFY_PROFILE=premerge scripts/verify.sh
 ```
 
-该门执行全部高频静态门、根包全量测试、CacheLab 和 loopback；源码或依赖改变时增加 Release 构建，Workbench 应用或验证工具改变时增加带 Release 审计的双设备 smoke。它不执行完整视觉矩阵、19 项 iPhone UI、5 项 iPad UI、sanitizer、clean-copy、rollback 和 mutation。
+该门执行全部高频静态门、根包全量测试、CacheLab 和 loopback；源码或依赖改变时增加 Release 构建，Workbench 应用或验证工具改变时增加带 Release 审计的双设备 smoke。它不执行完整视觉矩阵、19 项 iPhone UI、5 项 iPad UI、sanitizer、clean-copy、完整源码回退调查和 mutation。
 
 目标预算为 15 分钟左右。Simulator 基础设施异常最多按既有策略重试一次。
 
@@ -62,15 +62,15 @@ FOVEA_VERIFY_PROFILE=qualification scripts/verify.sh
 - 发布候选首次形成；
 - 产品源码、依赖 pin、工具链或资格门实现发生变化；
 - 资格证书缺失或失效；
-- 专门调查 sanitizer、mutation、rollback、视觉或长时 UI 问题。
+- 专门调查 sanitizer、mutation、源码回退、视觉或长时 UI 问题。
 
-该 profile 强制执行完整 Workbench、clean-copy、rollback/forward recovery、production coverage、Release、ThreadSanitizer、AddressSanitizer、iOS 包测试和关键 mutation，调用方不能通过环境变量关闭其中任一项。成功后写入：
+该 profile 强制执行完整 Workbench、当前组件 clean-copy、production coverage、Release、ThreadSanitizer、AddressSanitizer、iOS 包测试和关键 mutation，调用方不能通过环境变量关闭其中任一项。成功后写入：
 
 ```text
 .artifacts/verification/qualification-certificate.json
 ```
 
-证书绑定完整工作树 tree、Xcode/Swift 版本、`Package.resolved`、组件 pin 和 qualification run ID。九项昂贵证明各自在成功后写入同一 run ID、同一工作树的阶段回执；证书同时绑定这些回执的 SHA-256，缺少、跨运行、跨 tree 或被修改的回执都会拒绝签发或复用。写入器只接受 `qualification` 入口建立的活动上下文，不能在缺少完整阶段回执时独立生成证明。源码内容相同的提交前后可以复用；任一绑定项变化都会失效。
+证书绑定完整工作树 tree、Xcode/Swift 版本、`Package.resolved`、组件 pin 和 qualification run ID。八项昂贵证明各自在成功后写入同一 run ID、同一工作树的阶段回执；证书同时绑定这些回执的 SHA-256，缺少、跨运行、跨 tree 或被修改的回执都会拒绝签发或复用。写入器只接受 `qualification` 入口建立的活动上下文，不能在缺少完整阶段回执时独立生成证明。源码内容相同的提交前后可以复用；任一绑定项变化都会失效。
 
 ### `release`：发布快速复核
 

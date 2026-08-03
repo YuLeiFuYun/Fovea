@@ -35,4 +35,4 @@
 - W4 的 strict progressive generation 值语义和模型检查已建立，但 production incremental input、preview cadence、final promotion、UI identity fence 和比较实验仍缺失；状态保持 `capability-gap`。
 - W5 的 animated track 与 checked frame timing 词汇已建立，但 track enumeration、disposal/blend、frame cache、clock 和 playback 仍缺失；状态保持 `capability-gap`。
 - W9 新增 capability/resource fail-closed 与有限模型证据，但独立 codec 的 parser/decode fuzz、sanitizer、历史漏洞 corpus 和 held-out corpus 尚未完成。
-- 未来 codec 不得仅凭通过单元测试进入 W1-W3 或成为默认后端；必须先通过跨仓库 conformance kit，再按 `docs/roadmaps/fovea-codec-parallel-roadmap.md` 执行 shadow、canary、物理设备和 rollback 门。
+- 未来 codec 不得仅凭通过单元测试进入 W1-W3 或成为默认后端；必须先通过跨仓库 conformance kit，再按 `docs/roadmaps/fovea-codec-parallel-roadmap.md` 执行 shadow、canary、物理设备和 ImageIO fallback 门。

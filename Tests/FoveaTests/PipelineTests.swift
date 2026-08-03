@@ -32,7 +32,7 @@ final class PipelineTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder(),
+            codec: ImageIOImageDecoder(),
             transformer: transformer
         )
         let request = try ImageRequest.publicImage(
@@ -91,7 +91,7 @@ final class PipelineTests: XCTestCase {
                 root: root.appendingPathComponent("records")
             ),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder(),
+            codec: ImageIOImageDecoder(),
             transformer: transformer
         )
         let request = try ImageRequest.publicImage(
@@ -131,7 +131,7 @@ final class PipelineTests: XCTestCase {
                 root: root.appendingPathComponent("records")
             ),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder(),
+            codec: ImageIOImageDecoder(),
             transformer: OversizedImageTransformer()
         )
         let request = try ImageRequest.publicImage(
@@ -170,7 +170,7 @@ final class PipelineTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: RejectingDecoder()
+            codec: RejectingDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/encoded-data.png")),
@@ -261,7 +261,7 @@ final class PipelineTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/opaque-session.png")),
@@ -356,7 +356,7 @@ final class PipelineTests: XCTestCase {
             recordStore: records,
             namespaceRegistry: NamespaceRegistry(),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder(),
+            codec: ImageIOImageDecoder(),
             clock: clock
         )
 
@@ -403,7 +403,7 @@ final class PipelineTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: AlwaysFailingDecoder()
+            codec: AlwaysFailingDecoder()
         )
 
         await assertThrowsErrorAsync { try await pipeline.image(for: request) }
@@ -444,7 +444,7 @@ final class PipelineTests: XCTestCase {
             recordStore: records,
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: SlowDecoder(delay: 0.15)
+            codec: SlowDecoder(delay: 0.15)
         )
 
         let task = Task { try await pipeline.image(for: request) }
@@ -942,7 +942,7 @@ final class PipelineTests: XCTestCase {
             recordStore: records,
             namespaceRegistry: registry,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         try await firstPipeline.revoke(namespace: namespace)
@@ -958,7 +958,7 @@ final class PipelineTests: XCTestCase {
             recordStore: records,
             namespaceRegistry: registry,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         _ = try await coldMemoryPipeline.image(for: request)
 
@@ -989,7 +989,7 @@ final class PipelineTests: XCTestCase {
             recordStore: barrierRecords,
             namespaceRegistry: registry,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let namespace = SecurityNamespaceID("account-revoke-barrier")
         let request = try ImageRequest(
@@ -1040,7 +1040,7 @@ final class PipelineTests: XCTestCase {
                 root: root.appendingPathComponent("records")
             ),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/network-policy.png")),
@@ -1083,7 +1083,7 @@ final class PipelineTests: XCTestCase {
             encodedStore: encoded,
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://example.test/rendered-alias.png")),
@@ -1189,7 +1189,7 @@ private enum TransformFixtureError: Error {
     case failed
 }
 
-private struct RejectingDecoder: ImageDecoding {
+private struct RejectingDecoder: TestImageCodec {
     func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
         throw ImageCraftError.decodeFailed
     }
@@ -1204,7 +1204,7 @@ private struct RejectingDecoder: ImageDecoding {
     }
 }
 
-private struct AlwaysFailingDecoder: ImageDecoding {
+private struct AlwaysFailingDecoder: TestImageCodec {
     func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
         try ImageProbe(pixelWidth: 100, pixelHeight: 50, frameCount: 1)
     }
@@ -1233,7 +1233,7 @@ private actor TestWallClock: WallClock {
     }
 }
 
-private struct SlowDecoder: ImageDecoding {
+private struct SlowDecoder: TestImageCodec {
     let delay: TimeInterval
 
     func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {

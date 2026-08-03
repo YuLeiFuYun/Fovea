@@ -297,28 +297,6 @@
       "status": "retained-governance-counterexample"
     },
     {
-      "area": "durable-cache-process-crash-recovery",
-      "claimRejected": "A Foundation directory enumerator with skipsSubdirectoryDescendants plus blob-directory reconciliation is sufficient to remove all durable-write temporary files after process exit.",
-      "counterexample": "The first eleven-point independent Akashic child-process crash matrix failed at afterManifestDataWritten and afterManifestFileSynced because a hidden root .durable-tmp file remained after reopen, even though blob reachability correctly became a miss.",
-      "decision": "Retain the two failing switch points, add a POSIX bounded directory reader that includes hidden entries before appending names, and clean root manifest temporary files before blob orphan reconciliation. Do not weaken the zero-temporary-file recovery assertion.",
-      "evidencePaths": [
-        "docs/research/akashic-independent-local-evidence-2026-07.json"
-      ],
-      "exitCondition": "The retained eleven-point real process-crash matrix passes with expected hit/miss, exact blob count and zero temporary files for every point; power-loss remains a separate open claim.",
-      "id": "NEG-AKASHIC-MANIFEST-TEMP-RECOVERY-001"
-    },
-    {
-      "area": "durable-cache-metadata-write-amplification",
-      "claimRejected": "A crash-safe flat manifest rewrite has negligible application-layer write amplification whenever the total retained blob bytes are small.",
-      "counterexample": "The retained independent Akashic local resource envelope measured 64 blobs of 4 KiB each: 262,144 payload bytes caused 734,874 cumulative manifest rewrite bytes, producing a total logical write upper bound of about 3.8033 times payload. The 8 blobs of 1 MiB case was about 1.0016 times, showing object count rather than payload volume dominates this mechanism.",
-      "decision": "Keep the current flat manifest for the first correctness-focused vertical slice, expose object-count-sensitive logical metadata amplification as an explicit metric, and do not claim small-object efficiency. Evaluate batching, segmented manifests or an append/checkpoint design only behind the existing crash and recovery obligations.",
-      "evidencePaths": [
-        "docs/research/akashic-independent-local-evidence-2026-07.json"
-      ],
-      "exitCondition": "A replacement or batching mechanism must materially reduce the retained 64-by-4-KiB logical metadata rewrite ratio while preserving the eleven-point process-crash matrix, future-schema behavior, bounded recovery and partition semantics.",
-      "id": "NEG-AKASHIC-FLAT-MANIFEST-SMALL-BLOB-AMPLIFICATION-001"
-    },
-    {
       "area": "external-component-rehearsal-resource-isolation",
       "claimRejected": "A clean-copy external dependency rehearsal can share the machine with another full release compilation without affecting timing-sensitive URLSession tests.",
       "counterexample": "While the exact-revision 475-test clean-copy suite ran concurrently with the root release full-graph build, the rapid-cancellation warmup URLSession test produced one retryable transport failure. The same test then passed five of five serial replays, and prior isolated exact-revision rehearsals passed the complete suite.",
@@ -377,22 +355,6 @@
       "exitCondition": "No repository-visible file named main.swift contains @main; architecture, arm64/x86_64 identity, DocC and package builds must pass under the pinned supported Xcode without parse-as-library workarounds.",
       "id": "NEG-SWIFT-MAIN-FILENAME-001",
       "status": "resolved-retained-toolchain-portability-counterexample"
-    },
-    {
-      "area": "component-release-identity-governance",
-      "claimRejected": "A conformance checker may hard-code the first alpha tag while exact component revisions are maintained in a separate current-pin registry.",
-      "counterexample": "The second private Fovea root CI resolved Akashic at the current alpha.2 commit and passed the pin gate, but check-akashic-conformance-plan still required the literal tag 0.1.0-alpha.1 and failed after all earlier mathematical and contract models passed.",
-      "decision": "Store releaseTag beside repositoryURL and revision in component-pins.json, validate its prerelease semantic-version shape, and make migration/conformance checks compare against that current registry value rather than a historical literal.",
-      "evidencePaths": [
-        "docs/project-memory/component-pins.json",
-        "docs/project-memory/akashic-contract-migration.json",
-        "scripts/check-component-pins.py",
-        "scripts/check-akashic-conformance-plan.py",
-        ".github/workflows/verify.yml"
-      ],
-      "exitCondition": "Future component alpha/beta/RC updates change one current releaseTag record and all governance checks derive their expected tag from it; no checker contains a historical release literal.",
-      "id": "NEG-HARDCODED-COMPONENT-TAG-001",
-      "status": "resolved-retained-release-governance-counterexample"
     },
     {
       "area": "comparative-challenge-source-materialization",
@@ -631,20 +593,6 @@
       },
       "id": "NEG-SWIFT64-X86-IDENTITY-RUNTIME-001",
       "status": "resolved-hosted-direct-rosetta-xctest-run-30689587302"
-    },
-    {
-      "area": "release-governance-ci-identity",
-      "claimRejected": "A free-form publicCI success string is sufficient to bind component release evidence to the current commit and runner.",
-      "counterexample": "After Akashic alpha.3 passed on xcode-27, the conformance checker rejected the new success label because it hard-coded the prior passed-current-pin string; merely widening the accepted string would still leave commit, runner and run identity implicit.",
-      "decision": "Represent current component CI as a structured record containing status, scope, explicit runner, run ID and exact commit. The conformance checker validates every field against the component pin instead of accepting an evolving free-form label.",
-      "evidencePaths": [
-        "docs/project-memory/akashic-contract-migration.json",
-        "scripts/check-akashic-conformance-plan.py",
-        "docs/project-memory/component-pins.json"
-      ],
-      "exitCondition": "The checker accepts the structured alpha.3 xcode-27 main-current-pin record and rejects records with failed status, wrong runner, missing run ID or mismatched commit.",
-      "id": "NEG-COMPONENT-CI-FREEFORM-STATUS-001",
-      "status": "resolved-structured-current-pin-ci-record"
     },
     {
       "area": "repository-continuity-isolation",

@@ -2,6 +2,13 @@
 
 > **权威性：当前实现事实。** 本页用于区分已交付能力、局部实现与候选设计；若与 Research 文档的愿景叙述冲突，以活动规格、Accepted ADR、代码和可执行证据为准。
 
+## 跨仓 Conformance 状态
+
+- `PersistentStoreProvider` contract v1 已通过独立生成的 SwiftPM consumer：5 项义务覆盖 descriptor、首次发布、无网络重开、持久撤销与有界打开参数。
+- `ImageCodec` contract v1 已通过独立生成的 SwiftPM consumer：6 项义务覆盖 descriptor、2,304 项有限能力域、声明格式 probe/decode、资源估计组合与硬限制失败关闭。
+- 两套 kit 都在 `ConformanceKits/current-contracts.json` 中登记为唯一当前契约，且 `releaseQualified: false`。
+- 自宿主 fixture 通过不证明真实第三方实现、断电/崩溃一致性、跨进程 writer exclusion、hostile corpus、fuzz/sanitizer、真机资源或 Fovea protected qualification。
+
 ## 当前阶段
 
 - 当前工程阶段是 **Phase 0b closeout**。Phase 1 准备已获准，正式阶段声明仍被机器状态拒绝；权威入口见 `PHASE0B_GRADUATION_AND_PHASE1_ENTRY.md` 与 `phase0b-status.json`。

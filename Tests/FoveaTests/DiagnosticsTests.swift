@@ -369,7 +369,7 @@ final class DiagnosticsTests: XCTestCase {
             recordStore: RemovalFailingRecordStore(record: record),
             diagnostics: diagnostics,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         _ = try await pipeline.image(for: request)
@@ -404,7 +404,7 @@ final class DiagnosticsTests: XCTestCase {
                 root: root.appendingPathComponent("records")),
             diagnostics: SlowDiagnosticsSink(),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/slow-diagnostics.png")),

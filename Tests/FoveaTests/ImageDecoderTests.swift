@@ -30,7 +30,8 @@ final class ImageDecoderTests: XCTestCase {
             contentMode: .fit,
             geometryPolicyFingerprint: "exact-v1",
             colorPolicy: .preserveSource,
-            decoderVersion: 1
+            codecContractVersion: 1,
+            codecFingerprint: "test.codec#impl=1#contract=1"
         )
         let converted = DecodeKey(
             contentID: contentID,
@@ -39,7 +40,8 @@ final class ImageDecoderTests: XCTestCase {
             contentMode: .fit,
             geometryPolicyFingerprint: "exact-v1",
             colorPolicy: .convertToSRGB,
-            decoderVersion: 1
+            codecContractVersion: 1,
+            codecFingerprint: "test.codec#impl=1#contract=1"
         )
 
         XCTAssertNotEqual(preserve, converted)
@@ -479,7 +481,7 @@ extension ImageDecoderTests {
             backendWorkingSetBytes: 1
         )
         let stage = DecodeStage(
-            decoder: decoder,
+            codec: decoder,
             limits: .coreV1,
             diagnostics: NullDiagnosticsSink(),
             maximumConcurrentDecodes: 1,
@@ -511,11 +513,11 @@ extension ImageDecoderTests {
 
     func testBackendWorkingSetUnderreportCannotBypassGenericAdmission() async throws {
         let decoder = ContractTestPreparedDecoder(
-            capabilities: .foveaLegacyBaseline,
+            capabilities: .foveaTestBaseline,
             backendWorkingSetBytes: 1
         )
         let stage = DecodeStage(
-            decoder: decoder,
+            codec: decoder,
             limits: .coreV1,
             diagnostics: NullDiagnosticsSink(),
             maximumConcurrentDecodes: 1,

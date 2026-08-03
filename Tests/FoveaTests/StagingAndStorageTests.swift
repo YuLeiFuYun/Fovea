@@ -591,7 +591,7 @@ final class StagingAndStorageTests: XCTestCase {
             ),
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://example.com/incomplete.png")),
@@ -672,7 +672,7 @@ final class StagingAndStorageTests: XCTestCase {
             encodedStore: FailingEncodedStore(),
             recordStore: InMemoryRecordStore(),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         do {
@@ -700,7 +700,7 @@ final class StagingAndStorageTests: XCTestCase {
             encodedStore: FailingEncodedStore(),
             recordStore: InMemoryRecordStore(),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
         let request = try ImageRequest.publicImage(
             url: XCTUnwrap(URL(string: "https://example.com/cache-failure.png")),

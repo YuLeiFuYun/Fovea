@@ -118,6 +118,33 @@ func makePNG(width: Int = 100, height: Int = 50, red: UInt8 = 255) throws -> Dat
     return data as Data
 }
 
+/// 测试假 codec 的统一最新版能力面。生产代码不提供任意 `ImageDecoding` fallback。
+protocol TestImageCodec: ImageCodec {}
+
+extension ImageCodecCapabilities {
+    static let foveaTestBaseline = ImageCodecCapabilities(
+        formats: Set(EncodedImageFormat.allCases),
+        deliveryModes: [.completeFrame],
+        trackModes: [.primaryFrame],
+        metadata: [.orientation, .sourceColorProfile],
+        dynamicRanges: [.standard],
+        outputRepresentations: [.coreGraphicsImage],
+        cancellationMode: .operationBoundary
+    )
+}
+
+extension TestImageCodec {
+    var codecDescriptor: ImageCodecDescriptor {
+        ImageCodecDescriptor(
+            identifier: ImageCodecIdentifier(
+                rawValue: "test:\(String(reflecting: type(of: self)))"
+            ),
+            implementationVersion: 1,
+            capabilities: .foveaTestBaseline
+        )
+    }
+}
+
 func makePipeline(
     stubs: [FakeHTTPTransport.Stub],
     root: URL? = nil,
@@ -125,7 +152,7 @@ func makePipeline(
     configuration: PipelineConfiguration = PipelineConfiguration(),
     softLimitBytes: Int = 8 * 1024 * 1024,
     diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
-    decoder: any ImageDecoding = ImageIOImageDecoder(),
+    decoder: any ImageCodec = ImageIOImageDecoder(),
     renderedImageCache: (any RenderedImageCaching)? = nil
 ) async throws -> (
     FoveaPipeline, FakeHTTPTransport, AkashicOriginalEncodedStore, RepresentationRecordStore
@@ -148,7 +175,7 @@ func makePipeline(
             ),
         diagnostics: diagnostics,
         profileAccessPolicy: .unrestricted,
-        decoder: decoder
+        codec: decoder
     )
     return (pipeline, transport, encoded, records)
 }

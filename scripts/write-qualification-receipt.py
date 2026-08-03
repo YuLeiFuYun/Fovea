@@ -16,7 +16,6 @@ RUN_ID = re.compile(r"^[0-9]{8}T[0-9]{6}Z-[0-9]+$")
 ASSURANCES = {
     "deterministic-workbench-complete",
     "component-clean-copy",
-    "component-rollback-forward-recovery",
     "production-coverage",
     "release-build",
     "thread-sanitizer",

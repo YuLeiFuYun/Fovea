@@ -328,7 +328,7 @@ package enum BenchmarkSmokeHarness {
             recordStore: records,
             diagnostics: diagnostics,
             profileAccessPolicy: .publicOnly,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
     }
 

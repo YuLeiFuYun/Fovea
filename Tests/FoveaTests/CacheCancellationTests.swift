@@ -75,7 +75,7 @@ final class CacheCancellationTests: XCTestCase {
             encodedStore: CancellingReadEncodedStore(),
             recordStore: records,
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
     }
 

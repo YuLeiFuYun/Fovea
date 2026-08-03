@@ -30,7 +30,7 @@ final class RepresentationStoreBoundaryTests: XCTestCase {
             encodedStore: encodedStore,
             recordStore: UntrustedRecordStore(records: [maliciousRecord]),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         let result = try await pipeline.encodedData(for: request)
@@ -74,7 +74,7 @@ final class RepresentationStoreBoundaryTests: XCTestCase {
             encodedStore: encodedStore,
             recordStore: UntrustedRecordStore(records: [second, first]),
             profileAccessPolicy: .unrestricted,
-            decoder: ImageIOImageDecoder()
+            codec: ImageIOImageDecoder()
         )
 
         let result = try await pipeline.encodedData(for: request)

@@ -30,10 +30,7 @@ public final class FoveaPipeline: ProgressiveImageLoading, EncodedDataLoading, N
     let encodedWarmups: AdaptiveEncodedWarmupCoordinator
     let lifetimeAnchors = PipelineLifetimeAnchorStore()
 
-    /// 使用完整 codec descriptor、能力与资源契约构造高级管线。
-    ///
-    /// 新的生产级组合应使用该入口。仅实现 `ImageDecoding` 的迁移实现必须通过
-    /// `legacyDecoder:` 明示进入受限兼容路径。
+    /// 使用完整 codec descriptor、能力与资源契约构造管线。
     public convenience init(
         configuration: PipelineConfiguration = PipelineConfiguration(),
         transport: any HTTPTransporting,
@@ -57,74 +54,7 @@ public final class FoveaPipeline: ProgressiveImageLoading, EncodedDataLoading, N
             ),
             diagnostics: diagnostics,
             profileAccessPolicy: profileAccessPolicy,
-            decoder: codec,
-            transformer: transformer,
-            clock: SystemWallClock(),
-            retrySleeper: SystemRetrySleeper(),
-            retryJitter: SystemRetryJitter()
-        )
-    }
-
-    /// 使用未声明完整 codec 能力的旧解码器构造兼容管线。
-    ///
-    /// 该入口只获得动态类型隔离的 legacy descriptor 和宿主通用资源估计，
-    /// 不构成生产插件资格证明。
-    public convenience init(
-        configuration: PipelineConfiguration = PipelineConfiguration(),
-        transport: any HTTPTransporting,
-        encodedStore: any OriginalEncodedStoring,
-        recordStore: any RepresentationRecordStoring,
-        renderedImageCache: (any RenderedImageCaching)? = nil,
-        diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
-        profileAccessPolicy: ProfileAccessPolicy,
-        legacyDecoder: any ImageDecoding,
-        transformer: any ImageTransforming = IdentityImageTransformer()
-    ) {
-        self.init(
-            id: PipelineID(),
-            configuration: configuration,
-            transport: transport,
-            encodedStore: encodedStore,
-            recordStore: recordStore,
-            renderedImageCache: renderedImageCache,
-            namespaceRegistry: NamespaceRegistry(
-                maximumTrackedNamespaces: configuration.maximumTrackedNamespaces
-            ),
-            diagnostics: diagnostics,
-            profileAccessPolicy: profileAccessPolicy,
-            decoder: legacyDecoder,
-            transformer: transformer,
-            clock: SystemWallClock(),
-            retrySleeper: SystemRetrySleeper(),
-            retryJitter: SystemRetryJitter()
-        )
-    }
-
-    /// 旧源码兼容标签；新代码应使用 `codec:` 或显式 `legacyDecoder:`。
-    public convenience init(
-        configuration: PipelineConfiguration = PipelineConfiguration(),
-        transport: any HTTPTransporting,
-        encodedStore: any OriginalEncodedStoring,
-        recordStore: any RepresentationRecordStoring,
-        renderedImageCache: (any RenderedImageCaching)? = nil,
-        diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
-        profileAccessPolicy: ProfileAccessPolicy,
-        decoder: any ImageDecoding,
-        transformer: any ImageTransforming = IdentityImageTransformer()
-    ) {
-        self.init(
-            id: PipelineID(),
-            configuration: configuration,
-            transport: transport,
-            encodedStore: encodedStore,
-            recordStore: recordStore,
-            renderedImageCache: renderedImageCache,
-            namespaceRegistry: NamespaceRegistry(
-                maximumTrackedNamespaces: configuration.maximumTrackedNamespaces
-            ),
-            diagnostics: diagnostics,
-            profileAccessPolicy: profileAccessPolicy,
-            decoder: decoder,
+            codec: codec,
             transformer: transformer,
             clock: SystemWallClock(),
             retrySleeper: SystemRetrySleeper(),
@@ -142,7 +72,7 @@ public final class FoveaPipeline: ProgressiveImageLoading, EncodedDataLoading, N
         namespaceRegistry: NamespaceRegistry,
         diagnostics: any DiagnosticsSink = NullDiagnosticsSink(),
         profileAccessPolicy: ProfileAccessPolicy = .unrestricted,
-        decoder: any ImageDecoding,
+        codec: any ImageCodec,
         transformer: any ImageTransforming = IdentityImageTransformer(),
         clock: any WallClock = SystemWallClock(),
         retrySleeper: any RetrySleeping = SystemRetrySleeper(),
@@ -160,7 +90,7 @@ public final class FoveaPipeline: ProgressiveImageLoading, EncodedDataLoading, N
             renderedImageCache: renderedImageCache,
             namespaceRegistry: namespaceRegistry,
             diagnostics: diagnostics,
-            decoder: decoder,
+            codec: codec,
             transformer: transformer,
             clock: clock,
             retrySleeper: retrySleeper,

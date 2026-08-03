@@ -113,10 +113,10 @@
       ],
       "id": "DISC-2026-07-27-CODEC-PARALLEL-EVOLUTION",
       "openItems": [
-        "Extract the codec conformance suite into a cross-repository package and fixture manifest; the persistent-store provider v1 pattern is now the reference runner shape.",
-        "When the independent codec reaches bounded probe and reference still decode, build an opt-in adapter and run differential, hostile-corpus, sanitizer, resource and lifecycle evidence.",
+        "Run ImageCodec conformance v1 against the independent codec once it exposes ImageCraft contract v1; the ImageIO self-host fixture passes all six obligations.",
+        "Add hostile-corpus, fuzz, sanitizer and resource/lifecycle evidence before any Fovea default-selection claim.",
         "Implement W4 progressive delivery, W5 animation and HDR/output surfaces only through separate ADRs and workload gates.",
-        "Preserve ImageIO rollback and prohibit default selection before shadow/canary/physical-device evidence."
+        "Preserve immediate ImageIO fallback and prohibit default selection before shadow/canary/physical-device evidence."
       ],
       "repositoryTargets": [
         "docs/project-memory/component-pins.json",
@@ -136,8 +136,8 @@
     {
       "decisions": [
         "ImageCraft and Akashic are independent package/repository boundaries; Fovea remains the owner of network, HTTP, authorization, identity, namespace revoke, shared-work and cross-store commit semantics.",
-        "ImageCraft already exists as an independent local package, so the next codec task is release qualification and physical Fovea dependency migration rather than recreating an ImageIO wrapper.",
-        "Akashic must be made domain-neutral before extraction; Fovea-specific OriginalEncoded, ContentID, HTTP representation and account/logout semantics must not become Akashic public API.",
+        "ImageCraft already exists as an independent local package, so the next codec task is release qualification and current exact-pin Fovea integration rather than recreating an ImageIO wrapper.",
+        "Akashic is domain-neutral at its current public boundary; Fovea-specific OriginalEncoded, ContentID, HTTP representation and account/logout semantics must not become Akashic public API.",
         "Fovea keeps a safe ImageIO plus Akashic default composition while advanced callers may inject codec, rendered-memory cache and qualified persistent-store implementations at explicit composition boundaries.",
         "Global mutable registries, arbitrary post-key request mutation and plugin control over alias, shared-task, namespace-generation or commit-coordination state remain forbidden.",
         "Competitive success is defined by scoped semantic-equivalence classes: hard invariants first, non-inferiority on every preregistered primary endpoint, and superiority on at least one endpoint, with gaps and non-comparability preserved.",
@@ -145,20 +145,16 @@
       ],
       "id": "DISC-2026-07-28-PLUGGABLE-IMAGE-STACK",
       "openItems": [
-        "Complete ImageCraft remote/version governance, external SwiftPM integration, embedded source deletion and rollback evidence.",
-        "Give independent Akashic an immutable commit, remote, tag and protected CI; complete resource, power-loss and remaining fault evidence.",
-        "In an isolated clean Fovea worktree, migrate through typed Akashic adapters while retaining HTTP, authority, revoke and cross-store commit semantics in Fovea.",
-        "Build cross-repository compatibility matrices and repeat W3/W8/W13 and final evidence on clean source and stable physical devices."
+        "Run provider and codec v1 kits against real independent implementations.",
+        "Complete physical-device resource, energy and Akashic power-loss evidence.",
+        "Repeat W3/W8/W13 and final comparisons on clean current source and stable physical devices."
       ],
       "repositoryTargets": [
-        "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
         "docs/adr/0012-pluggable-codec-and-cache-boundaries.md",
         "docs/roadmaps/fovea-codec-parallel-roadmap.md",
         "Package.swift",
         "docs/project-memory/project-memory.json",
-        "docs/project-memory/akashic-contract-migration.json",
-        "docs/project-memory/akashic-conformance-plan.json",
-        "docs/research/akashic-independent-local-evidence-2026-07.json"
+        "ConformanceKits/current-contracts.json"
       ],
       "sourceIDs": [
         "SRC-DISCUSSION-PLUGGABLE-STACK-01"
@@ -171,14 +167,14 @@
         "Every task must map its work to a roadmap phase and an open obligation; unfinished phases and blocked queue items remain visible across sessions.",
         "Phase removal, renumbering or material sequencing changes require explicit discussion-ledger supersession rather than silent plan rewriting.",
         "The roadmap control plane is machine-readable and validated by the existing project-memory gate so local verification and CI fail when it drifts or disappears.",
-        "Execution begins immediately with P0 baseline capture and decode-resource contract audit while unsafe package migration remains blocked by the current dirty source identity.",
+        "Execution begins immediately with P0 baseline capture and decode-resource contract audit while current exact-pin evidence remains bound to explicit source identity.",
         "Research repositories inform adoption, rejection and experiment-only decisions, but they do not become Fovea runtime dependencies merely because they exist."
       ],
       "id": "DISC-2026-07-29-LONG-HORIZON-ROADMAP-CONTINUITY",
       "openItems": [
         "Publish a privacy-sanitized Fovea root commit and establish protected public CI.",
         "Resolve the decode working-set coverage ambiguity or retain the fail-closed resource policy before a second production codec.",
-        "Build cross-repository codec and storage conformance kits plus current/previous compatibility matrices.",
+        "Run the current codec and storage conformance kits against real independent implementations.",
         "Complete physical-device resource, energy and power-loss evidence."
       ],
       "repositoryTargets": [
@@ -200,43 +196,39 @@
       "status": "active"
     },
     {
-      "id": "DISC-2026-08-01-NEXT-ACTION-DIRECTION",
-      "status": "active",
-      "sourceIDs": [
-        "SRC-DISCUSSION-PLUGGABLE-STACK-01"
-      ],
       "decisions": [
         "ImageCraft and Akashic already satisfy the local logical-extraction objective; the immediate objective is release-grade physical dependency migration, not recreating wrappers.",
         "ImageCraft and Akashic public exact revisions are now the sole production component sources; embedded mirrors and source-lock governance are retired.",
-        "New qualified codec entry points should require ImageCodec rather than treating legacy ImageDecoding implementations as production-grade plugins.",
+        "ImageCodec is the only accepted codec composition contract; arbitrary ImageDecoding compatibility paths are removed.",
         "Persistent cache substitution must be expressed as an immutable qualified store bundle that preserves generation, writer lifetime, namespace persistence and cross-store transaction obligations; independent raw store hooks are rejected.",
         "Cross-repository validation should use separate minimal codec and storage conformance kits, while component evidence and Fovea composition evidence remain distinct.",
-        "The post-migration comparison target is scoped Pareto certification: hard invariants first, non-inferiority on all preregistered primary endpoints and superiority on at least one endpoint, with gaps and non-comparability retained.",
-        "New features and speculative cross-platform runtime abstraction are lower priority than clean source identity, release governance, external dependency switching, rollback, resource evidence and composition correctness."
+        "The current-stack comparison target is scoped Pareto certification: hard invariants first, non-inferiority on all preregistered primary endpoints and superiority on at least one endpoint, with gaps and non-comparability retained.",
+        "New features and speculative cross-platform runtime abstraction are lower priority than clean source identity, release governance, exact dependency identity, immediate safe fallback, resource evidence and composition correctness."
       ],
+      "id": "DISC-2026-08-01-NEXT-ACTION-DIRECTION",
       "openItems": [
-        "Publish the privacy-sanitized Fovea root, observe public CI, protect main and create the first immutable Fovea alpha tag.",
-        "Extract the versioned codec conformance kit and extend the current/previous contract compatibility classifier; persistent-store provider conformance v1 is self-hosted and source-bound.",
+        "Publish the privacy-sanitized Fovea root, observe public CI, protect main and create the first immutable Fovea tag.",
+        "Run codec/provider v1 kits against real independent components; both self-host fixtures now pass.",
         "Repeat W1/W2/W3/W7/W8/W10/W13 on protected clean source and stable physical devices."
       ],
       "repositoryTargets": [
         "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
         "docs/project-memory/long-horizon-roadmap.json",
         "docs/project-memory/project-memory.json",
-        "Sources/FoveaCore/FoveaImageDecoderPolicy.swift",
         "Sources/FoveaSystem/FoveaSystemPipeline.swift",
         "Sources/FoveaPersistence/FoveaPersistentStores.swift",
         "ConformanceKits/PersistentStoreProvider/v1/manifest.json",
         "ConformanceKits/PersistentStoreProvider/v1/run.py",
-        "ConformanceKits/compatibility-matrix.json"
-      ]
+        "ConformanceKits/current-contracts.json",
+        "ConformanceKits/ImageCodec/v1/manifest.json",
+        "ConformanceKits/ImageCodec/v1/run.py"
+      ],
+      "sourceIDs": [
+        "SRC-DISCUSSION-PLUGGABLE-STACK-01"
+      ],
+      "status": "active"
     },
     {
-      "id": "DISC-2026-08-01-PUBLIC-MIT-EXTERNAL-COMPONENTS",
-      "status": "active",
-      "sourceIDs": [
-        "SRC-DISCUSSION-PUBLIC-MIT-CLEANUP-01"
-      ],
       "decisions": [
         "Fovea, ImageCraft and Akashic use the MIT License; third-party and public-domain media remain outside the MIT grant and retain per-file provenance.",
         "Public histories are sanitized development histories with GitHub noreply authors; pre-publication histories remain only in local bundles and archive branches and are not pushed.",
@@ -244,8 +236,9 @@
         "Embedded ImageCraft and Akashic production sources, temporary external-package templates and embedded-source lock gates are retired.",
         "Compiler-warning strictness applies to Fovea-owned sources without overriding external package warning policy.",
         "Superseded narrative reports and extraction provenance are removed, while machine evidence needed to interpret still-valid claims remains immutable.",
-        "The 2026-08-01 action direction is the sole narrative migration plan; the superseded 2026-07-28 and 2026-07-30 operational roadmaps are deleted after their durable decisions and completed facts were normalized into machine-readable memory."
+        "The 2026-08-01 action direction is the current narrative plan; the superseded 2026-07-28 and 2026-07-30 operational roadmaps are deleted after their durable decisions and completed facts were normalized into machine-readable memory."
       ],
+      "id": "DISC-2026-08-01-PUBLIC-MIT-EXTERNAL-COMPONENTS",
       "openItems": [
         "Publish the privacy-sanitized Fovea root, observe public CI, protect main and retain the first immutable Fovea alpha tag.",
         "Complete physical-device resource, energy and physical power-loss evidence."
@@ -261,17 +254,16 @@
         "scripts/run-swift-strict.py",
         "docs/TECHNOLOGY_RADAR.md"
       ],
+      "sourceIDs": [
+        "SRC-DISCUSSION-PUBLIC-MIT-CLEANUP-01"
+      ],
+      "status": "active",
       "supersededArtifacts": [
         "docs/roadmaps/fovea-pluggable-image-stack-action-plan-2026-07-28.md",
         "docs/roadmaps/fovea-component-boundary-roadmap-2026-07-30.md"
       ]
     },
     {
-      "id": "DISC-2026-08-01-CROSS-PLATFORM-MECHANISM-AUDIT",
-      "status": "active",
-      "sourceIDs": [
-        "SRC-RESEARCH-CROSS-PLATFORM-PIPELINE-2026-08"
-      ],
       "decisions": [
         "Cross-platform inputs are adopted as falsifiable mechanisms and challenge tests, not copied public APIs or runtime dependencies.",
         "Codec and store selection remains build-time immutable and capability-qualified; global mutable registries and implicit singletons remain rejected.",
@@ -280,6 +272,7 @@
         "Caffeine is an external executable policy oracle only; SIEVE, S3-FIFO, W-TinyLFU and S4-FIFO must use identical traces, capacity models and loss metrics.",
         "Learning-augmented cache or prefetch policy may influence low-frequency control decisions only, must have deterministic fallback, and cannot alter identity, authorization, revoke or persistence eligibility."
       ],
+      "id": "DISC-2026-08-01-CROSS-PLATFORM-MECHANISM-AUDIT",
       "openItems": [
         "Add join-versus-cancel model checking and resource ownership/reclaim-tail evidence.",
         "Build a fixed-revision external cache-policy replay oracle for W13.",
@@ -291,32 +284,30 @@
         "docs/project-memory/long-horizon-roadmap.json",
         "Tests/FoveaTests/SharedTaskTests.swift",
         "Benchmarks/CacheLab"
-      ]
+      ],
+      "sourceIDs": [
+        "SRC-RESEARCH-CROSS-PLATFORM-PIPELINE-2026-08"
+      ],
+      "status": "active"
     },
     {
-      "id": "DISC-2026-08-01-SWIFT-6-4-MIGRATION",
-      "status": "active-private-xcode27-root-qualification",
-      "sourceIDs": [
-        "SRC-DISCUSSION-SWIFT-6-4-MIGRATION-01",
-        "SRC-RESEARCH-SWIFT-6-4-ADOPTION-2026-08",
-        "SRC-RESEARCH-GITHUB-XCODE27-PREVIEW-2026-08"
-      ],
       "decisions": [
         "Fovea, ImageCraft, Akashic and every active consumer/benchmark SwiftPM manifest move to tools version 6.4 while retaining iOS 15 and macOS 12 deployment targets.",
         "Every repository fails closed unless Xcode 27 or newer with Apple Swift 6.4 is selected; compiler identity is part of local evidence rather than an ambient assumption.",
         "Fovea adopts async defer for permit/subscription/preparation cleanup and weak let for immutable non-owning relationships; Akashic adopts a noncopyable writer lease acquired through a dedicated serial actor.",
         "Swift Build product paths are discovered through swift build --show-bin-path; scripts may not hard-code .build/debug or .build/out product locations.",
-        "RawSpan parser migration, public noncopyable decode preparation, task cancellation shields, SwiftPM SBOM certification and manual optimizer attributes remain deferred or rejected until deployment, compiler and A/B evidence gates are satisfied.",
+        "RawSpan parser adoption, public noncopyable decode preparation, task cancellation shields, SwiftPM SBOM certification and manual optimizer attributes remain deferred or rejected until deployment, compiler and A/B evidence gates are satisfied.",
         "No performance claim follows from a language-version bump alone; every optimization attribute or hot-loop rewrite requires a named workload, interleaved baseline and code-size/resource review.",
         "GitHub now provides an explicit xcode-27 public-preview runner. macos-26 remains invalid for tools 6.4; component PRs and the Fovea private root must use xcode-27, verify compiler identity, and preserve preview provenance before pins, tags or protected-CI claims advance.",
         "The prior Fovea publication task remains active: the repository stays private because the seventh root exposed an order-sensitive Workbench UI shard failure even though the isolated diagnostic test passed.",
         "The Workbench order-dependent product-patterns failure is locally resolved by test-scoped main-actor application termination; the exact original five-test shard passes 5/5 and isolated retry is no longer used as evidence.",
         "The diagnostics backpressure test now waits for a bounded observable condition instead of fixed scheduling delays; it passes 20/20 and the local three-repository composition passes 475/475.",
-        "The full locked comparison infrastructure builds under Swift 6.4: seven macOS adapters, seven iOS adapters and Apple/Fovea SwiftUI surfaces; this is compatibility evidence only and phase1DeclarationAllowed remains false."
+        "The full locked comparison infrastructure builds under Swift 6.4: seven macOS adapters, seven iOS adapters and Apple/Fovea SwiftUI surfaces; this is current integration evidence only and phase1DeclarationAllowed remains false."
       ],
+      "id": "DISC-2026-08-01-SWIFT-6-4-ADOPTION",
       "openItems": [
-        "Complete the sanitized private Fovea xcode-27 root including native arm64 and Rosetta-backed x86_64 identity vectors, full verification, rollback and privacy gates.",
-        "Rebind the full Akashic alpha.3 fault campaign, then complete physical-device resource/energy and true power-loss evidence.",
+        "Complete the sanitized private Fovea xcode-27 root including native arm64 and Rosetta-backed x86_64 identity vectors and full verification.",
+        "Complete physical-device resource/energy and true Akashic power-loss evidence.",
         "Revisit linear ImageCraft preparation, RawSpan and SBOM only when their retained exit conditions are met."
       ],
       "repositoryTargets": [
@@ -333,7 +324,13 @@
         "docs/research/swift-6.4-adoption-matrix.json",
         "docs/research/github-xcode27-hosted-runner-evidence-2026-08.json",
         "docs/research/negative-results.json"
-      ]
+      ],
+      "sourceIDs": [
+        "SRC-DISCUSSION-SWIFT-6-4-MIGRATION-01",
+        "SRC-RESEARCH-SWIFT-6-4-ADOPTION-2026-08",
+        "SRC-RESEARCH-GITHUB-XCODE27-PREVIEW-2026-08"
+      ],
+      "status": "active-current-components-green-fovea-qualification"
     }
   ],
   "ledgerID": "FOVEA-DISCUSSION-LEDGER-V1",
