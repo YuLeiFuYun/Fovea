@@ -1010,6 +1010,65 @@ try:
             "codec kit changes must run the dedicated validator and external harness without escalating"
         )
 
+    retired_registry_impact = profile_module.classify(
+        ["ConformanceKits/compatibility-matrix.json"]
+    )
+    if (
+        retired_registry_impact["unknownFiles"]
+        or "deleted" not in retired_registry_impact["categories"]
+        or "provider-conformance" not in retired_registry_impact["categories"]
+        or "codec-conformance" not in retired_registry_impact["categories"]
+        or "governance" not in retired_registry_impact["categories"]
+    ):
+        errors.append("retired conformance registry deletion must remain classified without unknown input")
+
+    smoke_effective, smoke_phases, smoke_reasons = profile_module.phase_plan(
+        "workbench-smoke", profile_module.classify([])
+    )
+    smoke = next((phase for phase in smoke_phases if phase.name == "workbench-smoke"), None)
+    if (
+        smoke_effective != "workbench-smoke"
+        or smoke_reasons
+        or smoke is None
+        or smoke.command.count("--skip-release-build") != 1
+        or smoke.command.count("--reuse-release-derived-data") != 1
+    ):
+        errors.append("Workbench smoke command must contain one copy of each bounded reuse flag")
+
+    source = profile_module.source_state()
+    if (
+        len(source.head_commit) != 40
+        or len(source.working_tree) != 40
+        or not all(character in "0123456789abcdef" for character in source.working_tree)
+    ):
+        errors.append("verification source state must bind canonical Git commit and tree identities")
+    with tempfile.TemporaryDirectory(prefix="fovea-profile-report-contract-") as temporary:
+        original_artifacts = profile_module.ARTIFACTS
+        profile_module.ARTIFACTS = Path(temporary)
+        try:
+            report_path = profile_module.write_report(
+                "smart",
+                "smart",
+                "synthetic-base",
+                {"changedFiles": [], "categories": [], "unknownFiles": [], "testFilters": [], "modelScripts": []},
+                [],
+                [profile_module.PhaseResult("synthetic", ["true"], 0, 0.0, "synthetic.log")],
+                0.0,
+                source,
+                source,
+            )
+            report_payload = json.loads(report_path.read_text())
+        finally:
+            profile_module.ARTIFACTS = original_artifacts
+    if (
+        report_payload.get("schemaVersion") != 2
+        or report_payload.get("headCommit") != source.head_commit
+        or report_payload.get("verifiedTree") != source.working_tree
+        or report_payload.get("sourceUnchangedDuringRun") is not True
+        or report_payload.get("status") != "passed"
+    ):
+        errors.append("verification report must bind an unchanged source state")
+
     codec_seam_impact = profile_module.classify(
         ["Sources/FoveaCore/DecodeStage.swift"]
     )
@@ -1130,6 +1189,12 @@ try:
             "codec runner must verify a backend that is also the contract package",
         'xctest_summary':
             "all cross-repository runners must verify actual XCTest execution counts",
+        '"schemaVersion": 2':
+            "verification reports must use the source-bound schema",
+        'sourceUnchangedDuringRun':
+            "verification reports must reject source changes during a run",
+        'working_tree_identity()':
+            "verification reports must bind the exact working tree",
     }
     combined_profile_source = (
         verify_profile_source

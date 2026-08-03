@@ -19,6 +19,7 @@ import subprocess
 import sys
 import threading
 import time
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -99,6 +100,13 @@ class PhaseResult:
     log: str
 
 
+@dataclass(frozen=True)
+class SourceState:
+    head_commit: str
+    working_tree: str
+    dirty: bool
+
+
 def command_output(command: list[str], *, env: dict[str, str] | None = None) -> str:
     return subprocess.run(
         command,
@@ -109,6 +117,32 @@ def command_output(command: list[str], *, env: dict[str, str] | None = None) -> 
         stderr=subprocess.PIPE,
         check=True,
     ).stdout.strip()
+
+
+def working_tree_identity() -> str:
+    with tempfile.TemporaryDirectory(prefix="fovea-verification-index-") as temporary:
+        index = Path(temporary) / "index"
+        env = os.environ.copy()
+        env["GIT_INDEX_FILE"] = str(index)
+        subprocess.run(
+            ["git", "read-tree", "HEAD"],
+            cwd=ROOT, env=env, check=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        subprocess.run(
+            ["git", "add", "-A", "--", "."],
+            cwd=ROOT, env=env, check=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        return command_output(["git", "write-tree"], env=env)
+
+
+def source_state() -> SourceState:
+    return SourceState(
+        head_commit=command_output(["git", "rev-parse", "HEAD"]),
+        working_tree=working_tree_identity(),
+        dirty=bool(command_output(["git", "status", "--porcelain"])),
+    )
 
 
 def changed_files(base: str | None) -> list[str]:
@@ -164,7 +198,10 @@ def classify(paths: list[str]) -> dict[str, object]:
             categories.add("provider-conformance")
             categories.add("codec-conformance")
             categories.add("tooling")
-        elif path == "ConformanceKits/current-contracts.json":
+        elif path in {
+            "ConformanceKits/current-contracts.json",
+            "ConformanceKits/compatibility-matrix.json",
+        }:
             categories.add("provider-conformance")
             categories.add("codec-conformance")
             categories.add("governance")
@@ -473,18 +510,28 @@ def phase_plan(profile: str, impact: dict[str, object]) -> tuple[str, list[Phase
 def write_report(
     requested: str,
     effective: str,
+    verification_base: str | None,
     impact: dict[str, object],
     reasons: list[str],
     results: list[PhaseResult],
     started: float,
+    source_before: SourceState,
+    source_after: SourceState,
 ) -> Path:
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
+    source_unchanged = source_before == source_after
+    phases_passed = all(item.return_code == 0 for item in results)
     report = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
         "requestedProfile": requested,
         "effectiveProfile": effective,
-        "status": "passed" if all(item.return_code == 0 for item in results) else "failed",
+        "verificationBase": verification_base,
+        "headCommit": source_after.head_commit,
+        "verifiedTree": source_after.working_tree,
+        "dirty": source_after.dirty,
+        "sourceUnchangedDuringRun": source_unchanged,
+        "status": "passed" if phases_passed and source_unchanged else "failed",
         "elapsedSeconds": round(time.monotonic() - started, 3),
         "impact": impact,
         "escalationReasons": reasons,
@@ -514,6 +561,7 @@ def main() -> int:
     started = time.monotonic()
     install_signal_handlers()
     try:
+        source_before = source_state()
         paths = changed_files(args.base)
         impact = classify(paths)
         effective, phases, reasons = phase_plan(args.profile, impact)
@@ -535,7 +583,11 @@ def main() -> int:
         sequential = [phase for phase in phases if phase.name not in static_names]
         results = run_parallel(parallel, env)
         if any(item.return_code != 0 for item in results):
-            report = write_report(args.profile, effective, impact, reasons, results, started)
+            source_after = source_state()
+            report = write_report(
+                args.profile, effective, args.base, impact, reasons, results, started,
+                source_before, source_after,
+            )
             print(f"Verification failed: {report.relative_to(ROOT)}", file=sys.stderr)
             return 1
         for phase in sequential:
@@ -543,8 +595,12 @@ def main() -> int:
             results.append(result)
             if result.return_code != 0:
                 break
-        report = write_report(args.profile, effective, impact, reasons, results, started)
-        if any(item.return_code != 0 for item in results):
+        source_after = source_state()
+        report = write_report(
+            args.profile, effective, args.base, impact, reasons, results, started,
+            source_before, source_after,
+        )
+        if any(item.return_code != 0 for item in results) or source_after != source_before:
             print(f"Verification failed: {report.relative_to(ROOT)}", file=sys.stderr)
             return 1
         print(
