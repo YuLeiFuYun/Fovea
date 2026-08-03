@@ -33,6 +33,9 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
     }
 
     package struct Key: Hashable, Sendable {
+        /// 取消交接只允许发生在调用方声明的同一逻辑来源内。
+        /// 不同图片不能因展示几何相同而互相预热；同一来源可显式跨轮换 locator 交接。
+        let logicalSource: LogicalSourceID
         let namespace: SecurityNamespaceID
         let authorizationContext: AuthorizationContextID
         let targetWidth: Int
@@ -150,6 +153,7 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
 
     private static func key(for request: ImageRequest) -> Key {
         Key(
+            logicalSource: request.logicalSource,
             namespace: request.namespace,
             authorizationContext: request.authorizationContext,
             targetWidth: request.target.width,

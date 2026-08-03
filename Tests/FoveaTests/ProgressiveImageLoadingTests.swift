@@ -188,9 +188,11 @@ final class ProgressiveImageLoadingTests: XCTestCase {
             profileAccessPolicy: .unrestricted,
             codec: ImageIOImageDecoder()
         )
+        let logicalSource = LogicalSourceID("adaptive-warmup-shared-source")
         let requests = try (0..<3).map { index in
             try ImageRequest.publicImage(
                 url: XCTUnwrap(URL(string: "https://example.test/warmup-\(index).png")),
+                logicalSource: logicalSource,
                 target: TargetPixels(width: 48, height: 32),
                 appID: "progressive-loader-tests"
             )

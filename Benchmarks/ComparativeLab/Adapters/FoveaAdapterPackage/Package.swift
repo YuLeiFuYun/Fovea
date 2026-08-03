@@ -24,6 +24,7 @@ let package = Package(
             dependencies: [
                 "FoveaComparatorAdapter",
                 .product(name: "ComparativeLabCore", package: "FoveaComparativeLab"),
+                .product(name: "Fovea", package: "Fovea"),
             ]
         ),
     ],

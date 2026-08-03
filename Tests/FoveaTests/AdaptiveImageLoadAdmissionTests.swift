@@ -51,6 +51,30 @@ final class AdaptiveImageLoadAdmissionTests: XCTestCase {
         controller.finish(alreadyStable)
     }
 
+    func testAdmissionStateDoesNotCrossLogicalSourceAtSameGeometry_UI_PT_026() async throws {
+        let clock = TestMonotonicTimeSource()
+        let controller = AdaptiveImageLoadAdmission(maximumStateCount: 64, timeSource: clock)
+        let firstSource = try imageRequest(path: "a.png", width: 320, height: 240)
+        let secondSource = try imageRequest(path: "b.png", width: 320, height: 240)
+
+        let first = controller.begin(for: firstSource)
+        controller.recordCancellation(for: firstSource)
+        controller.finish(first)
+        clock.advance(nanoseconds: 10_000_000)
+        let second = controller.begin(for: firstSource)
+        XCTAssertTrue(controller.recordCancellation(for: firstSource).shouldWarmCancelledRequest)
+        controller.finish(second)
+
+        let independent = controller.begin(for: secondSource)
+        XCTAssertFalse(independent.preservesFetchOnCancellation)
+        XCTAssertEqual(independent.stabilizationNanoseconds, 0)
+        XCTAssertFalse(
+            controller.recordCancellation(for: secondSource).shouldWarmCancelledRequest
+        )
+        controller.finish(independent)
+        XCTAssertEqual(controller.trackedStateCount(), 2)
+    }
+
     func testAdmissionStateDoesNotCrossTargetGeometry_UI_PT_026() async throws {
         let controller = AdaptiveImageLoadAdmission(maximumStateCount: 64)
         let firstTarget = try imageRequest(path: "a.png", width: 320, height: 240)

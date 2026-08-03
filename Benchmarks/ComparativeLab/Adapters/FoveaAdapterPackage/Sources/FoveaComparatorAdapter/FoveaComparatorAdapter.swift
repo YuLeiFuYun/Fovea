@@ -50,7 +50,6 @@ public actor FoveaComparatorAdapter: ComparatorAdapter {
         let isAuthenticated = !credentialNames.isEmpty
         let imageRequest = try ImageRequest(
             url: request.url,
-            logicalSource: LogicalSourceID(request.resourceID),
             target: TargetPixels(width: request.target.width, height: request.target.height),
             contentMode: request.contentMode == .aspectFit ? .fit : .fill,
             namespace: SecurityNamespaceID(request.securityNamespace),
