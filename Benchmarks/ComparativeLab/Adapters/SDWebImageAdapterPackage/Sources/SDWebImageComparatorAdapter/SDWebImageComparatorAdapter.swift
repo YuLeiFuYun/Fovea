@@ -136,7 +136,8 @@ public final class SDWebImageComparatorAdapter: ComparatorAdapter, @unchecked Se
                             )
                         )
                     } else {
-                        let cancelled = (error as NSError?)?.code == NSURLErrorCancelled
+                        let nsError = error as NSError?
+                        let cancelled = nsError.map(Self.isCancellation) ?? false
                         completionGate.resume(
                             continuation,
                             returning: ComparatorLoadOutput(
@@ -179,6 +180,12 @@ public final class SDWebImageComparatorAdapter: ComparatorAdapter, @unchecked Se
 
     public func cancelAll() async {
         manager.cancelAll()
+    }
+
+    private static func isCancellation(_ error: NSError) -> Bool {
+        (error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled)
+            || (error.domain == SDWebImageErrorDomain
+                && error.code == SDWebImageError.cancelled.rawValue)
     }
 
     private static func cacheSource(_ value: SDImageCacheType) -> ComparatorCacheSource {

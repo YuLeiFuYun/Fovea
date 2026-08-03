@@ -18,6 +18,13 @@ let package = Package(
                 .product(name: "ComparativeLabCore", package: "FoveaComparativeLab"),
                 .product(name: "SDWebImage", package: "SDWebImage"),
             ]
+        ),
+        .testTarget(
+            name: "SDWebImageComparatorAdapterTests",
+            dependencies: [
+                "SDWebImageComparatorAdapter",
+                .product(name: "ComparativeLabCore", package: "FoveaComparativeLab"),
+            ]
         )
     ],
     swiftLanguageModes: [.v6]
