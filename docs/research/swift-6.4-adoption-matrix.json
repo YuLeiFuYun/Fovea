@@ -135,7 +135,7 @@
     "custom noncopyable continuation bridges"
   ],
   "validation": {
-    "foveaTests": "478-of-478-public-akashic-alpha4-pin-zero-failures",
+    "foveaTests": "478-of-478-current-public-component-pins-zero-failures",
     "imageCraftTests": 64,
     "akashicTests": 55,
     "imageCraftReleaseBuild": "passed",
@@ -161,8 +161,8 @@
     "phase1DeclarationAllowed": false,
     "x86IdentityBuild": "passed-hosted-xcode27-direct-rosetta-xctest-run-30689587302",
     "componentReleases": {
-      "ImageCraft": "4507da936ef348fa198652c2e4314a1f393b2c90@0.1.0-alpha.3",
-      "Akashic": "50e7032b155187b993b5a82f613c3a0410d32976@0.1.0-alpha.4"
+      "ImageCraft": "e147b349d4ff440af6f257c3fb8a7cb4788c953b@0.1.0-alpha.4",
+      "Akashic": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6@0.1.0-alpha.5"
     },
     "foveaAlpha3CleanCopy": "475-of-475",
     "foveaAlpha2RollbackForward": "3-scenarios-475-each",
@@ -219,6 +219,7 @@
       "nonPromotingExactQueryTest": "CACHE_PT_053-passed"
     },
     "foveaAlpha4CleanCopy": "478-of-478-public-https-exact-revision",
-    "akashicAlpha4HostedCI": "passed-xcode27-core-run-30741724985"
+    "akashicAlpha4HostedCI": "passed-xcode27-core-run-30741724985",
+    "akashicAlpha5HostedCI": "passed-xcode27-core-run-30790047451"
   }
 }

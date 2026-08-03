@@ -32,7 +32,7 @@
 - `ImageCraftImageIO`：Apple ImageIO/Core Graphics 参考实现；
 - 独立消费者、公共 API、平台矩阵、retained corpus、oracle、性能与 release-readiness 门。
 
-ImageCraft 当前公共提交 `4507da936ef348fa198652c2e4314a1f393b2c90` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required CI，并以 `0.1.0-alpha.3` 标记。Fovea 通过公共 HTTPS exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy 通过。剩余缺口是真实独立 codec、hostile corpus 和真机资源证据。
+ImageCraft 当前公共提交 `e147b349d4ff440af6f257c3fb8a7cb4788c953b` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required CI，并以 `0.1.0-alpha.4` 标记。Fovea 通过公共 HTTPS exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy 通过。剩余缺口是真实独立 codec、hostile corpus 和真机资源证据。
 
 ### 2.2 缓存库也不需要从零拆分
 
@@ -42,7 +42,7 @@ ImageCraft 当前公共提交 `4507da936ef348fa198652c2e4314a1f393b2c90` 是唯�
 - `AkashicMemory`：SIEVE 内存缓存；
 - `AkashicDisk`：stage/publish/discard、单 writer、恢复、损坏隔离和文件系统防御。
 
-Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required `core` CI（run `30741724985`），并以 `0.1.0-alpha.4` 标记。Fovea 通过 typed adapter 和公共 exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy、fault V5、resource V2 与平台构建证据通过。物理断电和稳定真机资源/能耗证据仍待完成。
+Akashic 当前公共提交 `2715f23d50b5a17b7328be41608eaf1b1c99b0d6` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required `core` CI（run `30790047451`），并以 `0.1.0-alpha.5` 标记。Fovea 通过 typed adapter 和公共 exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy、fault V5、resource V2 与平台构建证据通过。物理断电和稳定真机资源/能耗证据仍待完成。
 
 ### 2.3 “整体帕累托优势”不能作为一个无条件目标
 
@@ -130,7 +130,7 @@ Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 是唯一�
 
 - 公共 MIT 仓库、`0.1.0-alpha.4`、Hosted `xcode-27` required `core` check 已建立；
 - 公共 API、consumer、兼容与组件门在 GitHub CI 通过；
-- Fovea 只固定到 `4507da936ef348fa198652c2e4314a1f393b2c90`；
+- Fovea 只固定到 `e147b349d4ff440af6f257c3fb8a7cb4788c953b`；
 - 内嵌源码已删除，宿主与 clean-copy 均为 475/475。
 
 剩余：真实独立 codec conformance、稳定真机 RSS/能耗和格式范围扩展证据。
@@ -139,9 +139,9 @@ Akashic 当前公共提交 `50e7032b155187b993b5a82f613c3a0410d32976` 是唯一�
 
 状态：**本地与公共迁移完成。**
 
-- 公共 MIT 仓库、`0.1.0-alpha.4`、Hosted `xcode-27` required `core` check 已建立；
+- 公共 MIT 仓库、`0.1.0-alpha.5`、Hosted `xcode-27` required `core` check 已建立；
 - 55 项组件测试、fault V5、resource V2、崩溃/quota/contention/六项平台门和 GitHub CI 通过；
-- Fovea 只固定到 `50e7032b155187b993b5a82f613c3a0410d32976`；
+- Fovea 只固定到 `2715f23d50b5a17b7328be41608eaf1b1c99b0d6`；
 - typed adapter 是唯一原编码持久化路径，内嵌源码已删除，当前宿主与 clean-copy 均为 478/478。
 
 剩余：跨仓 storage conformance、物理断电和稳定真机 I/O/能耗；flat-manifest 写放大已由 manifest v2 增量记录方案替代。

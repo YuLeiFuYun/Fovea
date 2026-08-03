@@ -40,7 +40,7 @@
       "id": "P1-GOVERNANCE-001",
       "phase": "P1",
       "status": "completed-current-public-xcode27-ci-green-required-check-active",
-      "summary": "ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 and Akashic 50e7032b155187b993b5a82f613c3a0410d32976 are the only supported component revisions. Both are public, MIT licensed, xcode-27 CI-green and protected by required core checks; physical-device evidence remains open."
+      "summary": "ImageCraft e147b349d4ff440af6f257c3fb8a7cb4788c953b and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 are the only supported component revisions. Both are public, MIT licensed, xcode-27 CI-green and protected by required core checks; physical-device evidence remains open."
     },
     {
       "id": "P3-CONTRACT-001",
@@ -52,7 +52,7 @@
       "id": "P4-DISK-001",
       "phase": "P4",
       "status": "public-xcode27-ci-green-alpha3-required-check-fault-rebind-device-pending",
-      "summary": "Akashic 50e7032b155187b993b5a82f613c3a0410d32976 is public under MIT, xcode-27 CI-green in run 30741724985, tagged 0.1.0-alpha.4, and protected by a required core check. Fovea public-pin clean-copy passes 478/478 and CacheLab V4 is bound to clean source-control resolution; physical power-loss and stable-device resource qualification remain open."
+      "summary": "Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 is public under MIT, xcode-27 CI-green in run 30790047451, tagged 0.1.0-alpha.5, and protected by a required core check. Fovea public-pin clean-copy passes 478/478 and CacheLab V4 is bound to clean source-control resolution; physical power-loss and stable-device resource qualification remain open."
     },
     {
       "id": "P4-EVIDENCE-001",
@@ -63,8 +63,8 @@
     {
       "id": "P5-AKASHIC-ADAPTER-001",
       "phase": "P5",
-      "status": "current-public-alpha4-pin-478-current-schema-tested",
-      "summary": "Fovea consumes public Akashic 50e7032b155187b993b5a82f613c3a0410d32976 (0.1.0-alpha.4) by exact revision and passes 478/478. Current manifest, resource V2 and fault V5 evidence are bound to this source identity; physical qualification remains open."
+      "status": "current-public-alpha5-pin-478-current-schema-tested",
+      "summary": "Fovea consumes public Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 (0.1.0-alpha.5) by exact revision and passes 478/478. Current manifest, resource V2 and fault V5 evidence are bound to this source identity; physical qualification remains open."
     },
     {
       "id": "P4-MANIFEST-001",
@@ -81,14 +81,14 @@
     {
       "id": "P2-IMAGECRAFT-EXTERNAL-SWITCH-001",
       "phase": "P2",
-      "status": "completed-current-alpha3-exact-switch-clean-copy",
-      "summary": "Fovea consumes ImageCraft 4507da936ef348fa198652c2e4314a1f393b2c90 as the only supported exact revision, with no embedded production source. Current clean-copy integration passes; physical-device evidence remains open."
+      "status": "completed-current-alpha4-exact-switch-clean-copy",
+      "summary": "Fovea consumes ImageCraft e147b349d4ff440af6f257c3fb8a7cb4788c953b as the only supported exact revision, with no embedded production source. Current clean-copy integration passes; physical-device evidence remains open."
     },
     {
       "id": "P6-CROSS-REPOSITORY-CONFORMANCE-001",
       "phase": "P6",
-      "status": "current-provider-and-codec-v1-self-hosted-external-components-pending",
-      "summary": "Persistent-store provider and ImageCodec v1 are the sole current conformance kits. Both run as independent generated SwiftPM consumers and pass source-bound self-host fixtures while remaining non-release-qualified. Next run them against real independent components and add hostile/crash/resource evidence."
+      "status": "local-schema4-seatbelt-contained-dual-component-composition-passed-release-evidence-pending",
+      "summary": "Persistent-store provider and ImageCodec v1 remain the sole current conformance kits and pass their independent self-host consumers. Source identity v2 binds component domain, complete coverage, exact exclusions, every file digest and executable bit. The schema-4 Fovea gate independently validates external identity documents, materializes byte-validated snapshots, and executes candidate manifests, package edit, dependency inspection and 478/478 tests inside FOVEA-COMPONENT-CANDIDATE-SANDBOX-V1. Seven runtime probes prove network denial, host-source read denial, host-write denial, isolated Fovea source write denial and both candidate snapshot write denials while the dedicated State root remains writable; immutable Fovea and component identities remain unchanged after testing. Akashic 5887e2facb07 (84 files) and ImageCraft 045aa7013b19 (94 files) also pass full local release-readiness and clean-copy campaigns. The same candidate bytes are now published as Akashic 2715f23d50b5 / 0.1.0-alpha.5 and ImageCraft e147b349d4ff / 0.1.0-alpha.4, with both component GitHub Verify workflows green and Fovea pinned to those exact revisions. The sandbox still uses deprecated SwiftPM native build system and candidates can read the isolated Fovea source graph, so default swiftbuild equivalence, mutual confidentiality, Fovea protected CI, real independent third-party implementations and physical-device qualification remain pending."
     },
     {
       "id": "P6-QUALIFIED-COMPOSITION-SEAMS-001",
@@ -111,13 +111,13 @@
     {
       "id": "P1-SWIFT64-IMAGECRAFT-001",
       "phase": "P1",
-      "status": "public-alpha3-xcode27-green-advanced-ownership-deferred",
+      "status": "public-alpha4-xcode27-green-advanced-ownership-deferred",
       "summary": "ImageCraft passes 64 tests, release, compatibility and macOS 12/iOS 15 platform builds under Swift 6.4. RawSpan hot parsing and public noncopyable preparation remain evidence-blocked."
     },
     {
       "id": "P4-SWIFT64-AKASHIC-001",
       "phase": "P4",
-      "status": "public-alpha4-xcode27-green-full-fault-rebind-pending",
+      "status": "public-alpha5-xcode27-green-full-fault-rebind-pending",
       "summary": "Akashic noncopyable writer lease and defer cleanup pass 41 tests, release, consumers, API baseline and six macOS 12/iOS 15 platform cases."
     },
     {
@@ -421,7 +421,7 @@
       "name": "Swift 6.4 ownership and toolchain audit"
     }
   ],
-  "reviewedOn": "2026-08-02",
+  "reviewedOn": "2026-08-03",
   "roadmapID": "FOVEA-LONG-HORIZON-ROADMAP-V1",
   "routeInvariants": [
     "Every multi-step Fovea task loads this manifest through the mandatory project context before changes.",

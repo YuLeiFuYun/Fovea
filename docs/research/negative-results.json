@@ -955,9 +955,41 @@
       ],
       "exitCondition": "A newer persistence implementation may revise the observed surface only after a versioned real-APFS matrix records the new behavior and preserves all recovery invariants.",
       "id": "NEG-AKASHIC-QUOTA-ERROR-SURFACE-FROZEN-001"
+    },
+    {
+      "area": "component-source-identity-governance",
+      "claimRejected": "Revalidating every file declared by a component-provided identity tool is sufficient to bind the complete and exact release candidate used by the build.",
+      "counterexample": "A self-consistent manifest can omit an existing source file or leave an added top-level file unbound; recursive name-based exclusions can hide arbitrary nested .build trees; unchanged bytes can retain a changed executable bit; symlinks alter path meaning; and invoking the candidate-owned capture tool executes untrusted code before verification. A verifier that validates one tree and later builds from the mutable original tree also retains a TOCTOU gap.",
+      "decision": "Use external source identity v2 documents whose schema, component-specific identity ID, complete coverage contract, exact exclusion paths, file digests and executable bits are independently recomputed by Fovea. Never execute the candidate identity tool. Materialize a separate SwiftPM snapshot directly from freshly revalidated bytes, build only that snapshot, and revalidate it after the test run. Retain six build-free negative probes for unbound content, manifest omission, nested exclusion smuggling, symlinks, candidate-tool execution attempts and executable-bit drift.",
+      "evidencePaths": [
+        "scripts/verify-component-candidate-clean-copy.py",
+        "scripts/verify-component-candidate-identity-negatives.py",
+        "docs/specifications/component-candidate-identity.md",
+        "../Akashic/Tools/Identity/capture_source_identity.py",
+        "../Akashic/Tools/Identity/materialize_clean_copy.py",
+        "../ImageCraft/Tools/Identity/capture_source_identity.py",
+        "../ImageCraft/Tools/Identity/materialize_clean_copy.py"
+      ],
+      "exitCondition": "A newer identity contract may replace v2 only if it preserves domain separation, complete independent enumeration, exact exclusion scoping, byte and executable-bit binding, non-execution of candidate identity tools, validated snapshot construction, post-build revalidation and all six retained negative cases.",
+      "id": "NEG-COMPONENT-IDENTITY-MANIFEST-COMPLETENESS-001"
+    },
+    {
+      "area": "component-candidate-execution-isolation",
+      "claimRejected": "Byte-identical Git-free candidate snapshots are sufficient to make cross-repository composition safe to execute with the verifier process ambient authority.",
+      "counterexample": "SwiftPM must evaluate candidate Package.swift files and may launch build tools, plugins, compilers and tests. Schema-3 proved which bytes were built but did not prevent those bytes from reading the host repository or user home, writing outside the snapshot, or using the network. A byte-bound malicious manifest could therefore preserve every source identity invariant while exfiltrating or mutating unrelated host state.",
+      "decision": "Add FOVEA-COMPONENT-CANDIDATE-SANDBOX-V1 and schema-4 reporting. Resolve only trusted public exact pins before isolation; execute candidate package edit, dependency inspection and all 478 tests under macOS Seatbelt with network denied, host-home reads denied and default-deny writes. Allow only dedicated State, exact SwiftPM state files and empirically required Swift/Fovea temporary roots. Retain seven effective escape probes and compare Fovea immutable-source plus component identities after execution. Do not claim mutual confidentiality because candidates can read the isolated Fovea source graph, and do not claim default SwiftBuild qualification because the passing isolated replay uses deprecated native mode.",
+      "evidencePaths": [
+        "scripts/component_candidate_sandbox.py",
+        "scripts/verify-component-candidate-clean-copy.py",
+        "docs/specifications/component-candidate-identity.md",
+        ".artifacts/external-components/candidate-sandbox-probes.json",
+        ".artifacts/external-components/candidate-clean-copy.json"
+      ],
+      "exitCondition": "A replacement may supersede this local Seatbelt gate only if it preserves effective network/read/write escape probes, builds exact validated snapshots, proves post-build source identity, and either qualifies the default production build backend or records an equally explicit backend limitation. Mutual-confidentiality claims additionally require separate source visibility or permission domains.",
+      "id": "NEG-COMPONENT-CANDIDATE-AMBIENT-AUTHORITY-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",
-  "reviewedOn": "2026-08-02",
+  "reviewedOn": "2026-08-03",
   "schemaVersion": 1
 }

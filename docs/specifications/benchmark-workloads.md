@@ -306,7 +306,7 @@ partial publication count
 read/write throughput within the same durability level
 ```
 
-当前状态：V2 因热吞吐未过门且计时边界不一致被归档；V3 预生成 corpus，但计划的 20 rounds 未被实现，最终仍有三个支配失败。V4 真正执行 20 个 fresh-cache rounds，磁盘 p99 使用吞吐 pass 后 8 轮、1536 个同步样本，并固定 8 分片；16/32 分片因热集保留失败被拒绝。20 个独立 clean process block 的正式结果通过全部 13 个适用支配比较。Akashic Git-free 候选的 release-readiness 与 Fovea 478/478 组合回归也已通过；公开 revision、精确 pin、trusted CI、真实进程终止矩阵扩展和 held-out corpus 仍缺失。
+当前状态：V2 因热吞吐未过门且计时边界不一致被归档；V3 预生成 corpus，但计划的 20 rounds 未被实现，最终仍有三个支配失败。V4 真正执行 20 个 fresh-cache rounds，磁盘 p99 使用吞吐 pass 后 8 轮、1536 个同步样本，并固定 8 分片；16/32 分片因热集保留失败被拒绝。20 个独立 clean process block 的正式结果通过全部 13 个适用支配比较。Akashic Git-free 候选的 release-readiness 与 Fovea 478/478 组合回归也已通过；Akashic 已发布为 `2715f23d50b5` / `0.1.0-alpha.5`，Fovea 已精确 pin 并通过公开 pin 478/478；Fovea trusted CI、真实进程终止矩阵扩展和 held-out corpus 仍缺失。
 
 ## W9：敌意图片 corpus
 

@@ -33,11 +33,11 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/YuLeiFuYun/ImageCraft.git",
-            revision: "4507da936ef348fa198652c2e4314a1f393b2c90"
+            revision: "e147b349d4ff440af6f257c3fb8a7cb4788c953b"
         ),
         .package(
             url: "https://github.com/YuLeiFuYun/Akashic.git",
-            revision: "50e7032b155187b993b5a82f613c3a0410d32976"
+            revision: "2715f23d50b5a17b7328be41608eaf1b1c99b0d6"
         ),
     ],
     targets: [
