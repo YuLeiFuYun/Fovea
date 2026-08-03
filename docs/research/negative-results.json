@@ -1020,6 +1020,36 @@
       ],
       "exitCondition": "Any replacement must continue to reject global service, target launchd_sim and install-critical U states; preserve a global administrator mode; record ignored target-noncritical and unrelated anomalies; and prove container plus SpringBoard availability before using a noncritical anomaly as non-blocking evidence.",
       "id": "NEG-SIMULATOR-ANY-DESCENDANT-U-001"
+    },
+    {
+      "area": "third-party-priority-observability",
+      "claimRejected": "Mapping W7 background and immediate priorities into Nuke request priorities is sufficient to keep the older background probe within the V7 black-box bound of fifteen newer origin starts.",
+      "counterexample": "Under Nuke 13.0.6 at exact commit 63a8fcbd6621340a2410bc3e9575ac97058615f4, the older background probe reached the origin after all thirty-one newer immediate requests in the clean six-comparator run and in three of three focused repeats. Client and origin concurrency remained fixed at eight and all 1,000 logical requests completed without load failure, so the result is a priority-order contract failure rather than transport collapse.",
+      "decision": "Preserve Nuke native request priorities and report background-probe-bypass-bound as a comparator hard failure. Do not add an adapter scheduler or weaken the fifteen-start bound, because either would replace the library behavior being measured.",
+      "evidencePaths": [
+        ".artifacts/w7-functional-diagnostics/current/calibration-report-a-tier-headless.json",
+        ".artifacts/w7-functional-diagnostics/repeats/summary.json",
+        "Benchmarks/ComparativeLab/Adapters/NukeAdapterPackage/Sources/NukeComparatorAdapter/NukeComparatorAdapter.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift"
+      ],
+      "exitCondition": "A newer exact Nuke revision may clear the finding only by passing the unchanged W7 V7 trace and fifteen-start bound in repeated clean-source runs with the same eight-slot client and origin budgets.",
+      "id": "NEG-NUKE-W7-PRIORITY-BYPASS-001"
+    },
+    {
+      "area": "third-party-single-flight-enrollment",
+      "claimRejected": "Returning an SDWebImageCombinedOperation from manager.loadImage means all identical logical subscribers are already enrolled in the downloader single-flight before a later cancellation wave.",
+      "counterexample": "For one half-cancel W7 group with thirty-two identical URL, cache-key, target and namespace requests, causal instrumentation observed three transport begins for group-11: one cancelled before service and two entering the service queue, while sixteen subscribers survived and completed. SDWebImageManager performs asynchronous cache lookup before each combined operation reaches SDWebImageDownloader; downloader coalescing is keyed by URL only after that transition. Cancelling the last currently enrolled token can therefore cancel the operation before late surviving cache queries attach, causing a replacement transport. In clean focused runs the seventeenth shared transport occurred in one of three repetitions, delivered no additional bytes and produced no result-classification error.",
+      "decision": "Keep the adapter on the native SDWebImageManager cache, transform and downloader path. Do not add an adapter-owned single-flight or bypass cache lookup merely to satisfy W7, because that would hide the exact library boundary under comparison. Preserve the hard origin-request bound and report the intermittent restart.",
+      "evidencePaths": [
+        ".artifacts/w7-functional-diagnostics/repeats/summary.json",
+        "Benchmarks/ComparativeLab/Adapters/SDWebImageAdapterPackage/Sources/SDWebImageComparatorAdapter/SDWebImageComparatorAdapter.swift",
+        ".artifacts/comparators/sources/SDWebImage/SDWebImage/Core/SDWebImageManager.m",
+        ".artifacts/comparators/sources/SDWebImage/SDWebImage/Core/SDWebImageDownloader.m",
+        ".artifacts/comparators/sources/SDWebImage/SDWebImage/Core/SDWebImageDownloaderOperation.m",
+        "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift"
+      ],
+      "exitCondition": "The finding can clear only if an exact upstream revision or public native API guarantees downloader enrollment/coalescing across the cache-query boundary and repeated unchanged W7 V7 runs stay at sixteen shared transports without adapter-owned coalescing.",
+      "id": "NEG-SDWEBIMAGE-W7-ASYNC-ENROLLMENT-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",

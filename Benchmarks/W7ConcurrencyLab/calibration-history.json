@@ -118,6 +118,66 @@
         "sourceTreeDigest": "da713ece5b32ca5a8ea55de4d041b4987dd30d08f5f2e5e440b947981a435207"
       },
       "status": "archived-calibration-observable-bound-invalid"
+    },
+    {
+      "artifact": ".artifacts/w7-functional-diagnostics/current/calibration-report-a-tier-headless.json",
+      "artifactSHA256": "4215c1a5cc561de370180a13e41f7754fa6718a41fa60594eca756cfd9aa2eba",
+      "claimFamilyDigest": "91306a6ee962e986fcdb1e7f0eaf8f7264b8ed8c09c6837f7143fe334ef53770",
+      "experimentPlanDigest": "f5e05d7de94f86b0386fcc13641a1bd080d2e12ab80f681318f0ed41b33be434",
+      "facts": {
+        "Apple URLSession + URLCache + ImageIO": {
+          "hardFailures": [],
+          "sharedOriginRequests": 16,
+          "backgroundProbeNewerBypasses": 0,
+          "originPeakConcurrency": 8
+        },
+        "Fovea": {
+          "hardFailures": [],
+          "sharedOriginRequests": 16,
+          "cancelledSubscribers": 256,
+          "failedLoads": 0,
+          "backgroundProbeNewerBypasses": 8,
+          "originPeakConcurrency": 8
+        },
+        "Nuke": {
+          "hardFailures": [
+            "background-probe-bypass-bound"
+          ],
+          "sharedOriginRequests": 16,
+          "backgroundProbeNewerBypasses": 31,
+          "originPeakConcurrency": 8,
+          "repeatStability": "3-of-3"
+        },
+        "Kingfisher": {
+          "hardFailures": [],
+          "sharedOriginRequests": 16,
+          "backgroundProbeNewerBypasses": 0,
+          "originPeakConcurrency": 8
+        },
+        "SDWebImage": {
+          "hardFailures": [],
+          "sharedOriginRequests": 16,
+          "backgroundProbeNewerBypasses": 0,
+          "originPeakConcurrency": 8,
+          "repeatFinding": "one-of-three-repeats-created-one-extra-pre-service-shared-transport"
+        },
+        "PINRemoteImage": {
+          "hardFailures": [],
+          "sharedOriginRequests": 16,
+          "backgroundProbeNewerBypasses": 0,
+          "originPeakConcurrency": 8
+        }
+      },
+      "finding": "The clean six-headless V7 structural run leaves Fovea with zero hard failures. Nuke exceeds the derived fifteen-start observable priority bound with thirty-one newer starts in three of three repeats. SDWebImage passes the six-way run but one of three focused repeats creates a seventeenth shared transport that is immediately stopped; causal instrumentation attributes the restart to downloader enrollment after asynchronous cache lookup, not to result classification or delivered post-cancellation bytes.",
+      "planID": "FOVEA-W7-CONCURRENCY-V7",
+      "repeatArtifact": ".artifacts/w7-functional-diagnostics/repeats/summary.json",
+      "repeatArtifactSHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3",
+      "sourceIdentity": {
+        "commit": "a81cf5e7aa8be0e23fb16cfa360672b5895464f1",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "0fd9829ef1a1f62f412536187769fb6a588e7443db0415c3740c9cff2d6828be"
+      },
+      "status": "current-clean-source-simulator-structural-calibration-performance-formal-not-run"
     }
   ]
 }

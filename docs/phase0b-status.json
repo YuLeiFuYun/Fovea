@@ -2,8 +2,8 @@
   "blockers": [
     {
       "id": "P0B-COMP-ADAPTERS",
-      "status": "six-headless-functional-contract-complete-performance-swiftui-w7-pending",
-      "summary": "All seven accepted A-tier integrations build. The six headless comparators completed a clean-source 30-spec W1-W3 structural diagnostic with zero Fovea failures and eight explicit external W3 contract failures. Quiet-host performance, paired SwiftUI, cross-library W7 and physical evidence remain incomplete."
+      "status": "six-headless-w1-w3-and-w7-structural-complete-performance-swiftui-pending",
+      "summary": "All seven accepted A-tier integrations build. Six headless comparators completed the clean-source 30-spec W1-W3 matrix and the W7 V7 1,000-request structural matrix. Fovea has zero hard failures in both. External W3 gaps remain stable; W7 shows a stable Nuke priority-bound failure and an intermittent SDWebImage pre-service transport restart. Quiet-host performance, paired SwiftUI and physical evidence remain incomplete."
     },
     {
       "id": "P0B-DEVICE-PRIMARY",
@@ -133,7 +133,7 @@
       "finalATierHeadlessAggregate": "current-clean-source-functional-30-spec-completed-performance-host-quiescence-pending",
       "finalPairedSwiftUISurfaceAggregate": "pending-post-w7-fix-rerun",
       "finalW7V6Aggregate": "archived-observable-bound-invalid",
-      "finalW7V7Aggregate": "fovea-current-tree-hard-pass-six-comparator-rerun-pending",
+      "finalW7V7Aggregate": "current-clean-source-six-comparator-structural-completed-performance-formal-pending",
       "historicalFiveLibraryAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
       "latestSimulatorAggregate": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
       "latestSimulatorAggregateTrust": "current-clean-source-functional-contract-only-no-performance-ranking",
@@ -222,7 +222,7 @@
         "healthScope": "global-services-target-launchd-and-install-critical-services",
         "currentDeviceRegistrySHA256": "b69231c3b20d868a07f1177a18915fbb062896fd353009464c26e65c57a0e39a"
       },
-      "status": "six-headless-functional-contract-complete-performance-swiftui-w7-and-physical-evidence-pending",
+      "status": "six-headless-w1-w3-and-w7-structural-complete-performance-swiftui-and-physical-evidence-pending",
       "thermalWholeBlockRerun": true,
       "verificationArtifact": ".artifacts/comparators/verification.json",
       "verificationArtifactSHA256": "9524865ef507ed78df5a98a8b73ce2ac3324873442e0a7386ec2252ebfc7a98a",
@@ -244,7 +244,19 @@
       "latestW3RepeatSummary": ".artifacts/comparative-functional-diagnostics/w3-repeats/summary.json",
       "latestW3RepeatSummarySHA256": "97e8b9cdfc15da71a78fc918f9bb7a0c6b4bc4206cc6cce5392cc1cc4c9d9d9f",
       "latestW3RepetitionsPerComparator": 3,
-      "latestW3FailurePatternStable": true
+      "latestW3FailurePatternStable": true,
+      "latestW7V7FunctionalDiagnostic": ".artifacts/w7-functional-diagnostics/current/calibration-report-a-tier-headless.json",
+      "latestW7V7FunctionalDiagnosticSHA256": "4215c1a5cc561de370180a13e41f7754fa6718a41fa60594eca756cfd9aa2eba",
+      "latestW7V7SourceCommit": "a81cf5e7aa8be0e23fb16cfa360672b5895464f1",
+      "latestW7V7SourceTreeDigest": "0fd9829ef1a1f62f412536187769fb6a588e7443db0415c3740c9cff2d6828be",
+      "latestW7V7ClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+      "latestW7V7FoveaHardFailures": 0,
+      "latestW7V7ExternalHardFailurePattern": {
+        "Nuke": "background-probe-bypass-bound-3-of-3",
+        "SDWebImage": "single-flight-origin-request-bound-1-of-3"
+      },
+      "latestW7V7RepeatSummary": ".artifacts/w7-functional-diagnostics/repeats/summary.json",
+      "latestW7V7RepeatSummarySHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3"
     },
     "projectMemory": {
       "discussionLedger": "docs/project-memory/discussion-ledger.json",

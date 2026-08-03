@@ -115,13 +115,18 @@
     },
     {
       "id": "EVID-W7-CANCELLATION-COHORT-FIX",
-      "status": "completed-targeted-local-final-aggregate-pending",
-      "summary": "W7 V6 reproduced a 16-survivor cancellation poisoning bug. Admission-aware cancellation tombstones now preserve one replacement cohort for calls that began before cancellation while post-cutoff callers remain non-revivable; SCHED-PT-021/022 and a targeted Fovea W7 run pass."
+      "status": "completed-current-clean-six-headless-structural",
+      "summary": "W7 exposed cancellation-cohort poisoning, cancellation result misclassification and replacement warmup transport restarts. Admission-aware replacement cohorts, cancellation-first result normalization, dynamic fetch handoff leases and synchronous warmup launch claims now pass the clean Fovea 1,000-request contract and the six-headless V7 structural matrix."
     },
     {
       "id": "EVID-W7-V6-OBSERVABLE-BOUND-COUNTEREXAMPLE",
       "status": "completed-methodology-negative-result",
       "summary": "W7 V6 observed nine newer origin starts although the internal scheduler admitted the background probe after at most eight newer grants. V7 separates internal grant fairness from downstream black-box start ordering and derives the latter bound as fifteen for the fixed eight-slot client budget."
+    },
+    {
+      "id": "EVID-W7-V7-SIX-HEADLESS-FUNCTIONAL-DIAGNOSTIC",
+      "status": "completed-current-clean-source-functional-only",
+      "summary": "Clean commit a81cf5e7 completed the six-headless W7 V7 structural matrix. Fovea, Apple Native, Kingfisher, SDWebImage and PINRemoteImage pass the main 1,000-request run; Fovea records 16 shared origin requests, 256 cancellations, zero failures, eight origin slots and zero hard failures. Nuke records thirty-one newer starts before the old background probe and fails the fifteen-start bound in three of three repeats. SDWebImage passes the main run but one of three repeats creates a seventeenth shared transport that is immediately stopped before additional bytes are delivered; causal instrumentation binds the restart to asynchronous cache-query-to-downloader enrollment. No quiet-host performance or release claim is permitted."
     },
     {
       "id": "EVID-CODEC-CONTRACT-LOCAL",
@@ -262,7 +267,7 @@
       "SDWebImage",
       "PINRemoteImage"
     ],
-    "aTierMatrixStatus": "seven-integrations-complete-six-headless-functional-contract-passed-performance-swiftui-w7-pending",
+    "aTierMatrixStatus": "seven-integrations-complete-six-headless-w1-w3-and-w7-structural-passed-for-fovea-performance-swiftui-pending",
     "aTierSwiftUISurfaceComparators": [
       "Apple AsyncImage",
       "Fovea"
@@ -770,7 +775,7 @@
     "swiftUISimulatorStagingStatus": "apple-asyncimage-and-fovea-staged-signatures-valid-retry-pending-after-competing-build",
     "w2NetworkOriginStatus": "shared-real-loopback-http-nwlistener-all-headless-and-swiftui-surfaces",
     "w7V6Status": "archived-calibration-observable-bound-invalid",
-    "w7V7Status": "preregistered-same-trace-derived-origin-bound-final-six-comparator-calibration-pending",
+    "w7V7Status": "current-clean-source-six-comparator-structural-complete-performance-formal-pending",
     "workloadRegistry": "Benchmarks/workload-registry.json",
     "latestATierFunctionalDiagnostic": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
     "latestATierFunctionalDiagnosticSHA256": "d170973c5625de7c7909520a2e027fbec9c33e5188ce9f8665755ce78285d7e2",
@@ -780,7 +785,17 @@
     "latestW3RepeatSummary": ".artifacts/comparative-functional-diagnostics/w3-repeats/summary.json",
     "latestW3RepeatSummarySHA256": "97e8b9cdfc15da71a78fc918f9bb7a0c6b4bc4206cc6cce5392cc1cc4c9d9d9f",
     "latestW3RepetitionsPerComparator": 3,
-    "latestW3FailurePatternStable": true
+    "latestW3FailurePatternStable": true,
+    "latestW7V7FunctionalDiagnostic": ".artifacts/w7-functional-diagnostics/current/calibration-report-a-tier-headless.json",
+    "latestW7V7FunctionalDiagnosticSHA256": "4215c1a5cc561de370180a13e41f7754fa6718a41fa60594eca756cfd9aa2eba",
+    "latestW7V7SourceCommit": "a81cf5e7aa8be0e23fb16cfa360672b5895464f1",
+    "latestW7V7SourceTreeDigest": "0fd9829ef1a1f62f412536187769fb6a588e7443db0415c3740c9cff2d6828be",
+    "latestW7V7ClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+    "latestW7V7FoveaHardFailures": 0,
+    "latestW7V7NukeFailureStability": "background-probe-bypass-bound-3-of-3-thirty-one-newer-starts",
+    "latestW7V7SDWebImageFinding": "single-flight-origin-request-bound-1-of-3-seventeenth-pre-service-transport",
+    "latestW7V7RepeatSummary": ".artifacts/w7-functional-diagnostics/repeats/summary.json",
+    "latestW7V7RepeatSummarySHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3"
   },
   "mandatoryTaskProtocol": {
     "afterWork": [
@@ -846,8 +861,8 @@
     {
       "id": "OPEN-A-TIER-COMPARATOR-INTEGRATION",
       "priority": 0,
-      "status": "in-progress-six-headless-functional-complete-swiftui-w7-performance-pending",
-      "summary": "All seven A-tier integrations build. The six headless comparators completed the clean-source W1-W3 structural matrix with zero Fovea failures and eight stable external W3 contract failures; W3 repeated 3/3 per comparator. Fovea also passes its W7 1,000-request hard contract. Quiet-host six-comparator performance, paired SwiftUI, cross-library W7 and physical evidence remain pending."
+      "status": "in-progress-six-headless-w1-w3-and-w7-structural-complete-swiftui-performance-pending",
+      "summary": "All seven A-tier integrations build. Six headless comparators completed clean-source W1-W3 and W7 structural matrices. Fovea has zero hard failures; eight stable external W3 gaps, one stable Nuke W7 priority gap and one intermittent SDWebImage W7 transport restart remain explicit. Quiet-host performance, paired SwiftUI and physical evidence remain pending."
     },
     {
       "id": "OPEN-CODEC-CONFORMANCE-KIT",
