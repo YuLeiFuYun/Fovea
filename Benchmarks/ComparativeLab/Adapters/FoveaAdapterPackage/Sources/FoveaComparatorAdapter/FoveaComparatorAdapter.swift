@@ -61,11 +61,15 @@ public actor FoveaComparatorAdapter: ComparatorAdapter {
             credentialHeaderNames: credentialNames
         )
         let started = DispatchTime.now().uptimeNanoseconds
+        // `events(for:)` 同步捕获顶层 admission。必须在 makeLoad 返回前创建 stream；
+        // 若延迟到消费 Task 内，逻辑上同一并发 burst 的后续 load 可能在首个 fetch
+        // 完成后才获得 admission，从而把 adapter 调度延迟误报为库的 single-flight 缺口。
+        let events = system.pipeline.events(for: imageRequest)
         let task = Task<ComparatorLoadOutput, Never> {
             do {
                 var firstFullQualityImage: DecodedImage?
                 var firstFullQualityLatency: UInt64?
-                for try await event in system.pipeline.events(for: imageRequest) {
+                for try await event in events {
                     switch event {
                     case .preview(let image, let quality):
                         guard quality == UInt16.max, firstFullQualityImage == nil else { continue }
