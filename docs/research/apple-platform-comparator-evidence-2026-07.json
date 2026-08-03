@@ -135,7 +135,7 @@
     },
     "buildDependencyResolution": "resolved-file-only-no-package-updates"
   },
-  "status": "passed-local-contracts-runtime-install-functional-diagnostic-performance-host-gated",
+  "status": "passed-headless-and-swiftui-structural-diagnostics-performance-host-gated",
   "swiftUIAppleBaseline": {
     "comparisonSurface": "paired independent SwiftUI surface against FoveaResponsiveImage",
     "headlessRankingMerged": false,
@@ -184,5 +184,64 @@
     "foveaFailures": 0,
     "externalW3ContractFailures": 8,
     "claimScope": "simulator-structural-contract-only-no-performance-ranking"
+  },
+  "swiftUISurfaceDiagnostic": {
+    "artifact": ".artifacts/swiftui-functional-diagnostics/current/calibration-report.json",
+    "artifactSHA256": "c62e0103948f6e1de942e4c9913fff48301ae9ccb49983ba9ba597a68ad65935",
+    "sourceCommit": "2decb76b320ee6ddcb782f430fbba043366d4e2b",
+    "sourceTreeDigest": "cdba6ecb0a9f4a3a7f5f7d36ab2c3f16eb2217460aa13274874991b766862a83",
+    "planID": "FOVEA-SWIFTUI-SURFACE-LAB-V5",
+    "pairedBlocks": 5,
+    "runCount": 30,
+    "hardFailures": 0,
+    "claimScope": "simulator-structural-contract-only-no-performance-ranking",
+    "requestCounts": {
+      "Apple AsyncImage": {
+        "W1": [
+          97,
+          97,
+          97,
+          97,
+          97
+        ],
+        "W2": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "W10": [
+          256,
+          256,
+          256,
+          256,
+          254
+        ]
+      },
+      "Fovea": {
+        "W1": [
+          79,
+          79,
+          79,
+          79,
+          79
+        ],
+        "W2": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "W10": [
+          129,
+          129,
+          129,
+          129,
+          129
+        ]
+      }
+    }
   }
 }

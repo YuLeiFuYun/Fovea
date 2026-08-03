@@ -2,8 +2,8 @@
   "blockers": [
     {
       "id": "P0B-COMP-ADAPTERS",
-      "status": "six-headless-w1-w3-and-w7-structural-complete-performance-swiftui-pending",
-      "summary": "All seven accepted A-tier integrations build. Six headless comparators completed the clean-source 30-spec W1-W3 matrix and the W7 V7 1,000-request structural matrix. Fovea has zero hard failures in both. External W3 gaps remain stable; W7 shows a stable Nuke priority-bound failure and an intermittent SDWebImage pre-service transport restart. Quiet-host performance, paired SwiftUI and physical evidence remain incomplete."
+      "status": "headless-and-swiftui-structural-complete-performance-physical-pending",
+      "summary": "All seven A-tier integrations build. Six headless comparators completed clean-source W1-W3 and W7 structural matrices; the paired Apple AsyncImage/Fovea SwiftUI surfaces completed 30 balanced W1/W2/W10 structural runs with zero hard failures. External headless semantic gaps remain explicit. Quiet-host performance and physical evidence remain incomplete."
     },
     {
       "id": "P0B-DEVICE-PRIMARY",
@@ -123,7 +123,7 @@
         "identity": "Apple AsyncImage",
         "mergedIntoHeadlessRanking": false,
         "pairedWith": "Fovea",
-        "planStatus": "passed"
+        "planStatus": "passed-clean-source-30-run-structural-performance-pending"
       },
       "bTierRetained": [
         "AlamofireImage"
@@ -131,7 +131,7 @@
       "envelopeSchemaVersion": 3,
       "experimentPlanCanonicalSHA256": "078206a957e4a44e4b5126543011d61a2746384ce6f87e693cee67c6ab5df8d3",
       "finalATierHeadlessAggregate": "current-clean-source-functional-30-spec-completed-performance-host-quiescence-pending",
-      "finalPairedSwiftUISurfaceAggregate": "pending-post-w7-fix-rerun",
+      "finalPairedSwiftUISurfaceAggregate": "current-clean-source-30-run-structural-completed-performance-host-quiescence-pending",
       "finalW7V6Aggregate": "archived-observable-bound-invalid",
       "finalW7V7Aggregate": "current-clean-source-six-comparator-structural-completed-performance-formal-pending",
       "historicalFiveLibraryAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
@@ -222,7 +222,7 @@
         "healthScope": "global-services-target-launchd-and-install-critical-services",
         "currentDeviceRegistrySHA256": "b69231c3b20d868a07f1177a18915fbb062896fd353009464c26e65c57a0e39a"
       },
-      "status": "six-headless-w1-w3-and-w7-structural-complete-performance-swiftui-and-physical-evidence-pending",
+      "status": "headless-and-swiftui-structural-complete-performance-and-physical-evidence-pending",
       "thermalWholeBlockRerun": true,
       "verificationArtifact": ".artifacts/comparators/verification.json",
       "verificationArtifactSHA256": "9524865ef507ed78df5a98a8b73ce2ac3324873442e0a7386ec2252ebfc7a98a",
@@ -256,7 +256,63 @@
         "SDWebImage": "single-flight-origin-request-bound-1-of-3"
       },
       "latestW7V7RepeatSummary": ".artifacts/w7-functional-diagnostics/repeats/summary.json",
-      "latestW7V7RepeatSummarySHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3"
+      "latestW7V7RepeatSummarySHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3",
+      "latestSwiftUISurfaceFunctionalDiagnostic": ".artifacts/swiftui-functional-diagnostics/current/calibration-report.json",
+      "latestSwiftUISurfaceFunctionalDiagnosticSHA256": "c62e0103948f6e1de942e4c9913fff48301ae9ccb49983ba9ba597a68ad65935",
+      "latestSwiftUISurfaceSourceCommit": "2decb76b320ee6ddcb782f430fbba043366d4e2b",
+      "latestSwiftUISurfaceSourceTreeDigest": "cdba6ecb0a9f4a3a7f5f7d36ab2c3f16eb2217460aa13274874991b766862a83",
+      "latestSwiftUISurfaceClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+      "latestSwiftUISurfacePairedBlockCount": 5,
+      "latestSwiftUISurfaceRunCount": 30,
+      "latestSwiftUISurfaceHardFailures": 0,
+      "latestSwiftUISurfaceRequestCounts": {
+        "Apple AsyncImage": {
+          "W1": [
+            97,
+            97,
+            97,
+            97,
+            97
+          ],
+          "W2": [
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "W10": [
+            256,
+            256,
+            256,
+            256,
+            254
+          ]
+        },
+        "Fovea": {
+          "W1": [
+            79,
+            79,
+            79,
+            79,
+            79
+          ],
+          "W2": [
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "W10": [
+            129,
+            129,
+            129,
+            129,
+            129
+          ]
+        }
+      }
     },
     "projectMemory": {
       "discussionLedger": "docs/project-memory/discussion-ledger.json",

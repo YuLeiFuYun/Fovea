@@ -1,0 +1,88 @@
+{
+  "claimBoundary": "All entries are Simulator surface calibration. Structural checks may be used to establish view lifecycle, identity and request-shape behavior. Hitch, latency, resource and superiority claims require the unchanged host-quiescence and physical-device gates.",
+  "historyID": "FOVEA-SWIFTUI-SURFACE-CALIBRATION-HISTORY-V1",
+  "schemaVersion": 1,
+  "versions": [
+    {
+      "artifact": ".artifacts/swiftui-functional-diagnostics/current/calibration-report.json",
+      "artifactSHA256": "c62e0103948f6e1de942e4c9913fff48301ae9ccb49983ba9ba597a68ad65935",
+      "applicabilityDigest": "f9f429cb81d9cc28d49d6cbed47ebc4562718305e0b3c58a19a7f78ce2802321",
+      "claimFamilyDigest": "9f270d0f8e988c2c5de3fe104891c604fc506e7ac959d98d77b70ba8dfe4709b",
+      "experimentPlanDigest": "5536367dc5a996cf095b27b48cebbe72c90b823817ab07c536d305397c5231aa",
+      "facts": {
+        "pairedBlockCount": 5,
+        "pairedBlocksComplete": true,
+        "runCount": 30,
+        "hardFailureCount": 0,
+        "Apple AsyncImage": {
+          "W1-SCROLL-V1": {
+            "originRequestCounts": [
+              97,
+              97,
+              97,
+              97,
+              97
+            ]
+          },
+          "W2-HERO-V1": {
+            "originRequestCounts": [
+              3,
+              3,
+              3,
+              3,
+              3
+            ]
+          },
+          "W10-SWIFTUI-IDENTITY-CHURN-V1": {
+            "originRequestCounts": [
+              256,
+              256,
+              256,
+              256,
+              254
+            ]
+          }
+        },
+        "Fovea": {
+          "W1-SCROLL-V1": {
+            "originRequestCounts": [
+              79,
+              79,
+              79,
+              79,
+              79
+            ]
+          },
+          "W2-HERO-V1": {
+            "originRequestCounts": [
+              3,
+              3,
+              3,
+              3,
+              3
+            ]
+          },
+          "W10-SWIFTUI-IDENTITY-CHURN-V1": {
+            "originRequestCounts": [
+              129,
+              129,
+              129,
+              129,
+              129
+            ]
+          }
+        }
+      },
+      "finding": "Both paired SwiftUI surfaces pass every no-crash, stale-success, visible-success, terminal-phase and hero-completion hard check across five balanced-order blocks. Request-count differences are retained as descriptive surface behavior and are not interpreted as latency, resource or superiority evidence.",
+      "hostQuiescenceBypassedForStructuralDiagnostics": true,
+      "planID": "FOVEA-SWIFTUI-SURFACE-LAB-V5",
+      "releaseClaimPermitted": false,
+      "sourceIdentity": {
+        "commit": "2decb76b320ee6ddcb782f430fbba043366d4e2b",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "cdba6ecb0a9f4a3a7f5f7d36ab2c3f16eb2217460aa13274874991b766862a83"
+      },
+      "status": "current-clean-source-simulator-structural-calibration-performance-formal-not-run"
+    }
+  ]
+}

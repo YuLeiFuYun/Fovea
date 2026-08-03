@@ -110,8 +110,8 @@
     },
     {
       "id": "EVID-A-TIER-SEVEN-INTEGRATIONS",
-      "status": "completed-local-build-and-six-headless-functional-contract",
-      "summary": "All seven accepted A-tier Apple-platform comparators are represented in the unified Xcode project. Six headless implementations completed the clean-source 30-spec W1-W3 structural diagnostic; Apple AsyncImage remains paired with FoveaResponsiveImage on the independent SwiftUI surface. Quiet-host performance, paired SwiftUI and cross-library W7 aggregates remain pending. AlamofireImage remains B-tier."
+      "status": "completed-local-build-headless-and-swiftui-structural-contracts",
+      "summary": "All seven accepted A-tier Apple-platform comparators are represented in the unified Xcode project. Six headless implementations completed clean-source W1-W3 and W7 structural diagnostics. Apple AsyncImage and FoveaResponsiveImage completed the independent 30-run paired SwiftUI W1/W2/W10 structural matrix with zero hard failures. Quiet-host performance and physical evidence remain pending. AlamofireImage remains B-tier."
     },
     {
       "id": "EVID-W7-CANCELLATION-COHORT-FIX",
@@ -209,6 +209,11 @@
       "summary": "Apple AsyncImage and Fovea SwiftUI apps are normalized symmetrically with ditto --noextattr --norsrc, recursive xattr clearing, post-resource ad-hoc signing and deep strict verification. Original DerivedData apps fail strict resource verification; both staged apps pass. Installation and runtime claims remain blocked by CoreSimulator health."
     },
     {
+      "id": "EVID-SWIFTUI-PAIRED-FUNCTIONAL-DIAGNOSTIC",
+      "status": "completed-current-clean-source-functional-only",
+      "summary": "Clean commit 2decb76b completed five balanced-order paired blocks for Apple AsyncImage and FoveaResponsiveImage across W1 scroll, W2 hero and W10 identity churn: 30 runs, complete shared nonces and ordering, zero hard failures. Both surfaces pass no-crash, stale-success-zero, visible-success, terminal-phase and workload-specific completion checks. W1 and W10 request-count differences are descriptive only because host quiescence was bypassed for this structural diagnostic; hitch, latency, resource and superiority claims remain prohibited."
+    },
+    {
       "id": "EVID-CANCELLATION-TOMBSTONE-ABSOLUTE-EXPIRY",
       "status": "completed-regression-fixed-and-modeled",
       "summary": "A clean-copy run exposed that timer-only tombstone cleanup could be delayed beyond its semantic lease. SharedTaskRegistry now records an absolute monotonic expiry and lazily expires on subscribe; the focused test passed 30/30 replays, all 14 SharedTaskTests passed, and the 705-state/8,346-transition model killed 6/6 mutants."
@@ -267,7 +272,7 @@
       "SDWebImage",
       "PINRemoteImage"
     ],
-    "aTierMatrixStatus": "seven-integrations-complete-six-headless-w1-w3-and-w7-structural-passed-for-fovea-performance-swiftui-pending",
+    "aTierMatrixStatus": "seven-integrations-headless-and-swiftui-structural-complete-performance-physical-pending",
     "aTierSwiftUISurfaceComparators": [
       "Apple AsyncImage",
       "Fovea"
@@ -405,7 +410,7 @@
       "status": "current-imagecraft-alpha4-akashic-alpha5-clean-copy-478-passed"
     },
     "finalATierHeadlessAggregateStatus": "current-clean-source-functional-30-spec-complete-performance-host-quiescence-blocked",
-    "finalSwiftUISurfaceAggregateStatus": "pending-new-plan-real-loopback-rerun-host-quiescence-gate-blocked",
+    "finalSwiftUISurfaceAggregateStatus": "current-clean-source-30-run-structural-complete-performance-host-quiescence-blocked",
     "foveaCompositeStoreContentionArtifactSHA256": "1855b08a6cf1efe4fa82268347909842b16f20e69f0e4ece5a9ba2294362fff6",
     "fullAcceptedWorkloadRange": "W1-W15",
     "imageCraftGovernanceArtifacts": [
@@ -772,7 +777,7 @@
     "swiftUIInstallStagingVerificationArtifactSHA256": "7092a6c89aec086c33037d5629faac421ef2c9419fb797bcc4887b8fbff9ba4a",
     "swiftUISimulatorInstallNormalization": "symmetric-ditto-noextattr-xattr-clear-post-resource-ad-hoc-sign-deep-strict-verify",
     "swiftUISimulatorInstallStaging": ".artifacts/asyncimage-lab/InstallStaging",
-    "swiftUISimulatorStagingStatus": "apple-asyncimage-and-fovea-staged-signatures-valid-retry-pending-after-competing-build",
+    "swiftUISimulatorStagingStatus": "apple-asyncimage-and-fovea-built-installed-and-30-run-structural-diagnostic-passed-performance-host-gated",
     "w2NetworkOriginStatus": "shared-real-loopback-http-nwlistener-all-headless-and-swiftui-surfaces",
     "w7V6Status": "archived-calibration-observable-bound-invalid",
     "w7V7Status": "current-clean-source-six-comparator-structural-complete-performance-formal-pending",
@@ -795,7 +800,15 @@
     "latestW7V7NukeFailureStability": "background-probe-bypass-bound-3-of-3-thirty-one-newer-starts",
     "latestW7V7SDWebImageFinding": "single-flight-origin-request-bound-1-of-3-seventeenth-pre-service-transport",
     "latestW7V7RepeatSummary": ".artifacts/w7-functional-diagnostics/repeats/summary.json",
-    "latestW7V7RepeatSummarySHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3"
+    "latestW7V7RepeatSummarySHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3",
+    "latestSwiftUISurfaceFunctionalDiagnostic": ".artifacts/swiftui-functional-diagnostics/current/calibration-report.json",
+    "latestSwiftUISurfaceFunctionalDiagnosticSHA256": "c62e0103948f6e1de942e4c9913fff48301ae9ccb49983ba9ba597a68ad65935",
+    "latestSwiftUISurfaceSourceCommit": "2decb76b320ee6ddcb782f430fbba043366d4e2b",
+    "latestSwiftUISurfaceSourceTreeDigest": "cdba6ecb0a9f4a3a7f5f7d36ab2c3f16eb2217460aa13274874991b766862a83",
+    "latestSwiftUISurfaceClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+    "latestSwiftUISurfacePairedBlockCount": 5,
+    "latestSwiftUISurfaceRunCount": 30,
+    "latestSwiftUISurfaceHardFailures": 0
   },
   "mandatoryTaskProtocol": {
     "afterWork": [
@@ -861,8 +874,8 @@
     {
       "id": "OPEN-A-TIER-COMPARATOR-INTEGRATION",
       "priority": 0,
-      "status": "in-progress-six-headless-w1-w3-and-w7-structural-complete-swiftui-performance-pending",
-      "summary": "All seven A-tier integrations build. Six headless comparators completed clean-source W1-W3 and W7 structural matrices. Fovea has zero hard failures; eight stable external W3 gaps, one stable Nuke W7 priority gap and one intermittent SDWebImage W7 transport restart remain explicit. Quiet-host performance, paired SwiftUI and physical evidence remain pending."
+      "status": "in-progress-headless-and-swiftui-structural-complete-performance-physical-pending",
+      "summary": "All seven A-tier integrations build. Six headless W1-W3/W7 and paired SwiftUI W1/W2/W10 structural matrices are complete under clean sources with zero Fovea hard failures. External headless W3/W7 gaps remain explicit. Quiet-host performance and physical-device evidence remain pending."
     },
     {
       "id": "OPEN-CODEC-CONFORMANCE-KIT",
