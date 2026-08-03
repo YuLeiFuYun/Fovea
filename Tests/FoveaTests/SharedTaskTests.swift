@@ -427,7 +427,9 @@ final class SharedTaskTests: XCTestCase {
         XCTAssertEqual(retainedKeyCount, 0)
     }
 
-    func testCompletedTaskCannotBeJoinedByNewSubscriber_SCHED_PT_015() async throws {
+    func testCompletedTaskRemainsJoinableOnlyWhileExistingSubscriberHoldsIt_SCHED_PT_015()
+        async throws
+    {
         let registry = SharedTaskRegistry<FetchExecutionKey, Int>(recordsCancellationCounts: true)
         let key = makeKey("https://example.com/terminal")
         let counter = OperationCounter()
@@ -436,16 +438,31 @@ final class SharedTaskTests: XCTestCase {
             await counter.increment()
             return 1
         }
-        _ = try await first.value()
+        let firstValue = try await first.value()
+        XCTAssertEqual(firstValue, 1)
 
-        let second = await registry.subscribe(key: key) {
+        let concurrentLate = await registry.subscribe(key: key) {
             await counter.increment()
             return 2
         }
-        XCTAssertFalse(second.wasJoined)
-        _ = try await second.value()
-        let operationCount = await counter.value()
-        XCTAssertEqual(operationCount, 2)
+        XCTAssertTrue(concurrentLate.wasJoined)
+        let concurrentLateValue = try await concurrentLate.value()
+        let countDuringCohort = await counter.value()
+        XCTAssertEqual(concurrentLateValue, 1)
+        XCTAssertEqual(countDuringCohort, 1)
+
+        await first.cancel()
+        await concurrentLate.cancel()
+        let fresh = await registry.subscribe(key: key) {
+            await counter.increment()
+            return 3
+        }
+        XCTAssertFalse(fresh.wasJoined)
+        let freshValue = try await fresh.value()
+        let countAfterRelease = await counter.value()
+        XCTAssertEqual(freshValue, 3)
+        XCTAssertEqual(countAfterRelease, 2)
+        await fresh.cancel()
     }
 
     private func makeKey(_ locator: String) -> FetchExecutionKey {

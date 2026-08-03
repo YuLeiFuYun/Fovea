@@ -147,6 +147,7 @@ package actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
         if var entry = entries[key] {
             let completedResultIsJoinable =
                 !entry.completed
+                || !entry.subscribers.isEmpty
                 || entry.orphanLeaseID != nil
                 || cancellationTombstones[key] != nil
             if completedResultIsJoinable {
@@ -167,8 +168,9 @@ package actor SharedTaskRegistry<Key: Hashable & Sendable, Value: Sendable> {
                 )
             }
 
-            // 普通已完成结果不是缓存。仅显式 orphan-handoff 租约或 cancellation
-            // replacement cohort 可复用它；否则新调用必须启动独立执行。
+            // 已完成且仍由现存订阅者持有的 exact-key 任务仍属于同一并发 cohort；
+            // 最后一个订阅者 release 后普通完成结果立即移除，不会退化成旁路缓存。
+            // 无订阅者时仅显式 orphan-handoff 或 cancellation replacement 可复用。
             entries.removeValue(forKey: key)
             await entry.priorityControl.finish()
         }
