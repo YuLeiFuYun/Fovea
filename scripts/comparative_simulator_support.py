@@ -32,6 +32,12 @@ XCODEBUILD_RESOLVED_PACKAGE_FLAGS = [
     "-onlyUsePackageVersionsFromResolvedFile",
     "-skipPackageUpdates",
 ]
+INSTALL_CRITICAL_DEVICE_SERVICE_MARKERS = {
+    "SpringBoard": "SpringBoard.app/SpringBoard",
+    "backboardd": "/usr/libexec/backboardd",
+    "runningboardd": "/usr/libexec/runningboardd",
+    "lsd": "/usr/libexec/lsd",
+}
 
 RunCommand = Callable[..., subprocess.CompletedProcess[str]]
 
@@ -95,13 +101,19 @@ def assert_coresimulator_healthy(
         for row in rows
         if any(marker in row["command"] for marker in global_markers)
     }
+    global_scope = descendants(global_roots)
     all_relevant = {
         row["pid"]
         for row in rows
         if any(marker in row["command"] for marker in core_simulator_markers)
     }
-    all_relevant |= descendants(global_roots)
+    all_relevant |= global_scope
+    uninterruptible = {
+        row["pid"] for row in rows if "U" in row["state"] and row["pid"] in all_relevant
+    }
 
+    target_tree: set[int] = set()
+    target_critical_scope: set[int] = set()
     if device_udid is None:
         scoped = all_relevant
         scope = "global"
@@ -110,14 +122,27 @@ def assert_coresimulator_healthy(
         device_roots = {
             row["pid"] for row in rows if device_marker in row["command"]
         }
-        scoped = descendants(global_roots | device_roots)
-        scope = "global-and-device"
+        target_tree = descendants(device_roots)
+        target_launchd = {
+            pid for pid in target_tree if "launchd_sim " in by_pid[pid]["command"]
+        }
+        target_critical_services = {
+            pid
+            for pid in target_tree
+            if any(
+                marker in by_pid[pid]["command"]
+                for marker in INSTALL_CRITICAL_DEVICE_SERVICE_MARKERS.values()
+            )
+        }
+        target_critical_scope = target_launchd | target_critical_services
+        scoped = global_scope | target_critical_scope
+        scope = "global-and-device-critical"
 
-    uninterruptible = {
-        row["pid"] for row in rows if "U" in row["state"] and row["pid"] in all_relevant
-    }
     blocked_pids = uninterruptible & scoped
-    ignored_pids = uninterruptible - scoped
+    target_uninterruptible = uninterruptible & target_tree
+    global_uninterruptible = uninterruptible & global_scope
+    ignored_target_noncritical = target_uninterruptible - blocked_pids
+    ignored_unrelated = uninterruptible - target_uninterruptible - global_uninterruptible
 
     def evidence(pid: int) -> dict[str, Any]:
         row = by_pid[pid]
@@ -131,13 +156,17 @@ def assert_coresimulator_healthy(
 
     blocked = [evidence(pid) for pid in sorted(blocked_pids)]
     artifact = {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "capturedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
         "scope": scope,
         "deviceUDID": device_udid,
+        "criticalDeviceServices": sorted(INSTALL_CRITICAL_DEVICE_SERVICE_MARKERS),
         "status": "blocked-uninterruptible-processes" if blocked else "healthy",
         "uninterruptibleProcesses": blocked,
-        "ignoredUnrelatedUninterruptibleProcessCount": len(ignored_pids),
+        "ignoredTargetNonCriticalUninterruptibleProcessCount": len(
+            ignored_target_noncritical
+        ),
+        "ignoredUnrelatedUninterruptibleProcessCount": len(ignored_unrelated),
     }
     path = root / CORESIMULATOR_HEALTH_ARTIFACT
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -573,15 +602,9 @@ def _critical_device_services(
         for child in children.get(parent, []):
             pending.append(child[0])
             commands.append(child[2])
-    required = {
-        "SpringBoard": "SpringBoard.app/SpringBoard",
-        "backboardd": "/usr/libexec/backboardd",
-        "runningboardd": "/usr/libexec/runningboardd",
-        "lsd": "/usr/libexec/lsd",
-    }
     missing = [
         label
-        for label, marker in required.items()
+        for label, marker in INSTALL_CRITICAL_DEVICE_SERVICE_MARKERS.items()
         if not any(marker in command for command in commands)
     ]
     return not missing, missing

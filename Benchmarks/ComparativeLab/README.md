@@ -85,7 +85,7 @@ Apple Native 与 PINRemoteImage 的最终 W1-W3 语义结果尚待当前源码�
 
 ### CoreSimulator 恢复与健康门
 
-实际实验 runner 在调用 `simctl` 前检查全局 `simdiskimaged`/CoreSimulatorService 与注册的专用设备进程树；该作用域内任何 `launchd_sim` 或 runtime 子进程处于 `U`/`Us` 状态都会被拒绝，并写入 `.artifacts/comparative-coresimulator-health.json`。其他设备的异常会记录为 unrelated count，但不会错误阻断专用设备。独立 `check-comparative-coresimulator-health.py` 仍执行全局检查。首次启动超时会写入设备注册表；该半初始化设备不得复用，必须归档后以精确 `23E254a` bundle 重新创建。
+实际实验 runner 在调用 `simctl` 前检查全局 `simdiskimaged`/CoreSimulatorService、注册设备的 `launchd_sim`，以及 SpringBoard、backboardd、runningboardd、lsd 四个安装/启动关键服务；这些关键进程处于 `U`/`Us` 状态时会被拒绝，并写入 `.artifacts/comparative-coresimulator-health.json`。目标设备的非关键 daemon 异常与其他设备异常分别记录为 target-noncritical 和 unrelated count，不会在容器与 SpringBoard 探针仍可用时制造假阻断。独立 `check-comparative-coresimulator-health.py` 仍执行全局检查。首次启动超时会写入设备注册表；该半初始化设备不得复用，必须归档后以精确 `23E254a` bundle 重新创建。
 
 管理员恢复命令已封装为：
 
