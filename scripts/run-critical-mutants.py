@@ -1676,7 +1676,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--only",
-        help="run a comma-separated subset of mutant identifiers for migration smoke verification",
+        help="run a comma-separated subset of mutant identifiers for targeted smoke verification",
     )
     parser.add_argument(
         "--validate-applications",

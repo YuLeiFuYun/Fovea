@@ -49,12 +49,6 @@
       "summary": "ADR-0014 is Accepted. Typed identity, partition-scoped deduplication, one active writer, new-generation migration and 30 named conformance obligations are frozen; implementation moves to P4."
     },
     {
-      "id": "P4-CORE-MEMORY-001",
-      "phase": "P4",
-      "status": "superseded-by-three-product-slice",
-      "summary": "The earlier Core/Memory-only prototype is retained historically and superseded by the independent Core/Memory/Disk local vertical slice."
-    },
-    {
       "id": "P4-DISK-001",
       "phase": "P4",
       "status": "public-xcode27-ci-green-alpha3-required-check-fault-rebind-device-pending",
@@ -431,7 +425,7 @@
   "roadmapID": "FOVEA-LONG-HORIZON-ROADMAP-V1",
   "routeInvariants": [
     "Every multi-step Fovea task loads this manifest through the mandatory project context before changes.",
-    "P0 through P9 remain visible until completed or explicitly superseded in the discussion ledger.",
+    "P0 through P9 retain only current active or completed obligations; superseded implementation paths are deleted after durable decisions are normalized.",
     "Planned, specified, implemented, calibrated, formally verified and release-eligible remain distinct states.",
     "Dirty source may support local diagnosis and planning but cannot support trusted release evidence.",
     "ImageCraft and Akashic are consumed only through current exact public revisions and isolated source identities.",

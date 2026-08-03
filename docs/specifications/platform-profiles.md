@@ -58,7 +58,7 @@ Animation frame cache: independent budget and visibility-driven
 
 - iOS 15 与 macOS 12 以最低 deployment target 编译；运行时测试使用可安装的代表性 runtime，并记录旧系统 coverage gap；
 - 未在 Package manifest 声明的平台不得出现在“已支持”列表；
-- identity、HTTP profile、schema migration、security、scheduler、resource permit、diagnostics schema、state machine；
+- identity、HTTP profile、current-schema validation、security、scheduler、resource permit、diagnostics schema、state machine；
 - 不运行重型实验模块；
 - 允许使用 simulator 验证逻辑，但内存/能耗结论不能来自 simulator；
 - API availability tests 必须证明最低 deployment target 不会触发未保护的新系统符号。

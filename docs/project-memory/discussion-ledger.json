@@ -236,7 +236,7 @@
         "Embedded ImageCraft and Akashic production sources, temporary external-package templates and embedded-source lock gates are retired.",
         "Compiler-warning strictness applies to Fovea-owned sources without overriding external package warning policy.",
         "Superseded narrative reports and extraction provenance are removed, while machine evidence needed to interpret still-valid claims remains immutable.",
-        "The 2026-08-01 action direction is the current narrative plan; the superseded 2026-07-28 and 2026-07-30 operational roadmaps are deleted after their durable decisions and completed facts were normalized into machine-readable memory."
+        "The 2026-08-01 action direction is the current narrative plan; the older operational roadmaps are deleted after their still-current decisions were normalized into machine-readable memory."
       ],
       "id": "DISC-2026-08-01-PUBLIC-MIT-EXTERNAL-COMPONENTS",
       "openItems": [
@@ -257,11 +257,7 @@
       "sourceIDs": [
         "SRC-DISCUSSION-PUBLIC-MIT-CLEANUP-01"
       ],
-      "status": "active",
-      "supersededArtifacts": [
-        "docs/roadmaps/fovea-pluggable-image-stack-action-plan-2026-07-28.md",
-        "docs/roadmaps/fovea-component-boundary-roadmap-2026-07-30.md"
-      ]
+      "status": "active"
     },
     {
       "decisions": [

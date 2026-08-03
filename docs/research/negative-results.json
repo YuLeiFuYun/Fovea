@@ -259,44 +259,6 @@
       "id": "NEG-COLOR-CROSS-MODEL-RETAG-001"
     },
     {
-      "area": "evidence-identity-and-continuity",
-      "artifactRetention": "local-only because the historical envelope contains absolute workstation paths and obsolete embedded-source topology",
-      "claimRejected": "Including project-memory and roadmap files inside a migration baseline always strengthens source provenance.",
-      "counterexample": "The baseline digest was written back into project-memory and the roadmap queue while those same files were included in the baseline input set. Each evidence update changed an input digest, so recapturing produced a new baseline digest indefinitely.",
-      "decision": "Exclude self-referential continuity files from the pluggable-stack migration baseline. Keep their canonical digests in the independently rendered task context, while the migration baseline covers package, production source, storage schema and non-self-referential plan inputs.",
-      "evidencePaths": [
-        "docs/project-memory/source-manifest.json",
-        "docs/project-memory/long-horizon-roadmap.json",
-        "scripts/check-project-memory.py",
-        "scripts/check-component-pins.py"
-      ],
-      "exitCondition": "This separation is permanent unless a future content-addressed envelope can bind continuity metadata without including a field that contains the envelope digest itself.",
-      "finding": "A baseline that contains files which store that baseline digest is self-referential and cannot stabilize under ordinary recapture.",
-      "historicalArtifactSHA256": "9f854acffadaaac368e450e9bacd9770925a55685d2c41314f5842eaeee1248b",
-      "historicalGeneratorRemoved": "scripts/capture-pluggable-stack-baseline.py was deleted after public exact-pin migration because it emitted obsolete embedded topology and absolute local paths.",
-      "id": "NEG-BASELINE-SELF-REFERENCE-001",
-      "status": "retained-governance-counterexample"
-    },
-    {
-      "area": "evidence-identity-and-reproducibility",
-      "artifactRetention": "local-only because the historical envelope contains absolute workstation paths and obsolete embedded-source topology",
-      "claimRejected": "Hashing the complete emitted baseline document is a stable way to identify an unchanged source baseline.",
-      "counterexample": "The first baseline document included generatedAt in the hashed payload. Consecutive captures of unchanged source produced different digests solely because wall-clock metadata changed.",
-      "decision": "Define sourceIdentitySHA256 over the source-relevant repository records only. Keep generatedAt in the envelope for audit chronology, but exclude it from the identity digest used by roadmap gates and migration comparisons.",
-      "evidencePaths": [
-        "docs/project-memory/source-manifest.json",
-        "docs/project-memory/long-horizon-roadmap.json",
-        "scripts/check-project-memory.py",
-        "scripts/check-component-pins.py"
-      ],
-      "exitCondition": "Any future baseline schema must preserve an explicit separation between stable subject identity and volatile envelope metadata such as timestamps or run identifiers.",
-      "finding": "A timestamp-bearing evidence envelope is not itself a stable source identity.",
-      "historicalArtifactSHA256": "9f854acffadaaac368e450e9bacd9770925a55685d2c41314f5842eaeee1248b",
-      "historicalGeneratorRemoved": "scripts/capture-pluggable-stack-baseline.py was deleted after public exact-pin migration because it emitted obsolete embedded topology and absolute local paths.",
-      "id": "NEG-BASELINE-VOLATILE-TIMESTAMP-001",
-      "status": "retained-governance-counterexample"
-    },
-    {
       "area": "external-component-rehearsal-resource-isolation",
       "claimRejected": "A clean-copy external dependency rehearsal can share the machine with another full release compilation without affecting timing-sensitive URLSession tests.",
       "counterexample": "While the exact-revision 475-test clean-copy suite ran concurrently with the root release full-graph build, the rapid-cancellation warmup URLSession test produced one retryable transport failure. The same test then passed five of five serial replays, and prior isolated exact-revision rehearsals passed the complete suite.",
@@ -372,22 +334,6 @@
       "exitCondition": "A clean checkout with no comparator artifacts must prepare and verify every exact upstream source before challenge path checks, while Package.swift and the production dependency allowlist remain unchanged.",
       "id": "NEG-COMPARATOR-CHECKOUT-ORDER-001",
       "status": "resolved-retained-fresh-clone-comparator-counterexample"
-    },
-    {
-      "area": "benchmark-component-migration-cohesion",
-      "claimRejected": "Removing a legacy embedded persistence type from production code is complete when the root package and host tests no longer reference it.",
-      "counterexample": "After the external Akashic migration and four 475-test host scenarios passed, the standalone CacheLab package still referenced the deleted OriginalEncodedStore. The main verify path only validated its plan and policy analysis, so the stale benchmark adapter escaped until a proactive standalone package build after the fourth private root.",
-      "decision": "Migrate the Fovea disk contestant to the public FoveaPersistentStores bundle and its OriginalEncodedMaintaining capability, derive corruption-test file locations from the active generation plus the opaque PhysicalBlobID, preserve the configured byte limit across reopen, and add CacheLab package tests to every root verification run after exact comparator preparation.",
-      "evidencePaths": [
-        "Benchmarks/CacheLab/Sources/CacheLabCore/CacheContestants.swift",
-        "Benchmarks/CacheLab/Sources/CacheLabRunner/CacheLabMain.swift",
-        "Benchmarks/CacheLab/Tests/CacheLabTests/CacheLabTests.swift",
-        "scripts/check-cache-lab-plan.py",
-        "scripts/verify.sh"
-      ],
-      "exitCondition": "A fresh checkout must materialize exact cache comparators and pass the standalone CacheLab package tests; no benchmark source may reference removed embedded component types.",
-      "id": "NEG-BENCHMARK-LEGACY-STORE-001",
-      "status": "resolved-retained-component-migration-counterexample"
     },
     {
       "area": "cross-repository-mutation-harness",
@@ -494,7 +440,7 @@
     },
     {
       "area": "swift64-hosted-ci-availability",
-      "claimRejected": "The existing GitHub macos-26 hosted runners can validate a Swift tools 6.4 migration simply by selecting a newer installed Xcode.",
+      "claimRejected": "The existing GitHub macos-26 hosted runners can validate the current Swift tools 6.4 graph simply by selecting a newer installed Xcode.",
       "counterexample": "The public macos-26 image inventory still exposes Xcode 26.x and cannot validate a tools 6.4 package by selecting a newer installed Xcode. GitHub subsequently introduced a distinct xcode-27 public-preview label on 2026-07-16; availability therefore depends on selecting that image explicitly rather than changing DEVELOPER_DIR inside macos-26.",
       "decision": "Never use macos-26 or macos-latest as implicit Swift 6.4 evidence. Use the explicit xcode-27 preview image, verify Xcode/Swift identity in-repository, retain preview provenance and capacity caveats, and require green component pull requests plus a green private Fovea root before merging, repinning or tagging.",
       "evidencePaths": [

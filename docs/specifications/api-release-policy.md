@@ -1,23 +1,23 @@
 # 公共 API、发布与依赖治理
 
-> **状态：Proposed，Phase 1 / Core v1 Candidate Hardening 入口规格；首个公开版本前必须裁决。**
+> **状态：Active pre-adoption policy。当前无外部用户，只维护最新源码、API、配置与磁盘 schema。**
 
 ## 1. 目标
 
-Fovea、ImageCraft 和 Akashic 的源码实现可以快速重构，但一旦发布稳定产品，就必须区分源码兼容、行为兼容、磁盘格式兼容和二进制分发兼容。安全修复不能以“签名没变”为理由静默改变关键语义而不记录。
+Fovea、ImageCraft 和 Akashic 当前均处于无外部用户的 pre-adoption 阶段。实现、API、配置和磁盘格式发生破坏性变化时，直接更新唯一当前版本并删除旧分支；安全与行为变化仍必须记录并重新绑定证据。
 
 ## Phase 1 与发布阶段的关系
 
-Phase 1 等同于 Core v1 Candidate Hardening，不等同于 1.0 Stable。它允许 breaking API 变化，主要工作是公共面收缩、Source 补全、真实宿主兼容周期、Profile v1 Candidate、迁移和发布证据。只有 Phase 1 结果经过至少一个兼容周期并由 Accepted ADR 承担兼容承诺，才可进入 Stable Core。
+Phase 1 等同于 Core v1 Candidate Hardening，不等同于 1.0 Stable。它允许 breaking API 变化，主要工作是公共面收缩、Source 补全、真实宿主采用、Profile v1 Candidate 和发布证据。首次真实采用前不建立旧版本兼容承诺。
 
 ## 2. 发布阶段
 
 ```text
-0.x Experimental
-  API 可破坏；每次发布记录迁移说明
+0.x Pre-adoption
+  只维护最新 API、行为和 schema；不保留 deprecated shim 或迁移读取器
 
-1.0 Core Stable
-  SemVer；公开 API、关键行为和错误分类形成兼容承诺
+首次真实采用后的稳定阶段
+  另行 Accepted ADR 定义 SemVer、行为和存储兼容承诺
 
 独立 Experimental products
   不因 umbrella import 自动暴露；版本可与 Core 分离
@@ -27,8 +27,8 @@ Phase 1 等同于 Core v1 Candidate Hardening，不等同于 1.0 Stable。它允
 
 - Phase 0b/Core v1 门禁通过；
 - 公开 API surface review 完成；
-- 至少一个真实应用兼容周期；
-- API/ABI/行为/磁盘格式政策有 Accepted ADR；
+- 至少一个真实应用采用周期；
+- API/ABI/行为/磁盘格式稳定政策有 Accepted ADR；
 - 依赖、license、二进制体积和安全基线公开；
 - AIQA release gate、SBOM、签名/provenance 和 R3 独立审查证据完整。
 
@@ -109,12 +109,12 @@ resident memory after import/first request
 
 导入 Fovea Core 不得初始化实验 codec、模型、Metal pipeline 或全局 registry。Optional product 的成本由使用者显式承担。
 
-## 8. 弃用
+## 8. 当前删除政策
 
-- Stable API 先 deprecate，再于下一 major 删除；
-- 安全上必须立即禁用的 API 可更快移除，但需要安全公告和迁移路径；
-- deprecated API 不得继续写入已废弃的磁盘 schema；
-- 文档、sample 和 migration guide 与 release 同步更新。
+- 当前无外部用户，不建立 deprecated API、旧配置、旧磁盘 schema 或旧 package product 的兼容层；
+- 破坏性变更直接修改当前实现、文档、样例、测试、API baseline 和 conformance contract；
+- 删除后必须通过 clean-copy、当前 consumer、当前持久层和源码绑定门禁；
+- 首次真实采用后再以 Accepted ADR 建立弃用与迁移政策。
 
 ## 9. CI 门禁
 
@@ -124,6 +124,6 @@ resident memory after import/first request
 - dependency/license/SBOM check；
 - per-product binary size regression；
 - sample app compile；
-- migration fixture：上一 minor 的缓存、配置和常见调用代码；
+- current-schema fixture：当前缓存、配置和常见调用代码必须可由 clean consumer 重现；
 - PR Evidence Bundle schema、AIQA gates、critical mutants 与 human comprehension attestation；
 - protected CI 生成 SBOM、签名和 SLSA-compatible provenance，release runner 不执行未审查 PR 代码并携带秘密。
