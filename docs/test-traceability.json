@@ -2030,6 +2030,17 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/PluggableComponentTests.swift",
+          "kind": "swiftTest",
+          "method": "testLegacySystemCompositionRequiresExplicitCompatibilityBoundary_CODEC_PT_012"
+        }
+      ],
+      "id": "CODEC-PT-012",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
           "kind": "swiftTest",
           "method": "comparatorIdentityRequiresExactCommit_COMP_PT_001"

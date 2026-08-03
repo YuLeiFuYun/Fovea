@@ -135,6 +135,7 @@ AxiomRaster 或其他 codec 成为默认前，至少必须：
 
 - **CODEC-PT-010**：外部公共 `ImageCodec + PreparedImageDecoding` 驱动完整 FoveaPipeline；
 - **CODEC-PT-011**：官方组合根接受自定义 codec 与渲染缓存，并公开实际 descriptor；
+- **CODEC-PT-012**：官方组合根的默认/新入口要求完整 `ImageCodec`，旧 decoder 必须通过显式 `legacyDecoder` 兼容边界并获得 legacy descriptor；
 - **CACHE-PT-043**：自定义 `RenderedImageCaching` 接管插入、命中和 purge；
 - **DIAG-PT-014**：ImageIO prepared decode 与普通 prepared decode 结果一致，且重复 source/type/frame 阶段耗时为零；
 - capability 有限域、资源上界、identity 分离和 unsupported failure 继续由 ADR-0011 的模型与测试验证；

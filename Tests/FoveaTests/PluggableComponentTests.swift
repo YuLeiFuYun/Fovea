@@ -1,7 +1,9 @@
 import AkashicMemory
 import Foundation
 import FoveaCore
+import FoveaPersistence
 import FoveaSystem
+import FoveaTesting
 import ImageCraftCore
 import ImageCraftImageIO
 import XCTest
@@ -10,15 +12,26 @@ final class PluggableComponentTests: XCTestCase {
     func testPublicCodecContractCanDriveThePipeline_CODEC_PT_010() async throws {
         let body = try makePNG(width: 40, height: 20)
         let codec = DelegatingTestCodec()
-        let (pipeline, _, _, _) = try await makePipeline(
+        let root = try makeTemporaryDirectory("qualified-codec-pipeline")
+        let transport = FakeHTTPTransport(
             stubs: [
                 .init(
                     statusCode: 200,
                     headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
                     body: body
                 )
-            ],
-            decoder: codec
+            ]
+        )
+        let pipeline = FoveaPipeline(
+            transport: transport,
+            encodedStore: try await AkashicOriginalEncodedStore.open(
+                root: root.appendingPathComponent("encoded", isDirectory: true)
+            ),
+            recordStore: try await RepresentationRecordStore.open(
+                root: root.appendingPathComponent("records", isDirectory: true)
+            ),
+            profileAccessPolicy: .unrestricted,
+            codec: codec
         )
         let request = try ImageRequest.publicImage(
             url: try XCTUnwrap(URL(string: "https://example.test/plugin-codec.png")),
@@ -75,7 +88,7 @@ final class PluggableComponentTests: XCTestCase {
         let system = try await FoveaSystemPipeline.open(
             cacheRoot: try makeTemporaryDirectory("system-plugin-components"),
             automaticallyPurgesMemoryOnPressure: false,
-            decoder: codec,
+            codec: codec,
             renderedImageCache: cache
         )
 
@@ -84,6 +97,43 @@ final class PluggableComponentTests: XCTestCase {
             "test.delegating-codec"
         )
         XCTAssertEqual(cache.count, 0)
+    }
+
+    func testLegacySystemCompositionRequiresExplicitCompatibilityBoundary_CODEC_PT_012()
+        async throws
+    {
+        let system = try await FoveaSystemPipeline.open(
+            cacheRoot: try makeTemporaryDirectory("system-legacy-decoder"),
+            automaticallyPurgesMemoryOnPressure: false,
+            legacyDecoder: LegacyDelegatingDecoder()
+        )
+
+        XCTAssertTrue(
+            system.pipeline.codecDescriptor.identifier.rawValue.hasPrefix("legacy:")
+        )
+        XCTAssertEqual(system.pipeline.codecDescriptor.implementationVersion, 1)
+        XCTAssertEqual(
+            system.pipeline.codecDescriptor.capabilities.deliveryModes,
+            [.completeFrame]
+        )
+    }
+
+}
+
+private struct LegacyDelegatingDecoder: ImageDecoding {
+    private let base = ImageIOImageDecoder()
+
+    func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
+        try base.probe(data: data, limits: limits)
+    }
+
+    func decode(
+        data: Data,
+        probe: ImageProbe,
+        request: ImageDecodeRequest,
+        limits: DecodeLimits
+    ) throws -> DecodedImage {
+        try base.decode(data: data, probe: probe, request: request, limits: limits)
     }
 }
 

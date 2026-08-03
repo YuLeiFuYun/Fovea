@@ -216,7 +216,7 @@
       ],
       "openItems": [
         "Publish the privacy-sanitized Fovea root, observe public CI, protect main and create the first immutable Fovea alpha tag.",
-        "Build minimal cross-repository codec and storage conformance kits and a qualified persistent-store bundle design.",
+        "Complete the immutable qualified persistent-store bundle and build minimal cross-repository codec and storage conformance kits.",
         "Repeat W1/W2/W3/W7/W8/W10/W13 on protected clean source and stable physical devices."
       ],
       "repositoryTargets": [

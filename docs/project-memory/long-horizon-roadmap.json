@@ -99,8 +99,8 @@
     {
       "id": "P6-QUALIFIED-COMPOSITION-SEAMS-001",
       "phase": "P6",
-      "status": "specified-design-pending",
-      "summary": "Qualify new codec injection through ImageCodec and design an immutable persistent-store bundle that preserves generation, writer lifetime, namespace persistence and cross-store transaction semantics without a global registry."
+      "status": "codec-qualified-persistent-bundle-pending",
+      "summary": "New production composition entry points now require ImageCodec; legacy ImageDecoding is isolated behind explicit compatibility labels and tests. The immutable persistent-store bundle preserving generation, writer lifetime, namespace persistence and cross-store transaction semantics remains pending."
     },
     {
       "id": "P7-POST-MIGRATION-PARETO-001",
