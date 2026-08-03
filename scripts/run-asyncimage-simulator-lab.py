@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from comparative_simulator_support import (
+    XCODEBUILD_RESOLVED_PACKAGE_FLAGS,
     assert_measurement_host_quiet,
     ensure_dedicated_simulator,
     recover_dedicated_simulator_user_services,
@@ -245,6 +246,7 @@ def build_apps(env: dict[str, str], selected: list[str]) -> dict[str, Path]:
         result = run(
             [
                 "xcodebuild",
+                *XCODEBUILD_RESOLVED_PACKAGE_FLAGS,
                 "-project",
                 str(PROJECT),
                 "-scheme",

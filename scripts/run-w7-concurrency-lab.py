@@ -15,6 +15,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from comparative_simulator_support import XCODEBUILD_RESOLVED_PACKAGE_FLAGS
+
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "Benchmarks/ComparativeLab/Apps/FoveaComparativeApps.xcodeproj"
 PLAN_PATH = ROOT / "Benchmarks/W7ConcurrencyLab/experiment-plan.json"
@@ -177,6 +179,7 @@ def build_install(env: dict[str, str], udid: str, selected: list[str]) -> None:
         result = run(
             [
                 "xcodebuild",
+                *XCODEBUILD_RESOLVED_PACKAGE_FLAGS,
                 "-project",
                 str(PROJECT),
                 "-scheme",

@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from comparative_simulator_support import (
+    XCODEBUILD_RESOLVED_PACKAGE_FLAGS,
     assert_measurement_host_quiet,
     ensure_dedicated_simulator,
     recover_dedicated_simulator_user_services,
@@ -190,9 +191,22 @@ def build_apps(env: dict[str, str], selected: list[str]) -> None:
         scheme, _ = APPS[comparator]
         print(f"Building simulator app: {comparator}", flush=True)
         result = run(
-            ["xcodebuild", "-project", str(PROJECT), "-scheme", scheme, "-configuration", "Release",
-             "-destination", "generic/platform=iOS Simulator", "-derivedDataPath", str(DERIVED_DATA),
-             "CODE_SIGNING_ALLOWED=NO", "build"],
+            [
+                "xcodebuild",
+                *XCODEBUILD_RESOLVED_PACKAGE_FLAGS,
+                "-project",
+                str(PROJECT),
+                "-scheme",
+                scheme,
+                "-configuration",
+                "Release",
+                "-destination",
+                "generic/platform=iOS Simulator",
+                "-derivedDataPath",
+                str(DERIVED_DATA),
+                "CODE_SIGNING_ALLOWED=NO",
+                "build",
+            ],
             env=env,
             timeout=900,
         )

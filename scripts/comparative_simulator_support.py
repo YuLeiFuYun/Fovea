@@ -26,6 +26,11 @@ MAXIMUM_DISK_MEGABYTES_PER_SECOND = 12.0
 HOST_SAMPLE_COUNT = 3
 FIRST_BOOT_TIMEOUT_SECONDS = 900
 REGULAR_BOOT_TIMEOUT_SECONDS = 240
+XCODEBUILD_RESOLVED_PACKAGE_FLAGS = [
+    "-disableAutomaticPackageResolution",
+    "-onlyUsePackageVersionsFromResolvedFile",
+    "-skipPackageUpdates",
+]
 
 RunCommand = Callable[..., subprocess.CompletedProcess[str]]
 

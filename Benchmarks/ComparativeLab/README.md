@@ -50,7 +50,7 @@ python3 scripts/run-comparative-device-lab.py --mode calibration
 
 Simulator runner 使用独立设备 `Fovea Comparative iPhone 17e R26`，并把设备绑定到已验证的 iOS 26.4.1 build `23E254a` 的精确 runtime bundle path，而不是有歧义的 `com.apple.CoreSimulator.SimRuntime.iOS-26-4` identifier。绑定记录写入 `.artifacts/comparative-simulator-device.json`；即使同 identifier 的其他 build 已挂载，也以专用设备的 live 进程路径验证实际 build，错误 build 会自动关机并拒绝继续。首次启动允许最多 900 秒完成系统数据迁移，但仍是有界操作。
 
-构建、初始化、安装和测量必须分离。`--initialize-simulator-only` 只完成精确 runtime 解析与首次启动，`--install-only` 只安装现有 Release app；二者都不生成测量。新建设备或执行未完成的首次启动前，runner 会写入 `.artifacts/comparative-initialization-host-preflight.json`，并要求连续三个样本 CPU idle 均不低于 65%、聚合磁盘吞吐均不高于 12 MB/s、没有其他 `xcodebuild`、Swift 编译或竞争性 `simctl` 操作。该门失败时不会调用 `simctl create` 或 `simctl boot`。headless 测量只接受 `--skip-build --skip-prepare`，SwiftUI 配对测量只接受 `--skip-build`；测量前使用独立的 `.artifacts/comparative-host-preflight.json` 执行相同静默门。
+构建、初始化、安装和测量必须分离。`--initialize-simulator-only` 只完成精确 runtime 解析与首次启动，`--install-only` 只安装现有 Release app；二者都不生成测量。 三个 Simulator 构建入口统一使用 `-disableAutomaticPackageResolution`、`-onlyUsePackageVersionsFromResolvedFile` 与 `-skipPackageUpdates`，已锁定的比较构建不得在重放时联网更新依赖。新建设备或执行未完成的首次启动前，runner 会写入 `.artifacts/comparative-initialization-host-preflight.json`，并要求连续三个样本 CPU idle 均不低于 65%、聚合磁盘吞吐均不高于 12 MB/s、没有其他 `xcodebuild`、Swift 编译或竞争性 `simctl` 操作。该门失败时不会调用 `simctl create` 或 `simctl boot`。headless 测量只接受 `--skip-build --skip-prepare`，SwiftUI 配对测量只接受 `--skip-build`；测量前使用独立的 `.artifacts/comparative-host-preflight.json` 执行相同静默门。
 
 当前专用模拟器的首次启动未完成，已按策略标记为不可复用；本地设备标识仅写入被忽略的 `.artifacts`，不得进入仓库或证据摘要。创建替代设备仍受初始化宿主静默门约束；在主机达到阈值前不会创建设备，也不会生成性能结果。
 
