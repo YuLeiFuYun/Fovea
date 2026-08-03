@@ -319,6 +319,10 @@ def verify_simulator_runner_resilience() -> None:
             "bounded process-group termination": "os.killpg(process.pid, signal.SIGKILL)",
             "two-phase build mode": '"--build-only"',
             "measurement host gate": "assert_measurement_host_quiet(",
+            "simulator profile injection": "SIMCTL_CHILD_FOVEA_SIMULATOR_PROFILE_ID",
+            "simulator version injection": "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_VERSION",
+            "simulator build injection": "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_BUILD",
+            "simulator channel injection": "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_CHANNEL",
         }
         required.update(
             {
@@ -356,9 +360,12 @@ def verify_simulator_runner_resilience() -> None:
         ROOT / "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkModels.swift"
     ).read_text()
     required_profile = {
-        "iOS 26.4 simulator profile": 'deviceProfileID: "ios26-4-simulator-calibration-v1"',
-        "iOS 26.4 simulator build": 'osBuild: "simulator-runtime-26-4"',
-        "stable simulator channel": "osChannel: .stable",
+        "injected simulator profile": 'injected["FOVEA_SIMULATOR_PROFILE_ID"]',
+        "injected simulator version": 'injected["FOVEA_SIMULATOR_OS_VERSION"]',
+        "injected simulator build": 'injected["FOVEA_SIMULATOR_OS_BUILD"]',
+        "injected simulator channel": 'injected["FOVEA_SIMULATOR_OS_CHANNEL"]',
+        "runtime version verification": "versionMatchesCurrentSimulator",
+        "fail-closed simulator identity": 'invalidResource("simulator-environment-identity")',
     }
     missing_profile = [
         label for label, marker in required_profile.items() if marker not in benchmark_models

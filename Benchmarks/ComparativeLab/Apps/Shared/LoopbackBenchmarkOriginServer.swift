@@ -179,6 +179,7 @@ final class LoopbackBenchmarkOriginServer: @unchecked Sendable {
             stoppedRequestCount: stoppedRequestCount,
             redirectAuthorizationLeakCount: 0,
             peakConcurrentRequestCount: peakConcurrentRequestCount,
+            w7SharedPreparationWaitCount: 0,
             w7ServiceStartOrder: [],
             routeRequestCounts: routeRequestCounts
         )

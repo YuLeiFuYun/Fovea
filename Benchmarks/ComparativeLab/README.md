@@ -44,7 +44,7 @@ python3 scripts/run-comparative-simulator-lab.py --skip-build --skip-prepare
 python3 scripts/run-asyncimage-simulator-lab.py --build-only
 python3 scripts/run-asyncimage-simulator-lab.py --install-only
 python3 scripts/run-asyncimage-simulator-lab.py --skip-build
-python3 scripts/run-w7-concurrency-lab.py                 # W7 V7 六项 A 级 headless
+python3 scripts/run-w7-concurrency-lab.py                 # W7 V8 六项 A 级 headless
 python3 scripts/run-comparative-device-lab.py --mode calibration
 ```
 

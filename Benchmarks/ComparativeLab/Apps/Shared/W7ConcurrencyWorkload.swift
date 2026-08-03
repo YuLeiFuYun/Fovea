@@ -38,12 +38,15 @@ extension WorkloadRunner {
         let started = DispatchTime.now().uptimeNanoseconds
         threadSampler.start()
 
+        DeterministicBenchmarkURLProtocol.closeW7SharedPreparationGate()
+        defer { DeterministicBenchmarkURLProtocol.releaseW7SharedPreparationGate() }
         let coalescing = try await prepareCoalescingBurst(
             adapter: adapter,
             target: target,
             runIndex: runIndex
         )
         let collectionTask = Task.detached { await collect(coalescing) }
+        DeterministicBenchmarkURLProtocol.releaseW7SharedPreparationGate()
         try await Task.sleep(nanoseconds: 20_000_000)
         for prepared in coalescing where prepared.shouldCancel {
             prepared.load.cancel()
@@ -142,6 +145,11 @@ extension WorkloadRunner {
                 value: max(0, sharedOriginRequests - 16)
             ),
             BenchmarkCheck(
+                identifier: "single-flight-preparation-gate-engaged",
+                passed: origin.w7SharedPreparationWaitCount > 0,
+                value: origin.w7SharedPreparationWaitCount > 0 ? 0 : 1
+            ),
+            BenchmarkCheck(
                 identifier: "cancelled-subscriber-count-exact",
                 passed: coalescingCancelled == 256,
                 value: abs(coalescingCancelled - 256)
@@ -188,6 +196,11 @@ extension WorkloadRunner {
                 identifier: "w7-shared-origin-request-count",
                 passed: true,
                 value: sharedOriginRequests
+            ),
+            BenchmarkCheck(
+                identifier: "w7-shared-preparation-wait-count",
+                passed: true,
+                value: origin.w7SharedPreparationWaitCount
             ),
             BenchmarkCheck(
                 identifier: "w7-baseline-thread-count",

@@ -591,7 +591,8 @@
         "CMP-ALAMOFIREIMAGE"
       ],
       "blockers": [
-        "final six-comparator V7 Simulator calibration under one source digest",
+        "clean six-comparator V8 Simulator calibration under one source digest",
+        "quiet-host formal 20-block campaign",
         "formal repeated physical-device run",
         "stable iOS replication",
         "lower-performance device",
@@ -618,7 +619,7 @@
         "CH-CALLBACK-ONCE-018",
         "CH-MEMORY-CONCURRENCY-007"
       ],
-      "claimActivation": "preregistered-v7-calibration-pending-release-blocked",
+      "claimActivation": "preregistered-v8-clean-calibration-pending-release-blocked",
       "directComparators": [
         "CMP-APPLE-NATIVE",
         "CMP-NUKE",
@@ -634,7 +635,9 @@
         "scripts/model-check-permit-scheduler.py",
         "scripts/model-check-shared-task-registry.py",
         "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v6.json",
-        "Benchmarks/W7ConcurrencyLab/calibration-history.json"
+        "Benchmarks/W7ConcurrencyLab/calibration-history.json",
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json",
+        "Benchmarks/W7ConcurrencyLab/plans/claim-families-v7.json"
       ],
       "hardInvariants": [
         "capacity-never-exceeded",
@@ -669,7 +672,7 @@
         "CMP-MOKA",
         "CMP-RISTRETTO"
       ],
-      "status": "implemented-v7-runner-admission-aware-cancellation-fix-and-derived-origin-order-bound-final-calibration-pending",
+      "status": "implemented-v8-response-preparation-gate-clean-six-comparator-calibration-pending",
       "traceabilityIDs": [
         "SCHED-PT-022"
       ]

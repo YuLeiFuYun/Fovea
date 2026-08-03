@@ -1032,14 +1032,14 @@
         "Benchmarks/ComparativeLab/Adapters/NukeAdapterPackage/Sources/NukeComparatorAdapter/NukeComparatorAdapter.swift",
         "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift"
       ],
-      "exitCondition": "A newer exact Nuke revision may clear the finding only by passing the unchanged W7 V7 trace and fifteen-start bound in repeated clean-source runs with the same eight-slot client and origin budgets.",
+      "exitCondition": "A newer exact Nuke revision may clear the finding only by passing the unchanged W7 V8 priority subtrace and fifteen-start bound in repeated clean-source runs with the same eight-slot client and origin budgets.",
       "id": "NEG-NUKE-W7-PRIORITY-BYPASS-001"
     },
     {
       "area": "third-party-single-flight-enrollment",
       "claimRejected": "Returning an SDWebImageCombinedOperation from manager.loadImage means all identical logical subscribers are already enrolled in the downloader single-flight before a later cancellation wave.",
       "counterexample": "For one half-cancel W7 group with thirty-two identical URL, cache-key, target and namespace requests, causal instrumentation observed three transport begins for group-11: one cancelled before service and two entering the service queue, while sixteen subscribers survived and completed. SDWebImageManager performs asynchronous cache lookup before each combined operation reaches SDWebImageDownloader; downloader coalescing is keyed by URL only after that transition. Cancelling the last currently enrolled token can therefore cancel the operation before late surviving cache queries attach, causing a replacement transport. In clean focused runs the seventeenth shared transport occurred in one of three repetitions, delivered no additional bytes and produced no result-classification error.",
-      "decision": "Keep the adapter on the native SDWebImageManager cache, transform and downloader path. Do not add an adapter-owned single-flight or bypass cache lookup merely to satisfy W7, because that would hide the exact library boundary under comparison. Preserve the hard origin-request bound and report the intermittent restart.",
+      "decision": "Do not attribute the V7 seventeenth request to SDWebImage. The serial preparation harness allowed an early response to finish before all nominal burst subscribers existed. Retain the observation only as historical evidence and re-evaluate the unchanged native adapter under V8.",
       "evidencePaths": [
         ".artifacts/w7-functional-diagnostics/repeats/summary.json",
         "Benchmarks/ComparativeLab/Adapters/SDWebImageAdapterPackage/Sources/SDWebImageComparatorAdapter/SDWebImageComparatorAdapter.swift",
@@ -1048,8 +1048,52 @@
         ".artifacts/comparators/sources/SDWebImage/SDWebImage/Core/SDWebImageDownloaderOperation.m",
         "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift"
       ],
-      "exitCondition": "The finding can clear only if an exact upstream revision or public native API guarantees downloader enrollment/coalescing across the cache-query boundary and repeated unchanged W7 V7 runs stay at sixteen shared transports without adapter-owned coalescing.",
-      "id": "NEG-SDWEBIMAGE-W7-ASYNC-ENROLLMENT-001"
+      "exitCondition": "Re-evaluate repeated clean-source W7 V8 runs. Only a V8 recurrence after the response-preparation barrier may support an upstream enrollment finding.",
+      "id": "NEG-SDWEBIMAGE-W7-ASYNC-ENROLLMENT-001",
+      "status": "superseded-attribution-confounded-by-NEG-W7-SEQUENTIAL-PREPARATION-001"
+    },
+    {
+      "area": "w7-benchmark-preparation-semantics",
+      "claimRejected": "Serially awaiting every native makeLoad call plus a fixed response delay is sufficient to define a simultaneous 512-subscriber single-flight burst.",
+      "counterexample": "Every major comparator starts native work during makeLoad. W7 V7 awaited 512 creations serially; on a loaded simulator the 750 ms /w7/shared delay expired before all thirty-two subscribers for some identities existed. The duplicate identity moved across runs, including groups 12 and 6, and persisted after production-side handoff experiments, so the seventeenth origin request could not be attributed to a library single-flight defect.",
+      "decision": "V8 closes a response-delivery-only /w7/shared preparation gate before constructing the 512 loads, allows native request creation and enrollment while closed, and releases only after all 512 load objects exist. It emits a hard check proving at least one shared service actually waited. V7 shared-origin results and library-specific restart attribution are archived as confounded; the independent priority subtrace remains unchanged.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkOrigin.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift",
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json",
+        ".artifacts/comparative-regression-diagnostics/v8-environment/summary.json"
+      ],
+      "exitCondition": "No exit for V7 interpretation. Any future replacement must prove all nominal shared loads exist before response completion without preventing native request creation, enrollment, cancellation or priority behavior.",
+      "id": "NEG-W7-SEQUENTIAL-PREPARATION-001"
+    },
+    {
+      "area": "w7-runner-prebuilt-source-identity",
+      "claimRejected": "Matching an installed App binary to an existing DerivedData binary is sufficient to make --skip-build evidence current-tree-bound.",
+      "counterexample": "The W7 runner selected its iOS 27 device while a diagnostic workflow built and installed through the Comparative Lab iOS 26.4 path. The iOS 27 device retained an older App whose binary matched the older W7 DerivedData, so a simple installed-versus-built SHA check passed even though the current tree and V8 plan had changed. The App accepted the injected V8 plan ID but emitted the older check schema.",
+      "decision": "Every W7 build now writes an atomic manifest binding source commit/tree digest, exact V8 plan and claim digests, Simulator runtime/device identity, and built/installed executable and resource hashes. --skip-build fails before launch unless every field still matches. Result filenames include a fresh UUID and are normalized only after validation.",
+      "evidencePaths": [
+        "scripts/run-w7-concurrency-lab.py",
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
+        ".artifacts/comparative-regression-diagnostics/v8-environment/summary.json"
+      ],
+      "exitCondition": "No weaker prebuilt path may be introduced. Any replacement must bind source, protocol, Simulator and App bytes before launch and use a non-colliding result name.",
+      "id": "NEG-W7-UNBOUND-SKIP-BUILD-001"
+    },
+    {
+      "area": "simulator-environment-identity",
+      "claimRejected": "A benchmark App may hard-code one Simulator profile/build while deriving only the runtime version dynamically.",
+      "counterexample": "W7 executed on the iOS 27.0 runtime build 24A5355p, but BenchmarkModels hard-coded deviceProfileID ios26-4-simulator-calibration-v1 and osBuild simulator-runtime-26-4. The result therefore combined real iOS 27 execution with an iOS 26.4 identity and could not support environment-specific interpretation.",
+      "decision": "Simulator benchmark Apps now require profile ID, OS version, runtime build and channel from the runner. The App verifies the injected version against ProcessInfo and fails closed if any identity field is absent or inconsistent. W7 binds the exact mounted runtime build in its plan and build manifest; Comparative and AsyncImage runners inject their dedicated stable-runtime identity.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkModels.swift",
+        "scripts/run-w7-concurrency-lab.py",
+        "scripts/run-comparative-simulator-lab.py",
+        "scripts/run-asyncimage-simulator-lab.py",
+        ".artifacts/comparative-regression-diagnostics/v8-environment/summary.json"
+      ],
+      "exitCondition": "No hard-coded Simulator identity may return. Every Simulator entry point must inject an exact profile/version/build/channel and validate it before accepting a result.",
+      "id": "NEG-SIMULATOR-ENVIRONMENT-HARDCODED-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",

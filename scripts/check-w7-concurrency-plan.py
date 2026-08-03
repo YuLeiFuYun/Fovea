@@ -10,6 +10,10 @@ ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "Benchmarks/W7ConcurrencyLab/experiment-plan.json"
 CLAIMS = ROOT / "Benchmarks/W7ConcurrencyLab/claim-families.json"
 WORKLOADS = ROOT / "Benchmarks/workload-registry.json"
+WORKLOAD_SOURCE = ROOT / "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift"
+ORIGIN_SOURCE = ROOT / "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkOrigin.swift"
+BENCHMARK_MODELS = ROOT / "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkModels.swift"
+RUNNER_SOURCE = ROOT / "scripts/run-w7-concurrency-lab.py"
 
 
 def canonical(value: object) -> str:
@@ -24,29 +28,44 @@ def main() -> int:
     workloads = json.loads(WORKLOADS.read_text())
     errors: list[str] = []
     execution = plan.get("execution", {})
-    if plan.get("schemaVersion") != 7 or plan.get("planID") != "FOVEA-W7-CONCURRENCY-V7":
-        errors.append("unexpected W7 plan identity")
-    if plan.get("status") != "preregistered-after-v6-calibration-before-formal-results":
-        errors.append("W7 V7 plan must remain preregistered before formal results")
-    if plan.get("supersedes") != "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v6.json":
-        errors.append("W7 V6 archive binding is missing")
-    archived_plan = json.loads(
-        (ROOT / "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v6.json").read_text()
+    expected_simulator_identity = {
+        "deviceProfileID": "ios27-simulator-calibration-v1",
+        "deviceType": "com.apple.CoreSimulator.SimDeviceType.iPhone-17e",
+        "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+        "runtimeVersion": "27.0",
+        "runtimeBuild": "24A5355p",
+        "osChannel": "beta",
+        "treeBoundBuildManifestRequired": True,
+        "uniqueResultFilenameRequired": True,
+    }
+    if execution.get("simulatorCalibrationIdentity") != expected_simulator_identity:
+        errors.append("W7 V8 Simulator calibration identity drifted")
+    expected_status = (
+        "preregistered-after-v7-preparation-barrier-counterexample-before-formal-results"
     )
-    if archived_plan.get("schemaVersion") != 6 or archived_plan.get("planID") != "FOVEA-W7-CONCURRENCY-V6":
-        errors.append("archived W7 V6 plan identity drifted")
+    if plan.get("schemaVersion") != 8 or plan.get("planID") != "FOVEA-W7-CONCURRENCY-V8":
+        errors.append("unexpected W7 plan identity")
+    if plan.get("status") != expected_status:
+        errors.append("W7 V8 plan must remain preregistered before formal results")
+    if plan.get("supersedes") != "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json":
+        errors.append("W7 V7 plan archive binding is missing")
+    archived_plan = json.loads(
+        (ROOT / "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json").read_text()
+    )
+    if archived_plan.get("schemaVersion") != 7 or archived_plan.get("planID") != "FOVEA-W7-CONCURRENCY-V7":
+        errors.append("archived W7 V7 plan identity drifted")
     expected_comparators = [
         "Apple URLSession + URLCache + ImageIO", "Fovea", "Nuke", "Kingfisher",
         "SDWebImage", "PINRemoteImage",
     ]
     if plan.get("comparators") != expected_comparators:
-        errors.append("W7 V7 A-tier headless comparator set drifted")
+        errors.append("W7 V8 A-tier headless comparator set drifted")
     supplemental = plan.get("bTierSupplemental", {})
     if supplemental.get("comparators") != ["AlamofireImage"] or "excluded from A-tier" not in supplemental.get("policy", ""):
-        errors.append("W7 V7 B-tier supplemental policy drifted")
+        errors.append("W7 V8 B-tier supplemental policy drifted")
     not_applicable = plan.get("notApplicable", {})
     if set(not_applicable) != {"Apple AsyncImage"} or "headless" not in not_applicable.get("Apple AsyncImage", ""):
-        errors.append("W7 V7 must preserve AsyncImage as not applicable")
+        errors.append("W7 V8 must preserve AsyncImage as not applicable")
     if execution.get("originConcurrentServiceLimit") != 8:
         errors.append("W7 origin-owned service limit must remain eight")
     if execution.get("clientConcurrentFetchBudget") != 8:
@@ -65,24 +84,76 @@ def main() -> int:
     probe = priority.get("starvationProbe", {})
     balanced = priority.get("balancedRoundRobin", {})
     if priority.get("blockerRequests") != 8:
-        errors.append("W7 V7 must keep eight blocker requests")
+        errors.append("W7 V8 must keep eight blocker requests")
     if probe.get("olderBackgroundRequests") != 1 or probe.get("newerImmediateRequests") != 31:
-        errors.append("W7 V7 starvation probe shape drifted")
+        errors.append("W7 V8 starvation probe shape drifted")
     internal_bypass = probe.get("internalMaximumGrantBypasses")
     observable_bypass = probe.get("maximumObservableOriginStartBypasses")
     derived_observable = internal_bypass + execution.get("clientConcurrentFetchBudget", 0) - 1         if isinstance(internal_bypass, int) else None
     if internal_bypass != 8:
-        errors.append("W7 V7 internal grant-bypass bound drifted")
+        errors.append("W7 V8 internal grant-bypass bound drifted")
     if observable_bypass != 15 or observable_bypass != derived_observable:
-        errors.append("W7 V7 origin-start bound must equal 8 + client budget - 1 = 15")
+        errors.append("W7 V8 origin-start bound must equal 8 + client budget - 1 = 15")
     if probe.get("observableBoundDerivation") !=         "internalMaximumGrantBypasses + clientConcurrentFetchBudget - 1":
-        errors.append("W7 V7 observable-bound derivation is missing")
+        errors.append("W7 V8 observable-bound derivation is missing")
     if balanced.get("requestsPerPriority") * 4 != 448:
-        errors.append("W7 V7 balanced burst shape drifted")
+        errors.append("W7 V8 balanced burst shape drifted")
     if balanced.get("submissionOrder") != "round-robin-background-utility-visible-immediate":
-        errors.append("W7 V7 must keep round-robin balanced arrivals")
+        errors.append("W7 V8 must keep round-robin balanced arrivals")
     if 8 + 1 + 31 + balanced.get("logicalRequests", 0) != 488:
-        errors.append("W7 V7 priority subtrace no longer totals 488")
+        errors.append("W7 V8 priority subtrace no longer totals 488")
+    barrier = single.get("preparationBarrier", {})
+    expected_barrier = {
+        "closeBeforeLoadConstruction": True,
+        "logicalLoadsRequiredBeforeRelease": 512,
+        "nativeRequestCreationAllowedWhileClosed": True,
+        "responseDeliveryScope": "/w7/shared-only",
+        "releaseBeforeCancellationDelayStarts": True,
+        "requiredObservedWaitersMinimum": 1,
+    }
+    if barrier != expected_barrier:
+        errors.append("W7 V8 shared-response preparation barrier drifted")
+    if "single-flight-preparation-gate-engaged" not in plan.get("hardChecks", []):
+        errors.append("W7 V8 preparation barrier hard check is missing")
+    workload_source = WORKLOAD_SOURCE.read_text()
+    origin_source = ORIGIN_SOURCE.read_text()
+    if "DeterministicBenchmarkURLProtocol.closeW7SharedPreparationGate()" not in workload_source:
+        errors.append("W7 workload no longer closes the preparation gate")
+    release_after_prepare = (
+        "let collectionTask = Task.detached { await collect(coalescing) }\n"
+        "        DeterministicBenchmarkURLProtocol.releaseW7SharedPreparationGate()"
+    )
+    if release_after_prepare not in workload_source:
+        errors.append("W7 workload no longer releases the gate after all loads are prepared")
+    if 'if route == "/w7/shared"' not in origin_source or (
+        "state.waitForW7SharedPreparationGate()" not in origin_source
+    ):
+        errors.append("W7 origin no longer gates shared response delivery")
+    if "w7SharedPreparationWaitCount" not in origin_source:
+        errors.append("W7 origin no longer emits preparation-wait evidence")
+    runner_source = RUNNER_SOURCE.read_text()
+    benchmark_models = BENCHMARK_MODELS.read_text()
+    runner_requirements = {
+        "tree-bound build manifest": "def verify_build_manifest(",
+        "manifest source identity": '"sourceIdentity": identity',
+        "manifest simulator identity": '"simulatorIdentity": simulator_identity',
+        "unique result filename": "uuid.uuid4().hex",
+        "Simulator profile injection": "SIMCTL_CHILD_FOVEA_SIMULATOR_PROFILE_ID",
+        "Simulator build injection": "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_BUILD",
+        "runtime build binding": '"osBuild": build',
+    }
+    for label, marker in runner_requirements.items():
+        if marker not in runner_source:
+            errors.append(f"W7 runner lost {label}")
+    model_requirements = [
+        'injected["FOVEA_SIMULATOR_PROFILE_ID"]',
+        'injected["FOVEA_SIMULATOR_OS_VERSION"]',
+        'injected["FOVEA_SIMULATOR_OS_BUILD"]',
+        'injected["FOVEA_SIMULATOR_OS_CHANNEL"]',
+        "versionMatchesCurrentSimulator",
+    ]
+    if any(marker not in benchmark_models for marker in model_requirements):
+        errors.append("W7 app lost fail-closed Simulator environment injection")
     if single.get("expectedCancelledSubscribers") != 256:
         errors.append("cancelled subscriber contract drifted")
     if single.get("expectedCompletedSubscribers") + priority.get("expectedCompletedSubscribers") != 744:
@@ -95,17 +166,17 @@ def main() -> int:
     }
     if set(plan.get("primaryEndpoints", {})) != required:
         errors.append("W7 primary endpoint set drifted")
-    if claims.get("schemaVersion") != 7 or claims.get("registryID") != "FOVEA-W7-CONCURRENCY-CLAIMS-V7":
+    if claims.get("schemaVersion") != 8 or claims.get("registryID") != "FOVEA-W7-CONCURRENCY-CLAIMS-V8":
         errors.append("unexpected W7 claim registry identity")
-    if claims.get("status") != "preregistered-after-v6-calibration-before-formal-results":
-        errors.append("W7 V7 claim registry must remain preregistered")
-    if claims.get("supersedes") != "Benchmarks/W7ConcurrencyLab/plans/claim-families-v6.json":
-        errors.append("W7 V6 claim archive binding is missing")
+    if claims.get("status") != expected_status:
+        errors.append("W7 V8 claim registry must remain preregistered")
+    if claims.get("supersedes") != "Benchmarks/W7ConcurrencyLab/plans/claim-families-v7.json":
+        errors.append("W7 V7 claim archive binding is missing")
     archived_claims = json.loads(
-        (ROOT / "Benchmarks/W7ConcurrencyLab/plans/claim-families-v6.json").read_text()
+        (ROOT / "Benchmarks/W7ConcurrencyLab/plans/claim-families-v7.json").read_text()
     )
-    if archived_claims.get("schemaVersion") != 6 or archived_claims.get("registryID") != "FOVEA-W7-CONCURRENCY-CLAIMS-V6":
-        errors.append("archived W7 V6 claim identity drifted")
+    if archived_claims.get("schemaVersion") != 7 or archived_claims.get("registryID") != "FOVEA-W7-CONCURRENCY-CLAIMS-V7":
+        errors.append("archived W7 V7 claim identity drifted")
     efficiency = next(
         (family for family in claims.get("families", []) if family.get("id") == "W7.ConcurrentEfficiency"),
         None,

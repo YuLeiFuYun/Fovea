@@ -24,16 +24,6 @@
     "maximumPeakThreads": 256,
     "networkProfile": "NET-CONSTRAINED-V1",
     "originConcurrentServiceLimit": 8,
-    "simulatorCalibrationIdentity": {
-      "deviceProfileID": "ios27-simulator-calibration-v1",
-      "deviceType": "com.apple.CoreSimulator.SimDeviceType.iPhone-17e",
-      "osChannel": "beta",
-      "runtimeBuild": "24A5355p",
-      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
-      "runtimeVersion": "27.0",
-      "treeBoundBuildManifestRequired": true,
-      "uniqueResultFilenameRequired": true
-    },
     "thermalRule": "physical formal blocks require nominal throughout and rerun the entire comparator block after drift",
     "timeoutSecondsPerComparatorRun": 240
   },
@@ -41,7 +31,6 @@
     "logical-request-count-exact",
     "observation-count-exact",
     "single-flight-origin-request-bound",
-    "single-flight-preparation-gate-engaged",
     "cancelled-subscriber-count-exact",
     "survivor-completion-count-exact",
     "priority-burst-no-starvation",
@@ -51,11 +40,11 @@
     "origin-peak-concurrency-bounded",
     "background-probe-bypass-bound"
   ],
-  "methodologyRevision": "V7 serially awaited 512 makeLoad calls while every native adapter started work during makeLoad. A fixed 750 ms response delay did not prove that all thirty-two subscribers for every shared identity existed before the first response completed, so intermittent seventeenth origin starts were confounded by harness preparation duration. V8 closes a response-delivery-only gate for /w7/shared before constructing the 512 loads, permits native request creation and single-flight enrollment while closed, and releases the gate only after all 512 logical loads exist. Priority scheduling, cancellation delay, client and origin budgets, endpoints, statistics and formal claim boundary are unchanged.",
+  "methodologyRevision": "V6 conflated internal permit-grant order with URLSession/origin start order. V7 preserves the internal eight-bypass proof and uses the concurrency-derived black-box bound 8 + (8 - 1) = 15 without changing the trace, client budget, origin limit, endpoints, or formal claim boundary.",
   "notApplicable": {
     "Apple AsyncImage": "view API does not expose W7 headless load, priority, subscriber and cancellation contract"
   },
-  "planID": "FOVEA-W7-CONCURRENCY-V8",
+  "planID": "FOVEA-W7-CONCURRENCY-V7",
   "primaryEndpoints": {
     "immediate-to-background-p95-ratio": {
       "direction": "lower",
@@ -79,7 +68,7 @@
       "unit": "requests"
     }
   },
-  "schemaVersion": 8,
+  "schemaVersion": 7,
   "secondaryEndpoints": [
     "throughput",
     "stopped-origin-request-count",
@@ -93,8 +82,7 @@
     "baseline-thread-count",
     "absolute-peak-thread-count",
     "peak-thread-delta",
-    "background-probe-newer-bypass-count",
-    "shared-preparation-wait-count"
+    "background-probe-newer-bypass-count"
   ],
   "statistics": {
     "bootstrapIterations": 10000,
@@ -103,7 +91,7 @@
     "multipleComparisonCorrection": "holm-within-claim-family",
     "resamplingUnit": "comparator-run-within-balanced-block"
   },
-  "status": "preregistered-after-v7-preparation-barrier-counterexample-before-formal-results",
+  "status": "preregistered-after-v6-calibration-before-formal-results",
   "subtraces": {
     "priorityScheduling": {
       "balancedRoundRobin": {
@@ -154,17 +142,9 @@
         14,
         15
       ],
-      "preparationBarrier": {
-        "closeBeforeLoadConstruction": true,
-        "logicalLoadsRequiredBeforeRelease": 512,
-        "nativeRequestCreationAllowedWhileClosed": true,
-        "releaseBeforeCancellationDelayStarts": true,
-        "requiredObservedWaitersMinimum": 1,
-        "responseDeliveryScope": "/w7/shared-only"
-      },
       "subscribersPerGroup": 32
     }
   },
-  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json",
+  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v6.json",
   "workloadID": "W7-THOUSAND-CONCURRENT-V1"
 }

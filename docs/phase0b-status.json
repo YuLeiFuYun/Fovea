@@ -133,7 +133,7 @@
       "finalATierHeadlessAggregate": "current-clean-source-functional-30-spec-completed-performance-host-quiescence-pending",
       "finalPairedSwiftUISurfaceAggregate": "current-clean-source-30-run-structural-completed-performance-host-quiescence-pending",
       "finalW7V6Aggregate": "archived-observable-bound-invalid",
-      "finalW7V7Aggregate": "current-clean-source-six-comparator-structural-completed-performance-formal-pending",
+      "finalW7V7Aggregate": "archived-preparation-barrier-missing-single-flight-origin-count-confounded",
       "historicalFiveLibraryAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
       "latestSimulatorAggregate": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
       "latestSimulatorAggregateTrust": "current-clean-source-functional-contract-only-no-performance-ranking",
@@ -249,11 +249,11 @@
       "latestW7V7FunctionalDiagnosticSHA256": "4215c1a5cc561de370180a13e41f7754fa6718a41fa60594eca756cfd9aa2eba",
       "latestW7V7SourceCommit": "a81cf5e7aa8be0e23fb16cfa360672b5895464f1",
       "latestW7V7SourceTreeDigest": "0fd9829ef1a1f62f412536187769fb6a588e7443db0415c3740c9cff2d6828be",
-      "latestW7V7ClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+      "latestW7V7ClaimScope": "historical-structural-only-single-flight-origin-count-invalidated-priority-subtrace-retained",
       "latestW7V7FoveaHardFailures": 0,
       "latestW7V7ExternalHardFailurePattern": {
         "Nuke": "background-probe-bypass-bound-3-of-3",
-        "SDWebImage": "single-flight-origin-request-bound-1-of-3"
+        "SDWebImage": "single-flight-restart-attribution-confounded-by-sequential-preparation"
       },
       "latestW7V7RepeatSummary": ".artifacts/w7-functional-diagnostics/repeats/summary.json",
       "latestW7V7RepeatSummarySHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3",
@@ -312,6 +312,19 @@
             129
           ]
         }
+      },
+      "finalW7V8Aggregate": "preregistered-dirty-preparation-gate-diagnostic-passed-clean-six-comparator-calibration-pending",
+      "latestW7V8PreparationGateDiagnostic": ".artifacts/comparative-regression-diagnostics/v8-environment/summary.json",
+      "latestW7V8PreparationGateDiagnosticSHA256": "42d06802f0a00c5b48f26fb828611da9813930987b0f3496c37a89857dc3d33a",
+      "latestW7V8PreparationGateFacts": {
+        "foveaRepeats": "4-of-4",
+        "foveaSharedOriginRequests": 16,
+        "foveaPreparationWaitCount": 8,
+        "foveaHardFailures": 0,
+        "simulatorProfileID": "ios27-simulator-calibration-v1",
+        "simulatorRuntimeBuild": "24A5355p",
+        "treeBoundBuildManifest": true,
+        "claimScope": "dirty-source-causal-diagnostic-only"
       }
     },
     "projectMemory": {
@@ -366,7 +379,7 @@
       ],
       "claimFamilies": "Benchmarks/W7ConcurrencyLab/claim-families.json",
       "plan": "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
-      "status": "v7-preregistered-after-v6-origin-order-counterexample-final-six-a-tier-calibration-pending"
+      "status": "v8-preregistered-after-v7-sequential-preparation-counterexample-clean-six-a-tier-calibration-pending"
     },
     "workloadContinuity": {
       "acceptedMatrix": "docs/project-memory/accepted-workload-matrix.md",

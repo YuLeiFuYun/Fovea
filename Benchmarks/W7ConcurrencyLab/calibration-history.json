@@ -168,7 +168,7 @@
           "originPeakConcurrency": 8
         }
       },
-      "finding": "The clean six-headless V7 structural run leaves Fovea with zero hard failures. Nuke exceeds the derived fifteen-start observable priority bound with thirty-one newer starts in three of three repeats. SDWebImage passes the six-way run but one of three focused repeats creates a seventeenth shared transport that is immediately stopped; causal instrumentation attributes the restart to downloader enrollment after asynchronous cache lookup, not to result classification or delivered post-cancellation bytes.",
+      "finding": "V7 awaited 512 makeLoad calls serially while native adapters started work immediately. The fixed 750 ms shared-response delay did not guarantee that all thirty-two subscribers for every identity existed before the first response completed. V7 single-flight origin counts and the SDWebImage seventeenth-request attribution are therefore confounded. The independent Nuke priority subtrace remains retained because V8 does not alter it.",
       "planID": "FOVEA-W7-CONCURRENCY-V7",
       "repeatArtifact": ".artifacts/w7-functional-diagnostics/repeats/summary.json",
       "repeatArtifactSHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3",
@@ -177,7 +177,25 @@
         "includesWorkingTreeChanges": false,
         "sourceTreeDigest": "0fd9829ef1a1f62f412536187769fb6a588e7443db0415c3740c9cff2d6828be"
       },
-      "status": "current-clean-source-simulator-structural-calibration-performance-formal-not-run"
+      "status": "archived-calibration-shared-burst-preparation-invalid"
+    },
+    {
+      "planID": "FOVEA-W7-CONCURRENCY-V8",
+      "status": "preregistered-dirty-preparation-gate-diagnostic-clean-calibration-pending",
+      "archiveSuperseded": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json",
+      "diagnosticArtifact": ".artifacts/comparative-regression-diagnostics/v8-environment/summary.json",
+      "diagnosticArtifactSHA256": "42d06802f0a00c5b48f26fb828611da9813930987b0f3496c37a89857dc3d33a",
+      "facts": {
+        "foveaRepeatsPassed": 4,
+        "foveaSharedOriginRequestsEach": 16,
+        "foveaPreparationWaitCountEach": 8,
+        "responseDeliveryScope": "/w7/shared-only",
+        "logicalLoadsRequiredBeforeRelease": 512,
+        "simulatorProfileID": "ios27-simulator-calibration-v1",
+        "simulatorRuntimeBuild": "24A5355p",
+        "treeBoundBuildManifest": true
+      },
+      "finding": "A response-delivery-only preparation gate removes the sequential makeLoad duration confound without blocking native request creation, single-flight enrollment or cancellation. Four tree-bound dirty-source iOS 27.0 build 24A5355p diagnostics passed with exactly sixteen shared origins, eight observed gate waiters and zero hard failures. Clean V8 six-comparator calibration and formal blocks remain pending."
     }
   ]
 }

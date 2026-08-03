@@ -99,8 +99,8 @@
     {
       "id": "P7-CURRENT-STACK-PARETO-001",
       "phase": "P7",
-      "status": "blocked-current-pin-clean-copy-and-composition-evidence",
-      "summary": "Repin the full A-tier matrix and rerun W1/W2/W3/W7/W8/W10/W13 after current exact-pin clean-copy and composition gates pass."
+      "status": "in-progress-v8-preregistered-clean-calibration-and-formal-pending",
+      "summary": "Run the V8-prepared W7 matrix plus W1/W2/W3/W8/W10/W13 from clean exact-pin source; quiet-host formal and physical evidence remain required."
     },
     {
       "id": "P0-SWIFT64-TOOLCHAIN-001",

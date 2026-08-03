@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Any
 
 from comparative_simulator_support import (
+    SIMULATOR_RUNTIME_BUILD,
+    SIMULATOR_RUNTIME_VERSION,
     XCODEBUILD_RESOLVED_PACKAGE_FLAGS,
     assert_measurement_host_quiet,
     ensure_dedicated_simulator,
@@ -38,6 +40,12 @@ FAILED_RUN_ROOT = ARTIFACT_ROOT / "failed-runs"
 PLAN_ID = "FOVEA-SWIFTUI-SURFACE-LAB-V5"
 SCHEMA_VERSION = 5
 PAIRED_BLOCKS = 5
+SIMULATOR_IDENTITY = {
+    "deviceProfileID": "ios26-4-simulator-calibration-v1",
+    "osVersion": SIMULATOR_RUNTIME_VERSION,
+    "osBuild": SIMULATOR_RUNTIME_BUILD,
+    "osChannel": "stable",
+}
 SURFACES = {
     "Apple AsyncImage": ("AsyncImageComparatorBench", "dev.fovea.comparative.asyncimage"),
     "Fovea": ("FoveaSwiftUIComparatorBench", "dev.fovea.comparative.foveaswiftui"),
@@ -468,6 +476,14 @@ def validate(
             raise RuntimeError("Fovea SwiftUI tree identity mismatch")
     if data.get("executionEnvironment") != "simulator" or data.get("provisional") is not True:
         raise RuntimeError("SwiftUI simulator evidence must remain provisional")
+    environment_record = data.get("environment", {})
+    drift = {
+        key: {"expected": value, "actual": environment_record.get(key)}
+        for key, value in SIMULATOR_IDENTITY.items()
+        if environment_record.get(key) != value
+    }
+    if drift:
+        raise RuntimeError(f"SwiftUI Simulator environment identity drifted: {drift}")
     thermal = data.get("thermal", {})
     if thermal.get("stateAtStart") != "nominal":
         raise RuntimeError("SwiftUI surface run did not start at nominal thermal state")
@@ -625,6 +641,7 @@ def write_report(
         "experimentPlanDigest": plan_digest,
         "applicabilityDigest": applicability_digest,
         "claimFamilyDigest": claim_family_digest,
+        "simulatorIdentity": SIMULATOR_IDENTITY,
         "comparators": selected_comparators,
         "pairedBlockCount": PAIRED_BLOCKS,
         "pairedBlocksComplete": paired_blocks_complete,
@@ -793,6 +810,10 @@ def main() -> int:
                 "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_DIGEST": plan_digest,
                 "SIMCTL_CHILD_FOVEA_APPLICABILITY_DIGEST": applicability_digest,
                 "SIMCTL_CHILD_FOVEA_CLAIM_FAMILY_DIGEST": claim_family_digest,
+                "SIMCTL_CHILD_FOVEA_SIMULATOR_PROFILE_ID": SIMULATOR_IDENTITY["deviceProfileID"],
+                "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_VERSION": SIMULATOR_IDENTITY["osVersion"],
+                "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_BUILD": SIMULATOR_IDENTITY["osBuild"],
+                "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_CHANNEL": SIMULATOR_IDENTITY["osChannel"],
             }
         )
         total = len(specs)

@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Any
 
 from comparative_simulator_support import (
+    SIMULATOR_RUNTIME_BUILD,
+    SIMULATOR_RUNTIME_VERSION,
     XCODEBUILD_RESOLVED_PACKAGE_FLAGS,
     assert_measurement_host_quiet,
     ensure_dedicated_simulator,
@@ -47,6 +49,12 @@ A_TIER_HEADLESS = [
     "PINRemoteImage",
 ]
 B_TIER_RETAINED = ["AlamofireImage"]
+SIMULATOR_IDENTITY = {
+    "deviceProfileID": "ios26-4-simulator-calibration-v1",
+    "osVersion": SIMULATOR_RUNTIME_VERSION,
+    "osBuild": SIMULATOR_RUNTIME_BUILD,
+    "osChannel": "stable",
+}
 
 
 
@@ -253,7 +261,13 @@ def validate(
     if data.get("experimentPlanDigest") != plan_digest: raise RuntimeError("experiment plan digest mismatch")
     if data.get("claimFamilyDigest") != claim_family_digest: raise RuntimeError("claim-family digest mismatch")
     if data.get("executionEnvironment") != "simulator": raise RuntimeError("simulator result environment mismatch")
-    if data.get("environment",{}).get("deviceProfileID") != "ios26-4-simulator-calibration-v1": raise RuntimeError("simulator profile mismatch")
+    environment_record = data.get("environment", {})
+    drift = {
+        key: {"expected": value, "actual": environment_record.get(key)}
+        for key, value in SIMULATOR_IDENTITY.items()
+        if environment_record.get(key) != value
+    }
+    if drift: raise RuntimeError(f"simulator environment identity mismatch: {drift}")
     if data.get("comparator",{}).get("name") != spec["comparator"]: raise RuntimeError("comparator mismatch")
     if data.get("workloadID") != spec["workload"] or data.get("cacheState") != spec["cache"]: raise RuntimeError("run identity mismatch")
     if data.get("provisional") is not True: raise RuntimeError("simulator result must be provisional")
@@ -320,7 +334,8 @@ def write_report(
         "executionEnvironment": "simulator",
         "experimentPlanDigest": plan_digest,
         "claimFamilyDigest": claim_family_digest,
-        "deviceProfileID": "ios26-4-simulator-calibration-v1",
+        "simulatorIdentity": SIMULATOR_IDENTITY,
+        "deviceProfileID": SIMULATOR_IDENTITY["deviceProfileID"],
         "provisional": True,
         "releaseClaimPermitted": False,
         "selectedComparators": selected,
@@ -489,6 +504,10 @@ def main() -> int:
                 "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_ID":"FOVEA-P0B-COMP-V1",
                 "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_DIGEST":plan_digest,
                 "SIMCTL_CHILD_FOVEA_CLAIM_FAMILY_DIGEST":claim_family_digest,
+                "SIMCTL_CHILD_FOVEA_SIMULATOR_PROFILE_ID":SIMULATOR_IDENTITY["deviceProfileID"],
+                "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_VERSION":SIMULATOR_IDENTITY["osVersion"],
+                "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_BUILD":SIMULATOR_IDENTITY["osBuild"],
+                "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_CHANNEL":SIMULATOR_IDENTITY["osChannel"],
             })
             print(f"Simulator run {index}/{len(specs)}: {comparator} {spec['workload']} {spec['cache']}",flush=True)
             container=Path(run(["xcrun","simctl","get_app_container",udid,bundle,"data"],env=env,timeout=60).stdout.strip())

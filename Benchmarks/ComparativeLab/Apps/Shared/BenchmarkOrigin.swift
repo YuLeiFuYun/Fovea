@@ -20,6 +20,9 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     private static let w7ConcurrentServiceLimit = 8
 
     private let lock = NSLock()
+    private let w7SharedPreparationCondition = NSCondition()
+    private var w7SharedPreparationGateOpen = true
+    private var w7SharedPreparationWaitCount = 0
     private let w7ServiceQueue = DispatchQueue(
         label: "dev.fovea.comparative.origin.w7-service",
         attributes: .concurrent
@@ -80,9 +83,45 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     }
 
     func resetMetrics() {
+        w7SharedPreparationCondition.lock()
+        w7SharedPreparationGateOpen = true
+        w7SharedPreparationWaitCount = 0
+        w7SharedPreparationCondition.broadcast()
+        w7SharedPreparationCondition.unlock()
         lock.lock()
         resetLocked()
         lock.unlock()
+    }
+
+    func closeW7SharedPreparationGate() {
+        w7SharedPreparationCondition.lock()
+        w7SharedPreparationGateOpen = false
+        w7SharedPreparationCondition.unlock()
+    }
+
+    func releaseW7SharedPreparationGate() {
+        w7SharedPreparationCondition.lock()
+        w7SharedPreparationGateOpen = true
+        w7SharedPreparationCondition.broadcast()
+        w7SharedPreparationCondition.unlock()
+    }
+
+    func waitForW7SharedPreparationGate() {
+        w7SharedPreparationCondition.lock()
+        if !w7SharedPreparationGateOpen {
+            w7SharedPreparationWaitCount += 1
+        }
+        while !w7SharedPreparationGateOpen {
+            w7SharedPreparationCondition.wait()
+        }
+        w7SharedPreparationCondition.unlock()
+    }
+
+    private func w7SharedPreparationWaitSnapshot() -> Int {
+        w7SharedPreparationCondition.lock()
+        let value = w7SharedPreparationWaitCount
+        w7SharedPreparationCondition.unlock()
+        return value
     }
 
     private func resetLocked() {
@@ -233,6 +272,7 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     }
 
     func snapshot() -> BenchmarkOriginMetrics {
+        let preparationWaitCount = w7SharedPreparationWaitSnapshot()
         lock.lock()
         let value = BenchmarkOriginMetrics(
             requestCount: requestCount,
@@ -242,6 +282,7 @@ private final class BenchmarkOriginState: @unchecked Sendable {
             stoppedRequestCount: stoppedRequestCount,
             redirectAuthorizationLeakCount: redirectAuthorizationLeakCount,
             peakConcurrentRequestCount: peakConcurrentRequestCount,
+            w7SharedPreparationWaitCount: preparationWaitCount,
             w7ServiceStartOrder: w7ServiceStartOrder,
             routeRequestCounts: routeRequestCounts
         )
@@ -403,6 +444,12 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
     }
 
     static func resetMetrics() { BenchmarkOriginState.shared.resetMetrics() }
+    static func closeW7SharedPreparationGate() {
+        BenchmarkOriginState.shared.closeW7SharedPreparationGate()
+    }
+    static func releaseW7SharedPreparationGate() {
+        BenchmarkOriginState.shared.releaseW7SharedPreparationGate()
+    }
     static func markCancellation(requestID: String) {
         BenchmarkOriginState.shared.markCancellation(requestID: requestID)
     }
@@ -461,6 +508,9 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
     }
 
     private func deliver(url: URL, route: String, w7ServiceIdentifier: UUID?) {
+        if route == "/w7/shared" {
+            state.waitForW7SharedPreparationGate()
+        }
         if isStopped {
             if let w7ServiceIdentifier { state.releaseW7Service(w7ServiceIdentifier) }
             return

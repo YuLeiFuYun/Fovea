@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,10 @@ PLAN_PATH = ROOT / "Benchmarks/W7ConcurrencyLab/experiment-plan.json"
 CLAIMS_PATH = ROOT / "Benchmarks/W7ConcurrencyLab/claim-families.json"
 ARTIFACT_ROOT = ROOT / ".artifacts/w7-concurrency-lab"
 DERIVED_DATA = ARTIFACT_ROOT / "DerivedData"
+BUILD_MANIFEST = DERIVED_DATA / "w7-build-manifest.json"
+W7_RUNTIME_IDENTIFIER = "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
+W7_SIMULATOR_PROFILE_ID = "ios27-simulator-calibration-v1"
+W7_SIMULATOR_CHANNEL = "beta"
 APPS = {
     "Apple URLSession + URLCache + ImageIO": (
         "AppleNativeComparatorBench", "dev.fovea.comparative.applenative"
@@ -53,6 +58,7 @@ HARD_CHECKS = {
     "logical-request-count-exact",
     "observation-count-exact",
     "single-flight-origin-request-bound",
+    "single-flight-preparation-gate-engaged",
     "cancelled-subscriber-count-exact",
     "survivor-completion-count-exact",
     "priority-burst-no-starvation",
@@ -64,6 +70,7 @@ HARD_CHECKS = {
 }
 MEASUREMENT_CHECKS = {
     "w7-shared-origin-request-count",
+    "w7-shared-preparation-wait-count",
     "w7-baseline-thread-count",
     "w7-peak-thread-count",
     "w7-peak-thread-delta",
@@ -153,26 +160,188 @@ def git_identity(env: dict[str, str]) -> dict[str, Any]:
     }
 
 
-def simulator(env: dict[str, str]) -> str:
+def simulator(env: dict[str, str]) -> dict[str, str]:
+    runtime_records = json.loads(
+        run(
+            ["xcrun", "simctl", "runtime", "list", "-v", "-j"],
+            env=env,
+            timeout=60,
+        ).stdout
+    )
+    runtime_matches = [
+        (storage_identifier, record)
+        for storage_identifier, record in runtime_records.items()
+        if record.get("runtimeIdentifier") == W7_RUNTIME_IDENTIFIER
+        and record.get("state") == "Ready"
+        and record.get("mountPath")
+    ]
+    if len(runtime_matches) != 1:
+        raise RuntimeError(
+            "expected exactly one ready mounted iOS 27.0 Simulator runtime, "
+            f"found {len(runtime_matches)}"
+        )
+    storage_identifier, runtime_record = runtime_matches[0]
+    version = runtime_record.get("version")
+    build = runtime_record.get("build")
+    if not isinstance(version, str) or not version or not isinstance(build, str) or not build:
+        raise RuntimeError("iOS 27.0 Simulator runtime identity is incomplete")
+
     data = json.loads(
         run(
             ["xcrun", "simctl", "list", "devices", "available", "-j"], env=env
         ).stdout
     )
-    runtime = "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
-    devices = data.get("devices", {}).get(runtime, [])
-    selected = next((item for item in devices if item.get("name") == "iPhone 17e"), None)
-    if selected is None:
-        raise RuntimeError("iOS 27 iPhone 17e simulator is unavailable")
+    devices = data.get("devices", {}).get(W7_RUNTIME_IDENTIFIER, [])
+    matches = [
+        item
+        for item in devices
+        if item.get("name") == "iPhone 17e"
+        and item.get("deviceTypeIdentifier")
+        == "com.apple.CoreSimulator.SimDeviceType.iPhone-17e"
+    ]
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"expected exactly one iOS 27 iPhone 17e simulator, found {len(matches)}"
+        )
+    selected = matches[0]
     udid = selected["udid"]
     if selected.get("state") != "Booted":
         run(["xcrun", "simctl", "boot", udid], env=env, timeout=120)
     run(["xcrun", "simctl", "bootstatus", udid, "-b"], env=env, timeout=240)
-    return udid
+    return {
+        "deviceUDID": udid,
+        "runtimeIdentifier": W7_RUNTIME_IDENTIFIER,
+        "runtimeStorageIdentifier": storage_identifier,
+        "runtimeSignatureState": str(runtime_record.get("signatureState", "unknown")),
+        "deviceProfileID": W7_SIMULATOR_PROFILE_ID,
+        "osVersion": version,
+        "osBuild": build,
+        "osChannel": W7_SIMULATOR_CHANNEL,
+    }
 
 
-def build_install(env: dict[str, str], udid: str, selected: list[str]) -> None:
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify_installed_app(
+    env: dict[str, str], udid: str, comparator: str
+) -> dict[str, str]:
+    scheme, bundle = APPS[comparator]
+    built_app = DERIVED_DATA / "Build/Products/Release-iphonesimulator" / f"{scheme}.app"
+    built_executable = built_app / scheme
+    built_resources = built_app / "resource-bundle.json"
+    if not built_executable.is_file() or not built_resources.is_file():
+        raise RuntimeError(
+            f"missing W7 prebuilt app identity for {comparator}: {built_app.relative_to(ROOT)}"
+        )
+    installed_app = Path(
+        run(
+            ["xcrun", "simctl", "get_app_container", udid, bundle, "app"],
+            env=env,
+            timeout=60,
+        ).stdout.strip()
+    )
+    installed_executable = installed_app / scheme
+    installed_resources = installed_app / "resource-bundle.json"
+    if not installed_executable.is_file() or not installed_resources.is_file():
+        raise RuntimeError(f"installed W7 app identity is incomplete: {comparator}")
+    identity = {
+        "builtExecutableSha256": file_sha256(built_executable),
+        "installedExecutableSha256": file_sha256(installed_executable),
+        "builtResourceBundleSha256": file_sha256(built_resources),
+        "installedResourceBundleSha256": file_sha256(installed_resources),
+    }
+    if identity["builtExecutableSha256"] != identity["installedExecutableSha256"]:
+        raise RuntimeError(
+            f"installed W7 executable does not match W7 DerivedData: {comparator}"
+        )
+    if identity["builtResourceBundleSha256"] != identity["installedResourceBundleSha256"]:
+        raise RuntimeError(
+            f"installed W7 resources do not match W7 DerivedData: {comparator}"
+        )
+    return identity
+
+
+def write_build_manifest(
+    *,
+    simulator_identity: dict[str, str],
+    identity: dict[str, Any],
+    plan_digest: str,
+    claims_digest: str,
+    app_identities: dict[str, dict[str, str]],
+) -> None:
+    manifest = {
+        "schemaVersion": 1,
+        "simulatorIdentity": simulator_identity,
+        "sourceIdentity": identity,
+        "experimentPlanDigest": plan_digest,
+        "claimFamilyDigest": claims_digest,
+        "apps": app_identities,
+    }
+    BUILD_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
+    temporary = BUILD_MANIFEST.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    temporary.replace(BUILD_MANIFEST)
+
+
+def verify_build_manifest(
+    *,
+    env: dict[str, str],
+    simulator_identity: dict[str, str],
+    selected: list[str],
+    identity: dict[str, Any],
+    plan_digest: str,
+    claims_digest: str,
+) -> None:
+    if not BUILD_MANIFEST.is_file():
+        raise RuntimeError(
+            "--skip-build requires a tree-bound W7 build manifest; run without --skip-build"
+        )
+    manifest = json.loads(BUILD_MANIFEST.read_text())
+    expected = {
+        "schemaVersion": 1,
+        "simulatorIdentity": simulator_identity,
+        "sourceIdentity": identity,
+        "experimentPlanDigest": plan_digest,
+        "claimFamilyDigest": claims_digest,
+    }
+    drift = {
+        key: {"expected": value, "actual": manifest.get(key)}
+        for key, value in expected.items()
+        if manifest.get(key) != value
+    }
+    if drift:
+        raise RuntimeError(f"W7 prebuilt manifest drifted: {drift}")
+    apps = manifest.get("apps")
+    if not isinstance(apps, dict):
+        raise RuntimeError("W7 prebuilt manifest apps are missing")
+    udid = simulator_identity["deviceUDID"]
+    for comparator in selected:
+        current = verify_installed_app(env, udid, comparator)
+        recorded = apps.get(comparator)
+        if recorded != current:
+            raise RuntimeError(
+                f"W7 prebuilt app identity drifted for {comparator}: "
+                f"recorded={recorded} current={current}"
+            )
+
+def build_install(
+    env: dict[str, str],
+    simulator_identity: dict[str, str],
+    selected: list[str],
+    identity: dict[str, Any],
+    plan_digest: str,
+    claims_digest: str,
+) -> None:
+    udid = simulator_identity["deviceUDID"]
     DERIVED_DATA.mkdir(parents=True, exist_ok=True)
+    app_identities: dict[str, dict[str, str]] = {}
     for comparator in selected:
         scheme, _ = APPS[comparator]
         print(f"Building W7 app: {comparator}", flush=True)
@@ -200,6 +369,14 @@ def build_install(env: dict[str, str], udid: str, selected: list[str]) -> None:
             raise RuntimeError(f"{comparator} W7 build did not report success")
         app = DERIVED_DATA / "Build/Products/Release-iphonesimulator" / f"{scheme}.app"
         run(["xcrun", "simctl", "install", udid, str(app)], env=env, timeout=120)
+        app_identities[comparator] = verify_installed_app(env, udid, comparator)
+    write_build_manifest(
+        simulator_identity=simulator_identity,
+        identity=identity,
+        plan_digest=plan_digest,
+        claims_digest=claims_digest,
+        app_identities=app_identities,
+    )
 
 
 def collect_strings(value: Any, output: list[str]) -> None:
@@ -219,10 +396,11 @@ def validate(
     identity: dict[str, Any],
     plan_digest: str,
     claims_digest: str,
+    simulator_identity: dict[str, str],
 ) -> dict[str, Any]:
     if data.get("schemaVersion") != 3:
         raise RuntimeError("unexpected W7 result schema")
-    if data.get("planID") != "FOVEA-W7-CONCURRENCY-V7":
+    if data.get("planID") != "FOVEA-W7-CONCURRENCY-V8":
         raise RuntimeError("unexpected W7 plan identity")
     if data.get("harnessIdentity") != identity:
         raise RuntimeError("W7 harness identity mismatch")
@@ -232,6 +410,20 @@ def validate(
         raise RuntimeError("W7 claim-family digest mismatch")
     if data.get("executionEnvironment") != "simulator" or data.get("provisional") is not True:
         raise RuntimeError("W7 calibration must remain provisional Simulator evidence")
+    environment_record = data.get("environment", {})
+    expected_environment = {
+        "deviceProfileID": simulator_identity["deviceProfileID"],
+        "osVersion": simulator_identity["osVersion"],
+        "osBuild": simulator_identity["osBuild"],
+        "osChannel": simulator_identity["osChannel"],
+    }
+    environment_drift = {
+        key: {"expected": value, "actual": environment_record.get(key)}
+        for key, value in expected_environment.items()
+        if environment_record.get(key) != value
+    }
+    if environment_drift:
+        raise RuntimeError(f"W7 Simulator environment identity drifted: {environment_drift}")
     if data.get("workloadID") != "W7-THOUSAND-CONCURRENT-V1":
         raise RuntimeError("W7 workload identity mismatch")
     if data.get("cacheState") != "cold":
@@ -296,9 +488,13 @@ def run_one(
     identity: dict[str, Any],
     plan_digest: str,
     claims_digest: str,
+    simulator_identity: dict[str, str],
 ) -> Path:
     _, bundle = APPS[comparator]
-    output_name = f"w7-{comparator.lower()}-{run_index:03d}.json"
+    output_name = (
+        f"w7-{comparator.lower()}-{run_index:03d}-"
+        f"{uuid.uuid4().hex}.json"
+    )
     container = Path(
         run(
             ["xcrun", "simctl", "get_app_container", udid, bundle, "data"],
@@ -316,9 +512,13 @@ def run_one(
             "SIMCTL_CHILD_FOVEA_BENCHMARK_DIRTY": (
                 "1" if identity["includesWorkingTreeChanges"] else "0"
             ),
-            "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_ID": "FOVEA-W7-CONCURRENCY-V7",
+            "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_ID": "FOVEA-W7-CONCURRENCY-V8",
             "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_DIGEST": plan_digest,
             "SIMCTL_CHILD_FOVEA_CLAIM_FAMILY_DIGEST": claims_digest,
+            "SIMCTL_CHILD_FOVEA_SIMULATOR_PROFILE_ID": simulator_identity["deviceProfileID"],
+            "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_VERSION": simulator_identity["osVersion"],
+            "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_BUILD": simulator_identity["osBuild"],
+            "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_CHANNEL": simulator_identity["osChannel"],
         }
     )
     launch = run(
@@ -372,8 +572,11 @@ def run_one(
         print(logs.stdout[-20_000:], file=sys.stderr)
         raise RuntimeError(f"missing W7 result after timeout: {comparator}")
     data = json.loads(source.read_text())
-    validate(data, comparator, identity, plan_digest, claims_digest)
-    destination = ARTIFACT_ROOT / "runs" / comparator / output_name
+    validate(
+        data, comparator, identity, plan_digest, claims_digest, simulator_identity
+    )
+    artifact_name = f"w7-{comparator.lower()}-{run_index:03d}.json"
+    destination = ARTIFACT_ROOT / "runs" / comparator / artifact_name
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, destination)
     return destination
@@ -385,12 +588,15 @@ def write_report(
     identity: dict[str, Any],
     plan_digest: str,
     claims_digest: str,
+    simulator_identity: dict[str, str],
 ) -> dict[str, Any]:
     entries: list[dict[str, Any]] = []
     for path in paths:
         data = json.loads(path.read_text())
         comparator = data["comparator"]["name"]
-        validated = validate(data, comparator, identity, plan_digest, claims_digest)
+        validated = validate(
+            data, comparator, identity, plan_digest, claims_digest, simulator_identity
+        )
         entries.append(
             {
                 "comparator": comparator,
@@ -404,7 +610,7 @@ def write_report(
     )
     report = {
         "schemaVersion": 1,
-        "planID": "FOVEA-W7-CONCURRENCY-V7",
+        "planID": "FOVEA-W7-CONCURRENCY-V8",
         "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
         "mode": "simulator-calibration",
         "executionEnvironment": "simulator",
@@ -413,6 +619,9 @@ def write_report(
         "sourceIdentity": identity,
         "experimentPlanDigest": plan_digest,
         "claimFamilyDigest": claims_digest,
+        "simulatorIdentity": simulator_identity,
+        "buildManifest": str(BUILD_MANIFEST.relative_to(ROOT)),
+        "buildManifestSha256": file_sha256(BUILD_MANIFEST),
         "selectedComparators": selected,
         "aTierHeadlessMatrix": A_TIER_HEADLESS,
         "aTierHeadlessComplete": selected == A_TIER_HEADLESS,
@@ -487,11 +696,34 @@ def main() -> int:
             for path in paths:
                 if not path.is_file():
                     raise RuntimeError(f"missing W7 artifact: {path.relative_to(ROOT)}")
-            report = write_report(paths, selected, identity, plan_digest, claims_digest)
+            simulator_identity = simulator(env)
+            verify_build_manifest(
+                env=env,
+                simulator_identity=simulator_identity,
+                selected=selected,
+                identity=identity,
+                plan_digest=plan_digest,
+                claims_digest=claims_digest,
+            )
+            report = write_report(
+                paths, selected, identity, plan_digest, claims_digest, simulator_identity
+            )
             return 0 if report["status"] == "completed" else 1
-        udid = simulator(env)
+        simulator_identity = simulator(env)
+        udid = simulator_identity["deviceUDID"]
         if not args.skip_build:
-            build_install(env, udid, selected)
+            build_install(
+                env, simulator_identity, selected, identity, plan_digest, claims_digest
+            )
+        else:
+            verify_build_manifest(
+                env=env,
+                simulator_identity=simulator_identity,
+                selected=selected,
+                identity=identity,
+                plan_digest=plan_digest,
+                claims_digest=claims_digest,
+            )
         paths: list[Path] = []
         for index, comparator in enumerate(selected, start=1):
             print(f"W7 Simulator {index}/{len(selected)}: {comparator}", flush=True)
@@ -504,9 +736,12 @@ def main() -> int:
                     identity=identity,
                     plan_digest=plan_digest,
                     claims_digest=claims_digest,
+                    simulator_identity=simulator_identity,
                 )
             )
-        report = write_report(paths, selected, identity, plan_digest, claims_digest)
+        report = write_report(
+            paths, selected, identity, plan_digest, claims_digest, simulator_identity
+        )
         return 0 if report["status"] == "completed" else 1
     except Exception as error:
         print(f"W7 concurrency lab failed: {error}", file=sys.stderr)

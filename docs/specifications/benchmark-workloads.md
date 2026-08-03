@@ -288,7 +288,7 @@ starvation / fairness gap
 aggregate subscriber wait
 ```
 
-当前状态：底层 single-flight、permit 与调度测试存在，统一五库 1,000 请求 runner 尚未完成。
+当前状态：V8 六项 A 级 headless runner 已预注册。single-flight 子轨迹在构造全部 512 个 load 期间只阻塞 `/w7/shared` 响应交付，不阻塞原生请求创建、合并注册、取消或优先级传播；全部 load 存在后释放，并以 `single-flight-preparation-gate-engaged` 证明栅栏实际生效。V7 因串行 `makeLoad` 期间响应可能提前完成而归档，其 shared-origin 结论无效。V8 tree-bound dirty 因果诊断在 iOS 27.0 build `24A5355p` 上 Fovea 4/4 均为八个实际 waiter、16 次 shared origin、硬失败 0；clean 六库校准、静默宿主 20-block 正式运行和真机证据仍待完成。
 
 ## W8：缓存重启与损坏
 

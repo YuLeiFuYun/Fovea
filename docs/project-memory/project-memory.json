@@ -115,8 +115,8 @@
     },
     {
       "id": "EVID-W7-CANCELLATION-COHORT-FIX",
-      "status": "completed-current-clean-six-headless-structural",
-      "summary": "W7 exposed cancellation-cohort poisoning, cancellation result misclassification and replacement warmup transport restarts. Admission-aware replacement cohorts, cancellation-first result normalization, dynamic fetch handoff leases and synchronous warmup launch claims now pass the clean Fovea 1,000-request contract and the six-headless V7 structural matrix."
+      "status": "completed-production-fixes-v8-clean-calibration-pending",
+      "summary": "W7 exposed cancellation-cohort poisoning, cancellation result misclassification and replacement warmup amplification. Admission-aware replacement cohorts, cancellation-first result normalization, dynamic fetch handoff leases and synchronous warmup launch claims pass the retained production tests. V7 shared-origin interpretation is superseded by the preparation-barrier counterexample; V8 clean calibration remains pending."
     },
     {
       "id": "EVID-W7-V6-OBSERVABLE-BOUND-COUNTEREXAMPLE",
@@ -125,8 +125,8 @@
     },
     {
       "id": "EVID-W7-V7-SIX-HEADLESS-FUNCTIONAL-DIAGNOSTIC",
-      "status": "completed-current-clean-source-functional-only",
-      "summary": "Clean commit a81cf5e7 completed the six-headless W7 V7 structural matrix. Fovea, Apple Native, Kingfisher, SDWebImage and PINRemoteImage pass the main 1,000-request run; Fovea records 16 shared origin requests, 256 cancellations, zero failures, eight origin slots and zero hard failures. Nuke records thirty-one newer starts before the old background probe and fails the fifteen-start bound in three of three repeats. SDWebImage passes the main run but one of three repeats creates a seventeenth shared transport that is immediately stopped before additional bytes are delivered; causal instrumentation binds the restart to asynchronous cache-query-to-downloader enrollment. No quiet-host performance or release claim is permitted."
+      "status": "superseded-methodology-preparation-barrier-missing",
+      "summary": "The clean V7 matrix remains historical structural evidence, but its single-flight origin counts are not interpretable because 512 makeLoad calls were awaited serially while native work started immediately; a fixed delay did not guarantee full burst enrollment. Nuke priority-bypass evidence belongs to the unchanged priority subtrace and remains open."
     },
     {
       "id": "EVID-CODEC-CONTRACT-LOCAL",
@@ -252,6 +252,11 @@
       "id": "EVID-DUAL-COMPONENT-CANDIDATE-CLEAN-COPY",
       "status": "completed-local-schema4-seatbelt-contained-validated-snapshot-dual-component-composition",
       "summary": "The schema-4 Fovea candidate report consumes external source identity v2 documents without executing candidate-owned identity tools. Fovea independently binds component domain, complete coverage, exact exclusions, every file SHA-256 and executable bit, then materializes snapshots from freshly validated bytes. Only trusted public exact pins are resolved before isolation; candidate manifests first execute inside FOVEA-COMPONENT-CANDIDATE-SANDBOX-V1. Seatbelt denies network, original host-source reads and file writes except dedicated build state and narrowly enumerated Swift/Fovea test temporary roots. Seven runtime probes verify the effective boundary, the immutable Fovea source digest is identical before and after, Akashic 5887e2facb07 (84 files) and ImageCraft 045aa7013b19 (94 files) retain their identities after 478/478 tests, and six source-identity attacks still fail before build. The report self-binds the verifier, identity negative gate, identity specification, sandbox policy module, runtime profile and probe report. It explicitly records nativeBuildSystemDeprecated=true, defaultSwiftBuildSandboxQualification=false, candidateCanReadIsolatedFoveaSource=true, mutualConfidentialityClaim=false, publicRevisionClaim=false and trustedCIClaim=false; those report fields remain intentionally local-evidence scoped. Separately, the identical component bytes are now public as Akashic 2715f23d50b5 / 0.1.0-alpha.5 and ImageCraft e147b349d4ff / 0.1.0-alpha.4, both component Verify workflows are green, and Fovea public-pin tests pass 478/478."
+    },
+    {
+      "id": "EVID-W7-V8-PREPARATION-BARRIER-DIAGNOSTIC",
+      "status": "completed-dirty-diagnostic-clean-calibration-pending",
+      "summary": "V8 closes a /w7/shared response-delivery gate before constructing all 512 shared loads, while allowing native request creation and enrollment, then releases it before the cancellation delay. Four tree-bound dirty-source runs on iOS 27.0 build 24A5355p each recorded eight actual waiters, exactly sixteen shared origins and zero hard failures. Clean six-comparator calibration remains pending."
     }
   ],
   "currentState": {
@@ -874,8 +879,8 @@
     {
       "id": "OPEN-A-TIER-COMPARATOR-INTEGRATION",
       "priority": 0,
-      "status": "in-progress-headless-and-swiftui-structural-complete-performance-physical-pending",
-      "summary": "All seven A-tier integrations build. Six headless W1-W3/W7 and paired SwiftUI W1/W2/W10 structural matrices are complete under clean sources with zero Fovea hard failures. External headless W3/W7 gaps remain explicit. Quiet-host performance and physical-device evidence remain pending."
+      "status": "in-progress-v8-preregistered-clean-performance-physical-pending",
+      "summary": "All seven A-tier integrations build. V8 corrects the W7 shared-burst preparation boundary before any new clean-source matrix is interpreted. W1-W3 and paired SwiftUI structural evidence remain; quiet-host performance, clean V8 six-headless calibration and physical-device evidence are pending. External semantic gaps remain explicit."
     },
     {
       "id": "OPEN-CODEC-CONFORMANCE-KIT",

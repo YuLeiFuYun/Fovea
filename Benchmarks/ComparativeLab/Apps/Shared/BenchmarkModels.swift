@@ -151,6 +151,7 @@ struct BenchmarkOriginMetrics: Codable, Sendable {
     let stoppedRequestCount: Int
     let redirectAuthorizationLeakCount: Int
     let peakConcurrentRequestCount: Int
+    let w7SharedPreparationWaitCount: Int
     let w7ServiceStartOrder: [String]
     let routeRequestCounts: [String: Int]
 }
@@ -316,15 +317,24 @@ struct ResourceCatalog: Sendable {
         }
         let environment: ComparatorRunEnvironment
         #if targetEnvironment(simulator)
-            let version = ProcessInfo.processInfo.operatingSystemVersion
+            let injected = ProcessInfo.processInfo.environment
+            guard
+                let profileID = injected["FOVEA_SIMULATOR_PROFILE_ID"],
+                let declaredVersion = injected["FOVEA_SIMULATOR_OS_VERSION"],
+                let build = injected["FOVEA_SIMULATOR_OS_BUILD"],
+                let channelName = injected["FOVEA_SIMULATOR_OS_CHANNEL"],
+                let channel = OSReleaseChannel(rawValue: channelName),
+                Self.versionMatchesCurrentSimulator(declaredVersion)
+            else {
+                throw BenchmarkAppError.invalidResource("simulator-environment-identity")
+            }
             environment = try ComparatorRunEnvironment(
-                deviceProfileID: "ios26-4-simulator-calibration-v1",
+                deviceProfileID: profileID,
                 deviceRole: .primaryCurrentMid,
                 osFamily: "iOS Simulator",
-                osVersion:
-                    "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)",
-                osBuild: "simulator-runtime-26-4",
-                osChannel: .stable
+                osVersion: declaredVersion,
+                osBuild: build,
+                osChannel: channel
             )
         #else
             guard let role = DeviceEvidenceRole(rawValue: device.role),
@@ -347,6 +357,19 @@ struct ResourceCatalog: Sendable {
             correctnessProbes: correctnessProbes,
             bundle: bundle
         )
+    }
+
+    private static func versionMatchesCurrentSimulator(_ declared: String) -> Bool {
+        let parts = declared.split(separator: ".", omittingEmptySubsequences: false)
+        guard (2...3).contains(parts.count),
+            parts.allSatisfy({ !$0.isEmpty && $0.allSatisfy(\.isNumber) }),
+            let major = Int(parts[0]),
+            let minor = Int(parts[1]),
+            let patch = parts.count == 3 ? Int(parts[2]) : 0
+        else { return false }
+        let current = ProcessInfo.processInfo.operatingSystemVersion
+        return current.majorVersion == major && current.minorVersion == minor
+            && current.patchVersion == patch
     }
 
     func fileURL(for asset: CapturedAsset) throws -> URL {
