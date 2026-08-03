@@ -144,10 +144,10 @@ class CoreSimulatorHealthTests(unittest.TestCase):
     @staticmethod
     def _scoped_process_fixture() -> str:
         return """1 0 Ss 1:00 /sbin/launchd
-10 1 S 0:20 launchd_sim /Users/test/Library/Developer/CoreSimulator/Devices/TARGET/data/var/run/launchd_bootstrap.plist
+10 1 S 0:20 launchd_sim /private/tmp/fovea-test-home/Library/Developer/CoreSimulator/Devices/TARGET/data/var/run/launchd_bootstrap.plist
 11 10 Us 0:10 /Library/Developer/CoreSimulator/Volumes/iOS/RuntimeRoot/usr/libexec/callservicesd
 12 10 Ss 0:10 /Library/Developer/CoreSimulator/Volumes/iOS/RuntimeRoot/System/Library/CoreServices/SpringBoard.app/SpringBoard
-20 1 U 0:20 launchd_sim /Users/test/Library/Developer/CoreSimulator/Devices/OTHER/data/var/run/launchd_bootstrap.plist
+20 1 U 0:20 launchd_sim /private/tmp/fovea-test-home/Library/Developer/CoreSimulator/Devices/OTHER/data/var/run/launchd_bootstrap.plist
 21 20 Us 0:10 /Library/Developer/CoreSimulator/Volumes/iOS/RuntimeRoot/System/Other
 """
 

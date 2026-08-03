@@ -181,7 +181,7 @@
     },
     {
       "planID": "FOVEA-W7-CONCURRENCY-V8",
-      "status": "preregistered-dirty-preparation-gate-diagnostic-clean-calibration-pending",
+      "status": "archived-calibration-load-object-preparation-insufficient",
       "archiveSuperseded": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json",
       "diagnosticArtifact": ".artifacts/comparative-regression-diagnostics/v8-environment/summary.json",
       "diagnosticArtifactSHA256": "42d06802f0a00c5b48f26fb828611da9813930987b0f3496c37a89857dc3d33a",
@@ -195,7 +195,23 @@
         "simulatorRuntimeBuild": "24A5355p",
         "treeBoundBuildManifest": true
       },
-      "finding": "A response-delivery-only preparation gate removes the sequential makeLoad duration confound without blocking native request creation, single-flight enrollment or cancellation. Four tree-bound dirty-source iOS 27.0 build 24A5355p diagnostics passed with exactly sixteen shared origins, eight observed gate waiters and zero hard failures. Clean V8 six-comparator calibration and formal blocks remain pending."
+      "finding": "V8 made all 512 ComparatorLoad values exist and blocked /w7/shared response delivery, but it did not prove that each adapter had installed its native subscription. A clean Fovea repeat still emitted a seventeenth shared origin request while the origin gate observed only eight waiters. The V8 source/environment/build identity corrections remain retained; its single-flight preparation claim is superseded by V9."
+    },
+    {
+      "planID": "FOVEA-W7-CONCURRENCY-V9",
+      "status": "preregistered-dirty-native-preparation-diagnostic-clean-calibration-pending",
+      "archiveSuperseded": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v8.json",
+      "facts": {
+        "dirtyFoveaBuildRunPassed": 1,
+        "dirtyFoveaManifestRepeatsPassed": 8,
+        "logicalLoadsPreparedEach": 512,
+        "sharedOriginRequestsEach": 16,
+        "originPreparationWaitersEach": 8,
+        "hardFailuresEach": 0,
+        "adapterUnitTestSubscribersPrepared": 32,
+        "adapterUnitTestOriginRequests": 1
+      },
+      "finding": "An explicit per-load preparation contract closes the gap between constructing a load handle and installing its native operation. Dirty causal diagnostics passed one build-run plus eight tree-bound repeats, each with 512 prepared loads, sixteen shared origins and zero hard failures. Clean V9 six-comparator calibration remains pending."
     }
   ]
 }

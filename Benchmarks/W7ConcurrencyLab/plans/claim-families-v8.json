@@ -5,7 +5,6 @@
       "hardChecks": [
         "logical-request-count-exact",
         "observation-count-exact",
-        "logical-load-preparation-count-exact",
         "single-flight-origin-request-bound",
         "single-flight-preparation-gate-engaged",
         "cancelled-subscriber-count-exact",
@@ -50,8 +49,8 @@
       ]
     }
   ],
-  "registryID": "FOVEA-W7-CONCURRENCY-CLAIMS-V9",
-  "schemaVersion": 9,
-  "status": "preregistered-after-v8-native-preparation-counterexample-before-formal-results",
-  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/claim-families-v8.json"
+  "registryID": "FOVEA-W7-CONCURRENCY-CLAIMS-V8",
+  "schemaVersion": 8,
+  "status": "preregistered-after-v7-preparation-barrier-counterexample-before-formal-results",
+  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/claim-families-v7.json"
 }

@@ -3,6 +3,23 @@
   "entries": [
     {
       "evidence": [
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "docs/research/negative-results.json"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/AdaptiveEncodedWarmupCoordinator.swift",
+      "reason": "LaunchGate is the synchronous pre-actor admission boundary for cancellation-storm warmups. Its immutable capacity and bounded claim dictionary are accessed only while one private NSLock is held; keys and tokens are Sendable values, and the actor revalidates every claim before creating work. Keeping this helper synchronous prevents unbounded Task creation before actor deduplication.",
+      "requiredTokens": [
+        "private final class LaunchGate: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var claims: [Key: UUID] = [:]",
+        "func claim(_ key: Key) -> UUID?",
+        "func releaseAll(where predicate: (Key) -> Bool)"
+      ],
+      "type": "AdaptiveEncodedWarmupCoordinator.LaunchGate"
+    },
+    {
+      "evidence": [
         "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift",
         "Tests/FoveaTests/SwiftUIStateTests.swift"
       ],
@@ -17,6 +34,42 @@
         "defer { lock.unlock() }"
       ],
       "type": "AdaptiveImageLoadAdmission"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Tests/FoveaTests/SharedTaskTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/FetchStage.swift",
+      "reason": "FetchCancellationHandoffLease carries one monotone UInt64 grace value between a task-local operation and a cancellation handler that may run concurrently. Every read and max-update is serialized by one private NSLock; the type stores no request, transport, task or continuation reference and cannot reduce an activated grace period.",
+      "requiredTokens": [
+        "package final class FetchCancellationHandoffLease: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var graceNanosecondsStorage: UInt64 = 0",
+        "graceNanosecondsStorage = max(graceNanosecondsStorage, graceNanoseconds)",
+        "package func graceNanoseconds() -> UInt64"
+      ],
+      "type": "FetchCancellationHandoffLease"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/MemoryCacheTests.swift",
+        "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift",
+        "Tests/FoveaTests/StagingAndStorageTests.swift",
+        "scripts/verify-component-clean-copy.py"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/FoveaCompactSieveCache.swift",
+      "reason": "The Fovea-owned compact SIEVE index is synchronously shared by transport handoff operations after the external Akashic boundary is enforced. Every mutable slot, key index, free-list, SIEVE hand, epoch and cost counter is accessed only through one private NSLock-backed atomic helper; generic keys and values are constrained to Sendable, while actor isolation would change the synchronous cache hot path.",
+      "requiredTokens": [
+        "package final class FoveaCompactSieveCache<Key: Hashable & Sendable, Value: Sendable>",
+        "@unchecked Sendable",
+        "private let lock = NSLock()",
+        "private func atomic<T>",
+        "defer { lock.unlock() }"
+      ],
+      "type": "FoveaCompactSieveCache"
     },
     {
       "evidence": [
@@ -69,25 +122,6 @@
         "package func cloneContents(to destination: URL) throws"
       ],
       "type": "TransportStagedFileLease"
-    },
-    {
-      "evidence": [
-        "Tests/FoveaTests/MemoryCacheTests.swift",
-        "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift",
-        "Tests/FoveaTests/StagingAndStorageTests.swift",
-        "scripts/verify-component-clean-copy.py"
-      ],
-      "expectedCount": 1,
-      "path": "Sources/FoveaCore/FoveaCompactSieveCache.swift",
-      "reason": "The Fovea-owned compact SIEVE index is synchronously shared by transport handoff operations after the external Akashic boundary is enforced. Every mutable slot, key index, free-list, SIEVE hand, epoch and cost counter is accessed only through one private NSLock-backed atomic helper; generic keys and values are constrained to Sendable, while actor isolation would change the synchronous cache hot path.",
-      "requiredTokens": [
-        "package final class FoveaCompactSieveCache<Key: Hashable & Sendable, Value: Sendable>",
-        "@unchecked Sendable",
-        "private let lock = NSLock()",
-        "private func atomic<T>",
-        "defer { lock.unlock() }"
-      ],
-      "type": "FoveaCompactSieveCache"
     }
   ],
   "schemaVersion": 1

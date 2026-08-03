@@ -40,7 +40,6 @@
   "hardChecks": [
     "logical-request-count-exact",
     "observation-count-exact",
-    "logical-load-preparation-count-exact",
     "single-flight-origin-request-bound",
     "single-flight-preparation-gate-engaged",
     "cancelled-subscriber-count-exact",
@@ -52,11 +51,11 @@
     "origin-peak-concurrency-bounded",
     "background-probe-bypass-bound"
   ],
-  "methodologyRevision": "V8 proved that constructing 512 ComparatorLoad values and blocking shared response delivery was not sufficient: Fovea makeLoad returned after creating an events stream, while its internal pipeline task could reach the exact fetch registry later. A clean V8 repeat still created a seventeenth shared origin request with only eight origin gate waiters. V9 adds an explicit ComparatorLoad.waitUntilPrepared contract. W7 awaits all 512 preparation operations before releasing /w7/shared responses. Fovea preparation proves ordinal 1...32 exact fetch subscriber registration per shared identity; adapters that install native operations asynchronously signal only after their task, receipt or UUID is installed. Synchronous adapters use makeLoad return as the preparation boundary. Response-delivery gating, cancellation, priority, service budgets, endpoints and statistics are otherwise unchanged.",
+  "methodologyRevision": "V7 serially awaited 512 makeLoad calls while every native adapter started work during makeLoad. A fixed 750 ms response delay did not prove that all thirty-two subscribers for every shared identity existed before the first response completed, so intermittent seventeenth origin starts were confounded by harness preparation duration. V8 closes a response-delivery-only gate for /w7/shared before constructing the 512 loads, permits native request creation and single-flight enrollment while closed, and releases the gate only after all 512 logical loads exist. Priority scheduling, cancellation delay, client and origin budgets, endpoints, statistics and formal claim boundary are unchanged.",
   "notApplicable": {
     "Apple AsyncImage": "view API does not expose W7 headless load, priority, subscriber and cancellation contract"
   },
-  "planID": "FOVEA-W7-CONCURRENCY-V9",
+  "planID": "FOVEA-W7-CONCURRENCY-V8",
   "primaryEndpoints": {
     "immediate-to-background-p95-ratio": {
       "direction": "lower",
@@ -80,7 +79,7 @@
       "unit": "requests"
     }
   },
-  "schemaVersion": 9,
+  "schemaVersion": 8,
   "secondaryEndpoints": [
     "throughput",
     "stopped-origin-request-count",
@@ -104,7 +103,7 @@
     "multipleComparisonCorrection": "holm-within-claim-family",
     "resamplingUnit": "comparator-run-within-balanced-block"
   },
-  "status": "preregistered-after-v8-native-preparation-counterexample-before-formal-results",
+  "status": "preregistered-after-v7-preparation-barrier-counterexample-before-formal-results",
   "subtraces": {
     "priorityScheduling": {
       "balancedRoundRobin": {
@@ -127,14 +126,6 @@
       "uniqueNoStoreRequests": true
     },
     "singleFlightCancellation": {
-      "adapterPreparation": {
-        "asynchronousAdapterSignalBoundary": "native-task-receipt-or-operation-identifier-installed",
-        "contract": "ComparatorLoad.waitUntilPrepared",
-        "foveaExactSubscriberOrdinalRange": "1...32-per-shared-identity",
-        "requiredPreparedLogicalLoads": 512,
-        "synchronousAdapterBoundary": "makeLoad-returned-after-native-operation-installation",
-        "timeoutRule": "adapter-specific-bounded-fail-closed"
-      },
       "allCancelGroups": [
         0,
         1,
@@ -174,6 +165,6 @@
       "subscribersPerGroup": 32
     }
   },
-  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v8.json",
+  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json",
   "workloadID": "W7-THOUSAND-CONCURRENT-V1"
 }

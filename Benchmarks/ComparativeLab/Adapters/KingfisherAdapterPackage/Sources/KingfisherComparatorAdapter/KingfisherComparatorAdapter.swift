@@ -121,6 +121,7 @@ public final class KingfisherComparatorAdapter: ComparatorAdapter, @unchecked Se
 
     public func makeLoad(_ request: ComparatorRequest) async throws -> ComparatorLoad {
         let box = DownloadTaskBox()
+        let preparation = ComparatorPreparationSignal()
         let started = DispatchTime.now().uptimeNanoseconds
         let targetSize = CGSize(width: request.target.width, height: request.target.height)
         let downsampling = DownsamplingImageProcessor(size: targetSize)
@@ -200,10 +201,12 @@ public final class KingfisherComparatorAdapter: ComparatorAdapter, @unchecked Se
                     }
                 )
                 box.install(task)
+                preparation.markPrepared()
             }
         }
         return ComparatorLoad(
             cancel: { box.cancel() },
+            waitUntilPrepared: { await preparation.wait() },
             result: { await resultTask.value }
         )
     }

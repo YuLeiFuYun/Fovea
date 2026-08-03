@@ -20,6 +20,8 @@ package struct SystemMonotonicTimeSource: MonotonicTimeSource {
 package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
     package struct Ticket: Sendable {
         fileprivate let key: Key
+        /// 线性化 begin 相对前序 cancellation 的顺序，区分并发 fan-out 与顺序替换。
+        fileprivate let admissionSequence: UInt64
         package let preservesFetchOnCancellation: Bool
         /// 当前请求必须自身存活的严格稳定窗口；等于 cohort 最大已观测周期加一个纳秒。
         package let stabilizationNanoseconds: UInt64
@@ -50,6 +52,7 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
         var previousCancellationNanoseconds: UInt64?
         var latestCancellationNanoseconds: UInt64?
         var maximumObservedPeriodNanoseconds: UInt64?
+        var latestCancellationSequence: UInt64?
         var lastTouchedNanoseconds: UInt64
     }
 
@@ -57,6 +60,7 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
     private let maximumStateCount: Int
     private let timeSource: any MonotonicTimeSource
     private var states: [Key: State] = [:]
+    private var eventSequence: UInt64 = 0
 
     package init(
         maximumStateCount: Int,
@@ -70,6 +74,7 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
         atomic {
             let now = timeSource.nowNanoseconds()
             let key = Self.key(for: request)
+            let admissionSequence = nextEventSequence()
             var state = normalized(states[key], now: now)
             let maximumPeriod = state.maximumObservedPeriodNanoseconds
             state.lastTouchedNanoseconds = now
@@ -77,6 +82,7 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
             trimIfNeeded()
             return Ticket(
                 key: key,
+                admissionSequence: admissionSequence,
                 preservesFetchOnCancellation: maximumPeriod != nil,
                 stabilizationNanoseconds: maximumPeriod.map { $0 + 1 } ?? 0
             )
@@ -94,11 +100,27 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
     }
 
     @discardableResult
-    package func recordCancellation(for request: ImageRequest) -> CancellationObservation {
+    package func recordCancellation(_ ticket: Ticket) -> CancellationObservation {
         atomic {
             let now = timeSource.nowNanoseconds()
-            let key = Self.key(for: request)
-            var state = normalized(states[key], now: now)
+            let cancellationSequence = nextEventSequence()
+            var state = normalized(states[ticket.key], now: now)
+
+            // 多个订阅者若在同一取消发生前已全部 admission，它们属于一个并发
+            // fan-out，而不是 UI 先取消后替换的顺序 cohort。只有在最近一次取消之后
+            // 才 begin 的 ticket，才可贡献新的周期或触发预热。
+            if let latestCancellationSequence = state.latestCancellationSequence,
+                ticket.admissionSequence < latestCancellationSequence
+            {
+                state.lastTouchedNanoseconds = now
+                states[ticket.key] = state
+                trimIfNeeded()
+                return CancellationObservation(
+                    shouldWarmCancelledRequest: false,
+                    observedPeriodNanoseconds: nil
+                )
+            }
+
             let previousLatest = state.latestCancellationNanoseconds
             let isSameCohort =
                 previousLatest.map {
@@ -106,6 +128,7 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
                 } ?? false
             state.previousCancellationNanoseconds = isSameCohort ? previousLatest : nil
             state.latestCancellationNanoseconds = now
+            state.latestCancellationSequence = cancellationSequence
             let period = state.previousCancellationNanoseconds.map { now - $0 }
             if let period, period > 0,
                 period <= CancellationCohortPolicy.retentionNanoseconds
@@ -118,7 +141,7 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
                 state.maximumObservedPeriodNanoseconds = nil
             }
             state.lastTouchedNanoseconds = now
-            states[key] = state
+            states[ticket.key] = state
             trimIfNeeded()
 
             return CancellationObservation(
@@ -147,6 +170,7 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
             state.previousCancellationNanoseconds = nil
             state.latestCancellationNanoseconds = nil
             state.maximumObservedPeriodNanoseconds = nil
+            state.latestCancellationSequence = nil
         }
         return state
     }
@@ -163,6 +187,18 @@ package final class AdaptiveImageLoadAdmission: @unchecked Sendable {
             priority: request.priority,
             networkPolicyFingerprint: request.networkPolicy.executionFingerprint
         )
+    }
+
+    private func nextEventSequence() -> UInt64 {
+        let next = eventSequence.addingReportingOverflow(1)
+        if next.overflow {
+            // 实际不可达；若发生则清除依赖旧顺序的短期经验状态，避免 ABA。
+            states.removeAll(keepingCapacity: true)
+            eventSequence = 1
+        } else {
+            eventSequence = next.partialValue
+        }
+        return eventSequence
     }
 
     private func trimIfNeeded() {

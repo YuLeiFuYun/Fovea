@@ -794,7 +794,7 @@ conformance fixtures
 
 ## 11. 缓存：使用语义名，不使用乱序层号
 
-RenderedMemory 通过公共同步 `RenderedImageCaching` 契约替换算法或实现。其键强制包含 namespace、generation 和完整 RenderKey；调用方不能通过自定义缓存绕过账户隔离、撤销代际、transformer 或 codec fingerprint。默认实现是 Akashic SIEVE，但不是语义要求。OriginalEncoded 与 RepresentationRecord 已分别由公共 store 协议抽象；官方 System 组合根使用持久默认实现，自定义持久存储通过 `FoveaPipeline` 显式注入。request alias、transient verified handoff 和提交事务属于正确性状态机，不开放为普通缓存插件。
+RenderedMemory 通过公共同步 `RenderedImageCaching` 契约替换算法或实现。其键强制包含 namespace、generation 和完整 RenderKey；调用方不能通过自定义缓存绕过账户隔离、撤销代际、transformer 或 codec fingerprint。默认实现是 Akashic 八分片 SIEVE，但不是语义要求；分片数固定为经 V4 retention 反例筛选的 8，而不是按核心数动态变化。OriginalEncoded 与 RepresentationRecord 已分别由公共 store 协议抽象；官方 System 组合根使用持久默认实现，自定义持久存储通过 `FoveaPipeline` 显式注入。request alias、transient verified handoff 和提交事务属于正确性状态机，不开放为普通缓存插件。
 
 ```text
 RenderedMemory       目标尺寸、处理完成的显示结果

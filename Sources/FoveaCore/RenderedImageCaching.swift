@@ -61,12 +61,13 @@ public protocol RenderedImageCaching: Sendable {
     var count: Int { get }
 }
 
-/// 官方 SIEVE 内存实现。它不是协议语义的一部分，可由调用方整体替换。
+/// 官方八分片 SIEVE 内存实现。它不是协议语义的一部分，可由调用方整体替换。
+/// 八分片是经过 retention 反例和 CacheLab V4 选择的生产配置，不随 CPU 数量漂移。
 package final class DefaultRenderedImageCache: RenderedImageCaching {
-    private let storage: MemoryCache<RenderedImageCacheKey, DecodedImage>
+    private let storage: ShardedMemoryCache<RenderedImageCacheKey, DecodedImage>
 
     package init(costLimit: Int) {
-        storage = MemoryCache(costLimit: costLimit)
+        storage = ShardedMemoryCache(costLimit: costLimit, shardCount: 8)
     }
 
     package func image(for key: RenderedImageCacheKey) -> DecodedImage? {

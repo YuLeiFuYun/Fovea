@@ -52,6 +52,7 @@ extension FoveaPipeline {
         return AsyncThrowingStream { continuation in
             let terminalState = ImageEventStreamTerminalState()
             let cancellationHandoffLease = FetchCancellationHandoffLease()
+            let imageLoadTicket = imageLoadAdmission.begin(for: request)
             let task = Task { [self] in
                 do {
                     let image = try await execute {
@@ -59,6 +60,7 @@ extension FoveaPipeline {
                         try validateAuthorization(of: request)
                         return try await withImageLoadAdmission(
                             request: request,
+                            ticket: imageLoadTicket,
                             cancellationHandoffLease: cancellationHandoffLease
                         ) {
                             return try await SharedTaskAdmissionContext.$current.withValue(
@@ -90,6 +92,7 @@ extension FoveaPipeline {
                     {
                         handleCancelledRequest(
                             request,
+                            ticket: imageLoadTicket,
                             admission: admission,
                             cancellationHandoffLease: cancellationHandoffLease
                         )
@@ -107,6 +110,7 @@ extension FoveaPipeline {
                 {
                     self.handleCancelledRequest(
                         request,
+                        ticket: imageLoadTicket,
                         admission: admission,
                         cancellationHandoffLease: cancellationHandoffLease
                     )
@@ -215,9 +219,16 @@ extension FoveaPipeline {
 
     /// 测试缝：精确查询某个执行身份是否已有 transport-verified handoff。
     /// 查询不读取正文、不刷新 SIEVE 访问位，也不产生 cache-hit 诊断。
-    /// 测试缝：精确等待多个顶层调用已经加入同一 fetch single-flight。
-    package func fetchSubscriberCountForTesting(_ request: ImageRequest) async -> Int {
+    ///
+    /// 仅 Comparative Lab 通过 SPI 使用该只读计数，以证明名义 burst 的每个顶层
+    /// 调用已经进入 exact fetch single-flight；它不创建任务、不改变优先级或租约。
+    @_spi(FoveaBenchmarking)
+    public func fetchSubscriberCountForBenchmarking(_ request: ImageRequest) async -> Int {
         await fetchStage.subscriberCountForTesting(request: request)
+    }
+
+    package func fetchSubscriberCountForTesting(_ request: ImageRequest) async -> Int {
+        await fetchSubscriberCountForBenchmarking(request)
     }
 
     package func hasTransportVerifiedHandoffForTesting(_ request: ImageRequest) async -> Bool {
@@ -240,19 +251,21 @@ extension FoveaPipeline {
 
     private func withImageLoadAdmission<Value: Sendable>(
         request: ImageRequest,
+        ticket: AdaptiveImageLoadAdmission.Ticket,
         cancellationHandoffLease: FetchCancellationHandoffLease,
         operation: @escaping @Sendable () async throws -> Value
     ) async throws -> Value {
-        let ticket = imageLoadAdmission.begin(for: request)
         do {
-            if ticket.stabilizationNanoseconds > 0 {
-                try await Task.sleep(nanoseconds: ticket.stabilizationNanoseconds)
-            }
-            let warmupRequest = request.reprioritized(.background)
-            let completion = await encodedWarmups.completionStream(for: warmupRequest)
-            for await _ in completion { break }
-            try Task.checkCancellation()
             if ticket.preservesFetchOnCancellation {
+                if ticket.stabilizationNanoseconds > 0 {
+                    try await Task.sleep(nanoseconds: ticket.stabilizationNanoseconds)
+                }
+                // 只有学得顺序取消 cohort 的 ticket 才可能存在对应 warmup。
+                // 首次加载与并发 fan-out 跳过 actor/stream 控制面，不改变任何可见语义。
+                let warmupRequest = request.reprioritized(.background)
+                let completion = await encodedWarmups.completionStream(for: warmupRequest)
+                for await _ in completion { break }
+                try Task.checkCancellation()
                 cancellationHandoffLease.activate(
                     graceNanoseconds: CancellationCohortPolicy.retentionNanoseconds
                 )
@@ -272,10 +285,11 @@ extension FoveaPipeline {
 
     private func handleCancelledRequest(
         _ request: ImageRequest,
+        ticket: AdaptiveImageLoadAdmission.Ticket,
         admission: SharedTaskAdmission,
         cancellationHandoffLease: FetchCancellationHandoffLease
     ) {
-        let observation = imageLoadAdmission.recordCancellation(for: request)
+        let observation = imageLoadAdmission.recordCancellation(ticket)
         guard observation.shouldWarmCancelledRequest else { return }
         // Activate the fetch-level orphan lease before cancelling the foreground task.
         // The warmup can then join the existing single-flight instead of opening a

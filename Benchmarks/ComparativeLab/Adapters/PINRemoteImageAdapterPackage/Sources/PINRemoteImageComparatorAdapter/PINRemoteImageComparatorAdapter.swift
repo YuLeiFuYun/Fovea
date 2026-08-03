@@ -189,6 +189,7 @@ public final class PINRemoteImageComparatorAdapter: ComparatorAdapter, @unchecke
         let processorKey =
             "\(request.scopedCacheKey)|\(request.target.width)x\(request.target.height)|\(request.contentMode.rawValue)"
         let box = PINOperationBox()
+        let preparation = ComparatorPreparationSignal()
         let relay = PINResultRelay()
         let operationID = UUID()
         let cancelledOutput: @Sendable () -> ComparatorLoadOutput = {
@@ -299,6 +300,7 @@ public final class PINRemoteImageComparatorAdapter: ComparatorAdapter, @unchecke
                 )
             }
             box.install(uuid, manager: self.manager)
+            preparation.markPrepared()
             if let uuid {
                 self.manager.setPriority(Self.priority(request.priority), ofTaskWith: uuid)
             }
@@ -312,6 +314,7 @@ public final class PINRemoteImageComparatorAdapter: ComparatorAdapter, @unchecke
         }
         return ComparatorLoad(
             cancel: { task.cancel() },
+            waitUntilPrepared: { await preparation.wait() },
             result: { await task.value }
         )
     }

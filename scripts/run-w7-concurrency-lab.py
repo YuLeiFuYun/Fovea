@@ -57,6 +57,7 @@ B_TIER_RETAINED = ["AlamofireImage"]
 HARD_CHECKS = {
     "logical-request-count-exact",
     "observation-count-exact",
+    "logical-load-preparation-count-exact",
     "single-flight-origin-request-bound",
     "single-flight-preparation-gate-engaged",
     "cancelled-subscriber-count-exact",
@@ -400,7 +401,7 @@ def validate(
 ) -> dict[str, Any]:
     if data.get("schemaVersion") != 3:
         raise RuntimeError("unexpected W7 result schema")
-    if data.get("planID") != "FOVEA-W7-CONCURRENCY-V8":
+    if data.get("planID") != "FOVEA-W7-CONCURRENCY-V9":
         raise RuntimeError("unexpected W7 plan identity")
     if data.get("harnessIdentity") != identity:
         raise RuntimeError("W7 harness identity mismatch")
@@ -512,7 +513,7 @@ def run_one(
             "SIMCTL_CHILD_FOVEA_BENCHMARK_DIRTY": (
                 "1" if identity["includesWorkingTreeChanges"] else "0"
             ),
-            "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_ID": "FOVEA-W7-CONCURRENCY-V8",
+            "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_ID": "FOVEA-W7-CONCURRENCY-V9",
             "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_DIGEST": plan_digest,
             "SIMCTL_CHILD_FOVEA_CLAIM_FAMILY_DIGEST": claims_digest,
             "SIMCTL_CHILD_FOVEA_SIMULATOR_PROFILE_ID": simulator_identity["deviceProfileID"],
@@ -610,7 +611,7 @@ def write_report(
     )
     report = {
         "schemaVersion": 1,
-        "planID": "FOVEA-W7-CONCURRENCY-V8",
+        "planID": "FOVEA-W7-CONCURRENCY-V9",
         "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
         "mode": "simulator-calibration",
         "executionEnvironment": "simulator",

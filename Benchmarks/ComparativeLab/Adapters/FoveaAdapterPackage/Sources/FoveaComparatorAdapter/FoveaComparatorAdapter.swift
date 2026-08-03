@@ -1,6 +1,6 @@
 import ComparativeLabCore
 import Foundation
-import FoveaCore
+@_spi(FoveaBenchmarking) import FoveaCore
 import FoveaHTTP
 import FoveaSystem
 import ImageCraftCore
@@ -18,6 +18,7 @@ public actor FoveaComparatorAdapter: ComparatorAdapter {
     private let sessionConfiguration: URLSessionConfiguration
     private let transportReusePolicy: TransportReusePolicy
     private var system: FoveaSystemPipeline?
+    private var preparationOrdinals: [String: Int] = [:]
 
     public init(
         cacheDirectory: URL,
@@ -60,6 +61,9 @@ public actor FoveaComparatorAdapter: ComparatorAdapter {
             headers: request.headers,
             credentialHeaderNames: credentialNames
         )
+        let preparationKey = request.scopedCacheKey
+        let preparationOrdinal = preparationOrdinals[preparationKey, default: 0] + 1
+        preparationOrdinals[preparationKey] = preparationOrdinal
         let started = DispatchTime.now().uptimeNanoseconds
         // `events(for:)` 同步捕获顶层 admission。必须在 makeLoad 返回前创建 stream；
         // 若延迟到消费 Task 内，逻辑上同一并发 burst 的后续 load 可能在首个 fetch
@@ -132,8 +136,23 @@ public actor FoveaComparatorAdapter: ComparatorAdapter {
                 )
             }
         }
+        let pipeline = system.pipeline
         return ComparatorLoad(
             cancel: { task.cancel() },
+            waitUntilPrepared: {
+                let startedWaiting = DispatchTime.now().uptimeNanoseconds
+                let (deadline, overflow) = startedWaiting.addingReportingOverflow(5_000_000_000)
+                let boundedDeadline = overflow ? UInt64.max : deadline
+                while await pipeline.fetchSubscriberCountForBenchmarking(imageRequest)
+                    < preparationOrdinal
+                {
+                    try Task.checkCancellation()
+                    guard DispatchTime.now().uptimeNanoseconds < boundedDeadline else {
+                        throw FoveaComparatorAdapterError.runtimeUnavailable
+                    }
+                    await Task.yield()
+                }
+            },
             result: { await task.value }
         )
     }
@@ -146,6 +165,7 @@ public actor FoveaComparatorAdapter: ComparatorAdapter {
     public func purgeDisk() async throws {
         let previous = system
         system = nil
+        preparationOrdinals.removeAll(keepingCapacity: true)
         await previous?.invalidateAndCancel()
         try await Self.removeDirectory(cacheDirectory)
         system = try await Self.openSystem(
@@ -164,6 +184,7 @@ public actor FoveaComparatorAdapter: ComparatorAdapter {
     public func cancelAll() async {
         guard let previous = system else { return }
         system = nil
+        preparationOrdinals.removeAll(keepingCapacity: true)
         await previous.invalidateAndCancel()
     }
 

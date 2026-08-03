@@ -54,15 +54,15 @@
         "scripts/model-check-shared-task-registry.py"
       ],
       "path": "Sources/FoveaCore/SharedTaskRegistry.swift",
-      "reason": "SharedTaskRegistry is one actor state machine covering subscription cohorts, effective priority, orphan handoff leases and cancellation tombstones. The cancellation lease now stores an absolute monotonic expiry and performs lazy expiry on subscribe, so timer scheduling is only a cleanup optimization rather than a correctness dependency. Keeping entry, tombstone, lease identity, completion and join transitions in one actor preserves a reviewable linearization boundary; splitting storage from transitions would weaken the proof and make ABA prevention harder to audit.",
+      "reason": "SharedTaskRegistry is one actor state machine covering subscription cohorts, effective priority, completion visibility, orphan handoff leases and cancellation tombstones. Completed entries remain joinable only inside the active cohort and can be explicitly invalidated before a fresh cache-observation transaction. Absolute monotonic expiry and lazy admission checks make timers cleanup optimizations rather than correctness dependencies. Keeping entry, invalidation, tombstone, lease identity, completion and join transitions in one actor preserves the linearization boundary and prevents ABA races.",
       "responsibilities": [
         "subscription cohort state machine",
         "priority aggregation",
         "orphan handoff lease expiry",
         "absolute cancellation tombstone admission and retention"
       ],
-      "reviewedLineCount": 556,
-      "sha256": "f9a73f3821335ecdcdd6c18abfcd83d380c1344efc133e33a14bb088106b1dbf",
+      "reviewedLineCount": 566,
+      "sha256": "0b981b5009691057809b19c18167530237be118240ffd9fc303da34a767aaecc",
       "splitTriggers": [
         "a stable responsibility can move without sharing mutable state or transaction ordering",
         "the file changes after this frozen review",

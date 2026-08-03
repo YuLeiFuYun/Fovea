@@ -13,7 +13,7 @@ final class AdaptiveImageLoadAdmissionTests: XCTestCase {
         let first = controller.begin(for: request)
         XCTAssertFalse(first.preservesFetchOnCancellation)
         XCTAssertEqual(first.stabilizationNanoseconds, 0)
-        let firstObservation = controller.recordCancellation(for: request)
+        let firstObservation = controller.recordCancellation(first)
         XCTAssertFalse(firstObservation.shouldWarmCancelledRequest)
         controller.finish(first)
         clock.advance(nanoseconds: 10_000_000)
@@ -21,7 +21,7 @@ final class AdaptiveImageLoadAdmissionTests: XCTestCase {
         let second = controller.begin(for: request)
         XCTAssertFalse(second.preservesFetchOnCancellation)
         XCTAssertEqual(second.stabilizationNanoseconds, 0)
-        let secondObservation = controller.recordCancellation(for: request)
+        let secondObservation = controller.recordCancellation(second)
         XCTAssertTrue(secondObservation.shouldWarmCancelledRequest)
         XCTAssertEqual(secondObservation.observedPeriodNanoseconds, 10_000_000)
         controller.finish(second)
@@ -30,7 +30,7 @@ final class AdaptiveImageLoadAdmissionTests: XCTestCase {
         let third = controller.begin(for: request)
         XCTAssertTrue(third.preservesFetchOnCancellation)
         XCTAssertEqual(third.stabilizationNanoseconds, 10_000_001)
-        let thirdObservation = controller.recordCancellation(for: request)
+        let thirdObservation = controller.recordCancellation(third)
         XCTAssertEqual(thirdObservation.observedPeriodNanoseconds, 2_000_000)
         controller.finish(third)
 
@@ -51,6 +51,36 @@ final class AdaptiveImageLoadAdmissionTests: XCTestCase {
         controller.finish(alreadyStable)
     }
 
+    func testConcurrentCancellationFanoutDoesNotMasqueradeAsSequentialChurn_UI_PT_028()
+        async throws
+    {
+        let clock = TestMonotonicTimeSource()
+        let controller = AdaptiveImageLoadAdmission(maximumStateCount: 64, timeSource: clock)
+        let request = try imageRequest(path: "fanout.png", width: 320, height: 240)
+        let concurrent = (0..<32).map { _ in controller.begin(for: request) }
+
+        XCTAssertFalse(controller.recordCancellation(concurrent[0]).shouldWarmCancelledRequest)
+        for ticket in concurrent.dropFirst() {
+            clock.advance(nanoseconds: 1_000_000)
+            XCTAssertFalse(controller.recordCancellation(ticket).shouldWarmCancelledRequest)
+            controller.finish(ticket)
+        }
+        controller.finish(concurrent[0])
+
+        let replacement = controller.begin(for: request)
+        XCTAssertFalse(replacement.preservesFetchOnCancellation)
+        clock.advance(nanoseconds: 10_000_000)
+        let replacementCancellation = controller.recordCancellation(replacement)
+        XCTAssertTrue(replacementCancellation.shouldWarmCancelledRequest)
+        XCTAssertEqual(replacementCancellation.observedPeriodNanoseconds, 41_000_000)
+        controller.finish(replacement)
+
+        let stable = controller.begin(for: request)
+        XCTAssertTrue(stable.preservesFetchOnCancellation)
+        XCTAssertEqual(stable.stabilizationNanoseconds, 41_000_001)
+        controller.finish(stable)
+    }
+
     func testAdmissionStateDoesNotCrossLogicalSourceAtSameGeometry_UI_PT_026() async throws {
         let clock = TestMonotonicTimeSource()
         let controller = AdaptiveImageLoadAdmission(maximumStateCount: 64, timeSource: clock)
@@ -58,18 +88,18 @@ final class AdaptiveImageLoadAdmissionTests: XCTestCase {
         let secondSource = try imageRequest(path: "b.png", width: 320, height: 240)
 
         let first = controller.begin(for: firstSource)
-        controller.recordCancellation(for: firstSource)
+        controller.recordCancellation(first)
         controller.finish(first)
         clock.advance(nanoseconds: 10_000_000)
         let second = controller.begin(for: firstSource)
-        XCTAssertTrue(controller.recordCancellation(for: firstSource).shouldWarmCancelledRequest)
+        XCTAssertTrue(controller.recordCancellation(second).shouldWarmCancelledRequest)
         controller.finish(second)
 
         let independent = controller.begin(for: secondSource)
         XCTAssertFalse(independent.preservesFetchOnCancellation)
         XCTAssertEqual(independent.stabilizationNanoseconds, 0)
         XCTAssertFalse(
-            controller.recordCancellation(for: secondSource).shouldWarmCancelledRequest
+            controller.recordCancellation(independent).shouldWarmCancelledRequest
         )
         controller.finish(independent)
         XCTAssertEqual(controller.trackedStateCount(), 2)
@@ -82,7 +112,7 @@ final class AdaptiveImageLoadAdmissionTests: XCTestCase {
 
         for _ in 0..<2 {
             let ticket = controller.begin(for: firstTarget)
-            controller.recordCancellation(for: firstTarget)
+            controller.recordCancellation(ticket)
             controller.finish(ticket)
         }
         let independent = controller.begin(for: secondTarget)

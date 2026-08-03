@@ -255,20 +255,57 @@ public struct ComparatorLoadOutput: @unchecked Sendable {
     }
 }
 
+public final class ComparatorPreparationSignal: @unchecked Sendable {
+    private let lock = NSLock()
+    private var prepared = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    public init() {}
+
+    public func markPrepared() {
+        let continuations = lock.withLock { () -> [CheckedContinuation<Void, Never>] in
+            guard !prepared else { return [] }
+            prepared = true
+            let values = waiters
+            waiters.removeAll(keepingCapacity: false)
+            return values
+        }
+        for continuation in continuations { continuation.resume() }
+    }
+
+    public func wait() async {
+        await withCheckedContinuation { continuation in
+            let resumeImmediately = lock.withLock {
+                if prepared { return true }
+                waiters.append(continuation)
+                return false
+            }
+            if resumeImmediately { continuation.resume() }
+        }
+    }
+}
+
 public struct ComparatorLoad: Sendable {
     private let cancelOperation: @Sendable () -> Void
+    private let preparationOperation: @Sendable () async throws -> Void
     private let resultOperation: @Sendable () async -> ComparatorLoadOutput
 
     public init(
         cancel: @escaping @Sendable () -> Void,
+        waitUntilPrepared: @escaping @Sendable () async throws -> Void = {},
         result: @escaping @Sendable () async -> ComparatorLoadOutput
     ) {
         self.cancelOperation = cancel
+        self.preparationOperation = waitUntilPrepared
         self.resultOperation = result
     }
 
     public func cancel() {
         cancelOperation()
+    }
+
+    public func waitUntilPrepared() async throws {
+        try await preparationOperation()
     }
 
     public func result() async -> ComparatorLoadOutput {

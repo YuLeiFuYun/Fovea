@@ -84,6 +84,7 @@ public final class AlamofireImageComparatorAdapter: ComparatorAdapter, @unchecke
         let cachedBeforeStart = cache.image(withIdentifier: cacheKey) != nil
         let started = DispatchTime.now().uptimeNanoseconds
         let box = ReceiptBox()
+        let preparation = ComparatorPreparationSignal()
         let token = UUID()
         activeLock.withLock { active[token] = box }
 
@@ -130,11 +131,13 @@ public final class AlamofireImageComparatorAdapter: ComparatorAdapter, @unchecke
                     }
                 }
                 box.install(receipt, downloader: downloader)
+                preparation.markPrepared()
             }
         }
 
         return ComparatorLoad(
             cancel: { box.cancel(using: self.downloader) },
+            waitUntilPrepared: { await preparation.wait() },
             result: { await task.value }
         )
     }

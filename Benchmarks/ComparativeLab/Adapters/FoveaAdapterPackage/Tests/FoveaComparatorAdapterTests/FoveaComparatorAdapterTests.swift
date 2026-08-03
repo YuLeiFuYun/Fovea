@@ -55,7 +55,59 @@ final class FoveaComparatorAdapterTests: XCTestCase {
         await adapter.cancelAll()
     }
 
+    func testPreparedWaitCoversEverySharedFetchSubscriber() async throws {
+        let cacheRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fovea-comparator-prepared-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: cacheRoot) }
+        NeverCompletingURLProtocol.reset()
+
+        let session = URLSessionConfiguration.ephemeral
+        session.protocolClasses = [NeverCompletingURLProtocol.self]
+        let identity = try ComparatorIdentity(
+            name: "Fovea",
+            version: "test",
+            exactCommit: String(repeating: "c", count: 40)
+        )
+        let adapter = try await FoveaComparatorAdapter(
+            cacheDirectory: cacheRoot,
+            identity: identity,
+            sessionConfiguration: session,
+            transportReusePolicy: .reusable(contextIdentifier: "prepared-subscriber-test")
+        )
+        let request = try ComparatorRequest(
+            resourceID: "prepared-shared-image",
+            url: try XCTUnwrap(URL(string: "https://benchmark.invalid/prepared")),
+            target: try ComparatorPixelTarget(width: 32, height: 32),
+            contentMode: .aspectFit,
+            priority: .visible
+        )
+
+        var loads: [ComparatorLoad] = []
+        for _ in 0..<32 {
+            loads.append(try await adapter.makeLoad(request))
+        }
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for load in loads {
+                group.addTask { try await load.waitUntilPrepared() }
+            }
+            try await group.waitForAll()
+        }
+
+        XCTAssertEqual(NeverCompletingURLProtocol.startCount, 1)
+        for load in loads { load.cancel() }
+        let outputs = await withTaskGroup(of: ComparatorLoadOutput.self) { group in
+            for load in loads { group.addTask { await load.result() } }
+            var values: [ComparatorLoadOutput] = []
+            for await output in group { values.append(output) }
+            return values
+        }
+        XCTAssertEqual(outputs.count, 32)
+        XCTAssertTrue(outputs.allSatisfy { $0.measurement.outcome == .cancelled })
+        await adapter.cancelAll()
+    }
+
     func testCancelledProgressiveStreamIsReportedAsCancelled() async throws {
+        NeverCompletingURLProtocol.reset()
         let cacheRoot = FileManager.default.temporaryDirectory
             .appendingPathComponent("fovea-comparator-cancel-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: cacheRoot) }
@@ -92,13 +144,32 @@ final class FoveaComparatorAdapterTests: XCTestCase {
 }
 
 private final class NeverCompletingURLProtocol: URLProtocol, @unchecked Sendable {
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var count = 0
+
+    static var startCount: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return count
+    }
+
+    static func reset() {
+        lock.lock()
+        count = 0
+        lock.unlock()
+    }
+
     override class func canInit(with request: URLRequest) -> Bool {
         request.url?.host == "benchmark.invalid"
     }
 
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
-    override func startLoading() {}
+    override func startLoading() {
+        Self.lock.lock()
+        Self.count += 1
+        Self.lock.unlock()
+    }
 
     override func stopLoading() {}
 }

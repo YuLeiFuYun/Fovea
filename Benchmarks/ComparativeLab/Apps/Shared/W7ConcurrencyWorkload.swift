@@ -45,6 +45,7 @@ extension WorkloadRunner {
             target: target,
             runIndex: runIndex
         )
+        let preparedLoadCount = try await waitUntilPrepared(coalescing)
         let collectionTask = Task.detached { await collect(coalescing) }
         DeterministicBenchmarkURLProtocol.releaseW7SharedPreparationGate()
         try await Task.sleep(nanoseconds: 20_000_000)
@@ -138,6 +139,11 @@ extension WorkloadRunner {
                 identifier: "observation-count-exact",
                 passed: snapshot.observations.count == 1_000,
                 value: abs(snapshot.observations.count - 1_000)
+            ),
+            BenchmarkCheck(
+                identifier: "logical-load-preparation-count-exact",
+                passed: preparedLoadCount == 512,
+                value: abs(preparedLoadCount - 512)
             ),
             BenchmarkCheck(
                 identifier: "single-flight-origin-request-bound",
@@ -259,6 +265,17 @@ extension WorkloadRunner {
             cancelledLoads: snapshot.cancelled,
             failedLoads: snapshot.failed
         )
+    }
+
+    private static func waitUntilPrepared(_ values: [W7PreparedLoad]) async throws -> Int {
+        try await withThrowingTaskGroup(of: Void.self, returning: Int.self) { group in
+            for value in values {
+                group.addTask { try await value.load.waitUntilPrepared() }
+            }
+            var count = 0
+            for try await _ in group { count += 1 }
+            return count
+        }
     }
 
     private static func prepareCoalescingBurst(
