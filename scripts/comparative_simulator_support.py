@@ -41,20 +41,15 @@ def assert_coresimulator_healthy(
     run_command: RunCommand,
     env: dict[str, str],
     root: Path,
+    device_udid: str | None = None,
 ) -> dict[str, Any]:
     output = run_command(
         ["ps", "-axo", "pid=,ppid=,state=,etime=,command="],
         env=env,
         timeout=PROCESS_ENUMERATION_TIMEOUT_SECONDS,
     ).stdout
-    relevant_markers = (
-        "simdiskimaged",
-        "CoreSimulator.CoreSimulatorService",
-        "launchd_sim ",
-        "/CoreSimulator/Volumes/",
-        "/CoreSimulator/Devices/",
-    )
-    blocked: list[dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
+    children: dict[int, list[int]] = {}
     for line in output.splitlines():
         fields = line.strip().split(None, 4)
         if len(fields) != 5:
@@ -64,24 +59,85 @@ def assert_coresimulator_healthy(
             parent = int(fields[1])
         except ValueError:
             continue
-        state = fields[2]
-        command = fields[4]
-        if "U" not in state or not any(marker in command for marker in relevant_markers):
-            continue
-        blocked.append(
-            {
-                "pid": pid,
-                "parentPID": parent,
-                "state": state,
-                "elapsed": fields[3],
-                "command": command[:2_000],
-            }
-        )
+        row = {
+            "pid": pid,
+            "parentPID": parent,
+            "state": fields[2],
+            "elapsed": fields[3],
+            "command": fields[4],
+        }
+        rows.append(row)
+        children.setdefault(parent, []).append(pid)
+
+    by_pid = {row["pid"]: row for row in rows}
+
+    def descendants(roots: set[int]) -> set[int]:
+        result = set(roots)
+        pending = list(roots)
+        while pending:
+            parent = pending.pop()
+            for child in children.get(parent, []):
+                if child in result:
+                    continue
+                result.add(child)
+                pending.append(child)
+        return result
+
+    global_markers = ("simdiskimaged", "CoreSimulator.CoreSimulatorService")
+    core_simulator_markers = (
+        *global_markers,
+        "launchd_sim ",
+        "/CoreSimulator/Volumes/",
+        "/CoreSimulator/Devices/",
+    )
+    global_roots = {
+        row["pid"]
+        for row in rows
+        if any(marker in row["command"] for marker in global_markers)
+    }
+    all_relevant = {
+        row["pid"]
+        for row in rows
+        if any(marker in row["command"] for marker in core_simulator_markers)
+    }
+    all_relevant |= descendants(global_roots)
+
+    if device_udid is None:
+        scoped = all_relevant
+        scope = "global"
+    else:
+        device_marker = f"/CoreSimulator/Devices/{device_udid}/"
+        device_roots = {
+            row["pid"] for row in rows if device_marker in row["command"]
+        }
+        scoped = descendants(global_roots | device_roots)
+        scope = "global-and-device"
+
+    uninterruptible = {
+        row["pid"] for row in rows if "U" in row["state"] and row["pid"] in all_relevant
+    }
+    blocked_pids = uninterruptible & scoped
+    ignored_pids = uninterruptible - scoped
+
+    def evidence(pid: int) -> dict[str, Any]:
+        row = by_pid[pid]
+        return {
+            "pid": row["pid"],
+            "parentPID": row["parentPID"],
+            "state": row["state"],
+            "elapsed": row["elapsed"],
+            "command": row["command"][:2_000],
+        }
+
+    blocked = [evidence(pid) for pid in sorted(blocked_pids)]
     artifact = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "capturedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "scope": scope,
+        "deviceUDID": device_udid,
         "status": "blocked-uninterruptible-processes" if blocked else "healthy",
         "uninterruptibleProcesses": blocked,
+        "ignoredUnrelatedUninterruptibleProcessCount": len(ignored_pids),
     }
     path = root / CORESIMULATOR_HEALTH_ARTIFACT
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -94,7 +150,7 @@ def assert_coresimulator_healthy(
         )
         raise RuntimeError(
             "CoreSimulator health gate rejected uninterruptible processes: "
-            f"{descriptions}; evidence={path.relative_to(root)}"
+            f"{descriptions}; scope={scope}; evidence={path.relative_to(root)}"
         )
     return artifact
 
@@ -639,10 +695,20 @@ def ensure_dedicated_simulator(
     root: Path,
     require_terminal_boot: bool = True,
 ) -> str:
+    registered_udid: str | None = None
+    registry_path = root / SIMULATOR_REGISTRY
+    if registry_path.is_file():
+        try:
+            candidate = json.loads(registry_path.read_text()).get("deviceUDID")
+            if isinstance(candidate, str) and candidate:
+                registered_udid = candidate
+        except (json.JSONDecodeError, OSError):
+            registered_udid = None
     assert_coresimulator_healthy(
         run_command=run_command,
         env=env,
         root=root,
+        device_udid=registered_udid,
     )
     runtime = _runtime_selection(run_command, env)
     device, _ = _device_matches(run_command, env)
