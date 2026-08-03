@@ -141,6 +141,7 @@ jobs:
 
       - name: Verify current product gates
         env:
+          FOVEA_VERIFY_PROFILE: "qualification"
           RUN_IOS_SIMULATOR: "1"
           RUN_CRITICAL_MUTANTS: "1"
           RUN_LIVE_NETWORK: "0"

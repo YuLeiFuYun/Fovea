@@ -32,25 +32,31 @@ scripts/project-session-bootstrap.sh
 
 ## 本地验证
 
-确定性验证默认不依赖公网：
+确定性验证默认不依赖公网。开发循环使用变更感知门：
 
 ```sh
 scripts/verify.sh
 ```
 
-关键不变量变异测试：
+合并前使用：
 
 ```sh
-RUN_CRITICAL_MUTANTS=1 scripts/verify.sh
+FOVEA_VERIFY_PROFILE=premerge scripts/verify.sh
+```
+
+完整 UI、sanitizer、组件回滚与关键 mutation 只在源码绑定的资格矩阵中运行：
+
+```sh
+FOVEA_VERIFY_PROFILE=qualification scripts/verify.sh
 ```
 
 真实网络实验是独立环境证据：
 
 ```sh
-RUN_LIVE_NETWORK=1 scripts/verify.sh
+scripts/run-live-network-lab.py --timeout 240 --attempts 2
 ```
 
-提交前至少确保格式、严格并发编译、单元/集成测试、文档和结构门禁通过。不要把本地工件描述为 protected CI、独立审计或最终 merge commit 的发布证据。
+具体分层、自动升级规则、时间预算和资格证书契约见 `docs/specifications/verification-profiles.md`。提交前至少确保 smart 门通过；合并前必须通过 premerge。不要把本地工件描述为 protected CI、独立审计或最终 merge commit 的发布证据。
 
 ## 提交与评审
 

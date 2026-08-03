@@ -19,11 +19,17 @@ ARTIFACTS = ROOT / ".artifacts/ios-example"
 
 def verification_profile(phases: list[dict[str, str]]) -> tuple[str, set[str]]:
     executed = {phase["name"] for phase in phases}
-    all_phases = {"build", "unit-tests", "live-network-tests", "ui-tests", "ipad-ui-tests"}
+    all_phases = {
+        "build", "unit-tests", "live-network-tests", "ui-tests", "ipad-ui-tests",
+        "ui-smoke", "ipad-ui-smoke",
+    }
     profiles = {
-        frozenset(all_phases): "complete",
+        frozenset({"build", "unit-tests", "live-network-tests", "ui-tests", "ipad-ui-tests"}): "complete",
         frozenset({"build", "unit-tests", "ui-tests", "ipad-ui-tests"}): "deterministic",
         frozenset({"build", "unit-tests", "live-network-tests"}): "network-smoke",
+        frozenset({"unit-tests"}): "unit-only",
+        frozenset({"unit-tests", "ui-smoke", "ipad-ui-smoke"}): "ui-smoke",
+        frozenset({"build", "unit-tests", "ui-smoke", "ipad-ui-smoke"}): "ui-smoke-release",
         frozenset({"build", "unit-tests"}): "build-unit",
     }
     profile = profiles.get(frozenset(executed))

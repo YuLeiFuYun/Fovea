@@ -80,13 +80,19 @@ let system = try await FoveaSystemPipeline.open(
 )
 ```
 
-统一确定性验证入口（默认不访问公网）：
+分层确定性验证入口（默认不访问公网）：
 
 ```sh
-RUN_CRITICAL_MUTANTS=1 scripts/verify.sh
-# 组件正式发布或依赖切换前，执行精确 revision clean-copy 演练：
-RUN_COMPONENT_CLEAN_COPY=1 scripts/verify.sh
+scripts/verify.sh
+# 合并前全量根测试与确定性集成门：
+FOVEA_VERIFY_PROFILE=premerge scripts/verify.sh
+# 发布候选首次形成或资格证据失效时运行最大矩阵：
+FOVEA_VERIFY_PROFILE=qualification scripts/verify.sh
+# 同一源码树已有有效资格证据时执行发布复核：
+FOVEA_VERIFY_PROFILE=release scripts/verify.sh
 ```
+
+默认 `smart` profile 根据实际变更选择测试；未知路径自动升级，不会静默漏测。完整 UI、双 sanitizer、clean-copy、rollback 和 mutation 只在源码绑定的 qualification 中执行。详细契约见 [`docs/specifications/verification-profiles.md`](docs/specifications/verification-profiles.md)。
 
 示例与外部网络实验：
 
@@ -97,7 +103,7 @@ swift run FoveaGalleryDemo  # 启动后仍需显式允许第三方网络
 scripts/run-live-network-lab.py --timeout 240
 ```
 
-确定性 loopback chaos matrix 是合并门，负责可重复验证 304、no-store、慢响应、缺失 MIME、错误 MIME、响应体超限、401 和不安全 redirect。真实 HTTPS 矩阵用于计划任务、手动实验和 Phase 0b 完成证据，覆盖多个独立 origin、系统 DNS/代理/VPN、TLS、HTTP/2、重定向、CDN、URLSession metrics、single-flight 与目标像素约束；它不再把第三方服务瞬时故障等同于代码回归。需要显式运行时使用 `RUN_LIVE_NETWORK=1 scripts/verify.sh` 或独立 live-network workflow。
+确定性 loopback chaos matrix 是合并门，负责可重复验证 304、no-store、慢响应、缺失 MIME、错误 MIME、响应体超限、401 和不安全 redirect。真实 HTTPS 矩阵用于计划任务、手动实验和 Phase 0b 完成证据，覆盖多个独立 origin、系统 DNS/代理/VPN、TLS、HTTP/2、重定向、CDN、URLSession metrics、single-flight 与目标像素约束；它不再把第三方服务瞬时故障等同于代码回归。需要显式运行时使用 `scripts/run-live-network-lab.py --timeout 240 --attempts 2` 或独立 live-network workflow。
 
 Phase 0b 的本地协议、外部 WPT required corpus 与调度实现已大体落地；当前只执行完整 W1-W15 矩阵中的 W1-W3 baseline。存在性结论仍受正式 W1/W2/W3 真机比较、第二台较低性能设备、稳定 iOS 复跑、远程受保护 required check、accountable human attestation 与独立 held-out evaluator 阻塞。W4-W15 的能力缺口、专项计划与开放事项由 `Benchmarks/workload-registry.json` 和 `docs/project-memory/` 持续追踪；本地成功不得冒充这些外部证据或完整路线完成。
 

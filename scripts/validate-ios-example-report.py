@@ -20,18 +20,26 @@ ALL_PHASES = {
     "live-network-tests",
     "ui-tests",
     "ipad-ui-tests",
+    "ui-smoke",
+    "ipad-ui-smoke",
 }
 PROFILE_PHASES = {
+    "unit-only": {"unit-tests"},
     "build-unit": {"build", "unit-tests"},
     "deterministic": {"build", "unit-tests", "ui-tests", "ipad-ui-tests"},
     "network-smoke": {"build", "unit-tests", "live-network-tests"},
-    "complete": ALL_PHASES,
+    "ui-smoke": {"unit-tests", "ui-smoke", "ipad-ui-smoke"},
+    "ui-smoke-release": {"build", "unit-tests", "ui-smoke", "ipad-ui-smoke"},
+    "complete": {"build", "unit-tests", "live-network-tests", "ui-tests", "ipad-ui-tests"},
 }
 PROFILE_SATISFACTION = {
-    "build-unit": {"build-unit"},
-    "network-smoke": {"build-unit", "network-smoke"},
-    "deterministic": {"build-unit", "deterministic"},
-    "complete": {"build-unit", "network-smoke", "deterministic", "complete"},
+    "unit-only": {"unit-only"},
+    "build-unit": {"unit-only", "build-unit"},
+    "network-smoke": {"unit-only", "build-unit", "network-smoke"},
+    "ui-smoke": {"unit-only", "ui-smoke"},
+    "ui-smoke-release": {"unit-only", "build-unit", "ui-smoke", "ui-smoke-release"},
+    "deterministic": {"unit-only", "build-unit", "ui-smoke", "ui-smoke-release", "deterministic"},
+    "complete": {"unit-only", "build-unit", "network-smoke", "ui-smoke", "ui-smoke-release", "deterministic", "complete"},
 }
 
 
@@ -136,7 +144,7 @@ def main() -> int:
             names.add(name)
             device_family = phase.get("deviceFamily")
             require(device_family in {"iphone", "ipad"}, "invalid device family")
-            if name == "ipad-ui-tests":
+            if name in {"ipad-ui-tests", "ipad-ui-smoke"}:
                 require(device_family == "ipad", "iPad UI phase must use an iPad")
             else:
                 require(device_family == "iphone", f"{name} must use an iPhone")
@@ -168,11 +176,13 @@ def main() -> int:
                 require(count >= 1, "live-network phase must execute at least 1 test")
             elif name == "ui-tests":
                 require(count >= 5, "iPhone UI phase must execute at least 5 behavior tests")
-            else:
+            elif name == "ipad-ui-tests":
                 require(
                     count >= 3,
                     "iPad UI phase must execute at least 3 regular-width behavior tests",
                 )
+            elif name in {"ui-smoke", "ipad-ui-smoke"}:
+                require(count == 1, f"{name} must execute exactly one representative test")
 
         expected_phases = PROFILE_PHASES[profile]
         require(names == expected_phases, f"phase set mismatch for {profile}: {sorted(names)}")

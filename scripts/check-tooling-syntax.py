@@ -7,6 +7,7 @@ import os
 import json
 import re
 import signal
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -181,7 +182,8 @@ try:
     required_callables = (
         "ensure_simulator_booted", "capture_visual_family", "restart_simulator",
         "recover_core_simulator_service", "verify_visual_assurance",
-        "run_xcode_sharded_phase", "prepare_visual_family",
+        "pin_simulator_environment", "run_xcode_sharded_phase", "prepare_visual_family",
+        "compact_ui_smoke_phase", "regular_ui_smoke_phase",
         "terminate_visual_family_xcodebuild",
     )
     for name in required_callables:
@@ -217,6 +219,7 @@ try:
         '"w" if attempt == 0 else "a"': "xcode phase retry must preserve prior-attempt logs",
         '=== attempt {attempt + 1}/{attempts} simulator={destination} ===': "xcode phase logs must identify retry attempts and simulator",
         'family_env.pop(opposite, None)': "visual capture must remove the opposite simulator override",
+        'env = pin_simulator_environment(env, include_ipad=not args.skip_ui)': "iOS verification must pin only required simulator families once per session",
         'timed_out = completed.returncode == -1': "visual watchdog timeout must be classified as infrastructure",
         'retryable = timed_out or is_simulator_infrastructure_failure(output)': "visual retry must combine timeout and explicit infrastructure markers",
         'ROOT / result["log"]': "UI shard aggregation must resolve project-relative logs through ROOT",
@@ -229,6 +232,10 @@ try:
         'run_visual_xcode(': "visual xcodebuild must stream progress to its retained family log",
         'result_info = result / "Info.plist"': "visual attachment export must require a complete result bundle",
         'GENERATED_METADATA.write_bytes(original_metadata)': "visual capture must restore ephemeral build metadata",
+        'phases = run_requested_phases(args, env)': "Workbench report generation must occur after phase execution",
+        'clean_derived_data=not args.reuse_release_derived_data': "developer Workbench smoke must explicitly control Release cache reuse",
+        'if not args.skip_release_build:': "Workbench verifier must make Release audit an explicit phase decision",
+        'GENERATED_METADATA.unlink(missing_ok=True)': "Workbench verification must restore an originally absent metadata file",
         'DOC_BUILD_TOTAL_TIMEOUT_SECONDS = 900': "documentation build must have a bounded total timeout",
         'DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = 180': "documentation build must have a bounded inactivity timeout",
         'run_documentation_build(': "documentation xcodebuild must stream progress to its retained log",
@@ -249,7 +256,7 @@ try:
         re.DOTALL,
     ):
         errors.append("documentation xcodebuild must not use an unbounded subprocess.run")
-    if combined_source.count("inactivity_timeout_seconds=UI_TEST_INACTIVITY_TIMEOUT_SECONDS") != 3:
+    if combined_source.count("inactivity_timeout_seconds=UI_TEST_INACTIVITY_TIMEOUT_SECONDS") != 5:
         errors.append("host and UI test entry points must enable the bounded inactivity watchdog")
     if combined_source.count(f"-only-testing:{{REGULAR_WIDTH_NAVIGATION_TEST}}") != 1:
         errors.append("iPad UI phase must include the navigation test exactly once")
@@ -264,6 +271,18 @@ try:
     )
     if verifier.REGULAR_WIDTH_NAVIGATION_TEST != expected_navigation_test:
         errors.append("regular-width navigation test routing changed unexpectedly")
+    expected_compact_smoke = (
+        "FoveaWorkbenchUITests/FoveaWorkbenchUITests/"
+        "testSingleImageLabPublishesExpectedActualEvidence"
+    )
+    expected_ipad_smoke = (
+        "FoveaWorkbenchUITests/FoveaWorkbenchIPadUITests/"
+        "testIPadLaunchShowsResponsiveEcologicalAtlas_DEMO_PT_027"
+    )
+    if verifier.COMPACT_SMOKE_TEST != expected_compact_smoke:
+        errors.append("compact Workbench smoke routing changed unexpectedly")
+    if verifier.IPAD_SMOKE_TEST != expected_ipad_smoke:
+        errors.append("regular-width Workbench smoke routing changed unexpectedly")
     compact_methods = verifier.compact_ui_methods()
     if len(compact_methods) != 19 or expected_navigation_test.rsplit("/", 1)[-1] in compact_methods:
         errors.append("iPhone behavior matrix must contain exactly 19 non-navigation tests")
@@ -585,6 +604,48 @@ try:
     ):
         errors.append("failed simulator bootstatus must preserve progress and state diagnostics")
 
+    original_verifier_simulator = verifier.simulator
+    pin_calls: list[tuple[str, dict[str, str]]] = []
+
+    def pin_stub(env: dict[str, str], family: str) -> str:
+        pin_calls.append((family, dict(env)))
+        return f"pinned-{family}"
+
+    verifier.simulator = pin_stub
+    original_environment = {"DEVELOPER_DIR": "test"}
+    try:
+        pinned_environment = verifier.pin_simulator_environment(
+            original_environment, include_ipad=True
+        )
+        full_pin_calls = list(pin_calls)
+        pin_calls.clear()
+        unit_environment = {
+            "DEVELOPER_DIR": "test",
+            "FOVEA_IPAD_SIMULATOR_ID": "stale-ipad",
+        }
+        unit_pinned_environment = verifier.pin_simulator_environment(
+            unit_environment, include_ipad=False
+        )
+        unit_pin_calls = list(pin_calls)
+    finally:
+        verifier.simulator = original_verifier_simulator
+    if (
+        original_environment != {"DEVELOPER_DIR": "test"}
+        or pinned_environment.get("FOVEA_IPHONE_SIMULATOR_ID") != "pinned-iphone"
+        or pinned_environment.get("FOVEA_IPAD_SIMULATOR_ID") != "pinned-ipad"
+        or [family for family, _env in full_pin_calls] != ["iphone", "ipad"]
+        or full_pin_calls[0][1].get("FOVEA_IPHONE_SIMULATOR_ID") is not None
+        or full_pin_calls[1][1].get("FOVEA_IPHONE_SIMULATOR_ID") != "pinned-iphone"
+    ):
+        errors.append("UI verification must resolve and pin each simulator family exactly once")
+    if (
+        unit_environment.get("FOVEA_IPAD_SIMULATOR_ID") != "stale-ipad"
+        or unit_pinned_environment.get("FOVEA_IPHONE_SIMULATOR_ID") != "pinned-iphone"
+        or "FOVEA_IPAD_SIMULATOR_ID" in unit_pinned_environment
+        or [family for family, _env in unit_pin_calls] != ["iphone"]
+    ):
+        errors.append("unit-only Workbench verification must not resolve or retain an iPad")
+
     original_subprocess_run = xcode_support.subprocess.run
     original_recovery = xcode_support.recover_core_simulator_service
     selector_calls: list[list[str]] = []
@@ -830,6 +891,199 @@ try:
         errors.append("simulator selector does not fall back after process-group permission errors")
 except (OSError, RuntimeError, UnicodeError) as error:
     errors.append(f"invalid iOS simulator cleanup policy: {error}")
+
+try:
+    profile_path = ROOT / "scripts/run-verification-profile.py"
+    profile_spec = importlib.util.spec_from_file_location(
+        "fovea_verification_profiles", profile_path
+    )
+    if profile_spec is None or profile_spec.loader is None:
+        raise RuntimeError("unable to load verification profile orchestrator")
+    profile_module = importlib.util.module_from_spec(profile_spec)
+    sys.modules[profile_spec.name] = profile_module
+    profile_spec.loader.exec_module(profile_module)
+
+    test_impact = profile_module.classify(
+        ["Tests/FoveaTests/StagingAndStorageTests.swift"]
+    )
+    effective, test_phases, reasons = profile_module.phase_plan("smart", test_impact)
+    test_phase_names = {phase.name for phase in test_phases}
+    if (
+        effective != "smart"
+        or reasons
+        or test_impact["testFilters"] != ["StagingAndStorageTests"]
+        or "impacted-tests" not in test_phase_names
+        or "root-tests" in test_phase_names
+        or "qualification-certificate" in test_phase_names
+    ):
+        errors.append("smart test-only verification must run an exact impacted test filter")
+
+    unknown_impact = profile_module.classify(["unclassified.verification-input"])
+    unknown_effective, unknown_phases, unknown_reasons = profile_module.phase_plan(
+        "smart", unknown_impact
+    )
+    if (
+        unknown_effective != "premerge"
+        or not unknown_reasons
+        or "root-tests" not in {phase.name for phase in unknown_phases}
+    ):
+        errors.append("unknown verification inputs must fail closed by escalating to premerge")
+
+    deleted_impact = profile_module.classify(
+        ["Tests/FoveaTests/RemovedVerificationContractTests.swift"]
+    )
+    deleted_effective, deleted_phases, deleted_reasons = profile_module.phase_plan(
+        "smart", deleted_impact
+    )
+    if (
+        deleted_effective != "premerge"
+        or "deleted" not in deleted_impact["categories"]
+        or not any("deleted path" in reason for reason in deleted_reasons)
+        or "root-tests" not in {phase.name for phase in deleted_phases}
+    ):
+        errors.append("deleted paths must fail closed by escalating smart verification to premerge")
+
+    workbench_impact = profile_module.classify(
+        ["Examples/FoveaWorkbenchApp/FoveaWorkbench/Views/WorkbenchRootView.swift"]
+    )
+    workbench_effective, workbench_phases, _ = profile_module.phase_plan(
+        "smart", workbench_impact
+    )
+    workbench_names = {phase.name for phase in workbench_phases}
+    if workbench_effective != "smart" or "workbench-unit" not in workbench_names:
+        errors.append("Workbench application changes must select bounded host tests")
+
+    verifier_impact = profile_module.classify(["scripts/verify-ios-example.py"])
+    verifier_effective, verifier_phases, _ = profile_module.phase_plan(
+        "smart", verifier_impact
+    )
+    verifier_names = {phase.name for phase in verifier_phases}
+    if (
+        verifier_effective != "smart"
+        or "workbench-unit" in verifier_names
+        or "workbench-smoke" in verifier_names
+        or "workbench-tooling" not in verifier_impact["categories"]
+    ):
+        errors.append("Workbench verifier changes must rely on tooling contracts in smart mode")
+
+    verify_profile_source = profile_path.read_text()
+    verify_entry_source = (ROOT / "scripts/verify.sh").read_text()
+    certificate_writer_source = (
+        ROOT / "scripts/write-qualification-certificate.py"
+    ).read_text()
+    receipt_writer_source = (
+        ROOT / "scripts/write-qualification-receipt.py"
+    ).read_text()
+    workflow_source = (ROOT / ".github/workflows/verify.yml").read_text()
+    profile_contracts = {
+        'PROFILE_CHOICES = ("smart", "premerge", "release", "workbench-smoke")':
+            "verification profiles must expose bounded local gates",
+        'effective = "premerge"':
+            "unknown smart changes must escalate rather than skip",
+        '"--no-renames"':
+            "verification impact analysis must decompose renames into deletion and addition",
+        '"--diff-filter=ACMRDT"':
+            "verification impact analysis must include deleted and type-changed paths",
+        'categories.add("deleted")':
+            "deleted paths must be represented explicitly in verification impact",
+        'reasons.append("deleted path escalated to premerge")':
+            "deleted paths must conservatively escalate smart verification",
+        '"qualification-certificate"':
+            "release verification must require source-bound qualification evidence",
+        '"--reuse-release-derived-data"':
+            "bounded Workbench smoke must reuse local Release DerivedData",
+        '"--skip-release-build"':
+            "smart Workbench smoke must not repeat the Release binary audit",
+        'terminate_process_group(process.pid)':
+            "profile timeout cleanup must kill the complete process group",
+        'terminate_active_process_groups()':
+            "profile signal handling must clean every active child process group",
+        'install_signal_handlers()':
+            "verification profile entrypoint must install bounded cancellation handlers",
+        'FOVEA_VERIFY_PROFILE=${FOVEA_VERIFY_PROFILE:-smart}':
+            "verify.sh must default to the smart profile",
+        'python3 scripts/write-qualification-certificate.py':
+            "qualification must publish a source-bound certificate",
+        'export FOVEA_QUALIFICATION_ACTIVE=1':
+            "qualification must activate certificate publication explicitly",
+        'qualification certificate writer may only run from the qualification profile':
+            "certificate writer must reject standalone invocation",
+        'assuranceReceiptSha256':
+            "qualification certificates must bind per-stage receipt digests",
+        'qualification receipt does not belong to this run/tree':
+            "qualification certificate publication must reject stale stage receipts",
+        'qualification receipt writer requires an active qualification run':
+            "qualification stage receipts must reject inactive invocation",
+        'FOVEA_VERIFY_PROFILE: "qualification"':
+            "hosted qualification workflow must request the maximal profile explicitly",
+    }
+    combined_profile_source = (
+        verify_profile_source
+        + verify_entry_source
+        + certificate_writer_source
+        + receipt_writer_source
+        + workflow_source
+    )
+    for fragment, message in profile_contracts.items():
+        if fragment not in combined_profile_source:
+            errors.append(message)
+    if verify_entry_source.count("record_qualification_assurance ") != 9:
+        errors.append("qualification must record exactly nine required assurance receipts")
+
+    synthetic_run_id = "20000101T000000Z-999999"
+    synthetic_session = (
+        ROOT / ".artifacts/verification/qualification-runs" / synthetic_run_id
+    )
+    shutil.rmtree(synthetic_session, ignore_errors=True)
+    synthetic_session.mkdir(parents=True)
+    certificate_env = os.environ.copy()
+    certificate_env.update(
+        {
+            "FOVEA_QUALIFICATION_ACTIVE": "1",
+            "FOVEA_QUALIFICATION_RUN_ID": synthetic_run_id,
+            "FOVEA_QUALIFICATION_STARTED_EPOCH": "946684800",
+            "FOVEA_QUALIFICATION_SESSION_DIR": str(synthetic_session),
+        }
+    )
+    synthetic_receipt = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/write-qualification-receipt.py"),
+            "release-build",
+        ],
+        cwd=ROOT,
+        env=certificate_env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    receipt_path = synthetic_session / "release-build.json"
+    if synthetic_receipt.returncode != 0 or not receipt_path.is_file():
+        errors.append("qualification receipt writer must emit an active-run receipt")
+    else:
+        receipt_payload = json.loads(receipt_path.read_text())
+        if (
+            receipt_payload.get("qualificationRunID") != synthetic_run_id
+            or receipt_payload.get("assurance") != "release-build"
+            or receipt_payload.get("status") != "passed"
+        ):
+            errors.append("qualification receipt writer emitted invalid run binding")
+
+    missing_receipts = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/write-qualification-certificate.py")],
+        cwd=ROOT,
+        env=certificate_env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    shutil.rmtree(synthetic_session, ignore_errors=True)
+    if missing_receipts.returncode == 0 or "qualification receipt is missing" not in missing_receipts.stdout:
+        errors.append("qualification certificate writer must reject incomplete active runs")
+except (OSError, RuntimeError, ValueError) as error:
+    errors.append(f"invalid verification profile policy: {error}")
 
 json_roots = [ROOT / "docs", ROOT / "evidence", ROOT / "Examples", ROOT / "Benchmarks"]
 for json_root in json_roots:

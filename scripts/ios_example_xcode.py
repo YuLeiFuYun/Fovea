@@ -399,9 +399,12 @@ def run_xcode_sharded_phase(
     }
 
 
-def verify_release_build(env: dict[str, str]) -> dict[str, str]:
+def verify_release_build(
+    env: dict[str, str], *, clean_derived_data: bool = True
+) -> dict[str, str]:
     release_derived = ARTIFACTS / "release-derived"
-    shutil.rmtree(release_derived, ignore_errors=True)
+    if clean_derived_data:
+        shutil.rmtree(release_derived, ignore_errors=True)
     phase = run_xcode_phase(
         "build", ["-configuration", "Release", "-derivedDataPath", str(release_derived), "build"],
         env=env, retry_infrastructure_once=False,
