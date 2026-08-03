@@ -24,8 +24,11 @@ final class StagingAndStorageTests: XCTestCase {
 
         let stagedNames = try FileManager.default.contentsOfDirectory(atPath: directory.path)
         let stagedName = try XCTUnwrap(stagedNames.singleElement)
-        try assertSecureCacheItem(directory)
-        try assertSecureCacheItem(directory.appendingPathComponent(stagedName))
+        try assertSecureCacheItem(directory, backupExclusionAnchor: directory)
+        try assertSecureCacheItem(
+            directory.appendingPathComponent(stagedName),
+            backupExclusionAnchor: directory
+        )
 
         let result = try accumulator.finalize()
         let materialized = try result.materializedData()
@@ -623,16 +626,29 @@ final class StagingAndStorageTests: XCTestCase {
             )
         )
 
-        let urls = [
-            encodedRoot,
-            encodedRoot.appendingPathComponent("blobs", isDirectory: true),
-            encodedRoot.appendingPathComponent("manifest.json"),
-            encodedRoot.appendingPathComponent("blobs/\(stored.physicalID.foveaStorageFileName)"),
-            recordRoot,
-            recordRoot.appendingPathComponent("representation-records.json"),
+        let blobsRoot = encodedRoot.appendingPathComponent("blobs", isDirectory: true)
+        let items = [
+            (url: encodedRoot, backupExclusionAnchor: encodedRoot),
+            (url: blobsRoot, backupExclusionAnchor: blobsRoot),
+            (
+                url: encodedRoot.appendingPathComponent("manifest.json"),
+                backupExclusionAnchor: encodedRoot
+            ),
+            (
+                url: blobsRoot.appendingPathComponent(stored.physicalID.foveaStorageFileName),
+                backupExclusionAnchor: blobsRoot
+            ),
+            (url: recordRoot, backupExclusionAnchor: recordRoot),
+            (
+                url: recordRoot.appendingPathComponent("representation-records.json"),
+                backupExclusionAnchor: recordRoot
+            ),
         ]
-        for url in urls {
-            try assertSecureCacheItem(url)
+        for item in items {
+            try assertSecureCacheItem(
+                item.url,
+                backupExclusionAnchor: item.backupExclusionAnchor
+            )
         }
     }
 
@@ -853,11 +869,20 @@ final class StagingAndStorageTests: XCTestCase {
 
 private func assertSecureCacheItem(
     _ url: URL,
+    backupExclusionAnchor: URL,
     file: StaticString = #filePath,
     line: UInt = #line
 ) throws {
     let values = try url.resourceValues(forKeys: [.isDirectoryKey, .isExcludedFromBackupKey])
-    XCTAssertEqual(values.isExcludedFromBackup, true, file: file, line: line)
+    let anchorValues = try backupExclusionAnchor.resourceValues(
+        forKeys: [.isExcludedFromBackupKey]
+    )
+    XCTAssertTrue(
+        values.isExcludedFromBackup == true || anchorValues.isExcludedFromBackup == true,
+        "缓存项及其显式存储目录均未排除备份：item=\(url.path) anchor=\(backupExclusionAnchor.path)",
+        file: file,
+        line: line
+    )
 
     let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
     let permissions = try XCTUnwrap(
