@@ -133,7 +133,7 @@
       "finalATierHeadlessAggregate": "pending-post-w7-fix-rerun",
       "finalPairedSwiftUISurfaceAggregate": "pending-post-w7-fix-rerun",
       "finalW7V6Aggregate": "archived-observable-bound-invalid",
-      "finalW7V7Aggregate": "pending-final-six-comparator-rerun",
+      "finalW7V7Aggregate": "fovea-current-tree-hard-pass-six-comparator-rerun-pending",
       "historicalFiveLibraryAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
       "latestSimulatorAggregate": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
       "latestSimulatorAggregateTrust": "historical-only-current-plan-rerun-pending",
@@ -222,7 +222,16 @@
       "thermalWholeBlockRerun": true,
       "verificationArtifact": ".artifacts/comparators/verification.json",
       "verificationArtifactSHA256": "02ab9db195c1b41bac33235cf12ce73d47134931740654d2a7be70506d0e3d47",
-      "w2NetworkOrigin": "shared-real-loopback-http-nwlistener"
+      "w2NetworkOrigin": "shared-real-loopback-http-nwlistener",
+      "latestW7V7FoveaHardContract": {
+        "logicalRequests": 1000,
+        "sharedOriginRequests": 16,
+        "cancelledSubscribers": 256,
+        "failedLoads": 0,
+        "originPeakConcurrency": 8,
+        "hardFailures": 0,
+        "claimScope": "simulator-functional-calibration-only"
+      }
     },
     "projectMemory": {
       "discussionLedger": "docs/project-memory/discussion-ledger.json",

@@ -832,8 +832,8 @@
     {
       "id": "OPEN-A-TIER-COMPARATOR-INTEGRATION",
       "priority": 0,
-      "status": "in-progress-final-rerun-after-w7-fix",
-      "summary": "All seven A-tier integrations build. W7 V6 exposed and fixed cancellation-cohort poisoning, then invalidated the direct mapping from an eight-grant client fairness bound to black-box origin start order. W7 V7 keeps the trace and budgets, derives the observable bound as 8 + (8 - 1) = 15, and awaits the final six-comparator W1-W3, paired SwiftUI and W7 V7 aggregates under one unchanged source digest."
+      "status": "in-progress-fovea-v7-hard-pass-six-comparator-rerun-pending",
+      "summary": "All seven A-tier integrations build. W7 V7 current-tree Fovea calibration exposed and fixed cancellation misclassification plus pre-actor warmup scheduling duplication. Fovea now passes the 1,000-request hard contract with 16 shared-origin requests, 256 cancelled subscribers, zero failures, origin peak concurrency 8 and no hard-check failure. The final six-comparator W1-W3, paired SwiftUI and W7 V7 aggregates remain pending under one committed unchanged source digest and a passing host-quiet preflight."
     },
     {
       "id": "OPEN-CODEC-CONFORMANCE-KIT",

@@ -11,19 +11,63 @@ package actor AdaptiveEncodedWarmupCoordinator {
         let namespace: SecurityNamespaceID
     }
 
+    private final class LaunchGate: @unchecked Sendable {
+        private let lock = NSLock()
+        private let maximumCount: Int
+        private var claims: [Key: UUID] = [:]
+
+        init(maximumCount: Int) {
+            self.maximumCount = max(1, maximumCount)
+        }
+
+        func claim(_ key: Key) -> UUID? {
+            lock.lock()
+            defer { lock.unlock() }
+            guard claims[key] == nil, claims.count < maximumCount else { return nil }
+            let token = UUID()
+            claims[key] = token
+            return token
+        }
+
+        func contains(_ key: Key, token: UUID) -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            return claims[key] == token
+        }
+
+        func release(_ key: Key) {
+            lock.lock()
+            claims.removeValue(forKey: key)
+            lock.unlock()
+        }
+
+        func releaseAll(where predicate: (Key) -> Bool) {
+            lock.lock()
+            let keys = claims.keys.filter(predicate)
+            for key in keys { claims.removeValue(forKey: key) }
+            lock.unlock()
+        }
+    }
+
     private struct Entry: Sendable {
         let task: Task<Void, Never>
         var waiters: [UUID: AsyncStream<Void>.Continuation]
     }
 
     private let maximumEntryCount: Int
+    private nonisolated let launchGate: LaunchGate
     private var entries: [Key: Entry] = [:]
 
     package init(maximumEntryCount: Int) {
-        self.maximumEntryCount = max(1, maximumEntryCount)
+        let boundedCount = max(1, maximumEntryCount)
+        self.maximumEntryCount = boundedCount
+        self.launchGate = LaunchGate(maximumCount: boundedCount)
     }
 
-    package func start(
+    /// 在调用方线程上先按精确 fetch execution identity 领取一次性启动权，再进行
+    /// actor hop。取消风暴因此至多调度一个 warmup Task，而不是先生成大量 Task、
+    /// 再依赖 actor 内部去重。
+    package nonisolated func schedule(
         request: ImageRequest,
         operation: @escaping @Sendable () async throws -> Void
     ) {
@@ -33,7 +77,28 @@ package actor AdaptiveEncodedWarmupCoordinator {
         else { return }
 
         let key = Self.key(for: request)
-        guard entries[key] == nil, entries.count < maximumEntryCount else { return }
+        guard let claimToken = launchGate.claim(key) else { return }
+        Task { [weak self] in
+            await self?.startClaimed(
+                key: key,
+                claimToken: claimToken,
+                operation: operation
+            )
+        }
+    }
+
+    private func startClaimed(
+        key: Key,
+        claimToken: UUID,
+        operation: @escaping @Sendable () async throws -> Void
+    ) {
+        guard launchGate.contains(key, token: claimToken),
+            entries[key] == nil,
+            entries.count < maximumEntryCount
+        else {
+            launchGate.release(key)
+            return
+        }
 
         let task = Task.detached(priority: .utility) { [weak self] in
             do {
@@ -66,11 +131,13 @@ package actor AdaptiveEncodedWarmupCoordinator {
     }
 
     package func cancelAll(namespace: SecurityNamespaceID) {
+        launchGate.releaseAll { $0.namespace == namespace }
         let keys = entries.keys.filter { $0.namespace == namespace }
         for key in keys { cancel(key: key) }
     }
 
     package func cancelAll() {
+        launchGate.releaseAll { _ in true }
         let keys = Array(entries.keys)
         for key in keys { cancel(key: key) }
     }
@@ -85,6 +152,7 @@ package actor AdaptiveEncodedWarmupCoordinator {
     }
 
     private func finish(key: Key) {
+        launchGate.release(key)
         guard let entry = entries.removeValue(forKey: key) else { return }
         for continuation in entry.waiters.values {
             continuation.yield(())
@@ -93,6 +161,7 @@ package actor AdaptiveEncodedWarmupCoordinator {
     }
 
     private func cancel(key: Key) {
+        launchGate.release(key)
         guard let entry = entries.removeValue(forKey: key) else { return }
         entry.task.cancel()
         for continuation in entry.waiters.values { continuation.finish() }

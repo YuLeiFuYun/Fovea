@@ -51,12 +51,16 @@ extension FoveaPipeline {
         let admission = SharedTaskAdmission.now()
         return AsyncThrowingStream { continuation in
             let terminalState = ImageEventStreamTerminalState()
+            let cancellationHandoffLease = FetchCancellationHandoffLease()
             let task = Task { [self] in
                 do {
                     let image = try await execute {
                         try validateAccess(to: request)
                         try validateAuthorization(of: request)
-                        return try await withImageLoadAdmission(request: request) {
+                        return try await withImageLoadAdmission(
+                            request: request,
+                            cancellationHandoffLease: cancellationHandoffLease
+                        ) {
                             return try await SharedTaskAdmissionContext.$current.withValue(
                                 admission
                             ) {
@@ -84,7 +88,11 @@ extension FoveaPipeline {
                     if Self.isCancellation(error),
                         terminalState.claimCancellationIfIncomplete()
                     {
-                        observeCancelledRequest(request, admission: admission)
+                        handleCancelledRequest(
+                            request,
+                            admission: admission,
+                            cancellationHandoffLease: cancellationHandoffLease
+                        )
                     }
                     continuation.finish(throwing: error)
                 }
@@ -97,7 +105,11 @@ extension FoveaPipeline {
                 if case .cancelled = termination,
                     terminalState.claimCancellationIfIncomplete()
                 {
-                    self.observeCancelledRequest(request, admission: admission)
+                    self.handleCancelledRequest(
+                        request,
+                        admission: admission,
+                        cancellationHandoffLease: cancellationHandoffLease
+                    )
                 }
                 task.cancel()
             }
@@ -228,6 +240,7 @@ extension FoveaPipeline {
 
     private func withImageLoadAdmission<Value: Sendable>(
         request: ImageRequest,
+        cancellationHandoffLease: FetchCancellationHandoffLease,
         operation: @escaping @Sendable () async throws -> Value
     ) async throws -> Value {
         let ticket = imageLoadAdmission.begin(for: request)
@@ -239,12 +252,13 @@ extension FoveaPipeline {
             let completion = await encodedWarmups.completionStream(for: warmupRequest)
             for await _ in completion { break }
             try Task.checkCancellation()
-            let grace =
-                ticket.preservesFetchOnCancellation
-                ? CancellationCohortPolicy.retentionNanoseconds
-                : 0
-            let value = try await FetchCancellationHandoffContext.$graceNanoseconds.withValue(
-                grace
+            if ticket.preservesFetchOnCancellation {
+                cancellationHandoffLease.activate(
+                    graceNanoseconds: CancellationCohortPolicy.retentionNanoseconds
+                )
+            }
+            let value = try await FetchCancellationHandoffContext.$lease.withValue(
+                cancellationHandoffLease
             ) {
                 try await operation()
             }
@@ -256,13 +270,20 @@ extension FoveaPipeline {
         }
     }
 
-    private func observeCancelledRequest(
+    private func handleCancelledRequest(
         _ request: ImageRequest,
-        admission: SharedTaskAdmission
+        admission: SharedTaskAdmission,
+        cancellationHandoffLease: FetchCancellationHandoffLease
     ) {
         let observation = imageLoadAdmission.recordCancellation(for: request)
         guard observation.shouldWarmCancelledRequest else { return }
-        Task { await startCancelledRequestWarmup(request, admission: admission) }
+        // Activate the fetch-level orphan lease before cancelling the foreground task.
+        // The warmup can then join the existing single-flight instead of opening a
+        // replacement transport request during a rapid cancellation cohort.
+        cancellationHandoffLease.activate(
+            graceNanoseconds: CancellationCohortPolicy.retentionNanoseconds
+        )
+        startCancelledRequestWarmup(request, admission: admission)
     }
 
     private static func isCancellation(_ error: any Error) -> Bool {
@@ -274,7 +295,7 @@ extension FoveaPipeline {
     private func startCancelledRequestWarmup(
         _ request: ImageRequest,
         admission: SharedTaskAdmission
-    ) async {
+    ) {
         do {
             try validateAccess(to: request)
             try validateAuthorization(of: request)
@@ -283,7 +304,7 @@ extension FoveaPipeline {
         }
         let imageCoordinator = self.imageCoordinator
         let warmupRequest = request.reprioritized(.background)
-        await encodedWarmups.start(request: warmupRequest) {
+        encodedWarmups.schedule(request: warmupRequest) {
             try await SharedTaskAdmissionContext.$current.withValue(admission) {
                 try await imageCoordinator.warmOriginal(request: warmupRequest)
             }

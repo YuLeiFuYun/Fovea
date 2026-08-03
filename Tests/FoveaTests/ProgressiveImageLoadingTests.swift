@@ -165,9 +165,9 @@ final class ProgressiveImageLoadingTests: XCTestCase {
         let root = try makeTemporaryDirectory("adaptive-warmup")
         let body = try makePNG(width: 96, height: 64)
         let transport = FakeHTTPTransport(
-            // 三次前台尝试之外，第二、第三次取消都可能各自启动独立 replacement
-            // warmup；fixture 必须覆盖合法的五次最坏路径，不能用 stub 耗尽充当 oracle。
-            stubs: (0..<5).map { _ in
+            // 三次前台尝试各自只有一次 transport。取消预热必须在 fetch 交接租约内
+            // 加入原 single-flight，不得为第二、第三次取消另起 replacement 请求。
+            stubs: (0..<3).map { _ in
                 .init(
                     statusCode: 200,
                     headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
@@ -210,6 +210,11 @@ final class ProgressiveImageLoadingTests: XCTestCase {
             await pipeline.hasTransportVerifiedHandoffForTesting(finalRequest)
         }
         let capturedBeforeVisible = await transport.capturedRequests()
+        XCTAssertEqual(
+            capturedBeforeVisible.count,
+            3,
+            "取消预热必须复用每次前台请求的原 single-flight，不得额外重取"
+        )
         let recordsBeforeVisible = await records.records(
             for: finalRequest.fetchBaseKey.digestHex,
             namespace: finalRequest.namespace.value,

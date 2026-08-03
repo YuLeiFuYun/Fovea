@@ -18,6 +18,13 @@ let package = Package(
                 .product(name: "ComparativeLabCore", package: "FoveaComparativeLab"),
                 .product(name: "Fovea", package: "Fovea"),
             ]
+        ),
+        .testTarget(
+            name: "FoveaComparatorAdapterTests",
+            dependencies: [
+                "FoveaComparatorAdapter",
+                .product(name: "ComparativeLabCore", package: "FoveaComparativeLab"),
+            ]
         )
     ],
     swiftLanguageModes: [.v6]

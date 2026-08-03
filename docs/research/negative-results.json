@@ -987,6 +987,23 @@
       ],
       "exitCondition": "A replacement may supersede this local Seatbelt gate only if it preserves effective network/read/write escape probes, builds exact validated snapshots, proves post-build source identity, and either qualifies the default production build backend or records an equally explicit backend limitation. Mutual-confidentiality claims additionally require separate source visibility or permission domains.",
       "id": "NEG-COMPONENT-CANDIDATE-AMBIENT-AUTHORITY-001"
+    },
+    {
+      "area": "w7-cancellation-and-adaptive-warmup",
+      "claimRejected": "Async stream cancellation will always surface as a thrown cancellation error, and actor-isolated warmup deduplication is sufficient to bound tasks and network requests during a cancellation storm.",
+      "counterexample": "In the W7 V7 1,000-request trace, AsyncThrowingStream iteration could terminate without rethrowing after consumer cancellation, causing all 256 cancelled subscribers to be reported as unexpected failures. After correcting classification, four all-cancel groups produced up to four extra origin requests because hundreds of unstructured warmup tasks were created before actor-side deduplication; even a 250 ms fetch handoff lease could occasionally expire behind that queue.",
+      "decision": "At the comparator boundary, check Task cancellation before treating a stream without final as structurally incomplete. In FoveaCore, propagate a lock-protected dynamic fetch handoff lease that is activated before foreground cancellation, and claim a bounded exact-execution warmup launch synchronously before any actor hop. Pending launch claims are capacity-bounded and revoked by cancelAll. Preserve the existing durability rule: warmup may retain only validated transient handoff state until a visible consumer commits it.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/Adapters/FoveaAdapterPackage/Sources/FoveaComparatorAdapter/FoveaComparatorAdapter.swift",
+        "Benchmarks/ComparativeLab/Adapters/FoveaAdapterPackage/Tests/FoveaComparatorAdapterTests/FoveaComparatorAdapterTests.swift",
+        "Sources/FoveaCore/AdaptiveEncodedWarmupCoordinator.swift",
+        "Sources/FoveaCore/FetchStage.swift",
+        "Sources/FoveaCore/FoveaPipeline+Operations.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        ".artifacts/w7-concurrency-lab/calibration-report-fovea.json"
+      ],
+      "exitCondition": "Any replacement must retain exact cancelled outcome mapping, zero failed loads, no more than one origin execution per W7 shared identity, bounded pre-actor scheduling, cancelAll coverage of pending claims, and the no-durability-before-visible-consumer invariant.",
+      "id": "NEG-W7-CANCELLATION-WARMUP-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",

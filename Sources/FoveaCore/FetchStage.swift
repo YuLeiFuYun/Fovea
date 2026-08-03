@@ -1,8 +1,27 @@
 import Foundation
 import FoveaHTTP
 
+package final class FetchCancellationHandoffLease: @unchecked Sendable {
+    private let lock = NSLock()
+    private var graceNanosecondsStorage: UInt64 = 0
+
+    package init() {}
+
+    package func activate(graceNanoseconds: UInt64) {
+        lock.lock()
+        graceNanosecondsStorage = max(graceNanosecondsStorage, graceNanoseconds)
+        lock.unlock()
+    }
+
+    package func graceNanoseconds() -> UInt64 {
+        lock.lock()
+        defer { lock.unlock() }
+        return graceNanosecondsStorage
+    }
+}
+
 package enum FetchCancellationHandoffContext {
-    @TaskLocal package static var graceNanoseconds: UInt64 = 0
+    @TaskLocal package static var lease: FetchCancellationHandoffLease?
 }
 
 /// 负责 fetch 阶段的请求编排、共享执行和单次网络尝试。
@@ -186,7 +205,7 @@ final class FetchStage: Sendable {
             )
         }
 
-        let handoffGraceNanoseconds = FetchCancellationHandoffContext.graceNanoseconds
+        let handoffLease = FetchCancellationHandoffContext.lease
         return try await withTaskCancellationHandler {
             do {
                 let result = try await subscription.value()
@@ -195,6 +214,7 @@ final class FetchStage: Sendable {
                 return result
             } catch {
                 if Self.isCancellation(error) || Task.isCancelled {
+                    let handoffGraceNanoseconds = handoffLease?.graceNanoseconds() ?? 0
                     if handoffGraceNanoseconds > 0 {
                         await subscription.detach(
                             handoffGraceNanoseconds: handoffGraceNanoseconds
@@ -216,6 +236,7 @@ final class FetchStage: Sendable {
             }
         } onCancel: {
             Task {
+                let handoffGraceNanoseconds = handoffLease?.graceNanoseconds() ?? 0
                 if handoffGraceNanoseconds > 0 {
                     await subscription.detach(
                         handoffGraceNanoseconds: handoffGraceNanoseconds

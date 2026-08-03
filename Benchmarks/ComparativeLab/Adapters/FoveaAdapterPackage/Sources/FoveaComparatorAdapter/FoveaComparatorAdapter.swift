@@ -91,6 +91,11 @@ public actor FoveaComparatorAdapter: ComparatorAdapter {
                         )
                     }
                 }
+                // AsyncThrowingStream may terminate without rethrowing after the consumer
+                // cancels its iteration. Cancellation must win over the structural
+                // "missing final" sentinel, otherwise W7 records every cancelled subscriber
+                // as an unexpected load failure.
+                try Task.checkCancellation()
                 throw FoveaComparatorAdapterError.incompleteProgressiveStream
             } catch let failure as PipelineFailure {
                 return ComparatorLoadOutput(
