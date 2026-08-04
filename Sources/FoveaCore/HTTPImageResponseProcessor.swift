@@ -22,6 +22,14 @@ final class HTTPImageResponseProcessor: Sendable {
         let cacheControlPresent: Bool
     }
 
+    private struct Prepared200Execution {
+        let data: Data
+        let prepared: Prepared200Response
+        let progressivePreparation: ImageDecodePreparation?
+        let representation: RepresentationRecord?
+        let allowsReusableState: Bool
+    }
+
     init(
         cache: PipelineCache,
         fetchStage: FetchStage,
@@ -105,27 +113,38 @@ final class HTTPImageResponseProcessor: Sendable {
         request: ImageRequest,
         generation: NamespaceGeneration,
         allowReusableState: Bool = true,
-        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)? = nil
+        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)? = nil,
+        progressiveFinalization: PipelineProgressiveFinalization? = nil
     ) async throws -> DecodedImage {
-        let prepared = try await prepare200Response(response, request: request)
-        let data = try response.transport.materializedBody()
-        let allowsReusableState = allowReusableState && prepared.disposition != .noStore
-        let representation =
-            allowsReusableState
-            ? reusableRecord(
-                response: response,
+        let execution = try await prepare200Execution(
+            response,
+            request: request,
+            generation: generation,
+            allowReusableState: allowReusableState,
+            progressiveFinalization: progressiveFinalization
+        )
+        let data = execution.data
+        let prepared = execution.prepared
+        let progressivePreparation = execution.progressivePreparation
+        let allowsReusableState = execution.allowsReusableState
+        guard let representation = execution.representation else {
+            return try await processTransient200(
+                data: data,
+                contentID: prepared.contentID,
+                variantDigest: prepared.variant.digestHex,
                 request: request,
                 generation: generation,
-                prepared: prepared
+                onFullQualityPreview: onFullQualityPreview,
+                preparation: progressivePreparation
             )
-            : nil
-
+        }
         async let decodedTask = delivery.decode(
             data: data,
             contentID: prepared.contentID,
             request: request,
             generation: generation,
-            keyDigest: prepared.variant.digestHex
+            keyDigest: prepared.variant.digestHex,
+            preparation: progressivePreparation
         )
         async let commitPreparationTask: OriginalCommitPreparation? = prepareOriginalCommitIfNeeded(
             data: data,
@@ -135,7 +154,6 @@ final class HTTPImageResponseProcessor: Sendable {
             generation: generation,
             keyDigest: prepared.variant.digestHex
         )
-
         let decoded: DecodedImage
         do {
             decoded = try await decodedTask
@@ -151,7 +169,6 @@ final class HTTPImageResponseProcessor: Sendable {
             }
             throw error
         }
-
         let rendered: PreparedRenderedImage
         do {
             rendered = try await delivery.prepareRenderedImage(
@@ -178,7 +195,6 @@ final class HTTPImageResponseProcessor: Sendable {
             }
             throw error
         }
-
         try Task.checkCancellation()
         try await requireActive(generation, for: request.namespace)
         if let onFullQualityPreview {
@@ -211,6 +227,97 @@ final class HTTPImageResponseProcessor: Sendable {
             generation: generation,
             representation: representation
         )
+    }
+
+    private func prepare200Execution(
+        _ response: TimedTransportResponse,
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        allowReusableState: Bool,
+        progressiveFinalization: PipelineProgressiveFinalization?
+    ) async throws -> Prepared200Execution {
+        let prepared = try await prepare200Response(response, request: request)
+        let data = try response.transport.materializedBody()
+        let progressivePreparation = await validatedProgressivePreparation(
+            progressiveFinalization,
+            response: response,
+            data: data
+        )
+        try Task.checkCancellation()
+        let allowsReusableState = allowReusableState && prepared.disposition != .noStore
+        let representation =
+            allowsReusableState
+            ? reusableRecord(
+                response: response,
+                request: request,
+                generation: generation,
+                prepared: prepared
+            )
+            : nil
+        return Prepared200Execution(
+            data: data,
+            prepared: prepared,
+            progressivePreparation: progressivePreparation,
+            representation: representation,
+            allowsReusableState: allowsReusableState
+        )
+    }
+
+    private func processTransient200(
+        data: Data,
+        contentID: ContentID,
+        variantDigest: String,
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?,
+        preparation: ImageDecodePreparation?
+    ) async throws -> DecodedImage {
+        let decoded = try await delivery.decode(
+            data: data,
+            contentID: contentID,
+            request: request,
+            generation: generation,
+            keyDigest: variantDigest,
+            preparation: preparation
+        )
+        let rendered = try await delivery.prepareRenderedImage(
+            decoded: decoded,
+            contentID: contentID,
+            request: request,
+            generation: generation,
+            allowsRenderedMemory: false,
+            keyDigest: variantDigest
+        )
+        try Task.checkCancellation()
+        try await requireActive(generation, for: request.namespace)
+        if preparation == nil, let onFullQualityPreview {
+            try await onFullQualityPreview(rendered.image)
+        }
+        return try await delivery.publishPreparedRenderedImage(
+            rendered,
+            request: request,
+            generation: generation,
+            representation: nil
+        )
+    }
+
+    private func validatedProgressivePreparation(
+        _ finalization: PipelineProgressiveFinalization?,
+        response: TimedTransportResponse,
+        data: Data
+    ) async -> ImageDecodePreparation? {
+        guard let finalization, let candidate = await finalization.value() else { return nil }
+        let byteCount = response.transport.bodyByteCount
+        guard candidate.transportDigestHex == response.transport.digestHex,
+            candidate.transportByteCount == byteCount,
+            candidate.sourceByteCount == byteCount,
+            data.count == byteCount,
+            candidate.preparation.probe.format == .jpeg
+        else {
+            await delivery.discardProgressivePreparation(candidate.preparation)
+            return nil
+        }
+        return candidate.preparation
     }
 
     func retainTransportVerifiedOriginalOnly(

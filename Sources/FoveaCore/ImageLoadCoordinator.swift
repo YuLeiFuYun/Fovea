@@ -43,14 +43,18 @@ final class ImageLoadCoordinator: Sendable {
 
     func load(
         request: ImageRequest,
-        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)? = nil
+        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)? = nil,
+        progressObserver: TransportProgressObserver? = nil,
+        progressiveFinalization: PipelineProgressiveFinalization? = nil
     ) async throws -> DecodedImage {
         let generation = try await namespaceRegistry.generation(for: request.namespace)
         guard transportReusePolicy.allowsCrossRequestReuse else {
             return try await loadTaskLocal(
                 request: request,
                 generation: generation,
-                onFullQualityPreview: onFullQualityPreview
+                onFullQualityPreview: onFullQualityPreview,
+                progressObserver: progressObserver,
+                progressiveFinalization: progressiveFinalization
             )
         }
 
@@ -86,7 +90,9 @@ final class ImageLoadCoordinator: Sendable {
             request: request,
             generation: generation,
             conditionalRecord: lookup.conditionalRecord,
-            onFullQualityPreview: onFullQualityPreview
+            onFullQualityPreview: onFullQualityPreview,
+            progressObserver: progressObserver,
+            progressiveFinalization: progressiveFinalization
         )
     }
 
@@ -217,7 +223,9 @@ final class ImageLoadCoordinator: Sendable {
     private func loadTaskLocal(
         request: ImageRequest,
         generation: NamespaceGeneration,
-        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?
+        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?,
+        progressObserver: TransportProgressObserver?,
+        progressiveFinalization: PipelineProgressiveFinalization?
     ) async throws -> DecodedImage {
         guard request.cachePolicy != .onlyIfCached else {
             throw PipelineFailure.onlyIfCachedMiss
@@ -225,14 +233,16 @@ final class ImageLoadCoordinator: Sendable {
         let response = try await fetchStage.response(
             for: request,
             conditionalRecord: nil,
-            generation: generation
+            generation: generation,
+            progressObserver: progressObserver
         )
         return try await responseProcessor.process200(
             response,
             request: request,
             generation: generation,
             allowReusableState: false,
-            onFullQualityPreview: onFullQualityPreview
+            onFullQualityPreview: onFullQualityPreview,
+            progressiveFinalization: progressiveFinalization
         )
     }
 
@@ -336,20 +346,24 @@ final class ImageLoadCoordinator: Sendable {
         request: ImageRequest,
         generation: NamespaceGeneration,
         conditionalRecord: RepresentationRecord?,
-        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?
+        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?,
+        progressObserver: TransportProgressObserver?,
+        progressiveFinalization: PipelineProgressiveFinalization?
     ) async throws -> DecodedImage {
         do {
             let response = try await fetchStage.response(
                 for: request,
                 conditionalRecord: conditionalRecord,
-                generation: generation
+                generation: generation,
+                progressObserver: progressObserver
             )
             return try await processNetworkResponse(
                 response,
                 request: request,
                 generation: generation,
                 conditionalRecord: conditionalRecord,
-                onFullQualityPreview: onFullQualityPreview
+                onFullQualityPreview: onFullQualityPreview,
+                progressiveFinalization: progressiveFinalization
             )
         } catch let failure as PipelineFailure {
             if failure.disposition != .cancelled,
@@ -379,14 +393,16 @@ final class ImageLoadCoordinator: Sendable {
         request: ImageRequest,
         generation: NamespaceGeneration,
         conditionalRecord: RepresentationRecord?,
-        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?
+        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?,
+        progressiveFinalization: PipelineProgressiveFinalization?
     ) async throws -> DecodedImage {
         guard response.head.statusCode == 304 else {
             return try await responseProcessor.process200(
                 response,
                 request: request,
                 generation: generation,
-                onFullQualityPreview: onFullQualityPreview
+                onFullQualityPreview: onFullQualityPreview,
+                progressiveFinalization: progressiveFinalization
             )
         }
         return try await responseProcessor.process304(

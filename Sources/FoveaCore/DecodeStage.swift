@@ -58,6 +58,63 @@ package final class DecodeStage: Sendable {
             )
     }
 
+    package var progressiveEncodedByteLimit: Int { limits.maximumEncodedBytes }
+
+    package func makeProgressiveSession(
+        for request: ImageRequest,
+        format: EncodedImageFormat
+    ) throws -> (any ImageProgressiveDecodeSession)? {
+        guard codecDescriptor.capabilities.progressiveFormats.contains(format),
+            let progressive = codec as? any ProgressiveImageDecoding
+        else { return nil }
+        return try progressive.makeProgressiveSession(
+            format: format,
+            request: Self.decodeRequest(for: request),
+            limits: limits
+        )
+    }
+
+    package func appendProgressive(
+        _ chunk: Data,
+        to session: any ImageProgressiveDecodeSession
+    ) async throws -> ImageProgressiveDecodeGeneration? {
+        try Task.checkCancellation()
+        let generation = try await executor.run {
+            try session.append(chunk)
+        }
+        try Task.checkCancellation()
+        return generation
+    }
+
+    package func finishProgressive(
+        _ session: any ImageProgressiveDecodeSession
+    ) async throws {
+        try Task.checkCancellation()
+        try await executor.run {
+            try session.finish()
+        }
+    }
+
+    package func finishProgressiveWithPreparation(
+        _ session: any ProgressiveImagePreparingSession
+    ) async throws -> ImageProgressiveDecodePreparationFinalization {
+        try Task.checkCancellation()
+        let finalization = try await executor.run {
+            try session.finishWithPreparation()
+        }
+        try Task.checkCancellation()
+        return finalization
+    }
+
+    package func discardProgressivePreparation(
+        _ preparation: ImageDecodePreparation
+    ) async {
+        guard let preparedDecoder = codec as? any PreparedImageDecoding else { return }
+        _ = try? await executor.run {
+            preparedDecoder.discard(preparation)
+        }
+    }
+
     func cancelAll(namespace: SecurityNamespaceID) async {
         _ = await registry.cancelAll { $0.namespace == namespace }
     }
@@ -68,7 +125,8 @@ package final class DecodeStage: Sendable {
         contentID: ContentID,
         request: ImageRequest,
         generation: NamespaceGeneration,
-        keyDigest: String
+        keyDigest: String,
+        preparation: ImageDecodePreparation? = nil
     ) async throws -> DecodedImage {
         let decodeKey = DecodeKey(
             contentID: contentID,
@@ -93,7 +151,8 @@ package final class DecodeStage: Sendable {
                 data: data,
                 request: request,
                 keyDigest: keyDigest,
-                priorityControl: priorityControl
+                priorityControl: priorityControl,
+                preparation: preparation
             )
         }
 
@@ -152,7 +211,8 @@ package final class DecodeStage: Sendable {
         data: Data,
         request: ImageRequest,
         keyDigest: String,
-        priorityControl: SharedTaskPriorityControl
+        priorityControl: SharedTaskPriorityControl,
+        preparation: ImageDecodePreparation?
     ) async throws -> DecodedImage {
         try Task.checkCancellation()
         await diagnostics.record(
@@ -164,12 +224,18 @@ package final class DecodeStage: Sendable {
         )
 
         let decodeRequest = Self.decodeRequest(for: request)
-        let plan = try await prepareDecode(
-            data: data,
-            request: request,
-            keyDigest: keyDigest,
-            priorityControl: priorityControl
-        )
+        let plan: DecodePlan
+        if let preparation {
+            try preparation.probe.validateForFovea(under: limits)
+            plan = DecodePlan(probe: preparation.probe, preparation: preparation)
+        } else {
+            plan = try await prepareDecode(
+                data: data,
+                request: request,
+                keyDigest: keyDigest,
+                priorityControl: priorityControl
+            )
+        }
         let image = try await admitAndDecode(
             data: data,
             plan: plan,

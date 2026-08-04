@@ -1,8 +1,20 @@
 {
   "schemaVersion": 1,
   "allowlistID": "FOVEA-CONCURRENCY-ESCAPE-ALLOWLIST-V1",
-  "reviewedOn": "2026-07-30",
+  "reviewedOn": "2026-08-04",
   "entries": [
+    {
+      "path": "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "The demonstration URLProtocol is instantiated and called by Foundation across concurrency domains. Its mutable fixture and client-delivery state are serialized by its explicit lock/queue discipline and it is confined to the non-production Workbench example target.",
+      "requiredTokens": [
+        "@unchecked Sendable"
+      ],
+      "evidence": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift"
+      ]
+    },
     {
       "path": "Sources/FoveaCore/AdaptiveEncodedWarmupCoordinator.swift",
       "kind": "detached-task",
@@ -18,18 +30,6 @@
       "evidence": [
         "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
         "Tests/FoveaTests/SwiftUIStateTests.swift"
-      ]
-    },
-    {
-      "path": "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift",
-      "kind": "unchecked-sendable",
-      "expectedCount": 1,
-      "reason": "The demonstration URLProtocol is instantiated and called by Foundation across concurrency domains. Its mutable fixture and client-delivery state are serialized by its explicit lock/queue discipline and it is confined to the non-production Workbench example target.",
-      "requiredTokens": [
-        "@unchecked Sendable"
-      ],
-      "evidence": [
-        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift"
       ]
     },
     {
@@ -72,6 +72,78 @@
       ],
       "evidence": [
         "Tests/FoveaTests/ImageDecoderTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 2,
+      "reason": "The prepared-progressive codec and its nested session are deterministic test doubles for one-time preparation adoption and fallback. Both use private NSLock-protected token, byte-count and terminal state; they do not escape the test process or wrap production ImageIO objects.",
+      "requiredTokens": [
+        "PreparedProgressiveCodec:",
+        "@unchecked Sendable",
+        "private let lock = NSLock()",
+        "private final class Session: ProgressiveImagePreparingSession"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
+      "kind": "dispatch-semaphore",
+      "expectedCount": 1,
+      "reason": "A private test publication barrier uses one DispatchSemaphore to deterministically hold and release a background presentation callback while asserting main-thread behavior. It is bounded by the test lifecycle and is never used by production code.",
+      "requiredTokens": [
+        "DispatchSemaphore",
+        "ProgressivePublicationBarrier"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 5,
+      "reason": "The progressive presentation host tests bridge display-link callbacks, URLProtocol callbacks and deterministic publication barriers across Foundation and UIKit concurrency domains. Every shared mutable trace, transfer and fixture state is confined to this test file and protected by its explicit lock, queue or semaphore protocol.",
+      "requiredTokens": [
+        "@unchecked Sendable",
+        "ProgressivePublicationBarrier",
+        "ProgressiveHostTrace",
+        "ProgressiveURLSessionLoader",
+        "ProgressiveURLSessionTransfer"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
+      "kind": "unsafe-nonisolated",
+      "expectedCount": 1,
+      "reason": "The test-only URLProtocol fixture exposes immutable static fixture state to Foundation callback entry points that cannot be actor isolated. Mutation is not performed through the unsafe declaration, and all per-request state remains instance-owned and synchronized.",
+      "requiredTokens": [
+        "nonisolated(unsafe)",
+        "ProgressiveFixtureURLProtocol"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/URLSessionTransportTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "TransportProgressRecorder is a test-only callback recorder invoked by URLSession transport callbacks from unrelated executors. Its event kinds, cumulative byte counts and completion identity are read and mutated only under one private NSLock.",
+      "requiredTokens": [
+        "TransportProgressRecorder: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "func record(_ event: TransportProgressEvent)",
+        "func snapshot() -> Snapshot"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
       ]
     }
   ]

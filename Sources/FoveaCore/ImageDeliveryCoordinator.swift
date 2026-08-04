@@ -42,7 +42,8 @@ final class ImageDeliveryCoordinator: Sendable {
         contentID: ContentID,
         request: ImageRequest,
         generation: NamespaceGeneration,
-        keyDigest: String
+        keyDigest: String,
+        preparation: ImageDecodePreparation? = nil
     ) async throws -> DecodedImage {
         try Task.checkCancellation()
         try await requireActive(generation, for: request.namespace)
@@ -51,8 +52,13 @@ final class ImageDeliveryCoordinator: Sendable {
             contentID: contentID,
             request: request,
             generation: generation,
-            keyDigest: keyDigest
+            keyDigest: keyDigest,
+            preparation: preparation
         )
+    }
+
+    func discardProgressivePreparation(_ preparation: ImageDecodePreparation) async {
+        await decodeStage.discardProgressivePreparation(preparation)
     }
 
     func validateEncodedData(

@@ -635,6 +635,73 @@ final class URLSessionTransportTests: XCTestCase {
         XCTAssertNil(response.head.headers["Content-Type"])
     }
 
+    func testProgressObserverPublishesOnlyStagedBytesAndCompletesInOrder_HTTP_PT_008() async throws
+    {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [ChunkedURLProtocol.self]
+        let transport = URLSessionTransport(
+            configuration: configuration,
+            stagingDirectory: try makeTemporaryDirectory("url-session-progress")
+        )
+        let url = try XCTUnwrap(URL(string: "https://transport.example.test/progress"))
+        let expected = ChunkedURLProtocol.body(for: url)
+        let recorder = TransportProgressRecorder()
+
+        let response = try await transport.execute(
+            try TransportRequest(
+                request: URLRequest(url: url),
+                maximumBytes: expected.count + 1,
+                memoryThreshold: 1024,
+                credentialHeaderNames: [],
+                priority: .normal,
+                priorityController: TransportPriorityController(priority: .normal),
+                progressObserver: { recorder.record($0) }
+            )
+        )
+
+        let snapshot = recorder.snapshot()
+        XCTAssertEqual(try response.body, expected)
+        XCTAssertEqual(snapshot.kinds.first, .response)
+        XCTAssertEqual(snapshot.kinds.last, .complete)
+        XCTAssertEqual(snapshot.dataByteCounts.last, expected.count)
+        XCTAssertEqual(snapshot.dataByteCounts, snapshot.dataByteCounts.sorted())
+        XCTAssertEqual(snapshot.kinds.filter { $0 == .complete }.count, 1)
+        XCTAssertEqual(snapshot.completionDigestHex, response.digestHex)
+        XCTAssertEqual(snapshot.completionByteCount, expected.count)
+    }
+
+    func testProgressObserverDoesNotPublishChunkRejectedByStaging_HTTP_PT_009() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [OversizedChunkURLProtocol.self]
+        let transport = URLSessionTransport(
+            configuration: configuration,
+            stagingDirectory: try makeTemporaryDirectory("url-session-progress-limit")
+        )
+        let url = try XCTUnwrap(URL(string: "https://oversized-chunk.example.test/image"))
+        let recorder = TransportProgressRecorder()
+
+        do {
+            _ = try await transport.execute(
+                try TransportRequest(
+                    request: URLRequest(url: url),
+                    maximumBytes: 1024,
+                    memoryThreshold: 512,
+                    credentialHeaderNames: [],
+                    priority: .normal,
+                    priorityController: TransportPriorityController(priority: .normal),
+                    progressObserver: { recorder.record($0) }
+                )
+            )
+            XCTFail("Expected staging hard-limit failure")
+        } catch let error as TransportError {
+            XCTAssertEqual(error, .bodyTooLarge)
+        }
+
+        let snapshot = recorder.snapshot()
+        XCTAssertEqual(snapshot.kinds, [.response])
+        XCTAssertTrue(snapshot.dataByteCounts.isEmpty)
+    }
+
     func testRedirectPolicyRejectsRemoteCleartextAndAllowsLoopback_SEC_CASE_033() throws {
         var original = URLRequest(
             url: try XCTUnwrap(URL(string: "https://secure.example.test/image.png"))
@@ -733,6 +800,80 @@ final class URLSessionTransportTests: XCTestCase {
             XCTAssertEqual(error, .bodyTooLarge)
         }
     }
+}
+
+private final class TransportProgressRecorder: @unchecked Sendable {
+    enum Kind: Equatable {
+        case response
+        case data
+        case complete
+    }
+
+    struct Snapshot {
+        let kinds: [Kind]
+        let dataByteCounts: [Int]
+        let completionDigestHex: String?
+        let completionByteCount: Int?
+    }
+
+    private let lock = NSLock()
+    private var kinds: [Kind] = []
+    private var dataByteCounts: [Int] = []
+    private var completionDigestHex: String?
+    private var completionByteCount: Int?
+
+    func record(_ event: TransportProgressEvent) {
+        lock.withLock {
+            switch event {
+            case .response:
+                kinds.append(.response)
+            case .data(_, let cumulativeByteCount):
+                kinds.append(.data)
+                dataByteCounts.append(cumulativeByteCount)
+            case .complete(let digestHex, let byteCount):
+                kinds.append(.complete)
+                completionDigestHex = digestHex
+                completionByteCount = byteCount
+            }
+        }
+    }
+
+    func snapshot() -> Snapshot {
+        lock.withLock {
+            Snapshot(
+                kinds: kinds,
+                dataByteCounts: dataByteCounts,
+                completionDigestHex: completionDigestHex,
+                completionByteCount: completionByteCount
+            )
+        }
+    }
+}
+
+private final class OversizedChunkURLProtocol: URLProtocol {
+    override class func canInit(with request: URLRequest) -> Bool {
+        request.url?.host == "oversized-chunk.example.test"
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        guard let url = request.url else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
+        let response = HTTPURLResponse(
+            url: url,
+            statusCode: 200,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/octet-stream"]
+        )!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(repeating: 7, count: 4096))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
 }
 
 private final class ChunkedURLProtocol: URLProtocol {

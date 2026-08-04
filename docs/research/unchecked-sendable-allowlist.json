@@ -91,6 +91,23 @@
     },
     {
       "evidence": [
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/PipelineProgressivePreview.swift",
+      "reason": "TransportProgressRelay bridges synchronous URLSession progress callbacks into one asynchronous progressive consumer without dropping admitted bytes. One private NSLock serializes the bounded pending response, coalesced data, completion identity, waiter and terminal state; the only continuation is resumed after unlocking, and the relay enforces a single consumer.",
+      "requiredTokens": [
+        "final class TransportProgressRelay: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private let maximumBufferedBytes: Int",
+        "precondition(waiter == nil, \"TransportProgressRelay supports one consumer\")",
+        "private func popPendingLocked() -> TransportProgressEvent?"
+      ],
+      "type": "TransportProgressRelay"
+    },
+    {
+      "evidence": [
         "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift",
         "Tests/FoveaTests/StagingAndStorageTests.swift"
       ],

@@ -28,6 +28,7 @@ public final class FoveaPipeline: ProgressiveImageLoading, EncodedDataLoading, N
     let profileAccessPolicy: ProfileAccessPolicy
     let imageLoadAdmission: AdaptiveImageLoadAdmission
     let encodedWarmups: AdaptiveEncodedWarmupCoordinator
+    let progressivePreviewHub: PipelineProgressivePreviewHub
     let lifetimeAnchors = PipelineLifetimeAnchorStore()
 
     /// 使用完整 codec descriptor、能力与资源契约构造管线。
@@ -102,6 +103,12 @@ public final class FoveaPipeline: ProgressiveImageLoading, EncodedDataLoading, N
         self.imageLoadAdmission = AdaptiveImageLoadAdmission(maximumStateCount: adaptiveStateLimit)
         self.encodedWarmups = AdaptiveEncodedWarmupCoordinator(
             maximumEntryCount: adaptiveStateLimit)
+        self.progressivePreviewHub = PipelineProgressivePreviewHub(
+            decodeStage: assembly.decodeStage,
+            sharesAcrossSubscribers: transport.reusePolicy.allowsCrossRequestReuse,
+            supportsProgressObservation:
+                transport is any TransportProgressObservationSupporting
+        )
         self.cache = assembly.cache
         self.fetchStage = assembly.fetchStage
         self.decodeStage = assembly.decodeStage

@@ -4,7 +4,7 @@ import FoveaStorage
 
 /// 具备硬上限、重定向防护、环境状态净化与网络指标的 URLSession transport。
 
-public actor URLSessionTransport: HTTPTransporting {
+public actor URLSessionTransport: HTTPTransporting, TransportProgressObservationSupporting {
     public nonisolated let reusePolicy: TransportReusePolicy
 
     private nonisolated let ioExecutor = FoveaBlockingIOExecutor(label: "dev.fovea.http.transport")
@@ -125,14 +125,22 @@ public actor URLSessionTransport: HTTPTransporting {
             let received = try await consume(
                 events: events,
                 task: task,
-                accumulator: accumulator
+                accumulator: accumulator,
+                progressObserver: request.progressObserver
             )
-            return try makeResponse(
+            let response = try makeResponse(
                 response: received.response,
                 networkMetrics: received.networkMetrics,
                 accumulator: accumulator,
                 bodyDelivery: request.bodyDelivery
             )
+            request.progressObserver?(
+                .complete(
+                    digestHex: response.digestHex,
+                    byteCount: response.bodyByteCount
+                )
+            )
+            return response
         } onCancel: {
             priorityTask?.cancel()
             task.cancel()
@@ -156,7 +164,8 @@ public actor URLSessionTransport: HTTPTransporting {
     private func consume(
         events: AsyncThrowingStream<URLSessionStreamEvent, any Error>,
         task: URLSessionDataTask,
-        accumulator: BoundedStagingAccumulator
+        accumulator: BoundedStagingAccumulator,
+        progressObserver: TransportProgressObserver?
     ) async throws -> (response: HTTPURLResponse, networkMetrics: TransportNetworkMetrics?) {
         var response: HTTPURLResponse?
         var networkMetrics: TransportNetworkMetrics?
@@ -171,8 +180,16 @@ public actor URLSessionTransport: HTTPTransporting {
                     try accumulator.reserveCapacity(forExpectedByteCount: expected)
                 }
                 response = http
+                if let progressObserver {
+                    progressObserver(.response(try Self.responseHead(from: http)))
+                }
             case .data(let data):
                 try accumulator.append(data)
+                if let progressObserver {
+                    progressObserver(
+                        .data(data, cumulativeByteCount: accumulator.receivedByteCount)
+                    )
+                }
                 try Task.checkCancellation()
                 task.resume()
             case .metrics(let metrics):

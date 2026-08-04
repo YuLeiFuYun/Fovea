@@ -36,6 +36,141 @@ final class ProgressiveImageLoadingTests: XCTestCase {
         }
     }
 
+    func testConcurrentSubscribersShareOneProgressiveSessionAndReplayLatest_UI_PT_031()
+        async throws
+    {
+        let root = try makeTemporaryDirectory("shared-progressive-session")
+        let fixture = try BenchmarkFixtureCatalog.load(
+            named: "progressive-people-usda-meeting-1920x1280.jpg"
+        )
+        let transport = SharedProgressiveJPEGTransport(body: fixture.data)
+        let encoded = try await AkashicOriginalEncodedStore.open(
+            root: root.appendingPathComponent("encoded")
+        )
+        let records = try await RepresentationRecordStore.open(
+            root: root.appendingPathComponent("records")
+        )
+        let pipeline = FoveaPipeline(
+            transport: transport,
+            encodedStore: encoded,
+            recordStore: records,
+            profileAccessPolicy: .unrestricted,
+            codec: ImageIOImageDecoder()
+        )
+        let request = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/shared-progressive.jpg")),
+            target: TargetPixels(width: 512, height: 512),
+            appID: "progressive-loader-tests"
+        )
+        let first = ProgressiveSequenceRecorder()
+        let second = ProgressiveSequenceRecorder()
+        let firstTask = Task {
+            for try await event in pipeline.events(for: request) {
+                await first.record(event)
+            }
+        }
+        defer {
+            firstTask.cancel()
+            Task { await transport.releaseRemainingBytes() }
+        }
+
+        try await waitUntil("first subscriber receives the first network preview") {
+            await first.networkPreviewQualities.count == 1
+        }
+        let secondTask = Task {
+            for try await event in pipeline.events(for: request) {
+                await second.record(event)
+            }
+        }
+        defer { secondTask.cancel() }
+        try await waitUntil("late subscriber replays the latest shared preview") {
+            await second.networkPreviewQualities.count == 1
+        }
+        try await waitUntil("both subscribers join one fetch execution") {
+            await pipeline.fetchSubscriberCountForTesting(request) == 2
+        }
+
+        await transport.releaseRemainingBytes()
+        try await firstTask.value
+        try await secondTask.value
+
+        let firstSnapshot = await first.snapshot()
+        let secondSnapshot = await second.snapshot()
+        let requestCount = await transport.requestCount
+        let producerStarts = await pipeline.progressiveProducerStartCountForTesting()
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(producerStarts, 1)
+        XCTAssertEqual(firstSnapshot.networkPreviewQualities, [1, 2, 3, 4])
+        XCTAssertEqual(
+            secondSnapshot.networkPreviewQualities, firstSnapshot.networkPreviewQualities)
+        XCTAssertEqual(firstSnapshot.fullQualityPreviewCount, 0)
+        XCTAssertEqual(secondSnapshot.fullQualityPreviewCount, 0)
+        XCTAssertEqual(firstSnapshot.finalCount, 1)
+        XCTAssertEqual(secondSnapshot.finalCount, 1)
+    }
+
+    func testProgressivePreparationReusesDecodeAdmission_UI_PT_032()
+        async throws
+    {
+        let result = try await runPreparedFinalizationScenario(completionDigestOverride: nil)
+
+        XCTAssertEqual(result.fallbackPrepared, 0)
+        XCTAssertEqual(result.progressiveDecoded, 1)
+        XCTAssertEqual(result.fallbackDecoded, 0)
+        XCTAssertEqual(result.progressiveDiscarded, 0)
+    }
+
+    func testMismatchedProgressiveDigestDiscardsCandidateAndFallsBack_UI_PT_033() async throws {
+        let result = try await runPreparedFinalizationScenario(
+            completionDigestOverride: String(repeating: "0", count: 64)
+        )
+
+        XCTAssertEqual(result.fallbackPrepared, 1)
+        XCTAssertEqual(result.progressiveDecoded, 0)
+        XCTAssertEqual(result.fallbackDecoded, 1)
+        XCTAssertEqual(result.progressiveDiscarded, 1)
+    }
+
+    private func runPreparedFinalizationScenario(
+        completionDigestOverride: String?
+    ) async throws -> PreparedProgressiveCodec.Snapshot {
+        let root = try makeTemporaryDirectory("prepared-progressive-finalization")
+        let fixture = try BenchmarkFixtureCatalog.load(
+            named: "progressive-people-usda-meeting-1920x1280.jpg"
+        )
+        let transport = SharedProgressiveJPEGTransport(
+            body: fixture.data,
+            completionDigestOverride: completionDigestOverride
+        )
+        let codec = PreparedProgressiveCodec()
+        let pipeline = FoveaPipeline(
+            transport: transport,
+            encodedStore: try await AkashicOriginalEncodedStore.open(
+                root: root.appendingPathComponent("encoded")
+            ),
+            recordStore: try await RepresentationRecordStore.open(
+                root: root.appendingPathComponent("records")
+            ),
+            profileAccessPolicy: .unrestricted,
+            codec: codec
+        )
+        let request = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/prepared-progressive.jpg")),
+            target: TargetPixels(width: 32, height: 32),
+            appID: "progressive-loader-tests"
+        )
+        let consumer = Task {
+            for try await _ in pipeline.events(for: request) {}
+        }
+        defer { consumer.cancel() }
+        try await waitUntil("prepared finalization request starts") {
+            await transport.requestCount == 1
+        }
+        await transport.releaseRemainingBytes()
+        try await consumer.value
+        return codec.snapshot()
+    }
+
     func testFoveaPipelinePublishesFullQualityPreviewBeforeDurableFinal_UI_PT_024_CACHE_PT_042()
         async throws
     {
@@ -581,6 +716,286 @@ private actor StageBarrierEncodedStore: OriginalEncodedTransactionalStoring {
         released = true
         releaseWaiter?.resume()
         releaseWaiter = nil
+    }
+}
+
+private actor ProgressiveSequenceRecorder {
+    struct Snapshot: Sendable {
+        let networkPreviewQualities: [UInt16]
+        let fullQualityPreviewCount: Int
+        let finalCount: Int
+    }
+
+    private(set) var networkPreviewQualities: [UInt16] = []
+    private var fullQualityPreviewCount = 0
+    private var finalCount = 0
+
+    func record(_ event: ImageLoadingEvent) {
+        switch event {
+        case .preview(_, let quality) where quality < UInt16.max:
+            networkPreviewQualities.append(quality)
+        case .preview:
+            fullQualityPreviewCount += 1
+        case .final:
+            finalCount += 1
+        }
+    }
+
+    func snapshot() -> Snapshot {
+        Snapshot(
+            networkPreviewQualities: networkPreviewQualities,
+            fullQualityPreviewCount: fullQualityPreviewCount,
+            finalCount: finalCount
+        )
+    }
+}
+
+private final class PreparedProgressiveCodec:
+    ImageCodec, PreparedImageDecoding, ProgressiveImageDecoding, @unchecked Sendable
+{
+    struct Snapshot: Equatable {
+        let fallbackPrepared: Int
+        let progressiveDecoded: Int
+        let fallbackDecoded: Int
+        let progressiveDiscarded: Int
+    }
+
+    private enum TokenKind {
+        case progressive
+        case fallback
+    }
+
+    let codecDescriptor = ImageCodecDescriptor(
+        identifier: ImageCodecIdentifier(rawValue: "test.prepared-progressive"),
+        implementationVersion: 1,
+        capabilities: ImageCodecCapabilities(
+            formats: [.jpeg],
+            deliveryModes: [.completeFrame, .progressiveGenerations],
+            progressiveFormats: [.jpeg],
+            trackModes: [.primaryFrame],
+            metadata: [.orientation, .sourceColorProfile],
+            dynamicRanges: [.standard],
+            outputRepresentations: [.coreGraphicsImage],
+            cancellationMode: .operationBoundary
+        )
+    )
+
+    private let lock = NSLock()
+    private var tokens: [UUID: TokenKind] = [:]
+    private var fallbackPrepared = 0
+    private var progressiveDecoded = 0
+    private var fallbackDecoded = 0
+    private var progressiveDiscarded = 0
+
+    func probe(data: Data, limits: DecodeLimits) throws -> ImageProbe {
+        try Self.probe()
+    }
+
+    func decode(
+        data: Data,
+        probe: ImageProbe,
+        request: ImageDecodeRequest,
+        limits: DecodeLimits
+    ) throws -> DecodedImage {
+        lock.withLock { fallbackDecoded += 1 }
+        return try testDecodedImage(
+            width: request.target.width,
+            height: request.target.height
+        )
+    }
+
+    func prepare(data: Data, limits: DecodeLimits) throws -> ImageDecodePreparation {
+        let preparation = ImageDecodePreparation(probe: try Self.probe())
+        lock.withLock {
+            fallbackPrepared += 1
+            tokens[preparation.identifier] = .fallback
+        }
+        return preparation
+    }
+
+    func decode(
+        preparation: ImageDecodePreparation,
+        request: ImageDecodeRequest,
+        limits: DecodeLimits
+    ) throws -> DecodedImage {
+        let kind = lock.withLock { tokens.removeValue(forKey: preparation.identifier) }
+        guard let kind else { throw ImageCraftError.probeMismatch }
+        lock.withLock {
+            switch kind {
+            case .progressive: progressiveDecoded += 1
+            case .fallback: fallbackDecoded += 1
+            }
+        }
+        return try testDecodedImage(
+            width: request.target.width,
+            height: request.target.height
+        )
+    }
+
+    func discard(_ preparation: ImageDecodePreparation) {
+        let kind = lock.withLock { tokens.removeValue(forKey: preparation.identifier) }
+        if kind == .progressive { lock.withLock { progressiveDiscarded += 1 } }
+    }
+
+    func makeProgressiveSession(
+        format: EncodedImageFormat,
+        request: ImageDecodeRequest,
+        limits: DecodeLimits
+    ) throws -> any ImageProgressiveDecodeSession {
+        guard format == .jpeg else { throw ImageCraftError.progressiveDecodingUnsupported }
+        return Session(codec: self)
+    }
+
+    func snapshot() -> Snapshot {
+        lock.withLock {
+            Snapshot(
+                fallbackPrepared: fallbackPrepared,
+                progressiveDecoded: progressiveDecoded,
+                fallbackDecoded: fallbackDecoded,
+                progressiveDiscarded: progressiveDiscarded
+            )
+        }
+    }
+
+    private func progressivePreparation(byteCount: Int) throws
+        -> ImageProgressiveDecodePreparationFinalization
+    {
+        let preparation = ImageDecodePreparation(probe: try Self.probe())
+        lock.withLock { tokens[preparation.identifier] = .progressive }
+        return ImageProgressiveDecodePreparationFinalization(
+            preparation: preparation,
+            sourceByteCount: byteCount
+        )
+    }
+
+    private static func probe() throws -> ImageProbe {
+        try ImageProbe(
+            pixelWidth: 64,
+            pixelHeight: 64,
+            frameCount: 1,
+            orientation: 1,
+            format: .jpeg,
+            metadataByteCount: 0,
+            auxiliaryAttachmentCount: 0,
+            sourceColorProfile: .standardSRGB
+        )
+    }
+
+    private final class Session: ProgressiveImagePreparingSession, @unchecked Sendable {
+        private let lock = NSLock()
+        private let codec: PreparedProgressiveCodec
+        private var byteCount = 0
+        private var isClosed = false
+
+        init(codec: PreparedProgressiveCodec) {
+            self.codec = codec
+        }
+
+        var receivedByteCount: Int { lock.withLock { byteCount } }
+
+        func append(_ chunk: Data) throws -> ImageProgressiveDecodeGeneration? {
+            try lock.withLock {
+                guard !isClosed else { throw ImageCraftError.progressiveSessionFinished }
+                byteCount += chunk.count
+                return nil
+            }
+        }
+
+        func finish() throws {
+            try lock.withLock {
+                guard !isClosed else { throw ImageCraftError.progressiveSessionFinished }
+                isClosed = true
+            }
+        }
+
+        func finishWithPreparation() throws -> ImageProgressiveDecodePreparationFinalization {
+            let count = try lock.withLock {
+                guard !isClosed else { throw ImageCraftError.progressiveSessionFinished }
+                isClosed = true
+                return byteCount
+            }
+            return try codec.progressivePreparation(byteCount: count)
+        }
+
+        func cancel() { lock.withLock { isClosed = true } }
+    }
+}
+
+private actor SharedProgressiveJPEGTransport:
+    HTTPTransporting, TransportProgressObservationSupporting
+{
+    nonisolated let reusePolicy = TransportReusePolicy.reusable(
+        contextIdentifier: "shared-progressive-jpeg-test-v1"
+    )
+
+    private let body: Data
+    private let completionDigestOverride: String?
+    private var remainingBytesReleased = false
+    private var releaseWaiters: [CheckedContinuation<Void, Never>] = []
+    private(set) var requestCount = 0
+
+    init(body: Data, completionDigestOverride: String? = nil) {
+        self.body = body
+        self.completionDigestOverride = completionDigestOverride
+    }
+
+    func execute(_ request: TransportRequest) async throws -> TransportResponse {
+        requestCount += 1
+        let head = try TransportResponseHead(
+            statusCode: 200,
+            headers: [
+                "Content-Type": "image/jpeg",
+                "Content-Length": String(body.count),
+                "Cache-Control": "no-store",
+            ],
+            url: request.request.url
+        )
+        request.progressObserver?(.response(head))
+        var offset = 0
+        for _ in 0..<2 {
+            let end = min(body.count, offset + 16 * 1024)
+            request.progressObserver?(
+                .data(body.subdata(in: offset..<end), cumulativeByteCount: end)
+            )
+            offset = end
+        }
+        await waitForRemainingBytes()
+        while offset < body.count {
+            try Task.checkCancellation()
+            let end = min(body.count, offset + 16 * 1024)
+            request.progressObserver?(
+                .data(body.subdata(in: offset..<end), cumulativeByteCount: end)
+            )
+            offset = end
+            try await Task.sleep(for: .milliseconds(2))
+        }
+        let response = TransportResponse(
+            head: head,
+            body: body,
+            metrics: TransportMetrics(receivedBytes: body.count, spilledToDisk: false)
+        )
+        request.progressObserver?(
+            .complete(
+                digestHex: completionDigestOverride ?? response.digestHex,
+                byteCount: body.count
+            )
+        )
+        return response
+    }
+
+    func releaseRemainingBytes() {
+        guard !remainingBytesReleased else { return }
+        remainingBytesReleased = true
+        let waiters = releaseWaiters
+        releaseWaiters.removeAll(keepingCapacity: false)
+        for waiter in waiters { waiter.resume() }
+    }
+
+    private func waitForRemainingBytes() async {
+        guard !remainingBytesReleased else { return }
+        await withCheckedContinuation { continuation in
+            releaseWaiters.append(continuation)
+        }
     }
 }
 

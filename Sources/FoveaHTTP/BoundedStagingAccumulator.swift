@@ -29,6 +29,8 @@ package final class BoundedStagingAccumulator {
     private var count = 0
     private var finalized = false
 
+    package var receivedByteCount: Int { count }
+
     package convenience init(
         maximumBytes: Int,
         memoryThreshold: Int,

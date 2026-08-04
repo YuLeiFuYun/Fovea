@@ -113,7 +113,8 @@ final class FetchStage: Sendable {
         conditionalRecord: RepresentationRecord?,
         generation: NamespaceGeneration,
         memoryThresholdOverride: Int? = nil,
-        bodyDelivery: TransportBodyDelivery = .materialized
+        bodyDelivery: TransportBodyDelivery = .materialized,
+        progressObserver: TransportProgressObserver? = nil
     ) async throws -> TimedTransportResponse {
         let authorizedRequest = FetchRequestPreparation.authorizedRequest(
             for: request,
@@ -136,7 +137,8 @@ final class FetchStage: Sendable {
                 generation: generation,
                 executionKey: executionKey,
                 memoryThresholdOverride: memoryThresholdOverride,
-                bodyDelivery: bodyDelivery
+                bodyDelivery: bodyDelivery,
+                progressObserver: progressObserver
             )
         }
 
@@ -146,7 +148,8 @@ final class FetchStage: Sendable {
             generation: generation,
             executionKey: executionKey,
             memoryThresholdOverride: memoryThresholdOverride,
-            bodyDelivery: bodyDelivery
+            bodyDelivery: bodyDelivery,
+            progressObserver: progressObserver
         )
     }
 
@@ -156,7 +159,8 @@ final class FetchStage: Sendable {
         generation: NamespaceGeneration,
         executionKey: FetchExecutionKey,
         memoryThresholdOverride: Int?,
-        bodyDelivery: TransportBodyDelivery
+        bodyDelivery: TransportBodyDelivery,
+        progressObserver: TransportProgressObserver?
     ) async throws -> TimedTransportResponse {
         await diagnostics.recordQueued(
             executionKey: executionKey,
@@ -173,7 +177,8 @@ final class FetchStage: Sendable {
                 executionKey: executionKey,
                 priorityControl: priorityControl,
                 memoryThresholdOverride: memoryThresholdOverride,
-                bodyDelivery: bodyDelivery
+                bodyDelivery: bodyDelivery,
+                progressObserver: progressObserver
             )
             await priorityControl.finish()
             return result
@@ -193,7 +198,8 @@ final class FetchStage: Sendable {
         generation: NamespaceGeneration,
         executionKey: FetchExecutionKey,
         memoryThresholdOverride: Int?,
-        bodyDelivery: TransportBodyDelivery
+        bodyDelivery: TransportBodyDelivery,
+        progressObserver: TransportProgressObserver?
     ) async throws -> TimedTransportResponse {
         let scopedKey = ScopedFetchExecutionKey(
             namespace: request.namespace,
@@ -215,7 +221,8 @@ final class FetchStage: Sendable {
                 executionKey: executionKey,
                 priorityControl: priorityControl,
                 memoryThresholdOverride: memoryThresholdOverride,
-                bodyDelivery: bodyDelivery
+                bodyDelivery: bodyDelivery,
+                progressObserver: progressObserver
             )
         }
 
@@ -296,7 +303,8 @@ final class FetchStage: Sendable {
         executionKey: FetchExecutionKey,
         priorityControl: SharedTaskPriorityControl,
         memoryThresholdOverride: Int?,
-        bodyDelivery: TransportBodyDelivery
+        bodyDelivery: TransportBodyDelivery,
+        progressObserver: TransportProgressObserver?
     ) async throws -> TimedTransportResponse {
         var state = FetchRetryState()
 
@@ -317,7 +325,8 @@ final class FetchStage: Sendable {
                     attempt: state.attempt,
                     priorityControl: priorityControl,
                     memoryThresholdOverride: memoryThresholdOverride,
-                    bodyDelivery: bodyDelivery
+                    bodyDelivery: bodyDelivery,
+                    progressObserver: progressObserver
                 )
             } catch {
                 let failure = retryController.normalizedFailure(error)
@@ -405,7 +414,8 @@ final class FetchStage: Sendable {
         attempt: Int,
         priorityControl: SharedTaskPriorityControl,
         memoryThresholdOverride: Int?,
-        bodyDelivery: TransportBodyDelivery
+        bodyDelivery: TransportBodyDelivery,
+        progressObserver: TransportProgressObserver?
     ) async throws -> TimedTransportResponse {
         let permit = try await acquirePermit(priorityControl: priorityControl)
         let effectivePriority = await priorityControl.currentPriority()
@@ -443,7 +453,8 @@ final class FetchStage: Sendable {
                         credentialHeaderNames: request.credentialHeaderNames,
                         priority: effectivePriority.transportPriority,
                         bodyDelivery: bodyDelivery,
-                        priorityController: transportPriority
+                        priorityController: transportPriority,
+                        progressObserver: progressObserver
                     )
                 )
                 guard transportResponse.bodyByteCount <= configuration.maximumTransportBytes else {

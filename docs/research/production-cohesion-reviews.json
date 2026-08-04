@@ -9,15 +9,15 @@
         "docs/research/swift-6.4-adoption-audit-2026-08.md"
       ],
       "path": "Sources/FoveaCore/DecodeStage.swift",
-      "reason": "DecodeStage remains the Fovea host owner of probe revalidation, codec capability negotiation, generic-plus-backend working-set admission, prepared-state lifecycle, blocking execution, cancellation and aggregate diagnostics. Swift 6.4 async defer now makes subscription release, preparation discard and priority-control completion structurally unavoidable without adding mutable state or a new responsibility. These operations still form one permit, prepared-state and failure transaction; splitting before a second production backend demonstrates a stable collaborator would duplicate admission ordering, cancellation mapping or prepared-state cleanup.",
+      "reason": "DecodeStage remains the single host boundary for bounded probe validation, codec capability negotiation, conservative working-set admission, prepared-state lifecycle, blocking decode execution, cancellation and aggregate diagnostics. Progressive preparation finalization is accepted only as an already validated one-time codec token and still passes through the same probe postconditions, resource estimator, permit pools, shared decode registry and failure mapping. Splitting these paths would create a second resource-admission authority or duplicate prepared-state disposal semantics.",
       "responsibilities": [
         "host-owned bounded probe validation and preparation",
         "public codec capability and conservative resource admission",
         "decode executor, permit and prepared-state lifecycle",
         "aggregate diagnostics, failure mapping and cancellation"
       ],
-      "reviewedLineCount": 688,
-      "sha256": "283516d91f3ef2e1d70367cac6ffa0ff2fb6cd41d46866a1441b9dcbcb80105e",
+      "reviewedLineCount": 754,
+      "sha256": "16a218a62dbe90f24e90109b5c1874dceb57bceea3682042d21cd6e6d97907b2",
       "splitTriggers": [
         "a stable responsibility can move without sharing mutable state or transaction ordering",
         "the file changes after this frozen review",
@@ -26,24 +26,72 @@
     },
     {
       "evidence": [
+        "Tests/FoveaTests/URLSessionTransportTests.swift",
+        "Tests/FoveaTests/PipelineTests.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
+      ],
+      "path": "Sources/FoveaCore/FetchStage.swift",
+      "reason": "FetchStage remains the transaction owner for fetch identity, task-local versus shared execution, bounded retry, priority propagation, namespace cancellation, completion handoff and transport permit accounting. The progressive observer is a non-owning parameter forwarded into the same transport attempt after staging admission; it does not create a second network task or gain response commit authority. Splitting now would duplicate retry and shared-task ordering, while a future durable stream broadcaster or independently scheduled replay buffer would trigger extraction.",
+      "responsibilities": [
+        "fetch identity and shared subscription lifecycle",
+        "bounded retry and priority propagation",
+        "namespace and cancellation handoff",
+        "transport permit and response timing"
+      ],
+      "reviewedLineCount": 509,
+      "sha256": "bd24a170047bd13011f875ea8af4f11a0c95b77138405eef7021537677e256fa",
+      "splitTriggers": [
+        "progressive replay requires independent mutable buffering",
+        "observer registration becomes a durable shared subsystem",
+        "retry or priority policy can move without transaction ordering",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
         "Tests/FoveaTests/HTTPConformanceTests.swift",
         "Tests/FoveaTests/HTTPCachePolicyTests.swift",
-        "Tests/FoveaTests/PipelineTests.swift"
+        "Tests/FoveaTests/PipelineTests.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
       ],
       "path": "Sources/FoveaCore/HTTPImageResponseProcessor.swift",
-      "reason": "HTTPImageResponseProcessor owns one protocol transaction: validating a response, applying cache semantics, committing representations and handing verified bytes to delivery. Its branches are coupled by RFC cache and authorization invariants; extraction is deferred until a collaborator can own a complete state transition without duplicating commit barriers.",
+      "reason": "HTTPImageResponseProcessor owns one HTTP representation transaction: response validation, cache disposition, transport identity binding, original commit ordering and delivery of verified bytes. Progressive preparations are adopted only after digest and byte-count equality with the completed transport body, then enter the ordinary delivery path; mismatches are discarded and fall back safely. The extracted setup helper reduces function size without moving commit authority or duplicating RFC cache and namespace invariants.",
       "responsibilities": [
         "response and validator interpretation",
         "authorization-aware cache decisions",
         "representation commit barriers",
         "verified-byte delivery handoff"
       ],
-      "reviewedLineCount": 627,
-      "sha256": "3b90646987db61c75f3246d76a3cb833ff103ea1f5479a92e706539552c9aa20",
+      "reviewedLineCount": 734,
+      "sha256": "561a0471fecb7524032210b3a7f8049403875784e1067d36041c84afdb8747b2",
       "splitTriggers": [
         "a stable responsibility can move without sharing mutable state or transaction ordering",
         "the file changes after this frozen review",
         "a second production backend or workload demonstrates a better boundary"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/PipelineTests.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift",
+        "Tests/FoveaTests/StaleFallbackTests.swift"
+      ],
+      "path": "Sources/FoveaCore/ImageLoadCoordinator.swift",
+      "reason": "ImageLoadCoordinator remains the request-level orchestration boundary joining namespace generation, task-local versus reusable transport policy, rendered and encoded reuse, conditional fetch, stale fallback and 200/304 response processing. Progressive observation and finalization are non-owning parameters that follow the selected fetch transaction and do not acquire cache, retry or commit authority. Extraction is deferred until one branch can own a complete lifecycle without duplicating namespace checks or reusable-state ordering.",
+      "responsibilities": [
+        "request-level task-local and reusable execution selection",
+        "rendered, encoded and transport-handoff reuse ordering",
+        "conditional fetch, stale fallback and response dispatch",
+        "namespace generation and cache-policy coordination"
+      ],
+      "reviewedLineCount": 506,
+      "sha256": "f51d835eb049a98f67120398f64da9154f79533e08cd7cffc1390e5fa859be93",
+      "splitTriggers": [
+        "a stable execution branch can move without sharing namespace or cache ordering",
+        "progressive finalization gains independent retry, persistence or scheduling authority",
+        "the file changes after this frozen review",
+        "a second transport policy demonstrates a cleaner lifecycle boundary"
       ]
     },
     {
@@ -79,17 +127,17 @@
         "Tests/FoveaTests/PluggableComponentTests.swift",
         "scripts/verify-component-clean-copy.py"
       ],
-      "fileSetSha256": "17b1af22c695c7f021c22339e0072feac31af592499b83b0f14a032a35280781",
+      "fileSetSha256": "746930197a456b617aea3a193dfbb46135fd8d70dfea15ccc3b118289f447d96",
       "maximumReviewedSourceShare": 0.6,
       "module": "FoveaCore",
-      "reason": "FoveaCore remains the Fovea-owned policy and orchestration layer for request identity, geometry, resource admission, fetch/decode execution, namespace lifecycle, shared work and diagnostics. PipelineCache was split into four files after its frozen oversized-file review triggered, reducing local review scope without changing the module boundary. The cache base, rendered aliases, transport-verified handoffs and original-publication transaction still share FoveaCore identities, namespace authority, diagnostics and mutation ordering; extracting them would either import FoveaCore back into the new module or duplicate host-owned authority. The 57-file set preserves one-way package dependencies and remains below the reviewed 0.60 source-share ceiling.",
+      "reason": "FoveaCore remains the Fovea-owned policy and orchestration layer for request identity, geometry, resource admission, fetch/decode execution, namespace lifecycle, shared work and diagnostics. The new progressive preview file isolates the bounded transport-to-codec relay, shared preview hub and finalization handoff without creating a new public lifecycle or importing FoveaCore authority elsewhere. The 58-file set preserves one-way package dependencies and remains below the reviewed 0.60 source-share ceiling; extraction becomes mandatory when progressive delivery acquires independent persistence, retry or release cadence.",
       "responsibilities": [
         "request, geometry and execution identity",
         "pipeline orchestration and resource admission",
         "cache, transient handoff and namespace transaction coordination",
         "codec host conformance, shared-work lifecycle and diagnostics"
       ],
-      "reviewedFileCount": 56,
+      "reviewedFileCount": 58,
       "splitTriggers": [
         "the reviewed file set changes",
         "source share exceeds the reviewed 0.60 ceiling",
@@ -99,6 +147,6 @@
     }
   ],
   "reviewID": "FOVEA-PRODUCTION-COHESION-REVIEWS-V1",
-  "reviewedOn": "2026-08-02",
+  "reviewedOn": "2026-08-04",
   "schemaVersion": 1
 }

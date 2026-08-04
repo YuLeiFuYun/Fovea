@@ -54,6 +54,23 @@ extension FoveaPipeline {
             let cancellationHandoffLease = FetchCancellationHandoffLease()
             let imageLoadTicket = imageLoadAdmission.begin(for: request)
             let task = Task { [self] in
+                let previewFence = ProgressivePreviewPublicationFence()
+                let previewSubscription = await progressivePreviewHub.subscribe(request: request)
+                let previewTask = Task {
+                    do {
+                        for await preview in previewSubscription.stream {
+                            try Task.checkCancellation()
+                            try await previewFence.requireOpen()
+                            if case .terminated = continuation.yield(
+                                .preview(preview.image, quality: preview.quality)
+                            ) {
+                                throw CancellationError()
+                            }
+                        }
+                    } catch {
+                        // Final or cancellation closes the publication fence.
+                    }
+                }
                 do {
                     let image = try await execute {
                         try validateAccess(to: request)
@@ -75,11 +92,16 @@ extension FoveaPipeline {
                                         ) {
                                             throw CancellationError()
                                         }
-                                    }
+                                    },
+                                    progressObserver: previewSubscription.progressObserver,
+                                    progressiveFinalization: previewSubscription.finalization
                                 )
                             }
                         }
                     }
+                    await previewFence.close()
+                    await previewSubscription.cancel()
+                    previewTask.cancel()
                     try Task.checkCancellation()
                     if case .terminated = continuation.yield(.final(image)) {
                         throw CancellationError()
@@ -87,6 +109,9 @@ extension FoveaPipeline {
                     terminalState.markCompleted()
                     continuation.finish()
                 } catch {
+                    await previewFence.close()
+                    await previewSubscription.cancel()
+                    previewTask.cancel()
                     if Self.isCancellation(error),
                         terminalState.claimCancellationIfIncomplete()
                     {
@@ -229,6 +254,10 @@ extension FoveaPipeline {
 
     package func fetchSubscriberCountForTesting(_ request: ImageRequest) async -> Int {
         await fetchSubscriberCountForBenchmarking(request)
+    }
+
+    package func progressiveProducerStartCountForTesting() async -> Int {
+        await progressivePreviewHub.producerStartCountForTesting()
     }
 
     package func hasTransportVerifiedHandoffForTesting(_ request: ImageRequest) async -> Bool {

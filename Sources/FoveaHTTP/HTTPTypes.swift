@@ -125,6 +125,17 @@ package actor TransportPriorityController {
     }
 }
 
+/// 仅供当前在途订阅者观察的临时传输事件。
+/// 事件不具有 ContentID、缓存身份或持久化权限。
+package enum TransportProgressEvent: Sendable {
+    case response(TransportResponseHead)
+    case data(Data, cumulativeByteCount: Int)
+    case complete(digestHex: String, byteCount: Int)
+}
+
+package typealias TransportProgressObserver =
+    @Sendable (TransportProgressEvent) -> Void
+
 /// transport 完成时的响应体交付策略。
 ///
 /// 公开请求始终使用 `.materialized`；`.deferredFileIfStaged` 仅供包内取消 handoff，
@@ -151,6 +162,7 @@ public struct TransportRequest: Sendable {
     public let priority: TransportPriority
     package let bodyDelivery: TransportBodyDelivery
     package let priorityController: TransportPriorityController?
+    package let progressObserver: TransportProgressObserver?
 
     /// 创建有界、任务局部的传输请求。
     public init(
@@ -168,6 +180,7 @@ public struct TransportRequest: Sendable {
         self.priority = priority
         self.bodyDelivery = .materialized
         self.priorityController = nil
+        self.progressObserver = nil
     }
 
     package init(
@@ -177,7 +190,8 @@ public struct TransportRequest: Sendable {
         credentialHeaderNames: Set<String>,
         priority: TransportPriority,
         bodyDelivery: TransportBodyDelivery = .materialized,
-        priorityController: TransportPriorityController
+        priorityController: TransportPriorityController,
+        progressObserver: TransportProgressObserver? = nil
     ) throws {
         try Self.validateLimits(maximumBytes: maximumBytes, memoryThreshold: memoryThreshold)
         self.request = request
@@ -187,6 +201,7 @@ public struct TransportRequest: Sendable {
         self.priority = priority
         self.bodyDelivery = bodyDelivery
         self.priorityController = priorityController
+        self.progressObserver = progressObserver
     }
 
     private static func validateLimits(maximumBytes: Int, memoryThreshold: Int) throws {
@@ -390,6 +405,10 @@ public enum TransportError: Error, Equatable, Sendable {
 }
 
 /// 执行有界 HTTP 请求，但不应用图像缓存语义。
+
+/// 包内传输可选择承诺：所有 progress 事件来自与最终响应相同的暂存字节。
+/// 外部自定义 transport 无法访问 package-only observer，因此默认不具备该能力。
+package protocol TransportProgressObservationSupporting: HTTPTransporting {}
 
 public protocol HTTPTransporting: Sendable {
     /// 管线组合身份使用的传输复用契约。
