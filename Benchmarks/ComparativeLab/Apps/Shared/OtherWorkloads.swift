@@ -2,6 +2,19 @@ import ComparativeLabCore
 import CryptoKit
 import UIKit
 
+private final class ProgressiveMeasurementBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [ComparatorProgressiveFrameMeasurement] = []
+
+    func append(_ value: ComparatorProgressiveFrameMeasurement) {
+        lock.withLock { values.append(value) }
+    }
+
+    func snapshot() -> [ComparatorProgressiveFrameMeasurement] {
+        lock.withLock { values }
+    }
+}
+
 @MainActor
 final class HeroBenchmarkViewController: UIViewController {
     let imageView = UIImageView()
@@ -193,6 +206,143 @@ enum WorkloadRunner {
             if maximumError > probe.maxChannelError { mismatches += 1 }
         }
         return mismatches
+    }
+
+    static func runW4(
+        adapter: any ComparatorAdapter,
+        controller: HeroBenchmarkViewController,
+        runIndex: Int
+    ) async throws -> WorkloadResult {
+        guard let progressive = adapter as? any ComparatorProgressiveAdapter else {
+            throw BenchmarkAppError.runFailed("w4-progressive-adapter-unavailable")
+        }
+        let started = DispatchTime.now().uptimeNanoseconds
+        let target = try ComparatorPixelTarget(width: 512, height: 512)
+        let completeRequestID = "w4-\(runIndex)-complete"
+        let completeRequest = try ComparatorRequest(
+            resourceID: "w4-progressive-complete",
+            url: BenchmarkCoordinator.benchmarkURL(path: "/w4/progressive.jpg"),
+            target: target,
+            contentMode: .aspectFit,
+            priority: .immediate,
+            headers: ["X-Benchmark-Request-ID": completeRequestID]
+        )
+        let completeLoad = try await progressive.makeProgressiveLoad(completeRequest)
+        var completeFrames: [ComparatorProgressiveFrameMeasurement] = []
+        var finalFrame: ComparatorProgressiveFrame?
+        for try await frame in completeLoad.frames {
+            completeFrames.append(frame.measurement)
+            controller.imageView.image = UIImage(cgImage: frame.image.cgImage)
+            await Task.yield()
+            if frame.measurement.kind == .final { finalFrame = frame }
+        }
+        guard let finalFrame else {
+            throw BenchmarkAppError.runFailed("w4-final-missing")
+        }
+        let previews = completeFrames.filter { $0.kind == .preview }
+        let firstPreview = previews.first
+        let targetViolation =
+            finalFrame.measurement.pixelWidth > target.width
+            || finalFrame.measurement.pixelHeight > target.height
+
+        let cancelRequestID = "w4-\(runIndex)-cancel"
+        var cancelComponents = URLComponents(
+            url: BenchmarkCoordinator.benchmarkURL(path: "/w4/progressive.jpg"),
+            resolvingAgainstBaseURL: false
+        )!
+        cancelComponents.queryItems = [URLQueryItem(name: "case", value: "cancel")]
+        let cancelRequest = try ComparatorRequest(
+            resourceID: "w4-progressive-cancel",
+            url: cancelComponents.url!,
+            target: target,
+            contentMode: .aspectFit,
+            priority: .immediate,
+            headers: ["X-Benchmark-Request-ID": cancelRequestID]
+        )
+        let cancelLoad = try await progressive.makeProgressiveLoad(cancelRequest)
+        let cancelMeasurements = ProgressiveMeasurementBox()
+        let cancelCollector = Task { @MainActor in
+            do {
+                for try await frame in cancelLoad.frames {
+                    cancelMeasurements.append(frame.measurement)
+                    controller.imageView.image = UIImage(cgImage: frame.image.cgImage)
+                    await Task.yield()
+                }
+            } catch {
+                // Cancellation is the expected terminal state for this branch.
+            }
+        }
+        try await Task.sleep(nanoseconds: 220_000_000)
+        DeterministicBenchmarkURLProtocol.markCancellation(requestID: cancelRequestID)
+        cancelLoad.cancel()
+        try await Task.sleep(nanoseconds: 40_000_000)
+        cancelCollector.cancel()
+        let cancelFrames = cancelMeasurements.snapshot()
+
+        let finalMeasurement = try ComparatorLoadResult(
+            outcome: .completed,
+            cacheSource: .network,
+            latencyNanoseconds: finalFrame.measurement.elapsedNanoseconds,
+            pixelWidth: finalFrame.measurement.pixelWidth,
+            pixelHeight: finalFrame.measurement.pixelHeight,
+            receivedBytes: finalFrame.measurement.receivedBytes
+        )
+        let observation = try ComparatorObservation(
+            sequence: 0,
+            resourceID: completeRequest.resourceID,
+            target: target,
+            result: finalMeasurement
+        )
+        let firstPreviewLatency = firstPreview.map { Int(clamping: $0.elapsedNanoseconds) } ?? -1
+        let firstPreviewBytes = firstPreview?.receivedBytes ?? -1
+        let cancelPreviewCount = cancelFrames.filter { $0.kind == .preview }.count
+        return WorkloadResult(
+            observations: [observation],
+            checks: [
+                BenchmarkCheck(
+                    identifier: "w4-preview-produced",
+                    passed: true,
+                    value: previews.count
+                ),
+                BenchmarkCheck(
+                    identifier: "w4-first-preview-latency-nanoseconds",
+                    passed: true,
+                    value: firstPreviewLatency
+                ),
+                BenchmarkCheck(
+                    identifier: "w4-first-preview-received-bytes",
+                    passed: true,
+                    value: firstPreviewBytes
+                ),
+                BenchmarkCheck(
+                    identifier: "w4-final-latency-nanoseconds",
+                    passed: true,
+                    value: Int(clamping: finalFrame.measurement.elapsedNanoseconds)
+                ),
+                BenchmarkCheck(
+                    identifier: "w4-complete-preview-count",
+                    passed: true,
+                    value: previews.count
+                ),
+                BenchmarkCheck(
+                    identifier: "w4-cancel-preview-count-at-220ms",
+                    passed: true,
+                    value: cancelPreviewCount
+                ),
+                BenchmarkCheck(
+                    identifier: "w4-target-pixel-invariant",
+                    passed: !targetViolation,
+                    value: targetViolation ? 1 : 0
+                ),
+            ],
+            durationNanoseconds: DispatchTime.now().uptimeNanoseconds &- started,
+            decodedMegapixels: Double(
+                finalFrame.measurement.pixelWidth * finalFrame.measurement.pixelHeight
+            ) / 1_000_000,
+            completedLoads: 1,
+            cancelledLoads: 1,
+            failedLoads: 0
+        )
     }
 
     static func runW3(

@@ -15,7 +15,8 @@ enum BenchmarkAdapterFactory {
         try NukeComparatorAdapter(
             cacheDirectory: cacheDirectory,
             sessionConfiguration: sessionConfiguration,
-            maximumConcurrentDownloads: workload == .w7ThousandConcurrent ? 8 : 6
+            maximumConcurrentDownloads: workload == .w7ThousandConcurrent ? 8 : 6,
+            progressiveDecodingEnabled: workload == .w4ProgressiveJPEG
         )
     }
 }

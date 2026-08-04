@@ -67,6 +67,56 @@ private struct ExactPixelBoxProcessor: ImageProcessor {
     }
 }
 
+private final class KingfisherProgressiveBytes: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: Int?
+
+    func update(_ value: Int64) {
+        lock.withLock { self.value = max(0, Int(value)) }
+    }
+
+    func snapshot() -> Int? {
+        lock.withLock { value }
+    }
+}
+
+private final class KingfisherProgressiveObserver: @unchecked Sendable {
+    private let operation: @Sendable (KFCrossPlatformImage) -> Void
+
+    init(operation: @escaping @Sendable (KFCrossPlatformImage) -> Void) {
+        self.operation = operation
+    }
+
+    func record(_ image: KFCrossPlatformImage) {
+        operation(image)
+    }
+}
+
+private final class KingfisherProgressiveSequence: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = 0
+
+    func next() -> Int {
+        lock.withLock {
+            defer { value += 1 }
+            return value
+        }
+    }
+}
+
+private final class KingfisherProgressiveRetention: @unchecked Sendable {
+    private let lock = NSLock()
+    private var objects: [AnyObject] = []
+
+    func retain(_ objects: [AnyObject]) {
+        lock.withLock { self.objects = objects }
+    }
+
+    func clear() {
+        lock.withLock { objects.removeAll(keepingCapacity: false) }
+    }
+}
+
 private final class DownloadTaskBox: @unchecked Sendable {
     private let lock = NSLock()
     private var task: DownloadTask?
@@ -89,7 +139,7 @@ private final class DownloadTaskBox: @unchecked Sendable {
     }
 }
 
-public final class KingfisherComparatorAdapter: ComparatorAdapter, @unchecked Sendable {
+public final class KingfisherComparatorAdapter: ComparatorProgressiveAdapter, @unchecked Sendable {
     public let identity: ComparatorIdentity
 
     private let cache: ImageCache
@@ -208,6 +258,138 @@ public final class KingfisherComparatorAdapter: ComparatorAdapter, @unchecked Se
             cancel: { box.cancel() },
             waitUntilPrepared: { await preparation.wait() },
             result: { await resultTask.value }
+        )
+    }
+
+    public func makeProgressiveLoad(
+        _ request: ComparatorRequest
+    ) async throws -> ComparatorProgressiveLoad {
+        let box = DownloadTaskBox()
+        let retention = KingfisherProgressiveRetention()
+        let sequence = KingfisherProgressiveSequence()
+        let receivedBytes = KingfisherProgressiveBytes()
+        let started = DispatchTime.now().uptimeNanoseconds
+        let targetSize = CGSize(width: request.target.width, height: request.target.height)
+        let downsampling = DownsamplingImageProcessor(size: targetSize)
+        let processor: any ImageProcessor
+        switch request.contentMode {
+        case .aspectFit:
+            processor =
+                downsampling
+                |> ResizingImageProcessor(referenceSize: targetSize, mode: .aspectFit)
+                |> ExactPixelBoxProcessor(
+                    width: request.target.width, height: request.target.height)
+        case .aspectFill:
+            processor =
+                downsampling
+                |> ResizingImageProcessor(referenceSize: targetSize, mode: .aspectFill)
+                |> CroppingImageProcessor(size: targetSize)
+                |> ExactPixelBoxProcessor(
+                    width: request.target.width, height: request.target.height)
+        }
+        let resource = KF.ImageResource(downloadURL: request.url, cacheKey: request.scopedCacheKey)
+        let modifier = AnyModifier { urlRequest in
+            var modified = urlRequest
+            for (name, value) in request.headers {
+                modified.setValue(value, forHTTPHeaderField: name)
+            }
+            return modified
+        }
+        let stream = AsyncThrowingStream<ComparatorProgressiveFrame, any Error> { continuation in
+            let observer = KingfisherProgressiveObserver { image in
+                guard let rendered = Self.renderImage(image) else { return }
+                let dimensions = Self.pixelDimensions(image)
+                do {
+                    continuation.yield(
+                        ComparatorProgressiveFrame(
+                            measurement: try ComparatorProgressiveFrameMeasurement(
+                                sequence: sequence.next(),
+                                kind: .preview,
+                                elapsedNanoseconds: DispatchTime.now().uptimeNanoseconds
+                                    &- started,
+                                receivedBytes: receivedBytes.snapshot(),
+                                pixelWidth: dimensions.width,
+                                pixelHeight: dimensions.height
+                            ),
+                            image: rendered
+                        )
+                    )
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            let progressive = ImageProgressive(
+                isBlur: false, isFastestScan: true, scanInterval: 0
+            )
+            progressive.onImageUpdated.delegate(on: observer) { observer, image in
+                observer.record(image)
+                return .default
+            }
+            let options: KingfisherOptionsInfo = [
+                .targetCache(cache),
+                .downloader(downloader),
+                .processor(processor),
+                .scaleFactor(1),
+                .backgroundDecode,
+                .downloadPriority(priority(request.priority)),
+                .requestModifier(modifier),
+                .progressiveJPEG(progressive),
+            ]
+            continuation.onTermination = { @Sendable _ in
+                box.cancel()
+                retention.clear()
+            }
+            Task { @MainActor in
+                let imageView = KFCrossPlatformImageView(frame: .zero)
+                retention.retain([imageView, observer])
+                let task = imageView.kf.setImage(
+                    with: .network(resource),
+                    options: options,
+                    progressBlock: { completed, _ in receivedBytes.update(completed) },
+                    completionHandler: { result in
+                        defer { retention.clear() }
+                        switch result {
+                        case .success(let value):
+                            guard let rendered = Self.renderImage(value.image) else {
+                                continuation.finish(
+                                    throwing: URLError(.cannotDecodeContentData)
+                                )
+                                return
+                            }
+                            let dimensions = Self.pixelDimensions(value.image)
+                            do {
+                                continuation.yield(
+                                    ComparatorProgressiveFrame(
+                                        measurement: try ComparatorProgressiveFrameMeasurement(
+                                            sequence: sequence.next(),
+                                            kind: .final,
+                                            elapsedNanoseconds: DispatchTime.now().uptimeNanoseconds
+                                                &- started,
+                                            receivedBytes: receivedBytes.snapshot(),
+                                            pixelWidth: dimensions.width,
+                                            pixelHeight: dimensions.height
+                                        ),
+                                        image: rendered
+                                    )
+                                )
+                                continuation.finish()
+                            } catch {
+                                continuation.finish(throwing: error)
+                            }
+                        case .failure(let error):
+                            continuation.finish(throwing: error)
+                        }
+                    }
+                )
+                box.install(task)
+            }
+        }
+        return ComparatorProgressiveLoad(
+            cancel: {
+                box.cancel()
+                retention.clear()
+            },
+            frames: stream
         )
     }
 

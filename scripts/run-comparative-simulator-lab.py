@@ -386,8 +386,8 @@ def main() -> int:
     parser.add_argument(
         "--workload",
         action="append",
-        choices=["W1-SCROLL-V1", "W2-HERO-V1", "W3-AUTH-V1"],
-        help="Limit calibration to selected workloads; default runs W1, W2 and W3.",
+        choices=["W1-SCROLL-V1", "W2-HERO-V1", "W3-AUTH-V1", "W4-PROGRESSIVE-JPEG-V1"],
+        help="Limit calibration to selected workloads; W4 uses the constrained network profile.",
     )
     parser.add_argument(
         "--build-only",
@@ -403,6 +403,11 @@ def main() -> int:
         "--install-only",
         action="store_true",
         help="Install selected prebuilt Release apps without rebuilding or measuring.",
+    )
+    parser.add_argument(
+        "--diagnostic",
+        action="store_true",
+        help="Skip the quiescent-host gate for rapid directional runs; never claim-eligible.",
     )
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--skip-prepare", action="store_true")
@@ -490,7 +495,13 @@ def main() -> int:
         if not args.skip_build:
             build_apps(env, selected)
             install_existing_apps(env, udid, selected)
-        assert_measurement_host_quiet(root=ROOT)
+        if args.diagnostic:
+            print(
+                "Diagnostic mode: quiescent-host gate skipped; artifacts are directional only.",
+                flush=True,
+            )
+        else:
+            assert_measurement_host_quiet(root=ROOT)
         paths=[]
         for index,spec in enumerate(specs,1):
             comparator=spec["comparator"]
@@ -515,7 +526,8 @@ def main() -> int:
             source.unlink(missing_ok=True)
             run([
                 "xcrun","simctl","launch","--terminate-running-process",udid,bundle,
-                "--workload",spec["workload"],"--cache-state",spec["cache"],"--network-profile","NET-LOCAL-V1",
+                "--workload",spec["workload"],"--cache-state",spec["cache"],"--network-profile",
+                "NET-CONSTRAINED-V1" if spec["workload"] == "W4-PROGRESSIVE-JPEG-V1" else "NET-LOCAL-V1",
                 "--run-index","0","--time-scale",str(spec["scale"]),"--output",name,
             ],env=child,timeout=60)
             deadline=time.monotonic()+240

@@ -44,12 +44,15 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     private var assetFiles: [String: (URL, String)] = [:]
     private var heroFiles: [String: URL] = [:]
     private var probeFiles: [String: (URL, String)] = [:]
+    private var progressiveFile: URL?
     private var profile: BenchmarkNetworkProfile = .local
     private var cancelledRequestIDs: Set<String> = []
     private var offlineRoutes: Set<String> = []
     private var requestCount = 0
     private var deliveredBytes = 0
     private var postCancellationBytes = 0
+    private var cancellationMarkedAtNanoseconds: [String: UInt64] = [:]
+    private var cancellationAcknowledgementNanoseconds: [UInt64] = []
     private var completedRequestCount = 0
     private var stoppedRequestCount = 0
     private var redirectAuthorizationLeakCount = 0
@@ -84,6 +87,13 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         for probe in catalog.correctnessProbes.probes {
             probes[probe.identifier] = (try catalog.probeURL(for: probe), probe.mimeType)
         }
+        guard
+            let progressive = catalog.bundle.url(
+                forResource: "w4-progressive-1920x1280", withExtension: "jpg"
+            )
+        else {
+            throw BenchmarkAppError.missingResource("w4-progressive")
+        }
         let accountA = Self.solidPNG(red: 0.92, green: 0.12, blue: 0.10)
         let accountB = Self.solidPNG(red: 0.10, green: 0.22, blue: 0.92)
         let neutral = Self.solidPNG(red: 0.18, green: 0.72, blue: 0.35)
@@ -91,6 +101,7 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         assetFiles = files
         heroFiles = heroes
         probeFiles = probes
+        progressiveFile = progressive
         self.profile = profile
         accountAData = accountA
         accountBData = accountB
@@ -147,6 +158,8 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         requestCount = 0
         deliveredBytes = 0
         postCancellationBytes = 0
+        cancellationMarkedAtNanoseconds.removeAll(keepingCapacity: true)
+        cancellationAcknowledgementNanoseconds.removeAll(keepingCapacity: true)
         completedRequestCount = 0
         stoppedRequestCount = 0
         redirectAuthorizationLeakCount = 0
@@ -163,8 +176,10 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     }
 
     func markCancellation(requestID: String) {
+        let now = DispatchTime.now().uptimeNanoseconds
         lock.lock()
         cancelledRequestIDs.insert(requestID)
+        cancellationMarkedAtNanoseconds[requestID] = now
         lock.unlock()
     }
 
@@ -181,10 +196,16 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         lock.unlock()
     }
 
-    func record(bytes: Int, requestID: String?) {
+    func record(
+        bytes: Int,
+        requestID: String?,
+        deliveryStartedAtNanoseconds: UInt64
+    ) {
         lock.lock()
         deliveredBytes += bytes
-        if let requestID, cancelledRequestIDs.contains(requestID) {
+        if let requestID, let marked = cancellationMarkedAtNanoseconds[requestID],
+            deliveryStartedAtNanoseconds >= marked
+        {
             postCancellationBytes += bytes
         }
         lock.unlock()
@@ -196,9 +217,15 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         lock.unlock()
     }
 
-    func stop() {
+    func stop(requestID: String?) {
+        let now = DispatchTime.now().uptimeNanoseconds
         lock.lock()
         stoppedRequestCount += 1
+        if let requestID, let marked = cancellationMarkedAtNanoseconds.removeValue(forKey: requestID),
+            now >= marked
+        {
+            cancellationAcknowledgementNanoseconds.append(now - marked)
+        }
         lock.unlock()
     }
 
@@ -362,10 +389,21 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     func snapshot() -> BenchmarkOriginMetrics {
         let preparationWaitCount = w7SharedPreparationWaitSnapshot()
         lock.lock()
+        let acknowledgement = cancellationAcknowledgementNanoseconds.sorted()
+        let acknowledgementP95: UInt64
+        if acknowledgement.isEmpty {
+            acknowledgementP95 = 0
+        } else {
+            let rank = max(1, Int(ceil(Double(acknowledgement.count) * 0.95)))
+            acknowledgementP95 = acknowledgement[min(acknowledgement.count - 1, rank - 1)]
+        }
         let value = BenchmarkOriginMetrics(
             requestCount: requestCount,
             deliveredBytes: deliveredBytes,
             postCancellationBytes: postCancellationBytes,
+            cancellationAcknowledgementCount: acknowledgement.count,
+            cancellationAcknowledgementP95Nanoseconds: acknowledgementP95,
+            cancellationAcknowledgementMaximumNanoseconds: acknowledgement.last ?? 0,
             completedRequestCount: completedRequestCount,
             stoppedRequestCount: stoppedRequestCount,
             redirectAuthorizationLeakCount: redirectAuthorizationLeakCount,
@@ -393,6 +431,7 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         let files = assetFiles
         let heroes = heroFiles
         let probes = probeFiles
+        let progressive = progressiveFile
         let a = accountAData
         let b = accountBData
         let neutral = neutralData
@@ -435,6 +474,16 @@ private final class BenchmarkOriginState: @unchecked Sendable {
             return OriginResource(
                 data: try Data(contentsOf: file, options: [.mappedIfSafe]),
                 mimeType: mimeType,
+                statusCode: 200,
+                headers: ["Cache-Control": "no-store"],
+                delayNanoseconds: 0
+            )
+        }
+        if route == "/w4/progressive.jpg" {
+            guard let progressive else { return nil }
+            return OriginResource(
+                data: try Data(contentsOf: progressive, options: [.mappedIfSafe]),
+                mimeType: "image/jpeg",
                 statusCode: 200,
                 headers: ["Cache-Control": "no-store"],
                 delayNanoseconds: 0
@@ -666,8 +715,13 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
                     deadline: .now()
                         + .nanoseconds(Int(min(UInt64(Int.max), initialDelay + transferDelay)))
                 ) { [weak self] in
+                    let deliveryStartedAt = DispatchTime.now().uptimeNanoseconds
                     guard let self, !self.isStopped else { return }
-                    self.state.record(bytes: chunk.count, requestID: requestID)
+                    self.state.record(
+                        bytes: chunk.count,
+                        requestID: requestID,
+                        deliveryStartedAtNanoseconds: deliveryStartedAt
+                    )
                     self.client?.urlProtocol(self, didLoad: chunk)
                     if end == resource.data.count {
                         self.client?.urlProtocolDidFinishLoading(self)
@@ -695,7 +749,9 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
         w7ServiceIdentifier = nil
         stopLock.unlock()
         if !wasStopped {
-            state.stop()
+            state.stop(
+                requestID: request.value(forHTTPHeaderField: "X-Benchmark-Request-ID")
+            )
             if let serviceIdentifier { state.releaseW7Service(serviceIdentifier) }
         }
     }

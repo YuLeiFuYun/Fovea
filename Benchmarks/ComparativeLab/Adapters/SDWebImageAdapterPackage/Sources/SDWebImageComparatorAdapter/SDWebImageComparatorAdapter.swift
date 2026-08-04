@@ -32,6 +32,23 @@ private final class SDOperationBox: @unchecked Sendable {
     }
 }
 
+private final class SDProgressiveState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var sequence = 0
+    private var receivedBytes: Int?
+
+    func update(receivedBytes: Int) {
+        lock.withLock { self.receivedBytes = max(0, receivedBytes) }
+    }
+
+    func next() -> (sequence: Int, receivedBytes: Int?) {
+        lock.withLock {
+            defer { sequence += 1 }
+            return (sequence, receivedBytes)
+        }
+    }
+}
+
 private final class SDResultBox: @unchecked Sendable {
     private let lock = NSLock()
     private var output: ComparatorLoadOutput?
@@ -64,7 +81,7 @@ private final class SDResultBox: @unchecked Sendable {
     }
 }
 
-public final class SDWebImageComparatorAdapter: ComparatorAdapter, @unchecked Sendable {
+public final class SDWebImageComparatorAdapter: ComparatorProgressiveAdapter, @unchecked Sendable {
     public let identity: ComparatorIdentity
 
     private let cache: SDImageCache
@@ -170,6 +187,72 @@ public final class SDWebImageComparatorAdapter: ComparatorAdapter, @unchecked Se
             cancel: { box.cancel() },
             result: { await resultBox.value() }
         )
+    }
+
+    public func makeProgressiveLoad(
+        _ request: ComparatorRequest
+    ) async throws -> ComparatorProgressiveLoad {
+        let target = CGSize(width: request.target.width, height: request.target.height)
+        let scaleMode: SDImageScaleMode =
+            request.contentMode == .aspectFit ? .aspectFit : .aspectFill
+        let transformer = SDImageResizingTransformer(size: target, scaleMode: scaleMode)
+        let keyFilter = SDWebImageCacheKeyFilter { _ in request.scopedCacheKey }
+        let modifier = SDWebImageDownloaderRequestModifier(headers: request.headers)
+        #if canImport(UIKit)
+            let targetValue = NSValue(cgSize: target)
+        #else
+            let targetValue = NSValue(size: target)
+        #endif
+        let context: [SDWebImageContextOption: Any] = [
+            .imageTransformer: transformer,
+            .imageThumbnailPixelSize: targetValue,
+            .cacheKeyFilter: keyFilter,
+            .downloadRequestModifier: modifier,
+        ]
+        let started = DispatchTime.now().uptimeNanoseconds
+        let box = SDOperationBox()
+        let state = SDProgressiveState()
+        let stream = AsyncThrowingStream<ComparatorProgressiveFrame, any Error> { continuation in
+            let operation = manager.loadImage(
+                with: request.url,
+                options: [.scaleDownLargeImages, .progressiveLoad],
+                context: context,
+                progress: { received, _, _ in state.update(receivedBytes: received) }
+            ) { image, _, error, _, finished, _ in
+                guard let image, let rendered = Self.renderImage(image) else {
+                    if finished {
+                        continuation.finish(
+                            throwing: error ?? URLError(.cannotDecodeContentData)
+                        )
+                    }
+                    return
+                }
+                let snapshot = state.next()
+                let dimensions = Self.pixelDimensions(image)
+                do {
+                    continuation.yield(
+                        ComparatorProgressiveFrame(
+                            measurement: try ComparatorProgressiveFrameMeasurement(
+                                sequence: snapshot.sequence,
+                                kind: finished ? .final : .preview,
+                                elapsedNanoseconds: DispatchTime.now().uptimeNanoseconds
+                                    &- started,
+                                receivedBytes: snapshot.receivedBytes,
+                                pixelWidth: dimensions.width,
+                                pixelHeight: dimensions.height
+                            ),
+                            image: rendered
+                        )
+                    )
+                    if finished { continuation.finish() }
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            box.install(operation)
+            continuation.onTermination = { @Sendable _ in box.cancel() }
+        }
+        return ComparatorProgressiveLoad(cancel: { box.cancel() }, frames: stream)
     }
 
     public func purgeMemory() async {

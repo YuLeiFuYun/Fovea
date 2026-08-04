@@ -10,7 +10,29 @@ private enum FoveaComparatorAdapterError: Error {
     case incompleteProgressiveStream
 }
 
-public actor FoveaComparatorAdapter: ComparatorAdapter {
+private final class FoveaProgressiveTaskBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: Task<Void, Never>?
+    private var cancellationRequested = false
+
+    func install(_ task: Task<Void, Never>) {
+        let cancel = lock.withLock {
+            self.task = task
+            return cancellationRequested
+        }
+        if cancel { task.cancel() }
+    }
+
+    func cancel() {
+        let task = lock.withLock {
+            cancellationRequested = true
+            return self.task
+        }
+        task?.cancel()
+    }
+}
+
+public actor FoveaComparatorAdapter: ComparatorProgressiveAdapter {
     public nonisolated let identity: ComparatorIdentity
 
     private let cacheDirectory: URL
@@ -155,6 +177,76 @@ public actor FoveaComparatorAdapter: ComparatorAdapter {
             },
             result: { await task.value }
         )
+    }
+
+    public func makeProgressiveLoad(
+        _ request: ComparatorRequest
+    ) async throws -> ComparatorProgressiveLoad {
+        guard let system else { throw FoveaComparatorAdapterError.runtimeUnavailable }
+        let credentialNames = request.headers.keys.filter {
+            $0 == "authorization" || $0 == "cookie"
+        }.reduce(into: Set<String>()) { $0.insert($1) }
+        let isAuthenticated = !credentialNames.isEmpty
+        let imageRequest = try ImageRequest(
+            url: request.url,
+            target: TargetPixels(width: request.target.width, height: request.target.height),
+            contentMode: request.contentMode == .aspectFit ? .fit : .fill,
+            namespace: SecurityNamespaceID(request.securityNamespace),
+            authorizationContext: isAuthenticated
+                ? AuthorizationContextID("benchmark-auth-\(request.securityNamespace)") : .public,
+            credentialGeneration: isAuthenticated ? CredentialGeneration(1) : nil,
+            priority: priority(request.priority),
+            headers: request.headers,
+            credentialHeaderNames: credentialNames
+        )
+        let started = DispatchTime.now().uptimeNanoseconds
+        let source = system.pipeline.events(for: imageRequest)
+        let taskBox = FoveaProgressiveTaskBox()
+        let stream = AsyncThrowingStream<ComparatorProgressiveFrame, any Error> { continuation in
+            let worker = Task {
+                do {
+                    var sequence = 0
+                    for try await event in source {
+                        let kind: ComparatorProgressiveFrameKind
+                        let image: DecodedImage
+                        switch event {
+                        case .preview(let value, let quality):
+                            guard quality < UInt16.max else { continue }
+                            kind = .preview
+                            image = value
+                        case .final(let value):
+                            kind = .final
+                            image = value
+                        }
+                        let measurement = try ComparatorProgressiveFrameMeasurement(
+                            sequence: sequence,
+                            kind: kind,
+                            elapsedNanoseconds: DispatchTime.now().uptimeNanoseconds &- started,
+                            pixelWidth: image.pixelWidth,
+                            pixelHeight: image.pixelHeight
+                        )
+                        sequence += 1
+                        continuation.yield(
+                            ComparatorProgressiveFrame(
+                                measurement: measurement,
+                                image: ComparatorRenderImage(cgImage: image.cgImage)
+                            )
+                        )
+                        if kind == .final {
+                            continuation.finish()
+                            return
+                        }
+                    }
+                    try Task.checkCancellation()
+                    throw FoveaComparatorAdapterError.incompleteProgressiveStream
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            taskBox.install(worker)
+            continuation.onTermination = { @Sendable _ in taskBox.cancel() }
+        }
+        return ComparatorProgressiveLoad(cancel: { taskBox.cancel() }, frames: stream)
     }
 
     public func purgeMemory() async {

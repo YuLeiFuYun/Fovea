@@ -262,6 +262,16 @@ enum BenchmarkCoordinator {
                 adapter: adapter,
                 runIndex: arguments.runIndex
             )
+        case .w4ProgressiveJPEG:
+            let controller = HeroBenchmarkViewController()
+            window.rootViewController = controller
+            window.makeKeyAndVisible()
+            await Task.yield()
+            result = try await WorkloadRunner.runW4(
+                adapter: adapter,
+                controller: controller,
+                runIndex: arguments.runIndex
+            )
         case .w7ThousandConcurrent:
             let controller = BenchmarkStatusViewController()
             controller.loadViewIfNeeded()
@@ -485,7 +495,7 @@ enum BenchmarkCoordinator {
                     _ = try await adapter.makeLoad(request).result()
                 }
             }
-        case .w3AuthGallery, .w7ThousandConcurrent:
+        case .w3AuthGallery, .w4ProgressiveJPEG, .w7ThousandConcurrent:
             break
         }
         if state == .warmDisk { await adapter.purgeMemory() }

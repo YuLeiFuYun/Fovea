@@ -313,6 +313,76 @@ public struct ComparatorLoad: Sendable {
     }
 }
 
+public enum ComparatorProgressiveFrameKind: String, Codable, Equatable, Sendable {
+    case preview
+    case final
+}
+
+public struct ComparatorProgressiveFrameMeasurement: Codable, Equatable, Sendable {
+    public let sequence: Int
+    public let kind: ComparatorProgressiveFrameKind
+    public let elapsedNanoseconds: UInt64
+    public let receivedBytes: Int?
+    public let pixelWidth: Int
+    public let pixelHeight: Int
+
+    public init(
+        sequence: Int,
+        kind: ComparatorProgressiveFrameKind,
+        elapsedNanoseconds: UInt64,
+        receivedBytes: Int? = nil,
+        pixelWidth: Int,
+        pixelHeight: Int
+    ) throws {
+        guard sequence >= 0, receivedBytes.map({ $0 >= 0 }) ?? true,
+            (1...32_768).contains(pixelWidth), (1...32_768).contains(pixelHeight)
+        else {
+            throw ComparativeLabError.invalidMeasurement
+        }
+        self.sequence = sequence
+        self.kind = kind
+        self.elapsedNanoseconds = elapsedNanoseconds
+        self.receivedBytes = receivedBytes
+        self.pixelWidth = pixelWidth
+        self.pixelHeight = pixelHeight
+    }
+}
+
+public struct ComparatorProgressiveFrame: @unchecked Sendable {
+    public let measurement: ComparatorProgressiveFrameMeasurement
+    public let image: ComparatorRenderImage
+
+    public init(
+        measurement: ComparatorProgressiveFrameMeasurement,
+        image: ComparatorRenderImage
+    ) {
+        self.measurement = measurement
+        self.image = image
+    }
+}
+
+public struct ComparatorProgressiveLoad: Sendable {
+    private let cancelOperation: @Sendable () -> Void
+    public let frames: AsyncThrowingStream<ComparatorProgressiveFrame, any Error>
+
+    public init(
+        cancel: @escaping @Sendable () -> Void,
+        frames: AsyncThrowingStream<ComparatorProgressiveFrame, any Error>
+    ) {
+        self.cancelOperation = cancel
+        self.frames = frames
+    }
+
+    public func cancel() {
+        cancelOperation()
+    }
+}
+
+public protocol ComparatorProgressiveAdapter: ComparatorAdapter {
+    func makeProgressiveLoad(_ request: ComparatorRequest) async throws
+        -> ComparatorProgressiveLoad
+}
+
 public protocol ComparatorAdapter: Sendable {
     var identity: ComparatorIdentity { get }
 
@@ -327,6 +397,7 @@ public enum ComparativeWorkloadID: String, Codable, CaseIterable, Sendable {
     case w1FeedScroll = "W1-SCROLL-V1"
     case w2DetailHero = "W2-HERO-V1"
     case w3AuthGallery = "W3-AUTH-V1"
+    case w4ProgressiveJPEG = "W4-PROGRESSIVE-JPEG-V1"
     case w7ThousandConcurrent = "W7-THOUSAND-CONCURRENT-V1"
 }
 

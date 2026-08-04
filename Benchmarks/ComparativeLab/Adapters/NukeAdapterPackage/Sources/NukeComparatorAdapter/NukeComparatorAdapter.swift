@@ -8,7 +8,29 @@ import Nuke
     import AppKit
 #endif
 
-public final class NukeComparatorAdapter: ComparatorAdapter, @unchecked Sendable {
+private final class NukeProgressiveTaskBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: Task<Void, Never>?
+    private var cancellationRequested = false
+
+    func install(_ task: Task<Void, Never>) {
+        let cancel = lock.withLock {
+            self.task = task
+            return cancellationRequested
+        }
+        if cancel { task.cancel() }
+    }
+
+    func cancel() {
+        let task = lock.withLock {
+            cancellationRequested = true
+            return self.task
+        }
+        task?.cancel()
+    }
+}
+
+public final class NukeComparatorAdapter: ComparatorProgressiveAdapter, @unchecked Sendable {
     public let identity: ComparatorIdentity
 
     private let pipeline: ImagePipeline
@@ -18,7 +40,8 @@ public final class NukeComparatorAdapter: ComparatorAdapter, @unchecked Sendable
         cacheDirectory: URL,
         memoryCostLimit: Int = 128 * 1_024 * 1_024,
         sessionConfiguration: URLSessionConfiguration = .ephemeral,
-        maximumConcurrentDownloads: Int = 6
+        maximumConcurrentDownloads: Int = 6,
+        progressiveDecodingEnabled: Bool = false
     ) throws {
         identity = try ComparatorIdentity(
             name: "Nuke",
@@ -41,7 +64,8 @@ public final class NukeComparatorAdapter: ComparatorAdapter, @unchecked Sendable
         configuration.dataCache = dataCache
         configuration.dataCachePolicy = .storeOriginalData
         configuration.imageCache = ImageCache(costLimit: max(1, memoryCostLimit))
-        configuration.isProgressiveDecodingEnabled = false
+        configuration.isProgressiveDecodingEnabled = progressiveDecodingEnabled
+        configuration.progressiveDecodingInterval = 0
         pipeline = ImagePipeline(configuration: configuration)
     }
 
@@ -117,6 +141,117 @@ public final class NukeComparatorAdapter: ComparatorAdapter, @unchecked Sendable
                     )
                 }
             }
+        )
+    }
+
+    public func makeProgressiveLoad(
+        _ request: ComparatorRequest
+    ) async throws -> ComparatorProgressiveLoad {
+        let contentMode: ImageProcessingOptions.ContentMode =
+            request.contentMode == .aspectFit ? .aspectFit : .aspectFill
+        var urlRequest = URLRequest(url: request.url)
+        for (name, value) in request.headers {
+            urlRequest.setValue(value, forHTTPHeaderField: name)
+        }
+        var nukeRequest = ImageRequest(
+            urlRequest: urlRequest,
+            priority: priority(request.priority)
+        )
+        nukeRequest.imageID = request.scopedCacheKey
+        let targetSize = CGSize(width: request.target.width, height: request.target.height)
+        nukeRequest.thumbnail = ImageRequest.ThumbnailOptions(
+            size: targetSize,
+            unit: .pixels,
+            contentMode: contentMode
+        )
+        if request.contentMode == .aspectFill {
+            nukeRequest.processors = [
+                ImageProcessors.Resize(
+                    size: targetSize,
+                    unit: .pixels,
+                    contentMode: .aspectFill,
+                    crop: true
+                )
+            ]
+        }
+        let imageTask = pipeline.imageTask(with: nukeRequest)
+        let started = DispatchTime.now().uptimeNanoseconds
+        let taskBox = NukeProgressiveTaskBox()
+        let stream = AsyncThrowingStream<ComparatorProgressiveFrame, any Error> { continuation in
+            let worker = Task {
+                var sequence = 0
+                var receivedBytes: Int?
+                for await event in imageTask.events {
+                    do {
+                        switch event {
+                        case .started:
+                            continue
+                        case .progress(let progress):
+                            receivedBytes = max(0, Int(progress.completed))
+                        case .preview(let response):
+                            guard let image = Self.renderImage(response.image) else { continue }
+                            let dimensions = Self.pixelDimensions(response.image)
+                            continuation.yield(
+                                ComparatorProgressiveFrame(
+                                    measurement: try ComparatorProgressiveFrameMeasurement(
+                                        sequence: sequence,
+                                        kind: .preview,
+                                        elapsedNanoseconds: DispatchTime.now().uptimeNanoseconds
+                                            &- started,
+                                        receivedBytes: receivedBytes,
+                                        pixelWidth: dimensions.width,
+                                        pixelHeight: dimensions.height
+                                    ),
+                                    image: image
+                                )
+                            )
+                            sequence += 1
+                        case .finished(let result):
+                            switch result {
+                            case .success(let response):
+                                guard let image = Self.renderImage(response.image) else {
+                                    throw URLError(.cannotDecodeContentData)
+                                }
+                                let dimensions = Self.pixelDimensions(response.image)
+                                continuation.yield(
+                                    ComparatorProgressiveFrame(
+                                        measurement: try ComparatorProgressiveFrameMeasurement(
+                                            sequence: sequence,
+                                            kind: .final,
+                                            elapsedNanoseconds: DispatchTime.now()
+                                                .uptimeNanoseconds &- started,
+                                            receivedBytes: receivedBytes,
+                                            pixelWidth: dimensions.width,
+                                            pixelHeight: dimensions.height
+                                        ),
+                                        image: image
+                                    )
+                                )
+                                continuation.finish()
+                            case .failure(let error):
+                                continuation.finish(throwing: error)
+                            }
+                            return
+                        }
+                    } catch {
+                        continuation.finish(throwing: error)
+                        return
+                    }
+                }
+                continuation.finish()
+            }
+            taskBox.install(worker)
+            continuation.onTermination = { @Sendable _ in
+                taskBox.cancel()
+                imageTask.cancel()
+            }
+        }
+        return ComparatorProgressiveLoad(
+            cancel: {
+                taskBox.cancel()
+                imageTask.cancel()
+            },
+            frames: stream
         )
     }
 

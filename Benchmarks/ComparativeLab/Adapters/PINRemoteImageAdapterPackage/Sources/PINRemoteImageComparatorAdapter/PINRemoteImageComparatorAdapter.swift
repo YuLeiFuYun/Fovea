@@ -71,6 +71,18 @@ private final class PINOperationBox: @unchecked Sendable {
     }
 }
 
+private final class PINProgressiveSequence: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = 0
+
+    func next() -> Int {
+        lock.withLock {
+            defer { value += 1 }
+            return value
+        }
+    }
+}
+
 private final class PINActiveLoadRegistry: @unchecked Sendable {
     private let lock = NSLock()
     private var cancellations: [UUID: @Sendable () -> Void] = [:]
@@ -135,7 +147,9 @@ private final class PINResultRelay: @unchecked Sendable {
     }
 }
 
-public final class PINRemoteImageComparatorAdapter: ComparatorAdapter, @unchecked Sendable {
+public final class PINRemoteImageComparatorAdapter: ComparatorProgressiveAdapter,
+    @unchecked Sendable
+{
     public let identity: ComparatorIdentity
 
     private let manager: PINRemoteImageManager
@@ -164,6 +178,9 @@ public final class PINRemoteImageComparatorAdapter: ComparatorAdapter, @unchecke
         let configuration = PINRemoteImageManagerConfiguration()
         configuration.maxConcurrentDownloads = UInt(max(1, maximumConcurrentDownloads))
         configuration.maxConcurrentOperations = UInt(max(1, maximumConcurrentDownloads))
+        configuration.estimatedRemainingTimeThreshold = 0
+        configuration.shouldBlurProgressive = false
+        configuration.maxProgressiveRenderSize = CGSize(width: 8192, height: 8192)
         let imageCache = PINRemoteImageManager.defaultImageTtlCache()
         manager = PINRemoteImageManager(
             sessionConfiguration: session,
@@ -316,6 +333,110 @@ public final class PINRemoteImageComparatorAdapter: ComparatorAdapter, @unchecke
             cancel: { task.cancel() },
             waitUntilPrepared: { await preparation.wait() },
             result: { await task.value }
+        )
+    }
+
+    public func makeProgressiveLoad(
+        _ request: ComparatorRequest
+    ) async throws -> ComparatorProgressiveLoad {
+        let started = DispatchTime.now().uptimeNanoseconds
+        let token = scopeToken(request)
+        headerRegistry.register(token: token, headers: request.headers)
+        let url = scopedURL(request.url, token: token)
+        let box = PINOperationBox()
+        let sequence = PINProgressiveSequence()
+        let operationID = UUID()
+        let stream = AsyncThrowingStream<ComparatorProgressiveFrame, any Error> { continuation in
+            let cancelOperation: @Sendable () -> Void = { [self] in
+                box.cancel(manager: manager)
+                activeLoads.remove(id: operationID)
+            }
+            activeLoads.register(id: operationID, cancellation: cancelOperation)
+            let progressDownload: PINRemoteImageManagerProgressDownload = { completed, _ in
+                box.record(receivedBytes: completed)
+            }
+            let progressImage: PINRemoteImageManagerImageCompletion = { result in
+                guard let image = result.image,
+                    let resized = Self.resize(
+                        image, target: request.target, contentMode: request.contentMode
+                    ),
+                    let cgImage = Self.cgImage(resized)
+                else { return }
+                let snapshot = box.snapshot()
+                do {
+                    continuation.yield(
+                        ComparatorProgressiveFrame(
+                            measurement: try ComparatorProgressiveFrameMeasurement(
+                                sequence: sequence.next(),
+                                kind: .preview,
+                                elapsedNanoseconds: DispatchTime.now().uptimeNanoseconds
+                                    &- started,
+                                receivedBytes: snapshot.receivedBytes,
+                                pixelWidth: cgImage.width,
+                                pixelHeight: cgImage.height
+                            ),
+                            image: ComparatorRenderImage(cgImage: cgImage)
+                        )
+                    )
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            let completion: PINRemoteImageManagerImageCompletion = { [activeLoads] result in
+                activeLoads.remove(id: operationID)
+                guard let image = result.image,
+                    let resized = Self.resize(
+                        image, target: request.target, contentMode: request.contentMode
+                    ),
+                    let cgImage = Self.cgImage(resized)
+                else {
+                    continuation.finish(
+                        throwing: result.error ?? URLError(.cannotDecodeContentData)
+                    )
+                    return
+                }
+                let snapshot = box.snapshot()
+                do {
+                    continuation.yield(
+                        ComparatorProgressiveFrame(
+                            measurement: try ComparatorProgressiveFrameMeasurement(
+                                sequence: sequence.next(),
+                                kind: .final,
+                                elapsedNanoseconds: DispatchTime.now().uptimeNanoseconds
+                                    &- started,
+                                receivedBytes: snapshot.receivedBytes,
+                                pixelWidth: cgImage.width,
+                                pixelHeight: cgImage.height
+                            ),
+                            image: ComparatorRenderImage(cgImage: cgImage)
+                        )
+                    )
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            let options: PINRemoteImageManagerDownloadOptions = [
+                .disallowAlternateRepresentations,
+                .downloadOptionsSkipRetry,
+            ]
+            let uuid = manager.downloadImage(
+                with: url,
+                options: options,
+                priority: Self.priority(request.priority),
+                progressImage: progressImage,
+                progressDownload: progressDownload,
+                completion: completion
+            )
+            box.install(uuid, manager: manager)
+            continuation.onTermination = { @Sendable _ in cancelOperation() }
+        }
+        return ComparatorProgressiveLoad(
+            cancel: {
+                box.cancel(manager: self.manager)
+                self.activeLoads.remove(id: operationID)
+            },
+            frames: stream
         )
     }
 

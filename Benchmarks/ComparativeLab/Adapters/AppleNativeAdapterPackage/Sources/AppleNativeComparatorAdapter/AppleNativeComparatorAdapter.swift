@@ -41,6 +41,28 @@ private struct NativeFetchPayload: @unchecked Sendable {
     let reusable: Bool
 }
 
+private final class NativeProgressiveTransferBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var transfer: AppleProgressiveTransfer?
+    private var cancellationRequested = false
+
+    func install(_ transfer: AppleProgressiveTransfer) {
+        let cancel = lock.withLock {
+            self.transfer = transfer
+            return cancellationRequested
+        }
+        if cancel { transfer.cancel() }
+    }
+
+    func cancel() {
+        let transfer = lock.withLock {
+            cancellationRequested = true
+            return self.transfer
+        }
+        transfer?.cancel()
+    }
+}
+
 private final class NativeDataTaskBox: @unchecked Sendable {
     private let lock = NSLock()
     private var task: URLSessionDataTask?
@@ -312,10 +334,201 @@ private final class NativeImageBox: NSObject, @unchecked Sendable {
     }
 }
 
-public final class AppleNativeComparatorAdapter: ComparatorAdapter, @unchecked Sendable {
+private final class AppleProgressiveTransfer: NSObject, URLSessionDataDelegate,
+    URLSessionTaskDelegate, @unchecked Sendable
+{
+    private static let previewThresholds = [32 * 1024, 64 * 1024, 128 * 1024, 256 * 1024]
+
+    private struct State {
+        var body = Data()
+        var thresholdIndex = 0
+        var sequence = 0
+        var terminal = false
+        weak var task: URLSessionDataTask?
+    }
+
+    private let configuration: URLSessionConfiguration
+    private let request: URLRequest
+    private let target: ComparatorPixelTarget
+    private let started: UInt64
+    private let continuation:
+        AsyncThrowingStream<ComparatorProgressiveFrame, any Error>.Continuation
+    private let source: CGImageSource
+    private let lock = NSLock()
+    private var state = State()
+    private var session: URLSession?
+
+    init(
+        configuration: URLSessionConfiguration,
+        request: URLRequest,
+        target: ComparatorPixelTarget,
+        started: UInt64,
+        continuation: AsyncThrowingStream<ComparatorProgressiveFrame, any Error>.Continuation
+    ) throws {
+        let source = CGImageSourceCreateIncremental(nil)
+        self.configuration = configuration
+        self.request = request
+        self.target = target
+        self.started = started
+        self.continuation = continuation
+        self.source = source
+        super.init()
+    }
+
+    func start() {
+        let queue = OperationQueue()
+        queue.name = "dev.fovea.comparative.apple-progressive"
+        queue.maxConcurrentOperationCount = 1
+        let session = URLSession(
+            configuration: configuration,
+            delegate: self,
+            delegateQueue: queue
+        )
+        let task = session.dataTask(with: request)
+        lock.withLock {
+            self.session = session
+            state.task = task
+        }
+        task.resume()
+    }
+
+    func cancel() {
+        let values = lock.withLock { () -> (URLSessionDataTask?, URLSession?, Bool) in
+            guard !state.terminal else { return (nil, nil, false) }
+            state.terminal = true
+            return (state.task, session, true)
+        }
+        guard values.2 else { return }
+        values.0?.cancel()
+        continuation.finish(throwing: CancellationError())
+        values.1?.invalidateAndCancel()
+    }
+
+    func urlSession(
+        _: URLSession,
+        dataTask _: URLSessionDataTask,
+        didReceive response: URLResponse,
+        completionHandler: @escaping @Sendable (URLSession.ResponseDisposition) -> Void
+    ) {
+        guard let http = response as? HTTPURLResponse,
+            (200...299).contains(http.statusCode),
+            http.mimeType?.lowercased() == "image/jpeg"
+        else {
+            completionHandler(.cancel)
+            finish(throwing: URLError(.badServerResponse))
+            return
+        }
+        completionHandler(.allow)
+    }
+
+    func urlSession(
+        _: URLSession,
+        dataTask _: URLSessionDataTask,
+        didReceive data: Data
+    ) {
+        let snapshot = lock.withLock { () -> (Data, Int, Int)? in
+            guard !state.terminal else { return nil }
+            state.body.append(data)
+            guard state.thresholdIndex < Self.previewThresholds.count,
+                state.body.count >= Self.previewThresholds[state.thresholdIndex]
+            else { return (state.body, -1, state.body.count) }
+            state.thresholdIndex += 1
+            let sequence = state.sequence
+            state.sequence += 1
+            return (state.body, sequence, state.body.count)
+        }
+        guard let snapshot else { return }
+        CGImageSourceUpdateData(source, snapshot.0 as CFData, false)
+        guard snapshot.1 >= 0, let image = makeImage() else { return }
+        do {
+            continuation.yield(
+                ComparatorProgressiveFrame(
+                    measurement: try ComparatorProgressiveFrameMeasurement(
+                        sequence: snapshot.1,
+                        kind: .preview,
+                        elapsedNanoseconds: DispatchTime.now().uptimeNanoseconds &- started,
+                        receivedBytes: snapshot.2,
+                        pixelWidth: image.width,
+                        pixelHeight: image.height
+                    ),
+                    image: ComparatorRenderImage(cgImage: image)
+                )
+            )
+        } catch {
+            finish(throwing: error)
+        }
+    }
+
+    func urlSession(
+        _: URLSession,
+        task _: URLSessionTask,
+        didCompleteWithError error: (any Error)?
+    ) {
+        if let error {
+            if (error as? URLError)?.code == .cancelled {
+                finish(throwing: CancellationError())
+            } else {
+                finish(throwing: error)
+            }
+            return
+        }
+        let snapshot = lock.withLock { (state.body, state.sequence, state.body.count) }
+        CGImageSourceUpdateData(source, snapshot.0 as CFData, true)
+        guard let image = makeImage() else {
+            finish(throwing: URLError(.cannotDecodeContentData))
+            return
+        }
+        do {
+            continuation.yield(
+                ComparatorProgressiveFrame(
+                    measurement: try ComparatorProgressiveFrameMeasurement(
+                        sequence: snapshot.1,
+                        kind: .final,
+                        elapsedNanoseconds: DispatchTime.now().uptimeNanoseconds &- started,
+                        receivedBytes: snapshot.2,
+                        pixelWidth: image.width,
+                        pixelHeight: image.height
+                    ),
+                    image: ComparatorRenderImage(cgImage: image)
+                )
+            )
+            finish(throwing: nil)
+        } catch {
+            finish(throwing: error)
+        }
+    }
+
+    private func makeImage() -> CGImage? {
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: max(target.width, target.height),
+            kCGImageSourceShouldCacheImmediately: true,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
+
+    private func finish(throwing error: (any Error)?) {
+        let shouldFinish = lock.withLock { () -> Bool in
+            guard !state.terminal else { return false }
+            state.terminal = true
+            return true
+        }
+        guard shouldFinish else { return }
+        if let error {
+            continuation.finish(throwing: error)
+        } else {
+            continuation.finish()
+        }
+        session?.finishTasksAndInvalidate()
+    }
+}
+
+public final class AppleNativeComparatorAdapter: ComparatorProgressiveAdapter, @unchecked Sendable {
     public let identity: ComparatorIdentity
 
     private let session: URLSession
+    private let progressiveConfiguration: URLSessionConfiguration
     private let sessionDelegate: NativeSessionDelegate
     private let urlCache: URLCache
     private let imageCache = NSCache<NSString, NativeImageBox>()
@@ -352,6 +565,9 @@ public final class AppleNativeComparatorAdapter: ComparatorAdapter, @unchecked S
         configuration.httpCookieStorage = nil
         configuration.urlCredentialStorage = nil
         configuration.httpShouldSetCookies = false
+        progressiveConfiguration = configuration.copy() as! URLSessionConfiguration
+        progressiveConfiguration.urlCache = nil
+        progressiveConfiguration.requestCachePolicy = .reloadIgnoringLocalCacheData
         let sessionDelegate = NativeSessionDelegate()
         self.sessionDelegate = sessionDelegate
         session = URLSession(
@@ -454,6 +670,30 @@ public final class AppleNativeComparatorAdapter: ComparatorAdapter, @unchecked S
             },
             result: { await resultTask.value }
         )
+    }
+
+    public func makeProgressiveLoad(
+        _ request: ComparatorRequest
+    ) async throws -> ComparatorProgressiveLoad {
+        let started = DispatchTime.now().uptimeNanoseconds
+        let transferBox = NativeProgressiveTransferBox()
+        let stream = AsyncThrowingStream<ComparatorProgressiveFrame, any Error> { continuation in
+            do {
+                let transfer = try AppleProgressiveTransfer(
+                    configuration: progressiveConfiguration,
+                    request: makeURLRequest(request),
+                    target: request.target,
+                    started: started,
+                    continuation: continuation
+                )
+                transferBox.install(transfer)
+                continuation.onTermination = { @Sendable _ in transferBox.cancel() }
+                transfer.start()
+            } catch {
+                continuation.finish(throwing: error)
+            }
+        }
+        return ComparatorProgressiveLoad(cancel: { transferBox.cancel() }, frames: stream)
     }
 
     public func purgeMemory() async {
