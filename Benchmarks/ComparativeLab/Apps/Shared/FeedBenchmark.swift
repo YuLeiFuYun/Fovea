@@ -65,6 +65,7 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
     private let accumulator = ObservationAccumulator()
     private var tasks: [Task<Void, Never>] = []
     private var lateResultsRejected = 0
+    private var isStopping = false
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 8
@@ -112,6 +113,7 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
         NSLog("FOVEA_STAGE=scroll-start")
         await driver.run()
         NSLog("FOVEA_STAGE=scroll-finished")
+        isStopping = true
         for case let cell as FeedBenchmarkCell in collectionView.visibleCells { cell.cancel() }
         NSLog("FOVEA_STAGE=cancel-all-start")
         await adapter.cancelAll()
@@ -137,6 +139,11 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
                     identifier: "target-pixel-box",
                     passed: snapshot.targetPixelViolationCount == 0,
                     value: snapshot.targetPixelViolationCount
+                ),
+                BenchmarkCheck(
+                    identifier: "failed-load-count-zero",
+                    passed: snapshot.failed == 0,
+                    value: snapshot.failed
                 ),
             ],
             durationNanoseconds: duration,
@@ -189,6 +196,10 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
     }
 
     private func startLoad(cell: FeedBenchmarkCell, logicalIndex: Int) {
+        guard !isStopping else {
+            cell.cancel()
+            return
+        }
         cell.cancel()
         let token = cell.token
         let asset = catalog.dataset.assets[logicalIndex % catalog.dataset.assets.count]
