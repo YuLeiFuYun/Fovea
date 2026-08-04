@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "evidenceID": "FOVEA-CACHE-LAB-V4-FORMAL-2026-08-04",
+  "generatedAt": "2026-08-04T07:54:54+08:00",
+  "status": "local-formal-claim-eligible",
+  "scope": {
+    "planID": "FOVEA-CACHE-LAB-V4",
+    "benchmarkScope": "all",
+    "comparators": {
+      "memory": [
+        "LRUCache 1.2.1",
+        "PINCache 3.0.4 PINMemoryCache"
+      ],
+      "diskPrimary": [
+        "PINCache 3.0.4 PINDiskCache with Fovea durable validation wrapper"
+      ],
+      "diskDescriptive": [
+        "PINCache 3.0.4 PINDiskCache native"
+      ]
+    },
+    "claimBoundary": "Applies only to preregistered CacheLab V4 common-contract endpoints and named comparator revisions. It is not a universal claim over all cache libraries, workloads, platforms, energy, or application-level image loading."
+  },
+  "sourceIdentity": {
+    "Akashic": {
+      "commit": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
+      "declaredRevision": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
+      "dependencyMode": "source-control-checkout",
+      "includesWorkingTreeChanges": false,
+      "sourceTreeDigest": "2262300825d83b08ee70c8f1ec23e2ae8fa64defc61527371b760a8892fb052b"
+    },
+    "Fovea": {
+      "commit": "7ef9aa1320a930ac913b122e5e37007053f974d9",
+      "dependencyMode": "root-worktree",
+      "includesWorkingTreeChanges": false,
+      "sourceTreeDigest": "ba63b3f7019976b783d0ff467f2c38d68dd5582c2fb3719a4a0182cc537ef4ef"
+    }
+  },
+  "methodIdentity": {
+    "experimentPlanDigest": "3628fb8e4e4bbe259070ff5a9ef4ccdefbe40f519c27d5d8f3c67acc551d0979",
+    "claimFamilyDigest": "be98c53c526a8c44692eef70b8f0751dd2db7925db0ea764dd58d07837cb4610",
+    "analysisSHA256": "8c7486d332fc8f4de525d5bf053a87b8142c23c12ddefab85bf33b43d48c1ced",
+    "rawResultsSHA256": "6536cc4a35c3640a4e7dcb25ceaf57987b7ee6e6839259425be4680e38b9cc12",
+    "hostExecutionSHA256": "06ad7740095d05e5c6e2d7baaabb51d4e89fcf76dffc5bdf08b93b495ae60911",
+    "bootstrapIterations": 10000,
+    "confidenceLevel": 0.95,
+    "multipleComparisonCorrection": "Holm-within-metric-family",
+    "resamplingUnit": "independent runner process after within-process median"
+  },
+  "execution": {
+    "mode": "formal",
+    "acceptedProcessBlocks": 20,
+    "rejectedAttempts": 0,
+    "quiescentHostBound": true,
+    "trustedCleanSource": true,
+    "hostPolicyID": "external-compiler-process-block-v3"
+  },
+  "decision": {
+    "bestClaimEligible": true,
+    "bestClaimBlockedReasons": [],
+    "dominancePerformanceGatePassed": true,
+    "statisticalPerformanceGatePassed": true,
+    "foveaCorrectnessFailures": [],
+    "primaryComparatorCorrectnessFailures": [],
+    "dominanceFailures": [],
+    "inconclusiveMetrics": [],
+    "statisticallyInferiorMetrics": []
+  },
+  "comparisons": [
+    {
+      "metric": "memory-hot-scan-hit-rate",
+      "comparator": "LRUCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "higher",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": null,
+      "confidenceRatio95": null,
+      "orientedMedianDifference": 1.0,
+      "confidenceInterval95": [
+        1.0,
+        1.0
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.05
+    },
+    {
+      "metric": "memory-hot-scan-hit-rate",
+      "comparator": "PINMemoryCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "higher",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": null,
+      "confidenceRatio95": null,
+      "orientedMedianDifference": 1.0,
+      "confidenceInterval95": [
+        1.0,
+        1.0
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.05
+    },
+    {
+      "metric": "memory-hot-scan-throughput",
+      "comparator": "LRUCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "higher",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 1.2685241479168683,
+      "confidenceRatio95": [
+        1.2625639998545237,
+        1.283155024707908
+      ],
+      "orientedMedianDifference": 0.2378541364679399,
+      "confidenceInterval95": [
+        0.2331445738366117,
+        0.24932190819223338
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "memory-hot-scan-throughput",
+      "comparator": "PINMemoryCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "higher",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 34.420486928978896,
+      "confidenceRatio95": [
+        34.27451540560184,
+        34.73516948625219
+      ],
+      "orientedMedianDifference": 3.538651937370689,
+      "confidenceInterval95": [
+        3.5344020869268933,
+        3.5477527035413807
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "memory-hot-scan-p99-latency",
+      "comparator": "LRUCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "lower",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 1.411565212501341,
+      "confidenceRatio95": [
+        1.349730296843526,
+        1.472617875401105
+      ],
+      "orientedMedianDifference": 0.34469916849529,
+      "confidenceInterval95": [
+        0.2999047923757258,
+        0.38704168454586124
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "memory-hot-scan-p99-latency",
+      "comparator": "PINMemoryCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "lower",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 46.422127144351016,
+      "confidenceRatio95": [
+        43.499021604807844,
+        48.880451885937866
+      ],
+      "orientedMedianDifference": 3.837776223672993,
+      "confidenceInterval95": [
+        3.772738445998195,
+        3.8893775596229365
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "memory-concurrent-throughput",
+      "comparator": "LRUCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "higher",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 3.1089254781003546,
+      "confidenceRatio95": [
+        3.0328960432114163,
+        3.24923936020083
+      ],
+      "orientedMedianDifference": 1.134277161056419,
+      "confidenceInterval95": [
+        1.1095179528837615,
+        1.1784209259341762
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "memory-concurrent-throughput",
+      "comparator": "PINMemoryCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "higher",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 24.767628793745917,
+      "confidenceRatio95": [
+        23.626900937100814,
+        25.82130304212064
+      ],
+      "orientedMedianDifference": 3.2095375099623955,
+      "confidenceInterval95": [
+        3.1623859330889035,
+        3.2511998505324327
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "memory-concurrent-p99-latency",
+      "comparator": "LRUCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "lower",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 2.8337197678241246,
+      "confidenceRatio95": [
+        2.555002389294837,
+        3.214152765713133
+      ],
+      "orientedMedianDifference": 1.0415902541718842,
+      "confidenceInterval95": [
+        0.9380531587999807,
+        1.1675637975215027
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "memory-concurrent-p99-latency",
+      "comparator": "PINMemoryCache",
+      "semanticGroup": "memory-common-contract",
+      "direction": "lower",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 19.417751206181233,
+      "confidenceRatio95": [
+        16.993800302021963,
+        22.64764687038279
+      ],
+      "orientedMedianDifference": 2.966187658330144,
+      "confidenceInterval95": [
+        2.832848589424978,
+        3.120055955599679
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "disk-write-throughput",
+      "comparator": "PINDiskCacheDurableValidated",
+      "semanticGroup": "content-validated-durable-commit",
+      "direction": "higher",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 1.762166295864043,
+      "confidenceRatio95": [
+        1.7032647951464086,
+        1.8121387844903012
+      ],
+      "orientedMedianDifference": 0.5665439020980484,
+      "confidenceInterval95": [
+        0.5325468770548201,
+        0.5945077965698439
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "disk-read-throughput",
+      "comparator": "PINDiskCacheDurableValidated",
+      "semanticGroup": "content-validated-durable-commit",
+      "direction": "higher",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 1.6960315828517787,
+      "confidenceRatio95": [
+        1.6604889140605041,
+        1.754862770841431
+      ],
+      "orientedMedianDifference": 0.5282911591608168,
+      "confidenceInterval95": [
+        0.5071120855464966,
+        0.5623906606078315
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    },
+    {
+      "metric": "disk-p99-read-latency",
+      "comparator": "PINDiskCacheDurableValidated",
+      "semanticGroup": "content-validated-durable-commit",
+      "direction": "lower",
+      "classification": "fovea-superior",
+      "sampleCount": 20,
+      "orientedMedianRatio": 2.1765537942823734,
+      "confidenceRatio95": [
+        2.0717676350290177,
+        2.3582669880871796
+      ],
+      "orientedMedianDifference": 0.7777427976626827,
+      "confidenceInterval95": [
+        0.7284021728522216,
+        0.857927022205619
+      ],
+      "dominanceSatisfied": true,
+      "dominanceBoundOriented": 0.18232155679395465
+    }
+  ],
+  "remainingReleaseStrengthWork": [
+    "independent or trusted-CI replication on the same exact source and method identities",
+    "held-out real-image and phase-changing traces for dynamic-regret claims",
+    "expanded real process-kill and crash matrix for persistence recovery",
+    "cross-platform and application-level end-to-end validation"
+  ]
+}

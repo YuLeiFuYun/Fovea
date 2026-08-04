@@ -682,7 +682,7 @@
     {
       "acceptedPurpose": "durability、恢复、外部删除",
       "blockers": [
-        "clean trusted formal rerun",
+        "independent or trusted-CI formal replication",
         "real process-kill matrix expansion",
         "held-out corpus"
       ],
@@ -703,13 +703,14 @@
         "CH-EXTERNAL-DELETION-009",
         "CH-DISK-ATOMICITY-010"
       ],
-      "claimActivation": "active-component-family-local-gate-passed-clean-blocked",
+      "claimActivation": "active-component-family-local-formal-dominance-passed-independent-replication-pending",
       "directComparators": [
         "CMP-PINCACHE"
       ],
       "evidencePaths": [
         "Benchmarks/CacheLab/cache-plan.json",
-        "Benchmarks/CacheLab/Sources/CacheLabCore"
+        "Benchmarks/CacheLab/Sources/CacheLabCore",
+        "docs/research/cache-lab-v4-formal-evidence-2026-08.json"
       ],
       "hardInvariants": [
         "no-partial-publication",
@@ -738,7 +739,7 @@
       "specialistComparators": [
         "CMP-CACHELIB"
       ],
-      "status": "implemented-component-schema3-formal-local-clean-source-missing"
+      "status": "implemented-component-schema4-formal-local-clean-passed-heldout-recovery-expansion-pending"
     },
     {
       "acceptedPurpose": "crash、OOM、超限、fuzz",
@@ -1006,7 +1007,7 @@
     {
       "acceptedPurpose": "淘汰策略自适应",
       "blockers": [
-        "clean trusted formal rerun",
+        "independent or trusted-CI formal replication",
         "held-out real image traces",
         "large-trace lower-bound methodology",
         "dynamic-regret claim-family expansion"
@@ -1026,14 +1027,15 @@
         "CH-MEMORY-SCAN-006",
         "CH-MEMORY-CONCURRENCY-007"
       ],
-      "claimActivation": "active-component-family-local-gate-passed-clean-blocked",
+      "claimActivation": "active-component-family-local-formal-dominance-passed-dynamic-regret-pending",
       "directComparators": [
         "CMP-LRUCACHE",
         "CMP-PINCACHE"
       ],
       "evidencePaths": [
         "scripts/analyze-cache-policies.py",
-        "Benchmarks/CacheLab/cache-plan.json"
+        "Benchmarks/CacheLab/cache-plan.json",
+        "docs/research/cache-lab-v4-formal-evidence-2026-08.json"
       ],
       "hardInvariants": [
         "capacity-bounded",
@@ -1064,7 +1066,7 @@
         "CMP-CACHELIB",
         "CMP-LIBCACHESIM"
       ],
-      "status": "implemented-component-schema3-formal-local-heldout-dynamic-regret-missing"
+      "status": "implemented-component-schema4-formal-local-dominance-passed-heldout-dynamic-regret-missing"
     },
     {
       "acceptedPurpose": "stale、304、过期行为",

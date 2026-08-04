@@ -9,9 +9,11 @@ model, changes the global cost contract, or does not put the 95% interval above 
 20% dominance margin.
 
 The rejected-candidate numbers below are diagnostic evidence from the original research worktree.
-They are not marketing claims. The retained Akashic implementation is now published at the exact
-Fovea pin; the production switch still requires the current clean verification and a new quiet-host
-formal run before a release certificate.
+They are not marketing claims. The retained Akashic implementation is published at the exact Fovea
+pin and is now the production rendered-memory default. On 2026-08-04, the current clean Fovea and
+Akashic revisions completed the preregistered twenty-process CacheLab V4 campaign with zero rejected
+host attempts, zero correctness failures, and all thirteen applicable dominance comparisons passing.
+The machine-readable decision record is `cache-lab-v4-formal-evidence-2026-08.json`.
 
 ## Rejected candidates
 
@@ -42,4 +44,18 @@ The retained candidate is a configurable independent sharded SIEVE; the V4 Fovea
 - an all-shard slow path only when a value needs more than its current shard budget;
 - all-shard locking for atomic global limit changes, filtered purge and aggregate snapshots.
 
-The candidate passes the Akashic 55-test suite, public-API additive diff, six-case Apple platform matrix, full local release-readiness mechanics, and a Git-free Fovea 478-test integration. V2 passed 12/13 comparisons and was rejected; V3 had a declared-versus-executed round mismatch and three final failures. V4 executes twenty fresh-cache rounds, selects eight shards after explicit 16/32-shard retention counterexamples, and its twenty clean process blocks pass all 13 applicable dominance comparisons. Akashic revision `2715f23d50b5a17b7328be41608eaf1b1c99b0d6` is public and already pinned by Fovea, so the default rendered cache now uses the measured eight-shard implementation. A current clean Fovea verification and quiet-host trusted-CI repetition remain mandatory before a release certificate.
+The candidate passes the Akashic 55-test suite, public-API additive diff, six-case Apple platform matrix, full local release-readiness mechanics, and Fovea integration. V2 passed 12/13 comparisons and was rejected; V3 had a declared-versus-executed round mismatch and three final failures. V4 executes twenty fresh-cache rounds and selects eight shards after explicit 16/32-shard retention counterexamples. The current formal campaign binds clean Fovea commit `7ef9aa1320a930ac913b122e5e37007053f974d9` to public Akashic revision `2715f23d50b5a17b7328be41608eaf1b1c99b0d6`; the analyzer reports `bestClaimEligible=true`, with all 13 applicable comparisons above their preregistered dominance margins.
+
+Selected oriented median ratios are:
+
+| Endpoint | LRUCache | PINMemoryCache / durable PINDiskCache |
+|---|---:|---:|
+| Hot-scan throughput | 1.269× | 34.42× |
+| Hot-scan p99 latency | 1.412× lower | 46.42× lower |
+| Concurrent throughput | 3.109× | 24.77× |
+| Concurrent p99 latency | 2.834× lower | 19.42× lower |
+| Durable disk write throughput | — | 1.762× |
+| Durable disk read throughput | — | 1.696× |
+| Durable disk p99 read latency | — | 2.177× lower |
+
+These results support a scoped CacheLab claim only. They do not establish dominance over every cache implementation, held-out trace, platform, energy profile, or end-to-end image-loading workload. Independent or trusted-CI replication, held-out phase-changing traces, and an expanded process-kill matrix remain release-strength follow-up evidence.
