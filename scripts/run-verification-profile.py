@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import datetime as dt
+import errno
 import json
 import os
 import re
@@ -26,7 +27,7 @@ from typing import Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACTS = ROOT / ".artifacts/verification"
-PROFILE_CHOICES = ("smart", "premerge", "release", "workbench-smoke")
+PROFILE_CHOICES = ("iteration", "smart", "premerge", "release", "workbench-smoke")
 _ACTIVE_PROCESS_GROUPS: set[int] = set()
 _ACTIVE_PROCESS_GROUPS_LOCK = threading.Lock()
 
@@ -288,6 +289,88 @@ def classify(paths: list[str]) -> dict[str, object]:
     }
 
 
+
+def iteration_test_filters(paths: list[str]) -> list[str]:
+    """Map a narrow working-set change to executable test clusters.
+
+    The iteration profile is intentionally fail-closed: source changes without a
+    known mapping are escalated to the smart profile instead of being silently
+    under-tested.
+    """
+    filters: set[str] = set()
+    for path in paths:
+        if path.startswith("Tests/") and path.endswith(".swift"):
+            filters.add(Path(path).stem)
+        if path.startswith("Sources/FoveaHTTP/") or any(
+            token in path for token in ("URLSessionTransport", "RedirectPolicy", "HTTP")
+        ):
+            filters.update(("URLSessionTransportTests", "HTTP"))
+        if path.startswith(("Sources/FoveaUIKit/", "Sources/FoveaSwiftUI/")):
+            filters.update((
+                "PlatformImageViewTests", "SwiftUIStateTests",
+                "SwiftUIViewRenderingTests", "ProgressivePresentationHostTests",
+            ))
+        if path.startswith("Sources/FoveaCore/"):
+            filters.update(("PipelineTests", "ProgressiveImageLoadingTests"))
+            if any(token in path for token in ("ImageCraft", "Decode", "Codec", "PipelineFailure")):
+                filters.update((
+                    "ImageCodecContractTests", "ImageCodecConformanceTests",
+                    "ImageDecoderTests", "PipelineFailureTests",
+                ))
+        if path.startswith(("Sources/FoveaPersistence/", "Sources/FoveaStorage/")):
+            filters.update(("StagingAndStorageTests", "Persistent"))
+        if path.startswith(("Sources/FoveaCache/", "Sources/FoveaMemory/")):
+            filters.update(("Cache", "Memory"))
+        if path.startswith("Sources/FoveaSystem/"):
+            filters.update(("FoveaSystem", "PipelineTests"))
+    explicit = os.environ.get("FOVEA_ITERATION_FILTER", "").strip()
+    if explicit:
+        filters.add(explicit)
+    return sorted(filters)
+
+
+def iteration_static_phases(impact: dict[str, object]) -> list[Phase]:
+    categories = set(impact["categories"])
+    paths = list(impact["changedFiles"])
+    phases: list[Phase] = [
+        Phase("sensitive-material", ("python3", "scripts/check-sensitive-material.py"), 120),
+    ]
+    if any(path.endswith(".swift") for path in paths):
+        phases.append(Phase("swift-format", ("python3", "scripts/lint-fovea-swift-format.py"), 180))
+    if categories & {"source", "tests", "benchmark"}:
+        phases.append(Phase("architecture", ("python3", "scripts/check-architecture-boundaries.py"), 120))
+    changed_python = [path for path in paths if path.endswith(".py") and (ROOT / path).is_file()]
+    if changed_python:
+        phases.append(Phase("python-syntax", ("python3", "-m", "py_compile", *changed_python), 120))
+    if "docs" in categories:
+        phases.append(Phase("docs", ("python3", "scripts/check-docs.py"), 180))
+    if any(path.startswith("docs/project-memory/") for path in paths):
+        phases.append(Phase("project-memory", ("python3", "scripts/check-project-memory.py"), 120))
+    if "dependencies" in categories:
+        phases.extend((
+            Phase("component-pins", ("python3", "scripts/check-component-pins.py"), 120),
+            Phase("supply-chain", ("python3", "scripts/check-supply-chain.py"), 180),
+        ))
+    if categories & {"provider-conformance", "codec-conformance"}:
+        phases.append(Phase(
+            "cross-repository-conformance-kits",
+            ("python3", "scripts/check-cross-repository-conformance-kits.py"), 120,
+        ))
+    if any("test-traceability" in path or "current-required-ids" in path for path in paths):
+        phases.append(Phase("traceability", ("python3", "scripts/check-test-traceability.py"), 180))
+    if any("progressive-presentation" in path for path in paths):
+        phases.append(Phase(
+            "progressive-presentation-evidence",
+            (
+                "python3", "scripts/validate-progressive-presentation-evidence.py",
+                "docs/research/progressive-presentation-simulator-evidence-2026-08.json",
+            ), 180,
+        ))
+    unique: dict[str, Phase] = {}
+    for phase in phases:
+        unique.setdefault(phase.name, phase)
+    return list(unique.values())
+
 def static_phases(include_docs: bool) -> list[Phase]:
     phases = [
         Phase("toolchain", ("python3", "scripts/check-swift-toolchain.py"), 120),
@@ -331,11 +414,31 @@ def run_phase(phase: Phase, env: dict[str, str]) -> PhaseResult:
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     log_path = ARTIFACTS / f"{phase.name}.log"
     started = time.monotonic()
-    process = subprocess.Popen(
-        list(phase.command), cwd=ROOT, env=env, text=True,
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        start_new_session=True,
-    )
+    process: subprocess.Popen[str] | None = None
+    spawn_error: OSError | None = None
+    for attempt in range(2):
+        try:
+            process = subprocess.Popen(
+                list(phase.command), cwd=ROOT, env=env, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+            break
+        except OSError as error:
+            spawn_error = error
+            if attempt == 0 and error.errno in {errno.EPERM, errno.EAGAIN}:
+                time.sleep(0.25)
+                continue
+            break
+    if process is None:
+        elapsed = time.monotonic() - started
+        message = f"phase process creation failed: {spawn_error}\n"
+        log_path.write_text(message)
+        print(f"[failed] {phase.name} ({elapsed:.1f}s)")
+        print(message.rstrip(), file=sys.stderr)
+        return PhaseResult(
+            phase.name, list(phase.command), 126, elapsed, str(log_path.relative_to(ROOT))
+        )
     register_process_group(process.pid)
     try:
         try:
@@ -373,6 +476,16 @@ def phase_plan(profile: str, impact: dict[str, object]) -> tuple[str, list[Phase
     categories = set(impact["categories"])
     reasons: list[str] = []
     effective = profile
+    iteration_requires_smart = (
+        categories & {"unknown", "unknown-tooling", "deleted", "dependencies", "governance"}
+        or any(
+            path.startswith(("ConformanceKits/", "Fixtures/"))
+            for path in impact["changedFiles"]
+        )
+    )
+    if profile == "iteration" and iteration_requires_smart:
+        effective = "smart"
+        reasons.append("iteration change requires broader smart verification")
     if profile == "smart" and ("unknown" in categories or "unknown-tooling" in categories):
         effective = "premerge"
         reasons.append("unknown change path escalated to premerge")
@@ -382,12 +495,40 @@ def phase_plan(profile: str, impact: dict[str, object]) -> tuple[str, list[Phase
 
     phases: list[Phase] = []
     include_docs = effective != "smart" or "docs" in categories or "governance" in categories
-    phases.extend(static_phases(include_docs))
+    if effective == "iteration":
+        phases.extend(iteration_static_phases(impact))
+    else:
+        phases.extend(static_phases(include_docs))
 
     if "dependencies" in categories or effective in {"premerge", "release"}:
         phases.append(Phase("package-resolve", ("xcrun", "swift", "package", "resolve"), 600))
 
-    if effective == "smart":
+    if effective == "iteration":
+        filters = iteration_test_filters(list(impact["changedFiles"]))
+        if "source" in categories and not filters:
+            effective = "smart"
+            reasons.append("unmapped source change escalated from iteration to smart")
+            return phase_plan(effective, impact)
+        if filters:
+            expression = "|".join(re.escape(item) for item in filters)
+            phases.append(Phase(
+                "impacted-tests",
+                ("xcrun", "swift", "test", "--filter", expression),
+                900,
+            ))
+        if "benchmark" in categories:
+            phases.append(Phase(
+                "comparative-core-tests",
+                ("xcrun", "swift", "test", "--package-path", "Benchmarks/ComparativeLab"),
+                600,
+            ))
+        if "cache-lab" in categories:
+            phases.append(Phase(
+                "cache-lab",
+                ("xcrun", "swift", "test", "--package-path", "Benchmarks/CacheLab"),
+                900,
+            ))
+    elif effective == "smart":
         filters = list(impact["testFilters"])
         if "source" in categories or "dependencies" in categories:
             phases.append(Phase("root-tests", ("python3", "scripts/run-swift-strict.py", "test"), 1800))
@@ -471,7 +612,7 @@ def phase_plan(profile: str, impact: dict[str, object]) -> tuple[str, list[Phase
     else:
         raise ValueError(f"unsupported profile: {effective}")
 
-    if "provider-conformance" in categories:
+    if effective != "iteration" and "provider-conformance" in categories:
         phases.append(
             Phase(
                 "persistent-store-provider-conformance",
@@ -490,7 +631,7 @@ def phase_plan(profile: str, impact: dict[str, object]) -> tuple[str, list[Phase
                 1_200,
             )
         )
-    if "codec-conformance" in categories:
+    if effective != "iteration" and "codec-conformance" in categories:
         phases.append(
             Phase(
                 "image-codec-conformance",
@@ -588,6 +729,10 @@ def main() -> int:
         env = os.environ.copy()
         env["DEVELOPER_DIR"] = command_output([str(ROOT / "scripts/select-xcode.sh")])
         static_names = {phase.name for phase in static_phases(include_docs=True)}
+        static_names.update({
+            "python-syntax", "comparative-core-tests",
+            "progressive-presentation-evidence",
+        })
         parallel = [phase for phase in phases if phase.name in static_names]
         sequential = [phase for phase in phases if phase.name not in static_names]
         results = run_parallel(parallel, env)

@@ -6,7 +6,7 @@ cd "$ROOT"
 
 FOVEA_VERIFY_PROFILE=${FOVEA_VERIFY_PROFILE:-smart}
 case "$FOVEA_VERIFY_PROFILE" in
-    smart|premerge|release|workbench-smoke)
+    iteration|smart|premerge|release|workbench-smoke)
         exec python3 scripts/run-verification-profile.py --profile "$FOVEA_VERIFY_PROFILE"
         ;;
     qualification)

@@ -1127,7 +1127,7 @@ try:
     ).read_text()
     workflow_source = (ROOT / ".github/workflows/verify.yml").read_text()
     profile_contracts = {
-        'PROFILE_CHOICES = ("smart", "premerge", "release", "workbench-smoke")':
+        'PROFILE_CHOICES = ("iteration", "smart", "premerge", "release", "workbench-smoke")':
             "verification profiles must expose bounded local gates",
         'effective = "premerge"':
             "unknown smart changes must escalate rather than skip",
