@@ -66,11 +66,22 @@
             XCTAssertGreaterThanOrEqual(snapshot.previewGeneratedCount, 2)
             XCTAssertEqual(snapshot.previewGeneratedCount, snapshot.previewEmittedCount)
             XCTAssertEqual(snapshot.previewSuppressedCount, 0)
-            XCTAssertTrue(snapshot.finalEmitted)
+            XCTAssertNotNil(snapshot.finalEmitted)
             XCTAssertLessThan(previewFrame.elapsedNanoseconds, finalFrame.elapsedNanoseconds)
             XCTAssertEqual(imageIdentifier(imageView.image?.cgImage), finalID)
             XCTAssertEqual(imageView.image?.cgImage?.width, 512)
             XCTAssertEqual(imageView.image?.cgImage?.height, 341)
+            try emitProgressiveHostEvidence(
+                scenario: "complete",
+                source: fixture.metadata,
+                chunkSizeBytes: 16 * 1024,
+                intervalNanoseconds: 30_000_000,
+                targetWidth: 512,
+                targetHeight: 341,
+                trace: snapshot,
+                frames: frames,
+                replacementStartedElapsedNanoseconds: nil,
+            )
         }
 
         func testIdentityReplacementClosesPublicationFenceBeforeOldPreview_UI_PT_030()
@@ -163,6 +174,17 @@
                 "旧身份 generation 不得在 publication fence 关闭后进入 UIImageView",
             )
             XCTAssertEqual(imageView.image?.cgImage?.width, 64)
+            try emitProgressiveHostEvidence(
+                scenario: "identity-replacement",
+                source: fixture.metadata,
+                chunkSizeBytes: 32 * 1024,
+                intervalNanoseconds: 20_000_000,
+                targetWidth: 512,
+                targetHeight: 341,
+                trace: snapshot,
+                frames: displayLink.snapshot(),
+                replacementStartedElapsedNanoseconds: replacementStarted,
+            )
         }
 
         private func makeVisibleImageView() -> FoveaImageView {
@@ -200,9 +222,95 @@
         }
     }
 
+    private let progressiveHostEvidencePrefix = "FOVEA_PROGRESSIVE_HOST_EVIDENCE_BASE64:"
+
     private struct ProgressiveDisplayFrame: Sendable {
         let elapsedNanoseconds: UInt64
         let imageID: UInt64
+    }
+
+    private struct ProgressiveNetworkTraceEvent: Sendable {
+        let index: Int
+        let cumulativeByteCount: Int
+        let elapsedNanoseconds: UInt64
+    }
+
+    private struct ProgressivePreviewTraceEvent: Sendable {
+        let generation: UInt32
+        let sourceByteCount: Int
+        let elapsedNanoseconds: UInt64
+        let imageID: UInt64
+    }
+
+    private struct ProgressiveFinalTraceEvent: Sendable {
+        let elapsedNanoseconds: UInt64
+        let imageID: UInt64
+    }
+
+    private struct ProgressiveHostTraceSnapshot: Sendable {
+        let networkChunks: [ProgressiveNetworkTraceEvent]
+        let generatedPreviews: [ProgressivePreviewTraceEvent]
+        let emittedPreviews: [ProgressivePreviewTraceEvent]
+        let suppressedPreviews: [ProgressivePreviewTraceEvent]
+        let finalEmitted: ProgressiveFinalTraceEvent?
+        let publicationFenceClosedElapsedNanoseconds: UInt64?
+
+        var networkChunkCount: Int { networkChunks.count }
+        var previewGeneratedCount: Int { generatedPreviews.count }
+        var previewEmittedCount: Int { emittedPreviews.count }
+        var previewSuppressedCount: Int { suppressedPreviews.count }
+        var previewGeneratedImageIDs: [UInt64] { generatedPreviews.map(\.imageID) }
+        var previewEmittedImageIDs: [UInt64] { emittedPreviews.map(\.imageID) }
+        var finalEmittedImageID: UInt64? { finalEmitted?.imageID }
+        var publicationFenceClosed: Bool {
+            publicationFenceClosedElapsedNanoseconds != nil
+        }
+    }
+
+    private struct ProgressiveHostEvidence: Codable {
+        struct Source: Codable {
+            let resourceID: String
+            let pixelWidth: Int
+            let pixelHeight: Int
+            let byteCount: Int
+            let sha256: String
+        }
+
+        struct NetworkChunk: Codable {
+            let index: Int
+            let cumulativeByteCount: Int
+            let elapsedNanoseconds: UInt64
+        }
+
+        struct Preview: Codable {
+            let generation: UInt32
+            let sourceByteCount: Int
+            let elapsedNanoseconds: UInt64
+        }
+
+        struct DisplayObservation: Codable {
+            let elapsedNanoseconds: UInt64
+            let kind: String
+            let generation: UInt32?
+        }
+
+        let schemaVersion: Int
+        let scenario: String
+        let source: Source
+        let chunkSizeBytes: Int
+        let intervalNanoseconds: UInt64
+        let targetWidth: Int
+        let targetHeight: Int
+        let networkChunks: [NetworkChunk]
+        let generatedPreviews: [Preview]
+        let emittedPreviews: [Preview]
+        let suppressedPreviews: [Preview]
+        let finalEmittedElapsedNanoseconds: UInt64?
+        let publicationFenceClosedElapsedNanoseconds: UInt64?
+        let displayObservations: [DisplayObservation]
+        let previewDisplayedBeforeFinal: Bool?
+        let publicationFenceBeforeSuppression: Bool?
+        let oldPreviewObservedAfterReplacement: Bool?
     }
 
     @MainActor
@@ -275,26 +383,15 @@
         }
     }
 
-    private struct ProgressiveHostTraceSnapshot: Sendable {
-        let networkChunkCount: Int
-        let previewGeneratedCount: Int
-        let previewEmittedCount: Int
-        let previewSuppressedCount: Int
-        let previewGeneratedImageIDs: [UInt64]
-        let previewEmittedImageIDs: [UInt64]
-        let finalEmitted: Bool
-        let finalEmittedImageID: UInt64?
-        let publicationFenceClosed: Bool
-    }
-
     private final class ProgressiveHostTrace: @unchecked Sendable {
         private struct State {
-            var networkChunkCount = 0
-            var previewGeneratedImageIDs: [UInt64] = []
-            var previewEmittedImageIDs: [UInt64] = []
-            var previewSuppressedCount = 0
-            var finalEmittedImageID: UInt64?
-            var publicationFenceClosed = false
+            var networkChunks: [ProgressiveNetworkTraceEvent] = []
+            var cumulativeNetworkByteCount = 0
+            var generatedPreviews: [ProgressivePreviewTraceEvent] = []
+            var emittedPreviews: [ProgressivePreviewTraceEvent] = []
+            var suppressedPreviews: [ProgressivePreviewTraceEvent] = []
+            var finalEmitted: ProgressiveFinalTraceEvent?
+            var publicationFenceClosedElapsedNanoseconds: UInt64?
         }
 
         private let originNanoseconds = DispatchTime.now().uptimeNanoseconds
@@ -305,49 +402,208 @@
             DispatchTime.now().uptimeNanoseconds &- originNanoseconds
         }
 
-        func recordNetworkChunk() {
-            lock.withLock { state.networkChunkCount += 1 }
-        }
-
-        func recordPreviewGenerated(_ image: DecodedImage) {
-            if let identifier = imageIdentifier(image.cgImage) {
-                lock.withLock { state.previewGeneratedImageIDs.append(identifier) }
+        func recordNetworkChunk(byteCount: Int) {
+            let elapsed = elapsedNanoseconds()
+            lock.withLock {
+                state.cumulativeNetworkByteCount += byteCount
+                state.networkChunks.append(
+                    ProgressiveNetworkTraceEvent(
+                        index: state.networkChunks.count,
+                        cumulativeByteCount: state.cumulativeNetworkByteCount,
+                        elapsedNanoseconds: elapsed,
+                    ),
+                )
             }
         }
 
-        func recordPreviewEmitted(_ image: DecodedImage) {
-            if let identifier = imageIdentifier(image.cgImage) {
-                lock.withLock { state.previewEmittedImageIDs.append(identifier) }
-            }
+        func recordPreviewGenerated(
+            _ image: DecodedImage,
+            generation: UInt32,
+            sourceByteCount: Int,
+        ) {
+            recordPreview(
+                image,
+                generation: generation,
+                sourceByteCount: sourceByteCount,
+                destination: \.generatedPreviews,
+            )
         }
 
-        func recordPreviewSuppressed() {
-            lock.withLock { state.previewSuppressedCount += 1 }
+        func recordPreviewEmitted(
+            _ image: DecodedImage,
+            generation: UInt32,
+            sourceByteCount: Int,
+        ) {
+            recordPreview(
+                image,
+                generation: generation,
+                sourceByteCount: sourceByteCount,
+                destination: \.emittedPreviews,
+            )
+        }
+
+        func recordPreviewSuppressed(
+            _ image: DecodedImage,
+            generation: UInt32,
+            sourceByteCount: Int,
+        ) {
+            recordPreview(
+                image,
+                generation: generation,
+                sourceByteCount: sourceByteCount,
+                destination: \.suppressedPreviews,
+            )
         }
 
         func recordFinalEmitted(_ image: DecodedImage) {
-            lock.withLock { state.finalEmittedImageID = imageIdentifier(image.cgImage) }
+            guard let identifier = imageIdentifier(image.cgImage) else { return }
+            let event = ProgressiveFinalTraceEvent(
+                elapsedNanoseconds: elapsedNanoseconds(),
+                imageID: identifier,
+            )
+            lock.withLock { state.finalEmitted = event }
         }
 
         func recordPublicationFenceClosed() {
-            lock.withLock { state.publicationFenceClosed = true }
+            let elapsed = elapsedNanoseconds()
+            lock.withLock {
+                if state.publicationFenceClosedElapsedNanoseconds == nil {
+                    state.publicationFenceClosedElapsedNanoseconds = elapsed
+                }
+            }
         }
 
         func snapshot() -> ProgressiveHostTraceSnapshot {
             lock.withLock {
                 ProgressiveHostTraceSnapshot(
-                    networkChunkCount: state.networkChunkCount,
-                    previewGeneratedCount: state.previewGeneratedImageIDs.count,
-                    previewEmittedCount: state.previewEmittedImageIDs.count,
-                    previewSuppressedCount: state.previewSuppressedCount,
-                    previewGeneratedImageIDs: state.previewGeneratedImageIDs,
-                    previewEmittedImageIDs: state.previewEmittedImageIDs,
-                    finalEmitted: state.finalEmittedImageID != nil,
-                    finalEmittedImageID: state.finalEmittedImageID,
-                    publicationFenceClosed: state.publicationFenceClosed,
+                    networkChunks: state.networkChunks,
+                    generatedPreviews: state.generatedPreviews,
+                    emittedPreviews: state.emittedPreviews,
+                    suppressedPreviews: state.suppressedPreviews,
+                    finalEmitted: state.finalEmitted,
+                    publicationFenceClosedElapsedNanoseconds:
+                        state.publicationFenceClosedElapsedNanoseconds,
                 )
             }
         }
+
+        private func recordPreview(
+            _ image: DecodedImage,
+            generation: UInt32,
+            sourceByteCount: Int,
+            destination: WritableKeyPath<State, [ProgressivePreviewTraceEvent]>,
+        ) {
+            guard let identifier = imageIdentifier(image.cgImage) else { return }
+            let event = ProgressivePreviewTraceEvent(
+                generation: generation,
+                sourceByteCount: sourceByteCount,
+                elapsedNanoseconds: elapsedNanoseconds(),
+                imageID: identifier,
+            )
+            lock.withLock { state[keyPath: destination].append(event) }
+        }
+    }
+
+    private func emitProgressiveHostEvidence(
+        scenario: String,
+        source: BenchmarkSourceDescriptor,
+        chunkSizeBytes: Int,
+        intervalNanoseconds: UInt64,
+        targetWidth: Int,
+        targetHeight: Int,
+        trace: ProgressiveHostTraceSnapshot,
+        frames: [ProgressiveDisplayFrame],
+        replacementStartedElapsedNanoseconds: UInt64?,
+    ) throws {
+        let previewsByImageID = Dictionary(
+            uniqueKeysWithValues: trace.emittedPreviews.map { ($0.imageID, $0.generation) },
+        )
+        let observations = frames.map { frame -> ProgressiveHostEvidence.DisplayObservation in
+            if let generation = previewsByImageID[frame.imageID] {
+                return .init(
+                    elapsedNanoseconds: frame.elapsedNanoseconds,
+                    kind: "preview",
+                    generation: generation,
+                )
+            }
+            if frame.imageID == trace.finalEmitted?.imageID {
+                return .init(
+                    elapsedNanoseconds: frame.elapsedNanoseconds,
+                    kind: "final",
+                    generation: nil,
+                )
+            }
+            return .init(
+                elapsedNanoseconds: frame.elapsedNanoseconds,
+                kind: "other",
+                generation: nil,
+            )
+        }
+        let firstPreviewDisplay = observations.first { $0.kind == "preview" }
+        let finalDisplay = observations.first { $0.kind == "final" }
+        let oldIDs = Set(trace.generatedPreviews.map(\.imageID))
+        let oldObservedAfterReplacement = replacementStartedElapsedNanoseconds.map { started in
+            frames.contains { frame in
+                frame.elapsedNanoseconds >= started && oldIDs.contains(frame.imageID)
+            }
+        }
+        let fenceBeforeSuppression: Bool? = {
+            guard let fence = trace.publicationFenceClosedElapsedNanoseconds,
+                let suppression = trace.suppressedPreviews.first?.elapsedNanoseconds
+            else { return nil }
+            return fence <= suppression
+        }()
+        let evidence = ProgressiveHostEvidence(
+            schemaVersion: 1,
+            scenario: scenario,
+            source: .init(
+                resourceID: source.resourceID,
+                pixelWidth: source.pixelWidth,
+                pixelHeight: source.pixelHeight,
+                byteCount: source.byteCount,
+                sha256: source.sha256,
+            ),
+            chunkSizeBytes: chunkSizeBytes,
+            intervalNanoseconds: intervalNanoseconds,
+            targetWidth: targetWidth,
+            targetHeight: targetHeight,
+            networkChunks: trace.networkChunks.map {
+                .init(
+                    index: $0.index,
+                    cumulativeByteCount: $0.cumulativeByteCount,
+                    elapsedNanoseconds: $0.elapsedNanoseconds,
+                )
+            },
+            generatedPreviews: trace.generatedPreviews.map(stablePreview),
+            emittedPreviews: trace.emittedPreviews.map(stablePreview),
+            suppressedPreviews: trace.suppressedPreviews.map(stablePreview),
+            finalEmittedElapsedNanoseconds: trace.finalEmitted?.elapsedNanoseconds,
+            publicationFenceClosedElapsedNanoseconds:
+                trace.publicationFenceClosedElapsedNanoseconds,
+            displayObservations: observations,
+            previewDisplayedBeforeFinal: {
+                guard let preview = firstPreviewDisplay, let final = finalDisplay else {
+                    return nil
+                }
+                return preview.elapsedNanoseconds < final.elapsedNanoseconds
+            }(),
+            publicationFenceBeforeSuppression: fenceBeforeSuppression,
+            oldPreviewObservedAfterReplacement: oldObservedAfterReplacement,
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let encoded = try encoder.encode(evidence)
+        print(progressiveHostEvidencePrefix + encoded.base64EncodedString())
+    }
+
+    private func stablePreview(
+        _ event: ProgressivePreviewTraceEvent,
+    ) -> ProgressiveHostEvidence.Preview {
+        .init(
+            generation: event.generation,
+            sourceByteCount: event.sourceByteCount,
+            elapsedNanoseconds: event.elapsedNanoseconds,
+        )
     }
 
     private final class ProgressiveURLSessionLoader: ProgressiveImageLoading, @unchecked Sendable {
@@ -455,7 +711,7 @@
 
         func cancel() {
             let taskAndSession = lock.withLock { () -> (URLSessionDataTask?, URLSession?) in
-                guard state.publicationOpen || !state.terminal else { return (nil, nil) }
+                guard state.publicationOpen, !state.terminal else { return (nil, nil) }
                 state.publicationOpen = false
                 trace.recordPublicationFenceClosed()
                 return (state.task, urlSession)
@@ -488,7 +744,7 @@
             dataTask _: URLSessionDataTask,
             didReceive data: Data,
         ) {
-            trace.recordNetworkChunk()
+            trace.recordNetworkChunk(byteCount: data.count)
             let shouldDecode = lock.withLock { () -> Bool in
                 guard state.publicationOpen, !state.terminal else { return false }
                 state.body.append(data)
@@ -497,14 +753,26 @@
             guard shouldDecode else { return }
             do {
                 guard let generation = try progressiveSession.append(data) else { return }
-                trace.recordPreviewGenerated(generation.image)
+                trace.recordPreviewGenerated(
+                    generation.image,
+                    generation: generation.generation,
+                    sourceByteCount: generation.sourceByteCount,
+                )
                 publicationBarrier?.pauseOnce()
                 let shouldPublish = lock.withLock { state.publicationOpen && !state.terminal }
                 guard shouldPublish else {
-                    trace.recordPreviewSuppressed()
+                    trace.recordPreviewSuppressed(
+                        generation.image,
+                        generation: generation.generation,
+                        sourceByteCount: generation.sourceByteCount,
+                    )
                     return
                 }
-                trace.recordPreviewEmitted(generation.image)
+                trace.recordPreviewEmitted(
+                    generation.image,
+                    generation: generation.generation,
+                    sourceByteCount: generation.sourceByteCount,
+                )
                 let quality = UInt16(min(UInt32(UInt16.max - 1), generation.generation))
                 if case .terminated = continuation.yield(
                     .preview(generation.image, quality: quality),
