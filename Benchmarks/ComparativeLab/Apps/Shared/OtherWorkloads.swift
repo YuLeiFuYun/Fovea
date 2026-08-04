@@ -230,17 +230,32 @@ enum WorkloadRunner {
         let completeLoad = try await progressive.makeProgressiveLoad(completeRequest)
         var completeFrames: [ComparatorProgressiveFrameMeasurement] = []
         var finalFrame: ComparatorProgressiveFrame?
+        var finalObservedAtNanoseconds: UInt64?
         for try await frame in completeLoad.frames {
             completeFrames.append(frame.measurement)
             controller.imageView.image = UIImage(cgImage: frame.image.cgImage)
             await Task.yield()
-            if frame.measurement.kind == .final { finalFrame = frame }
+            if frame.measurement.kind == .final {
+                finalFrame = frame
+                finalObservedAtNanoseconds = DispatchTime.now().uptimeNanoseconds
+            }
         }
         guard let finalFrame else {
             throw BenchmarkAppError.runFailed("w4-final-missing")
         }
         let previews = completeFrames.filter { $0.kind == .preview }
         let firstPreview = previews.first
+        let completeOrigin = DeterministicBenchmarkURLProtocol.metrics()
+        let finalAfterLastByteNanoseconds: UInt64
+        if let finalObservedAtNanoseconds,
+            completeOrigin.latestCompletedAtNanoseconds > 0,
+            finalObservedAtNanoseconds >= completeOrigin.latestCompletedAtNanoseconds
+        {
+            finalAfterLastByteNanoseconds =
+                finalObservedAtNanoseconds - completeOrigin.latestCompletedAtNanoseconds
+        } else {
+            finalAfterLastByteNanoseconds = 0
+        }
         let targetViolation =
             finalFrame.measurement.pixelWidth > target.width
             || finalFrame.measurement.pixelHeight > target.height
@@ -296,45 +311,56 @@ enum WorkloadRunner {
         let firstPreviewLatency = firstPreview.map { Int(clamping: $0.elapsedNanoseconds) } ?? -1
         let firstPreviewBytes = firstPreview?.receivedBytes ?? -1
         let cancelPreviewCount = cancelFrames.filter { $0.kind == .preview }.count
+        let checks = [
+            BenchmarkCheck(
+                identifier: "w4-preview-produced",
+                passed: true,
+                value: previews.count
+            ),
+            BenchmarkCheck(
+                identifier: "w4-first-preview-latency-nanoseconds",
+                passed: true,
+                value: firstPreviewLatency
+            ),
+            BenchmarkCheck(
+                identifier: "w4-first-preview-received-bytes",
+                passed: true,
+                value: firstPreviewBytes
+            ),
+            BenchmarkCheck(
+                identifier: "w4-final-latency-nanoseconds",
+                passed: true,
+                value: Int(clamping: finalFrame.measurement.elapsedNanoseconds)
+            ),
+            BenchmarkCheck(
+                identifier: "w4-origin-complete-duration-nanoseconds",
+                passed: completeOrigin.completedRequestCount == 1,
+                value: Int(clamping: completeOrigin.completedRequestDurationP50Nanoseconds)
+            ),
+            BenchmarkCheck(
+                identifier: "w4-final-after-last-byte-nanoseconds",
+                passed: finalAfterLastByteNanoseconds > 0,
+                value: Int(clamping: finalAfterLastByteNanoseconds)
+            ),
+            BenchmarkCheck(
+                identifier: "w4-complete-preview-count",
+                passed: true,
+                value: previews.count
+            ),
+            BenchmarkCheck(
+                identifier: "w4-cancel-preview-count-at-220ms",
+                passed: true,
+                value: cancelPreviewCount
+            ),
+            BenchmarkCheck(
+                identifier: "w4-target-pixel-invariant",
+                passed: !targetViolation,
+                value: targetViolation ? 1 : 0
+            ),
+        ]
         return WorkloadResult(
             observations: [observation],
-            checks: [
-                BenchmarkCheck(
-                    identifier: "w4-preview-produced",
-                    passed: true,
-                    value: previews.count
-                ),
-                BenchmarkCheck(
-                    identifier: "w4-first-preview-latency-nanoseconds",
-                    passed: true,
-                    value: firstPreviewLatency
-                ),
-                BenchmarkCheck(
-                    identifier: "w4-first-preview-received-bytes",
-                    passed: true,
-                    value: firstPreviewBytes
-                ),
-                BenchmarkCheck(
-                    identifier: "w4-final-latency-nanoseconds",
-                    passed: true,
-                    value: Int(clamping: finalFrame.measurement.elapsedNanoseconds)
-                ),
-                BenchmarkCheck(
-                    identifier: "w4-complete-preview-count",
-                    passed: true,
-                    value: previews.count
-                ),
-                BenchmarkCheck(
-                    identifier: "w4-cancel-preview-count-at-220ms",
-                    passed: true,
-                    value: cancelPreviewCount
-                ),
-                BenchmarkCheck(
-                    identifier: "w4-target-pixel-invariant",
-                    passed: !targetViolation,
-                    value: targetViolation ? 1 : 0
-                ),
-            ],
+            checks: checks,
             durationNanoseconds: DispatchTime.now().uptimeNanoseconds &- started,
             decodedMegapixels: Double(
                 finalFrame.measurement.pixelWidth * finalFrame.measurement.pixelHeight

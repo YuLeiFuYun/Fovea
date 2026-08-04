@@ -1,0 +1,199 @@
+{
+  "cleanFivePairDirectionalCampaign": {
+    "allHardChecksPassed": true,
+    "appleNative": {
+      "finalAfterLastByteMilliseconds": [
+        34.546917,
+        28.2185,
+        22.643208,
+        25.932542,
+        22.72275
+      ],
+      "finalMilliseconds": [
+        528.60375,
+        556.486583,
+        513.4355,
+        519.4075,
+        515.076667
+      ],
+      "firstPreviewMilliseconds": [
+        172.189667,
+        180.146792,
+        149.791042,
+        160.66325,
+        159.98825
+      ],
+      "originCompletionMilliseconds": [
+        493.034667,
+        501.416542,
+        489.658,
+        480.4755,
+        479.910541
+      ],
+      "peakDirtyMemoryMiB": [
+        0.53125,
+        0.546875,
+        0.453125,
+        0.515625,
+        0.40625
+      ]
+    },
+    "fovea": {
+      "finalAfterLastByteMilliseconds": [
+        44.717917,
+        37.601542,
+        26.1035,
+        36.996958,
+        41.181
+      ],
+      "finalMilliseconds": [
+        531.470084,
+        531.579375,
+        521.188958,
+        533.11675,
+        532.7195
+      ],
+      "firstPreviewMilliseconds": [
+        176.008625,
+        153.483292,
+        154.945917,
+        171.751084,
+        156.175542
+      ],
+      "originCompletionMilliseconds": [
+        479.602292,
+        488.203458,
+        488.000833,
+        478.62525,
+        486.025667
+      ],
+      "peakDirtyMemoryMiB": [
+        0.5625,
+        0.59375,
+        0.609375,
+        0.53125,
+        1.234375
+      ]
+    },
+    "interpretation": "Transport completion was not the disadvantage: Fovea completed the origin earlier in four of five pairs. The stable deficit appeared after the final byte.",
+    "order": "Fovea then Apple, repeated five times on the same dedicated Simulator",
+    "pairedFoveaMinusApple": {
+      "finalAfterLastByteMilliseconds": [
+        10.171,
+        9.383042,
+        3.460292,
+        11.064416,
+        18.45825
+      ],
+      "finalMilliseconds": [
+        2.866334,
+        -24.907208,
+        7.753458,
+        13.70925,
+        17.642833
+      ],
+      "firstPreviewMilliseconds": [
+        3.818958,
+        -26.6635,
+        5.154875,
+        11.087834,
+        -3.812708
+      ],
+      "foveaWonFinalAfterLastBytePairs": 0,
+      "medianFinalAfterLastByteMilliseconds": 10.171,
+      "originCompletionMilliseconds": [
+        -13.432375,
+        -13.213084,
+        -1.657167,
+        -1.85025,
+        6.115126
+      ]
+    }
+  },
+  "evidenceID": "FOVEA-W4-POST-BYTE-CONTROL-PLANE-DIRECTIONAL-2026-08",
+  "foveaPhaseDecomposition": {
+    "closureNanoseconds": 0,
+    "medianMilliseconds": {
+      "decodeQueuedToWorkingSetReserved": 1.307125,
+      "fetchCompletedToDecodeQueued": 2.961875,
+      "lastByteToFetchCompleted": 6.609834,
+      "rasterCompletedToFinalObserved": 0.966916,
+      "workingSetReservedToRasterCompleted": 27.724542
+    },
+    "qualification": "Detailed diagnostics changed the execution environment and were used only for attribution, not comparator ranking."
+  },
+  "measurementCorrection": {
+    "closure": "Detailed Fovea phase decomposition closed to 0 ns after the correction.",
+    "decision": "Record final observation directly with DispatchTime.now().uptimeNanoseconds in WorkloadRunner and compare it with the origin completion timestamp from the same monotonic clock.",
+    "problem": "Comparator frame elapsed time and WorkloadRunner start time used different monotonic-clock origins; adding them underestimated final observation time.",
+    "retainedChecks": [
+      "w4-origin-complete-duration-nanoseconds",
+      "w4-final-after-last-byte-nanoseconds"
+    ]
+  },
+  "nextDecisionBoundary": "Measure ordinary-image W1/W2/W7 across the complete A-tier comparator matrix, and optimize only candidates that improve self-normalized repeated results while preserving semantic hard checks.",
+  "provenanceLimitations": [
+    "The five-pair baseline and temporary phase/raster probes were verified during execution but their /tmp raw files were later removed.",
+    "Only the final local runner artifacts remain under ignored .artifacts; the tracked report retains exact aggregate values and explicit evidence limits.",
+    "No result in this report supports a universal or physical-device performance claim."
+  ],
+  "recordedOn": "2026-08-05",
+  "rejectedCandidates": [
+    {
+      "baselineMedianMilliseconds": 6.609834,
+      "candidateMedianMilliseconds": 7.869459,
+      "decision": "reverted",
+      "id": "direct-lock-protected-urlsession-router",
+      "reason": "The target segment regressed; apparent end-to-end improvement came from raster variance.",
+      "target": "last byte to fetch completion",
+      "tests": "URLSessionTransport 28/28 passed"
+    },
+    {
+      "baselineMedianMilliseconds": 2.961875,
+      "candidateMedianMilliseconds": 2.840459,
+      "decision": "reverted",
+      "id": "lock-protected-progressive-finalization-future",
+      "reason": "The 0.12 ms change was below campaign noise; apparent end-to-end improvement came from raster variance.",
+      "target": "fetch completion to decode queue",
+      "tests": "ProgressiveImageLoading 11/11 passed"
+    },
+    {
+      "baselineFoveaTailMedianMilliseconds": 37.601542,
+      "candidateFoveaTailMedianMilliseconds": 39.26875,
+      "decision": "reverted",
+      "id": "known-content-length-terminal-chunk-no-suspend",
+      "pairedGapMedianBeforeMilliseconds": 10.171,
+      "pairedGapMedianCandidateMilliseconds": 4.976,
+      "reason": "Fovea itself became slower; the smaller paired gap was caused by Apple/campaign drift and was not attributable to the candidate.",
+      "target": "URLSession final-chunk completion propagation",
+      "tests": "URLSessionTransport 29/29 passed"
+    }
+  ],
+  "retainedLocalArtifacts": [
+    ".artifacts/comparative-simulator-lab/runs/Fovea/W4-PROGRESSIVE-JPEG-V1/cold/fovea-w4-progressive-jpeg-v1-cold-000.json",
+    ".artifacts/comparative-simulator-lab/runs/Apple URLSession + URLCache + ImageIO/W4-PROGRESSIVE-JPEG-V1/cold/apple urlsession + urlcache + imageio-w4-progressive-jpeg-v1-cold-000.json"
+  ],
+  "sameProcessRasterProbe": {
+    "appleIncrementalFinalMedianMilliseconds": 19.383041,
+    "imageCraftMinusAppleMilliseconds": 0.354001,
+    "imageCraftPreparationMedianMilliseconds": 0.137542,
+    "imageCraftPreparedDecodeMedianMilliseconds": 19.612834,
+    "imageCraftTotalMedianMilliseconds": 19.737042,
+    "interpretation": "The approximately 10 ms paired post-byte deficit cannot be assigned to ImageCraft rasterization in this environment; the measured codec difference was about 0.35 ms with identical pixels.",
+    "iterationsPerPath": 9,
+    "pixelMismatchCount": 0
+  },
+  "schemaVersion": 1,
+  "scope": {
+    "claimEligibility": "not-release-claim-eligible",
+    "environment": "dedicated iPhone 17e Simulator, iOS 26.4.1 build 23E254a, arm64 Release",
+    "evidenceClass": "directional-simulator-dirty-tree",
+    "reason": "Simulator execution, skipped quiescent-host gate, single host, and measurements collected while benchmark instrumentation was uncommitted.",
+    "workloadID": "W4-PROGRESSIVE-JPEG-V1"
+  },
+  "sourceIdentity": {
+    "baseCommit": "f4b320b7f995bc565f0ca5ef053a5cd5bfb3a3c7",
+    "includesWorkingTreeChanges": true,
+    "worktreeDigestAtReportCreation": "60ed48d83d0070384d3881162c742a1cfc9eefb75a5ccc0fc25602d2241bee0b"
+  }
+}

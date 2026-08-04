@@ -981,9 +981,8 @@
       "evidencePaths": [
         "scripts/component_candidate_sandbox.py",
         "scripts/verify-component-candidate-clean-copy.py",
-        "docs/specifications/component-candidate-identity.md",
-        ".artifacts/external-components/candidate-sandbox-probes.json",
-        ".artifacts/external-components/candidate-clean-copy.json"
+        "scripts/verify-component-candidate-identity-negatives.py",
+        "docs/specifications/component-candidate-identity.md"
       ],
       "exitCondition": "A replacement may supersede this local Seatbelt gate only if it preserves effective network/read/write escape probes, builds exact validated snapshots, proves post-build source identity, and either qualifies the default production build backend or records an equally explicit backend limitation. Mutual-confidentiality claims additionally require separate source visibility or permission domains.",
       "id": "NEG-COMPONENT-CANDIDATE-AMBIENT-AUTHORITY-001"
@@ -994,13 +993,13 @@
       "counterexample": "In the W7 V7 1,000-request trace, AsyncThrowingStream iteration could terminate without rethrowing after consumer cancellation, causing all 256 cancelled subscribers to be reported as unexpected failures. After correcting classification, four all-cancel groups produced up to four extra origin requests because hundreds of unstructured warmup tasks were created before actor-side deduplication; even a 250 ms fetch handoff lease could occasionally expire behind that queue.",
       "decision": "At the comparator boundary, check Task cancellation before treating a stream without final as structurally incomplete. In FoveaCore, propagate a lock-protected dynamic fetch handoff lease that is activated before foreground cancellation, and claim a bounded exact-execution warmup launch synchronously before any actor hop. Pending launch claims are capacity-bounded and revoked by cancelAll. Preserve the existing durability rule: warmup may retain only validated transient handoff state until a visible consumer commits it.",
       "evidencePaths": [
+        "docs/research/w7-v10-clean-calibration-2026-08.json",
         "Benchmarks/ComparativeLab/Adapters/FoveaAdapterPackage/Sources/FoveaComparatorAdapter/FoveaComparatorAdapter.swift",
         "Benchmarks/ComparativeLab/Adapters/FoveaAdapterPackage/Tests/FoveaComparatorAdapterTests/FoveaComparatorAdapterTests.swift",
         "Sources/FoveaCore/AdaptiveEncodedWarmupCoordinator.swift",
         "Sources/FoveaCore/FetchStage.swift",
         "Sources/FoveaCore/FoveaPipeline+Operations.swift",
-        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
-        ".artifacts/w7-concurrency-lab/calibration-report-fovea.json"
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
       ],
       "exitCondition": "Any replacement must retain exact cancelled outcome mapping, zero failed loads, no more than one origin execution per W7 shared identity, bounded pre-actor scheduling, cancelAll coverage of pending claims, and the no-durability-before-visible-consumer invariant.",
       "id": "NEG-W7-CANCELLATION-WARMUP-001"
@@ -1013,10 +1012,8 @@
       "evidencePaths": [
         "scripts/comparative_simulator_support.py",
         "scripts/check-comparative-coresimulator-health.py",
-        "Benchmarks/ComparativeLab/README.md",
-        ".artifacts/comparative-coresimulator-health.json",
-        ".artifacts/comparative-simulator-recovery.json",
-        ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json"
+        "scripts/recover-comparative-simulator.sh",
+        "Benchmarks/ComparativeLab/README.md"
       ],
       "exitCondition": "Any replacement must continue to reject global service, target launchd_sim and install-critical U states; preserve a global administrator mode; record ignored target-noncritical and unrelated anomalies; and prove container plus SpringBoard availability before using a noncritical anomaly as non-blocking evidence.",
       "id": "NEG-SIMULATOR-ANY-DESCENDANT-U-001"
@@ -1027,10 +1024,10 @@
       "counterexample": "Under Nuke 13.0.6 at exact commit 63a8fcbd6621340a2410bc3e9575ac97058615f4, the older background probe reached the origin after all thirty-one newer immediate requests in the clean six-comparator run and in three of three focused repeats. Client and origin concurrency remained fixed at eight and all 1,000 logical requests completed without load failure, so the result is a priority-order contract failure rather than transport collapse.",
       "decision": "Preserve Nuke native request priorities and report background-probe-bypass-bound as a comparator hard failure. Do not add an adapter scheduler or weaken the fifteen-start bound, because either would replace the library behavior being measured.",
       "evidencePaths": [
-        ".artifacts/w7-functional-diagnostics/current/calibration-report-a-tier-headless.json",
-        ".artifacts/w7-functional-diagnostics/repeats/summary.json",
+        "docs/research/w7-v10-clean-calibration-2026-08.json",
         "Benchmarks/ComparativeLab/Adapters/NukeAdapterPackage/Sources/NukeComparatorAdapter/NukeComparatorAdapter.swift",
-        "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift"
+        "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift",
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json"
       ],
       "exitCondition": "A newer exact Nuke revision may clear the finding only by passing the unchanged W7 V8 priority subtrace and fifteen-start bound in repeated clean-source runs with the same eight-slot client and origin budgets.",
       "id": "NEG-NUKE-W7-PRIORITY-BYPASS-001"
@@ -1041,12 +1038,11 @@
       "counterexample": "For one half-cancel W7 group with thirty-two identical URL, cache-key, target and namespace requests, causal instrumentation observed three transport begins for group-11: one cancelled before service and two entering the service queue, while sixteen subscribers survived and completed. SDWebImageManager performs asynchronous cache lookup before each combined operation reaches SDWebImageDownloader; downloader coalescing is keyed by URL only after that transition. Cancelling the last currently enrolled token can therefore cancel the operation before late surviving cache queries attach, causing a replacement transport. In clean focused runs the seventeenth shared transport occurred in one of three repetitions, delivered no additional bytes and produced no result-classification error.",
       "decision": "Do not attribute the V7 seventeenth request to SDWebImage. The serial preparation harness allowed an early response to finish before all nominal burst subscribers existed. Retain the observation only as historical evidence and re-evaluate the unchanged native adapter under V8.",
       "evidencePaths": [
-        ".artifacts/w7-functional-diagnostics/repeats/summary.json",
+        "docs/research/w7-control-plane-negative-results-2026-08.md",
         "Benchmarks/ComparativeLab/Adapters/SDWebImageAdapterPackage/Sources/SDWebImageComparatorAdapter/SDWebImageComparatorAdapter.swift",
-        ".artifacts/comparators/sources/SDWebImage/SDWebImage/Core/SDWebImageManager.m",
-        ".artifacts/comparators/sources/SDWebImage/SDWebImage/Core/SDWebImageDownloader.m",
-        ".artifacts/comparators/sources/SDWebImage/SDWebImage/Core/SDWebImageDownloaderOperation.m",
-        "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift"
+        "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift",
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json",
+        "Benchmarks/W7ConcurrencyLab/experiment-plan.json"
       ],
       "exitCondition": "Re-evaluate repeated clean-source W7 V8 runs. Only a V8 recurrence after the response-preparation barrier may support an upstream enrollment finding.",
       "id": "NEG-SDWEBIMAGE-W7-ASYNC-ENROLLMENT-001",
@@ -1058,11 +1054,12 @@
       "counterexample": "Every major comparator starts native work during makeLoad. W7 V7 awaited 512 creations serially; on a loaded simulator the 750 ms /w7/shared delay expired before all thirty-two subscribers for some identities existed. The duplicate identity moved across runs, including groups 12 and 6, and persisted after production-side handoff experiments, so the seventeenth origin request could not be attributed to a library single-flight defect.",
       "decision": "V8 closes a response-delivery-only /w7/shared preparation gate before constructing the 512 loads, allows native request creation and enrollment while closed, and releases only after all 512 load objects exist. It emits a hard check proving at least one shared service actually waited. V7 shared-origin results and library-specific restart attribution are archived as confounded; the independent priority subtrace remains unchanged.",
       "evidencePaths": [
+        "docs/research/w7-control-plane-negative-results-2026-08.md",
         "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkOrigin.swift",
         "Benchmarks/ComparativeLab/Apps/Shared/W7ConcurrencyWorkload.swift",
         "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
         "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v7.json",
-        ".artifacts/comparative-regression-diagnostics/v8-environment/summary.json"
+        "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v8.json"
       ],
       "exitCondition": "No exit for V7 interpretation. Any future replacement must prove all nominal shared loads exist before response completion without preventing native request creation, enrollment, cancellation or priority behavior.",
       "id": "NEG-W7-SEQUENTIAL-PREPARATION-001"
@@ -1075,7 +1072,8 @@
       "evidencePaths": [
         "scripts/run-w7-concurrency-lab.py",
         "Benchmarks/W7ConcurrencyLab/experiment-plan.json",
-        ".artifacts/comparative-regression-diagnostics/v8-environment/summary.json"
+        "Benchmarks/W7ConcurrencyLab/claim-families.json",
+        "docs/research/w7-v10-clean-calibration-2026-08.json"
       ],
       "exitCondition": "No weaker prebuilt path may be introduced. Any replacement must bind source, protocol, Simulator and App bytes before launch and use a non-colliding result name.",
       "id": "NEG-W7-UNBOUND-SKIP-BUILD-001"
@@ -1090,7 +1088,7 @@
         "scripts/run-w7-concurrency-lab.py",
         "scripts/run-comparative-simulator-lab.py",
         "scripts/run-asyncimage-simulator-lab.py",
-        ".artifacts/comparative-regression-diagnostics/v8-environment/summary.json"
+        "docs/research/w7-v10-clean-calibration-2026-08.json"
       ],
       "exitCondition": "No hard-coded Simulator identity may return. Every Simulator entry point must inject an exact profile/version/build/channel and validate it before accepting a result.",
       "id": "NEG-SIMULATOR-ENVIRONMENT-HARDCODED-001"
@@ -1107,9 +1105,50 @@
       ],
       "exitCondition": "Reconsider only with a preregistered workload that has a meaningful post-EOI verification or transport tail, and only if the candidate improves both latency distribution and bounded memory without degrading first preview, cancellation or frame stability.",
       "id": "NEG-W4-SPECULATIVE-FINAL-001"
+    },
+    {
+      "area": "progressive-jpeg-transport-completion-control-plane",
+      "claimRejected": "Replacing the URLSession event-router task and command stream with a lock-protected direct yield path will necessarily reduce Fovea post-byte latency.",
+      "counterexample": "The direct-router candidate passed all 28 focused transport tests, but median last-byte-to-fetch-completed increased from 6.61 ms to 7.87 ms. Its apparent end-to-end gain was explained by unrelated raster variance rather than the targeted control-plane segment.",
+      "decision": "Retain the actor/task-based router. Do not exchange its ordering and lifecycle structure for a lock-based path without a repeated self-normalized reduction in the targeted segment.",
+      "evidencePaths": [
+        "docs/research/w4-post-byte-control-plane-evidence-2026-08.json",
+        "Sources/FoveaHTTP/URLSessionEventRouter.swift",
+        "Sources/FoveaHTTP/URLSessionTransport.swift",
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
+      ],
+      "exitCondition": "Reconsider only after a preregistered repeated campaign shows a stable reduction in last-byte-to-fetch-completed on Fovea itself, with unchanged hard-limit, ordering, cancellation, redirect and credential-isolation tests.",
+      "id": "NEG-W4-DIRECT-URLSESSION-ROUTER-001"
+    },
+    {
+      "area": "progressive-jpeg-finalization-coordination",
+      "claimRejected": "Replacing PipelineProgressiveFinalization actor coordination with a lock-protected future will materially reduce the post-byte decode-start delay.",
+      "counterexample": "The lock-based future passed all 11 focused progressive tests, but median fetch-completed-to-decode-queued changed only from 2.96 ms to 2.84 ms, below campaign noise. The larger apparent final-latency change was entirely associated with raster variance.",
+      "decision": "Retain actor-based finalization because the candidate did not demonstrate a material attributable benefit and added synchronization complexity.",
+      "evidencePaths": [
+        "docs/research/w4-post-byte-control-plane-evidence-2026-08.json",
+        "Sources/FoveaCore/PipelineProgressivePreview.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
+      ],
+      "exitCondition": "Reconsider only if repeated targeted timing on the same raster workload demonstrates a stable material reduction in fetch-completed-to-decode-queued while preserving multi-waiter, nil completion, digest mismatch, cancellation and preparation-discard behavior.",
+      "id": "NEG-W4-LOCKED-PROGRESSIVE-FINALIZATION-001"
+    },
+    {
+      "area": "urlsession-stream-backpressure",
+      "claimRejected": "Skipping URLSessionTask suspend/resume for an exact known-length terminal chunk will reliably improve Fovea final-after-last-byte latency.",
+      "counterexample": "The terminal-chunk state machine passed 29 focused transport tests and the paired Fovea-minus-Apple gap became smaller, but Fovea own tail median worsened from 37.60 ms to 39.27 ms. Apple changed in the same campaign, proving that the apparent paired improvement was host/campaign drift rather than an attributable Fovea gain.",
+      "decision": "Keep uniform per-chunk backpressure. Do not introduce terminal-chunk special state until Fovea self-normalized measurements improve independently of comparator drift.",
+      "evidencePaths": [
+        "docs/research/w4-post-byte-control-plane-evidence-2026-08.json",
+        "Sources/FoveaHTTP/URLSessionEventRouter.swift",
+        "Sources/FoveaHTTP/URLSessionTransport.swift",
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
+      ],
+      "exitCondition": "Reconsider only with randomized interleaving and enough repeated Fovea-only and paired samples to show that Fovea own post-byte distribution improves without increasing memory, post-cancel bytes, ordering failures or incomplete-body risk.",
+      "id": "NEG-W4-TERMINAL-CHUNK-SUSPEND-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",
-  "reviewedOn": "2026-08-04",
+  "reviewedOn": "2026-08-05",
   "schemaVersion": 1
 }

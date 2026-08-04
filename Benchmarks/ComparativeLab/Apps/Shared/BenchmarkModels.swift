@@ -151,6 +151,10 @@ struct BenchmarkOriginMetrics: Codable, Sendable {
     let cancellationAcknowledgementP95Nanoseconds: UInt64
     let cancellationAcknowledgementMaximumNanoseconds: UInt64
     let completedRequestCount: Int
+    let latestCompletedAtNanoseconds: UInt64
+    let completedRequestDurationP50Nanoseconds: UInt64
+    let completedRequestDurationP95Nanoseconds: UInt64
+    let completedRequestDurationMaximumNanoseconds: UInt64
     let stoppedRequestCount: Int
     let redirectAuthorizationLeakCount: Int
     let peakConcurrentRequestCount: Int
