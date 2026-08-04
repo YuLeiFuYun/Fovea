@@ -11,6 +11,7 @@ private struct W7PreparedLoad: Sendable {
 
 private enum W7WorkloadError: Error {
     case blockerCapacityNotObserved
+    case sharedPreparationCapacityNotObserved
 }
 
 private struct W7CompletedLoad: Sendable {
@@ -36,16 +37,26 @@ extension WorkloadRunner {
         let accumulator = ObservationAccumulator()
         let threadSampler = ThreadCountSampler()
         let started = DispatchTime.now().uptimeNanoseconds
+        let phaseDiagnosticsEnabled =
+            ProcessInfo.processInfo.environment["FOVEA_W7_PHASE_DIAGNOSTICS"] == "1"
         threadSampler.start()
 
         DeterministicBenchmarkURLProtocol.closeW7SharedPreparationGate()
         defer { DeterministicBenchmarkURLProtocol.releaseW7SharedPreparationGate() }
+        if phaseDiagnosticsEnabled {
+            DeterministicBenchmarkURLProtocol.resetW7ServiceTiming()
+        }
         let coalescing = try await prepareCoalescingBurst(
             adapter: adapter,
             target: target,
             runIndex: runIndex
         )
+        let coalescingConstructionFinished =
+            phaseDiagnosticsEnabled ? DispatchTime.now().uptimeNanoseconds : 0
         let preparedLoadCount = try await waitUntilPrepared(coalescing)
+        try await waitForW7SharedPreparationCapacity()
+        let coalescingPreparationFinished =
+            phaseDiagnosticsEnabled ? DispatchTime.now().uptimeNanoseconds : 0
         let collectionTask = Task.detached { await collect(coalescing) }
         DeterministicBenchmarkURLProtocol.releaseW7SharedPreparationGate()
         try await Task.sleep(nanoseconds: 20_000_000)
@@ -53,6 +64,12 @@ extension WorkloadRunner {
             prepared.load.cancel()
         }
         let coalescingResults = await collectionTask.value
+        let coalescingCollectionFinished =
+            phaseDiagnosticsEnabled ? DispatchTime.now().uptimeNanoseconds : 0
+        let coalescingOriginTiming =
+            phaseDiagnosticsEnabled
+            ? DeterministicBenchmarkURLProtocol.w7ServiceTimingSnapshot()
+            : .zero
         for item in coalescingResults.sorted(by: { $0.sequence < $1.sequence }) {
             await accumulator.append(
                 resourceID: item.observationResourceID,
@@ -60,7 +77,12 @@ extension WorkloadRunner {
                 output: item.output
             )
         }
+        let coalescingAccumulationFinished =
+            phaseDiagnosticsEnabled ? DispatchTime.now().uptimeNanoseconds : 0
 
+        if phaseDiagnosticsEnabled {
+            DeterministicBenchmarkURLProtocol.resetW7ServiceTiming()
+        }
         let blockers = try await prepareBlockers(
             adapter: adapter,
             target: target,
@@ -76,13 +98,28 @@ extension WorkloadRunner {
         let probeCollection = Task.detached { await collect(starvationProbe) }
         let blockerResults = await blockerCollection.value
         let probeResults = await probeCollection.value
+        let blockerProbeFinished =
+            phaseDiagnosticsEnabled ? DispatchTime.now().uptimeNanoseconds : 0
+        let blockerProbeOriginTiming =
+            phaseDiagnosticsEnabled
+            ? DeterministicBenchmarkURLProtocol.w7ServiceTimingSnapshot()
+            : .zero
 
+        if phaseDiagnosticsEnabled {
+            DeterministicBenchmarkURLProtocol.resetW7ServiceTiming()
+        }
         let balanced = try await prepareBalancedPriorityBurst(
             adapter: adapter,
             target: target,
             runIndex: runIndex
         )
         let balancedResults = await collect(balanced)
+        let balancedCollectionFinished =
+            phaseDiagnosticsEnabled ? DispatchTime.now().uptimeNanoseconds : 0
+        let balancedOriginTiming =
+            phaseDiagnosticsEnabled
+            ? DeterministicBenchmarkURLProtocol.w7ServiceTimingSnapshot()
+            : .zero
         let scheduling = blockers + starvationProbe + balanced
         let schedulingResults = blockerResults + probeResults + balancedResults
         for item in schedulingResults.sorted(by: { $0.sequence < $1.sequence }) {
@@ -93,7 +130,8 @@ extension WorkloadRunner {
             )
         }
 
-        let duration = DispatchTime.now().uptimeNanoseconds &- started
+        let workloadFinished = DispatchTime.now().uptimeNanoseconds
+        let duration = workloadFinished &- started
         let threads = threadSampler.stop()
         let snapshot = await accumulator.snapshot()
         let origin = DeterministicBenchmarkURLProtocol.metrics()
@@ -151,9 +189,9 @@ extension WorkloadRunner {
                 value: max(0, sharedOriginRequests - 16)
             ),
             BenchmarkCheck(
-                identifier: "single-flight-preparation-gate-engaged",
-                passed: origin.w7SharedPreparationWaitCount > 0,
-                value: origin.w7SharedPreparationWaitCount > 0 ? 0 : 1
+                identifier: "single-flight-preparation-capacity-exact",
+                passed: origin.w7SharedPreparationWaitCount == 8,
+                value: abs(origin.w7SharedPreparationWaitCount - 8)
             ),
             BenchmarkCheck(
                 identifier: "cancelled-subscriber-count-exact",
@@ -244,6 +282,63 @@ extension WorkloadRunner {
                 value: throughputMilli
             ),
         ]
+        if phaseDiagnosticsEnabled {
+            let phaseDurations: [(String, UInt64)] = [
+                (
+                    "w7-diagnostic-coalescing-construction-ns",
+                    coalescingConstructionFinished &- started
+                ),
+                (
+                    "w7-diagnostic-coalescing-preparation-ns",
+                    coalescingPreparationFinished &- coalescingConstructionFinished
+                ),
+                (
+                    "w7-diagnostic-coalescing-execution-ns",
+                    coalescingCollectionFinished &- coalescingPreparationFinished
+                ),
+                (
+                    "w7-diagnostic-coalescing-accumulation-ns",
+                    coalescingAccumulationFinished &- coalescingCollectionFinished
+                ),
+                (
+                    "w7-diagnostic-blocker-probe-ns",
+                    blockerProbeFinished &- coalescingAccumulationFinished
+                ),
+                (
+                    "w7-diagnostic-balanced-execution-ns",
+                    balancedCollectionFinished &- blockerProbeFinished
+                ),
+                (
+                    "w7-diagnostic-scheduling-accumulation-ns",
+                    workloadFinished &- balancedCollectionFinished
+                ),
+                (
+                    "w7-diagnostic-coalescing-origin-idle-slot-ns",
+                    coalescingOriginTiming.idleSlotNanoseconds
+                ),
+                (
+                    "w7-diagnostic-blocker-probe-origin-idle-slot-ns",
+                    blockerProbeOriginTiming.idleSlotNanoseconds
+                ),
+                (
+                    "w7-diagnostic-balanced-origin-idle-slot-ns",
+                    balancedOriginTiming.idleSlotNanoseconds
+                ),
+                (
+                    "w7-diagnostic-balanced-origin-start-gap-p95-ns",
+                    balancedOriginTiming.serviceStartGapP95Nanoseconds
+                ),
+                (
+                    "w7-diagnostic-balanced-origin-start-gap-max-ns",
+                    balancedOriginTiming.serviceStartGapMaximumNanoseconds
+                ),
+            ]
+            for (identifier, value) in phaseDurations {
+                checks.append(
+                    BenchmarkCheck(identifier: identifier, passed: true, value: boundedInt(value))
+                )
+            }
+        }
         for priority in ComparatorPriority.allCasesForW7 {
             let value = percentile(
                 priorityLatencies[Substring(priority.rawValue)] ?? [], quantile: 0.95)
@@ -340,6 +435,18 @@ extension WorkloadRunner {
             )
         }
         return values
+    }
+
+    private static func waitForW7SharedPreparationCapacity() async throws {
+        let deadline = DispatchTime.now().uptimeNanoseconds + 5_000_000_000
+        while DispatchTime.now().uptimeNanoseconds < deadline {
+            let metrics = DeterministicBenchmarkURLProtocol.metrics()
+            if metrics.w7SharedPreparationWaitCount >= 8 {
+                return
+            }
+            try await Task.sleep(nanoseconds: 1_000_000)
+        }
+        throw W7WorkloadError.sharedPreparationCapacityNotObserved
     }
 
     private static func waitForW7Blockers() async throws {

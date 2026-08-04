@@ -199,19 +199,50 @@
     },
     {
       "planID": "FOVEA-W7-CONCURRENCY-V9",
-      "status": "preregistered-dirty-native-preparation-diagnostic-clean-calibration-pending",
-      "archiveSuperseded": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v8.json",
+      "status": "archived-calibration-origin-gate-readiness-insufficient",
+      "archiveSuperseded": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v9.json",
       "facts": {
-        "dirtyFoveaBuildRunPassed": 1,
-        "dirtyFoveaManifestRepeatsPassed": 8,
-        "logicalLoadsPreparedEach": 512,
-        "sharedOriginRequestsEach": 16,
-        "originPreparationWaitersEach": 8,
-        "hardFailuresEach": 0,
-        "adapterUnitTestSubscribersPrepared": 32,
-        "adapterUnitTestOriginRequests": 1
+        "logicalLoadsPrepared": 512,
+        "sharedOriginRequestsObserved": 12,
+        "originPreparationWaitersObserved": 0,
+        "cancelledSubscribers": 256,
+        "completedSubscribers": 744,
+        "failedLoads": 0,
+        "originPeakConcurrency": 8,
+        "counterexampleMechanism": "native operation may be installed yet remain locally suspended before reaching the closed origin response gate"
       },
-      "finding": "An explicit per-load preparation contract closes the gap between constructing a load handle and installing its native operation. Dirty causal diagnostics passed one build-run plus eight tree-bound repeats, each with 512 prepared loads, sixteen shared origins and zero hard failures. Clean V9 six-comparator calibration remains pending."
+      "finding": "V9 made native subscription installation explicit but still released the shared-response gate immediately after logical preparation. A bounded suspended-preparation prototype produced 512 prepared loads, correct 744/256 completion/cancellation outcomes, zero failures and origin peak eight, yet only twelve shared origin starts and zero gate waiters. Therefore V9 gate engagement depended on incidental scheduler timing and cannot support a stable cancellation/single-flight comparison. V10 adds an exact eight-waiter origin-capacity barrier before release."
+    },
+    {
+      "planID": "FOVEA-W7-CONCURRENCY-V10",
+      "status": "preregistered-dirty-six-comparator-calibration-passed-clean-pending",
+      "archiveSuperseded": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v9.json",
+      "facts": {
+        "comparatorsRun": 6,
+        "originPreparationWaitersEach": 8,
+        "sharedOriginRequestsEach": 16,
+        "originPeakConcurrencyEach": 8,
+        "foveaHardFailures": [],
+        "foveaThroughputRequestsPerSecond": 74.857,
+        "foveaP99Milliseconds": 8982.376292,
+        "foveaBackgroundProbeNewerBypasses": 8,
+        "nukeHardFailures": [
+          "background-probe-bypass-bound"
+        ],
+        "nukeBackgroundProbeNewerBypasses": 31,
+        "appleThroughputRequestsPerSecond": 79.542,
+        "kingfisherThroughputRequestsPerSecond": 79.254
+      },
+      "finding": "The first V10 six-comparator dirty-source calibration observed exactly eight shared gate waiters, sixteen shared origin requests and origin peak eight for every contestant. Fovea had no hard failures; Nuke again violated the observable starvation bound with thirty-one newer starts. Fovea remained slower than Apple native and Kingfisher, so V10 corrects causal comparability without creating a performance claim. Clean exact-source calibration remains pending.",
+      "artifact": ".artifacts/w7-concurrency-lab/calibration-report-a-tier-headless.json",
+      "artifactSHA256": "4b7cc63b86e8f9ca7e9abaaee310a9e0951e23d4358a5cb8e26b0059ed49e15a",
+      "experimentPlanDigest": "11c91da869076b1589edc7b90735023819163654f14722eafbac90b7300c5ad9",
+      "claimFamilyDigest": "13a5a72092b36733aca5ccc31ff36a9cda6de3ae609014cf3cf742d667636117",
+      "sourceIdentity": {
+        "commit": "66491b5e14674196b7c5b2af4b678996dca58e62",
+        "includesWorkingTreeChanges": true,
+        "sourceTreeDigest": "33d04f81a797244f5b95d0630052bab63e48276d73f5794dba6eb05016523f88"
+      }
     }
   ]
 }

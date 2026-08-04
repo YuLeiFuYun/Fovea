@@ -14,6 +14,20 @@ private struct OriginServiceReservation: Sendable {
     let startsImmediately: Bool
 }
 
+struct W7OriginServiceTimingSnapshot: Sendable {
+    static let zero = W7OriginServiceTimingSnapshot(
+        idleSlotNanoseconds: 0,
+        serviceStartGapP95Nanoseconds: 0,
+        serviceStartGapMaximumNanoseconds: 0,
+        serviceStartCount: 0
+    )
+
+    let idleSlotNanoseconds: UInt64
+    let serviceStartGapP95Nanoseconds: UInt64
+    let serviceStartGapMaximumNanoseconds: UInt64
+    let serviceStartCount: Int
+}
+
 private final class BenchmarkOriginState: @unchecked Sendable {
     static let shared = BenchmarkOriginState()
 
@@ -45,6 +59,9 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     private var w7ServiceLabels: [UUID: String] = [:]
     private var w7ServiceStartOrder: [String] = []
     private var w7ServiceOperations: [UUID: @Sendable (UUID) -> Void] = [:]
+    private var w7TimingLastNanoseconds: UInt64?
+    private var w7TimingIdleSlotNanoseconds: UInt64 = 0
+    private var w7TimingServiceStarts: [UInt64] = []
     private var routeRequestCounts: [String: Int] = [:]
     private var accountAData = Data()
     private var accountBData = Data()
@@ -139,6 +156,9 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         w7ServiceLabels.removeAll(keepingCapacity: true)
         w7ServiceStartOrder.removeAll(keepingCapacity: true)
         w7ServiceOperations.removeAll(keepingCapacity: true)
+        w7TimingLastNanoseconds = nil
+        w7TimingIdleSlotNanoseconds = 0
+        w7TimingServiceStarts.removeAll(keepingCapacity: true)
         routeRequestCounts.removeAll(keepingCapacity: true)
     }
 
@@ -188,12 +208,74 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         lock.unlock()
     }
 
+    func resetW7ServiceTiming() {
+        lock.lock()
+        w7TimingLastNanoseconds = DispatchTime.now().uptimeNanoseconds
+        w7TimingIdleSlotNanoseconds = 0
+        w7TimingServiceStarts.removeAll(keepingCapacity: true)
+        lock.unlock()
+    }
+
+    func w7ServiceTimingSnapshot() -> W7OriginServiceTimingSnapshot {
+        lock.lock()
+        updateW7TimingLocked(at: DispatchTime.now().uptimeNanoseconds)
+        let idle = w7TimingIdleSlotNanoseconds
+        let starts = w7TimingServiceStarts
+        lock.unlock()
+
+        let gaps = zip(starts.dropFirst(), starts).compactMap { later, earlier in
+            later >= earlier ? later - earlier : nil
+        }
+        let sortedGaps = gaps.sorted()
+        let p95: UInt64
+        if sortedGaps.isEmpty {
+            p95 = 0
+        } else {
+            let rank = max(1, Int(ceil(Double(sortedGaps.count) * 0.95)))
+            p95 = sortedGaps[min(sortedGaps.count - 1, rank - 1)]
+        }
+        return W7OriginServiceTimingSnapshot(
+            idleSlotNanoseconds: idle,
+            serviceStartGapP95Nanoseconds: p95,
+            serviceStartGapMaximumNanoseconds: sortedGaps.last ?? 0,
+            serviceStartCount: starts.count
+        )
+    }
+
+    private func updateW7TimingLocked(at now: UInt64) {
+        guard let previous = w7TimingLastNanoseconds else { return }
+        guard now >= previous else {
+            w7TimingLastNanoseconds = now
+            return
+        }
+        let elapsed = now - previous
+        let idleSlots = max(0, Self.w7ConcurrentServiceLimit - w7ActiveServiceIDs.count)
+        let (increment, productOverflow) = elapsed.multipliedReportingOverflow(
+            by: UInt64(idleSlots)
+        )
+        let boundedIncrement = productOverflow ? UInt64.max : increment
+        let (total, sumOverflow) = w7TimingIdleSlotNanoseconds.addingReportingOverflow(
+            boundedIncrement
+        )
+        w7TimingIdleSlotNanoseconds = sumOverflow ? UInt64.max : total
+        w7TimingLastNanoseconds = now
+    }
+
+    private func recordW7ServiceStartLocked(label: String, at now: UInt64) {
+        w7ServiceStartOrder.append(label)
+        if w7TimingLastNanoseconds != nil {
+            w7TimingServiceStarts.append(now)
+        }
+    }
+
     func reserveW7Service(
         label: String,
         operation: @escaping @Sendable (UUID) -> Void
     ) -> OriginServiceReservation {
         let identifier = UUID()
         lock.lock()
+        let now = DispatchTime.now().uptimeNanoseconds
+        updateW7TimingLocked(at: now)
         w7ServiceOperations[identifier] = operation
         w7ServiceLabels[identifier] = label
         let startsImmediately: Bool
@@ -203,12 +285,13 @@ private final class BenchmarkOriginState: @unchecked Sendable {
                 peakConcurrentRequestCount,
                 w7ActiveServiceIDs.count
             )
-            w7ServiceStartOrder.append(label)
+            recordW7ServiceStartLocked(label: label, at: now)
             startsImmediately = true
         } else {
             w7QueuedServiceIDs.append(identifier)
             startsImmediately = false
         }
+        w7TimingLastNanoseconds = now
         lock.unlock()
         return OriginServiceReservation(
             identifier: identifier,
@@ -233,10 +316,12 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     func releaseW7Service(_ identifier: UUID) {
         let next: (UUID, @Sendable (UUID) -> Void)?
         lock.lock()
+        let now = DispatchTime.now().uptimeNanoseconds
+        updateW7TimingLocked(at: now)
         if w7ActiveServiceIDs.remove(identifier) != nil {
             w7ServiceOperations.removeValue(forKey: identifier)
             w7ServiceLabels.removeValue(forKey: identifier)
-            next = promoteNextW7ServiceLocked()
+            next = promoteNextW7ServiceLocked(at: now)
         } else if let index = w7QueuedServiceIDs.firstIndex(of: identifier) {
             w7QueuedServiceIDs.remove(at: index)
             w7ServiceOperations.removeValue(forKey: identifier)
@@ -245,13 +330,16 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         } else {
             next = nil
         }
+        w7TimingLastNanoseconds = now
         lock.unlock()
         if let next {
             w7ServiceQueue.async { next.1(next.0) }
         }
     }
 
-    private func promoteNextW7ServiceLocked() -> (UUID, @Sendable (UUID) -> Void)? {
+    private func promoteNextW7ServiceLocked(
+        at now: UInt64
+    ) -> (UUID, @Sendable (UUID) -> Void)? {
         while !w7QueuedServiceIDs.isEmpty {
             let identifier = w7QueuedServiceIDs.removeFirst()
             guard let operation = w7ServiceOperations.removeValue(forKey: identifier),
@@ -265,7 +353,7 @@ private final class BenchmarkOriginState: @unchecked Sendable {
                 peakConcurrentRequestCount,
                 w7ActiveServiceIDs.count
             )
-            w7ServiceStartOrder.append(label)
+            recordW7ServiceStartLocked(label: label, at: now)
             return (identifier, operation)
         }
         return nil
@@ -444,6 +532,12 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
     }
 
     static func resetMetrics() { BenchmarkOriginState.shared.resetMetrics() }
+    static func resetW7ServiceTiming() {
+        BenchmarkOriginState.shared.resetW7ServiceTiming()
+    }
+    static func w7ServiceTimingSnapshot() -> W7OriginServiceTimingSnapshot {
+        BenchmarkOriginState.shared.w7ServiceTimingSnapshot()
+    }
     static func closeW7SharedPreparationGate() {
         BenchmarkOriginState.shared.closeW7SharedPreparationGate()
     }

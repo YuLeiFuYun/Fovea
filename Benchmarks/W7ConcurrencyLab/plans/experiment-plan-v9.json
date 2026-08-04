@@ -42,7 +42,7 @@
     "observation-count-exact",
     "logical-load-preparation-count-exact",
     "single-flight-origin-request-bound",
-    "single-flight-preparation-capacity-exact",
+    "single-flight-preparation-gate-engaged",
     "cancelled-subscriber-count-exact",
     "survivor-completion-count-exact",
     "priority-burst-no-starvation",
@@ -52,11 +52,11 @@
     "origin-peak-concurrency-bounded",
     "background-probe-bypass-bound"
   ],
-  "methodologyRevision": "V9 proved that all 512 logical loads had installed native subscriptions, but it still released the shared-response gate without proving that the origin service curve was fully occupied. A compliant suspended-preparation prototype produced 512 prepared loads yet zero gate waiters and only twelve shared origin starts before cancellation, so gate engagement depended on incidental scheduler timing. V10 retains the V9 per-load preparation contract and additionally waits, with a bounded fail-closed deadline, until exactly eight /w7/shared requests occupy all eight origin service slots and block on the closed response gate. Only then is the gate released and the twenty-millisecond cancellation delay started. Request shape, active client/origin budgets, priority trace, endpoints and statistical rules are otherwise unchanged.",
+  "methodologyRevision": "V8 proved that constructing 512 ComparatorLoad values and blocking shared response delivery was not sufficient: Fovea makeLoad returned after creating an events stream, while its internal pipeline task could reach the exact fetch registry later. A clean V8 repeat still created a seventeenth shared origin request with only eight origin gate waiters. V9 adds an explicit ComparatorLoad.waitUntilPrepared contract. W7 awaits all 512 preparation operations before releasing /w7/shared responses. Fovea preparation proves ordinal 1...32 exact fetch subscriber registration per shared identity; adapters that install native operations asynchronously signal only after their task, receipt or UUID is installed. Synchronous adapters use makeLoad return as the preparation boundary. Response-delivery gating, cancellation, priority, service budgets, endpoints and statistics are otherwise unchanged.",
   "notApplicable": {
     "Apple AsyncImage": "view API does not expose W7 headless load, priority, subscriber and cancellation contract"
   },
-  "planID": "FOVEA-W7-CONCURRENCY-V10",
+  "planID": "FOVEA-W7-CONCURRENCY-V9",
   "primaryEndpoints": {
     "immediate-to-background-p95-ratio": {
       "direction": "lower",
@@ -80,7 +80,7 @@
       "unit": "requests"
     }
   },
-  "schemaVersion": 10,
+  "schemaVersion": 9,
   "secondaryEndpoints": [
     "throughput",
     "stopped-origin-request-count",
@@ -104,7 +104,7 @@
     "multipleComparisonCorrection": "holm-within-claim-family",
     "resamplingUnit": "comparator-run-within-balanced-block"
   },
-  "status": "preregistered-after-v9-origin-gate-readiness-counterexample-before-formal-results",
+  "status": "preregistered-after-v8-native-preparation-counterexample-before-formal-results",
   "subtraces": {
     "priorityScheduling": {
       "balancedRoundRobin": {
@@ -168,25 +168,12 @@
         "logicalLoadsRequiredBeforeRelease": 512,
         "nativeRequestCreationAllowedWhileClosed": true,
         "releaseBeforeCancellationDelayStarts": true,
-        "responseDeliveryScope": "/w7/shared-only",
-        "waitForOriginCapacityBeforeRelease": true,
-        "requiredObservedWaitersExact": 8
+        "requiredObservedWaitersMinimum": 1,
+        "responseDeliveryScope": "/w7/shared-only"
       },
       "subscribersPerGroup": 32
     }
   },
-  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v9.json",
-  "workloadID": "W7-THOUSAND-CONCURRENT-V1",
-  "exploratoryDiagnostics": {
-    "activation": "scripts/run-w7-concurrency-lab.py --phase-diagnostics",
-    "claimBearing": false,
-    "publicationPolicy": "phase and origin-idle metrics are causal diagnostics only and cannot activate or defeat a registered claim family",
-    "metrics": [
-      "coalescing construction/preparation/execution/accumulation duration",
-      "blocker-plus-starvation-probe duration",
-      "balanced-priority execution and scheduling accumulation duration",
-      "origin idle-slot nanoseconds by subtrace",
-      "balanced origin service-start p95 and maximum gap"
-    ]
-  }
+  "supersedes": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v8.json",
+  "workloadID": "W7-THOUSAND-CONCURRENT-V1"
 }

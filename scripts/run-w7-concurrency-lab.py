@@ -59,7 +59,7 @@ HARD_CHECKS = {
     "observation-count-exact",
     "logical-load-preparation-count-exact",
     "single-flight-origin-request-bound",
-    "single-flight-preparation-gate-engaged",
+    "single-flight-preparation-capacity-exact",
     "cancelled-subscriber-count-exact",
     "survivor-completion-count-exact",
     "priority-burst-no-starvation",
@@ -84,6 +84,21 @@ MEASUREMENT_CHECKS = {
     "w7-visible-p95-latency-ns",
     "w7-immediate-p95-latency-ns",
 }
+PHASE_DIAGNOSTIC_CHECKS = {
+    "w7-diagnostic-coalescing-construction-ns",
+    "w7-diagnostic-coalescing-preparation-ns",
+    "w7-diagnostic-coalescing-execution-ns",
+    "w7-diagnostic-coalescing-accumulation-ns",
+    "w7-diagnostic-blocker-probe-ns",
+    "w7-diagnostic-balanced-execution-ns",
+    "w7-diagnostic-scheduling-accumulation-ns",
+    "w7-diagnostic-coalescing-origin-idle-slot-ns",
+    "w7-diagnostic-blocker-probe-origin-idle-slot-ns",
+    "w7-diagnostic-balanced-origin-idle-slot-ns",
+    "w7-diagnostic-balanced-origin-start-gap-p95-ns",
+    "w7-diagnostic-balanced-origin-start-gap-max-ns",
+}
+MAX_PHASE_DIAGNOSTIC_NANOSECONDS = 2_000_000_000_000
 
 
 def run(
@@ -401,7 +416,7 @@ def validate(
 ) -> dict[str, Any]:
     if data.get("schemaVersion") != 3:
         raise RuntimeError("unexpected W7 result schema")
-    if data.get("planID") != "FOVEA-W7-CONCURRENCY-V9":
+    if data.get("planID") != "FOVEA-W7-CONCURRENCY-V10":
         raise RuntimeError("unexpected W7 plan identity")
     if data.get("harnessIdentity") != identity:
         raise RuntimeError("W7 harness identity mismatch")
@@ -455,6 +470,25 @@ def validate(
             f"W7 measurement checks missing: {sorted(MEASUREMENT_CHECKS - by_id.keys())}"
         )
     metrics = {identifier: int(by_id[identifier]["value"]) for identifier in MEASUREMENT_CHECKS}
+    diagnostic_ids = PHASE_DIAGNOSTIC_CHECKS.intersection(by_id)
+    if diagnostic_ids and diagnostic_ids != PHASE_DIAGNOSTIC_CHECKS:
+        raise RuntimeError(
+            f"partial W7 phase diagnostics: {sorted(PHASE_DIAGNOSTIC_CHECKS - diagnostic_ids)}"
+        )
+    phase_diagnostics = {
+        identifier: int(by_id[identifier]["value"])
+        for identifier in PHASE_DIAGNOSTIC_CHECKS
+        if identifier in by_id
+    }
+    invalid_phase_diagnostics = {
+        identifier: value
+        for identifier, value in phase_diagnostics.items()
+        if value < 0 or value > MAX_PHASE_DIAGNOSTIC_NANOSECONDS
+    }
+    if invalid_phase_diagnostics:
+        raise RuntimeError(
+            f"invalid or saturated W7 phase diagnostics: {invalid_phase_diagnostics}"
+        )
     background = metrics["w7-background-p95-latency-ns"]
     immediate = metrics["w7-immediate-p95-latency-ns"]
     metrics["w7-immediate-to-background-p95-ratio-ppm"] = (
@@ -477,6 +511,7 @@ def validate(
             if by_id[identifier].get("passed") is not True
         ],
         "metrics": metrics,
+        "phaseDiagnostics": phase_diagnostics,
     }
 
 
@@ -490,6 +525,7 @@ def run_one(
     plan_digest: str,
     claims_digest: str,
     simulator_identity: dict[str, str],
+    phase_diagnostics: bool,
 ) -> Path:
     _, bundle = APPS[comparator]
     output_name = (
@@ -513,7 +549,7 @@ def run_one(
             "SIMCTL_CHILD_FOVEA_BENCHMARK_DIRTY": (
                 "1" if identity["includesWorkingTreeChanges"] else "0"
             ),
-            "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_ID": "FOVEA-W7-CONCURRENCY-V9",
+            "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_ID": "FOVEA-W7-CONCURRENCY-V10",
             "SIMCTL_CHILD_FOVEA_EXPERIMENT_PLAN_DIGEST": plan_digest,
             "SIMCTL_CHILD_FOVEA_CLAIM_FAMILY_DIGEST": claims_digest,
             "SIMCTL_CHILD_FOVEA_SIMULATOR_PROFILE_ID": simulator_identity["deviceProfileID"],
@@ -522,6 +558,8 @@ def run_one(
             "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_CHANNEL": simulator_identity["osChannel"],
         }
     )
+    if phase_diagnostics:
+        child["SIMCTL_CHILD_FOVEA_W7_PHASE_DIAGNOSTICS"] = "1"
     launch = run(
         [
             "xcrun",
@@ -604,6 +642,7 @@ def write_report(
                 "artifact": str(path.relative_to(ROOT)),
                 "hardFailures": validated["hardFailures"],
                 "metrics": validated["metrics"],
+                "phaseDiagnostics": validated["phaseDiagnostics"],
             }
         )
     fovea_failures = next(
@@ -611,7 +650,7 @@ def write_report(
     )
     report = {
         "schemaVersion": 1,
-        "planID": "FOVEA-W7-CONCURRENCY-V9",
+        "planID": "FOVEA-W7-CONCURRENCY-V10",
         "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
         "mode": "simulator-calibration",
         "executionEnvironment": "simulator",
@@ -631,6 +670,7 @@ def write_report(
         "asyncImageApplicability": "not-applicable-headless-contract",
         "runCount": len(entries),
         "logicalRequestsPerRun": 1000,
+        "phaseDiagnosticsEnabled": all(bool(item["phaseDiagnostics"]) for item in entries),
         "foveaHardFailures": fovea_failures,
         "comparatorResults": entries,
         "status": "completed" if not fovea_failures else "fovea-hard-failure",
@@ -662,6 +702,11 @@ def main() -> int:
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--skip-prepare", action="store_true")
     parser.add_argument("--aggregate-only", action="store_true")
+    parser.add_argument(
+        "--phase-diagnostics",
+        action="store_true",
+        help="Emit exploratory, non-claim-bearing W7 phase durations.",
+    )
     parser.add_argument(
         "--include-b-tier",
         action="store_true",
@@ -707,7 +752,12 @@ def main() -> int:
                 claims_digest=claims_digest,
             )
             report = write_report(
-                paths, selected, identity, plan_digest, claims_digest, simulator_identity
+                paths,
+                selected,
+                identity,
+                plan_digest,
+                claims_digest,
+                simulator_identity,
             )
             return 0 if report["status"] == "completed" else 1
         simulator_identity = simulator(env)
@@ -738,10 +788,16 @@ def main() -> int:
                     plan_digest=plan_digest,
                     claims_digest=claims_digest,
                     simulator_identity=simulator_identity,
+                    phase_diagnostics=args.phase_diagnostics,
                 )
             )
         report = write_report(
-            paths, selected, identity, plan_digest, claims_digest, simulator_identity
+            paths,
+            selected,
+            identity,
+            plan_digest,
+            claims_digest,
+            simulator_identity,
         )
         return 0 if report["status"] == "completed" else 1
     except Exception as error:

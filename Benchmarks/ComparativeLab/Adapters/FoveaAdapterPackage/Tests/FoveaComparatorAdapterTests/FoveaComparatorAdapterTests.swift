@@ -55,7 +55,9 @@ final class FoveaComparatorAdapterTests: XCTestCase {
         await adapter.cancelAll()
     }
 
-    func testPreparedWaitCoversEverySharedFetchSubscriber() async throws {
+    func testPreparedWaitCoversEverySharedFetchSubscriberWithoutRequiringTransportStart()
+        async throws
+    {
         let cacheRoot = FileManager.default.temporaryDirectory
             .appendingPathComponent("fovea-comparator-prepared-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: cacheRoot) }
@@ -93,7 +95,10 @@ final class FoveaComparatorAdapterTests: XCTestCase {
             try await group.waitForAll()
         }
 
-        XCTAssertEqual(NeverCompletingURLProtocol.startCount, 1)
+        // Subscriber registration is the adapter preparation boundary. V10 separately waits
+        // for all eight origin service slots before opening the response gate, so this unit test
+        // must not reintroduce V9's assumption that registration implies transport start.
+        XCTAssertLessThanOrEqual(NeverCompletingURLProtocol.startCount, 1)
         for load in loads { load.cancel() }
         let outputs = await withTaskGroup(of: ComparatorLoadOutput.self) { group in
             for load in loads { group.addTask { await load.result() } }
