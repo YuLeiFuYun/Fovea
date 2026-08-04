@@ -81,8 +81,8 @@
     {
       "id": "P2-IMAGECRAFT-EXTERNAL-SWITCH-001",
       "phase": "P2",
-      "status": "clean-alpha5-composition-and-simulator-host-evidence-qualified-public-ci-pending",
-      "summary": "Fovea consumes ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) as the only supported exact revision. Clean premerge, conformance, Release, iOS Simulator 485/485 and five-relaunch progressive host evidence 10/10 pass; public CI, Git-free clean-copy, production streaming and physical-device evidence remain open."
+      "status": "clean-alpha5-composition-simulator-host-and-portable-source-copy-qualified-public-ci-pending",
+      "summary": "Fovea consumes ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) as the only supported exact revision. Clean premerge, conformance, Release, iOS Simulator 485/485, five-relaunch host evidence 10/10, and git-archive portable replay (root 484/484, Release, rebuilt-comparator CacheLab 7/7) pass; public CI, production streaming and physical-device evidence remain open. Full profile portability remains a tooling obligation."
     },
     {
       "id": "P6-CROSS-REPOSITORY-CONFORMANCE-001",

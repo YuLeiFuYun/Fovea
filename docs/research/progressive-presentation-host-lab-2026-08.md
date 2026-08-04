@@ -51,3 +51,9 @@ python3 scripts/run-progressive-presentation-simulator-lab.py --iterations 3
 python3 scripts/validate-progressive-presentation-evidence.py \
   docs/research/progressive-presentation-simulator-evidence-2026-08.json
 ```
+
+## Portable source-copy replay
+
+从证据提交后的仓库使用 `git archive` 物化无 `.git` 副本。该副本重新解析 ImageCraft/Akashic 精确 revision，重算本证据，执行 root tests 484/484、Release build，并由 `prepare-comparator-sources.py` 按锁定 commit 重建 7 个 comparator checkout 后完成 CacheLab 7/7。
+
+Fovea 的完整 verification profile 不是 Git-free 工具：profile 规划、traceability/architecture/sensitive/tooling 的部分自测依赖 Git 工作树身份，engineering-knowledge 还依赖不受版本管理的 `.artifacts/mathematics`。因此本次只把可移植 package/evidence/benchmark 重放称为通过，不声称整个治理外壳在无 Git 环境可执行。该限制应在未来由显式 source-manifest/portable-profile 解决。

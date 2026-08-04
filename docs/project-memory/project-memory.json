@@ -412,7 +412,7 @@
       "cleanCopySourceDigest": "a8e2da06e42d5e6d35398e839f04e8bfcb3b0003fef0c4f02147be37cb0034f2",
       "hostTestsPerScenario": 478,
       "imageCraftRevision": "bc93b8df0337d7a57779b53106dd744ad97b095e",
-      "status": "imagecraft-alpha5-clean-composition-and-simulator-host-evidence-qualified-public-ci-pending"
+      "status": "imagecraft-alpha5-clean-composition-simulator-host-and-portable-source-copy-qualified-public-ci-pending"
     },
     "finalATierHeadlessAggregateStatus": "current-clean-source-functional-30-spec-complete-performance-host-quiescence-blocked",
     "finalSwiftUISurfaceAggregateStatus": "current-clean-source-30-run-structural-complete-performance-host-quiescence-blocked",
@@ -904,7 +904,7 @@
       "id": "OPEN-IMAGECRAFT-PHYSICAL-INTEGRATION",
       "priority": 1,
       "status": "current-exact-pin-public-ci-green-device-evidence-pending",
-      "summary": "Fovea consumes ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) as the only supported revision. Clean premerge, both conformance kits, Release, CacheLab, loopback, macOS root tests, iOS Simulator 485/485, and five-process-relaunch progressive host evidence 10/10 pass; public CI, Git-free clean-copy, production streaming integration and physical-device resource/presentation evidence remain open."
+      "summary": "Fovea consumes ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) as the only supported revision. Clean premerge, both conformance kits, Release, CacheLab, loopback, macOS root tests, iOS Simulator 485/485, five-relaunch progressive host evidence 10/10, and git-archive portable replay (root 484/484, Release, rebuilt-comparator CacheLab 7/7) pass; public CI, production streaming integration and physical-device resource/presentation evidence remain open. Full verification-profile portability is separately blocked by Git/generated-artifact assumptions."
     },
     {
       "id": "OPEN-AKASHIC-INDEPENDENT-PACKAGE",
