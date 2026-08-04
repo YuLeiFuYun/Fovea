@@ -240,11 +240,13 @@
         let sourceByteCount: Int
         let elapsedNanoseconds: UInt64
         let imageID: UInt64
+        let retainedImage: CGImage
     }
 
     private struct ProgressiveFinalTraceEvent: Sendable {
         let elapsedNanoseconds: UInt64
         let imageID: UInt64
+        let retainedImage: CGImage
     }
 
     private struct ProgressiveHostTraceSnapshot: Sendable {
@@ -460,6 +462,7 @@
             let event = ProgressiveFinalTraceEvent(
                 elapsedNanoseconds: elapsedNanoseconds(),
                 imageID: identifier,
+                retainedImage: image.cgImage,
             )
             lock.withLock { state.finalEmitted = event }
         }
@@ -499,6 +502,7 @@
                 sourceByteCount: sourceByteCount,
                 elapsedNanoseconds: elapsedNanoseconds(),
                 imageID: identifier,
+                retainedImage: image.cgImage,
             )
             lock.withLock { state[keyPath: destination].append(event) }
         }

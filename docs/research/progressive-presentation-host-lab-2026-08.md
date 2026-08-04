@@ -37,4 +37,4 @@ test-only URLProtocol
 python3 scripts/run-progressive-presentation-simulator-lab.py --iterations 3
 ```
 
-脚本保留 `.xcresult`、xcodebuild 日志、Simulator/Xcode/Swift 身份、Fovea commit/tree、工作树状态以及 ImageCraft/Akashic 精确 revision。v2 还从每次 XCTest 执行解析 Base64 JSON 时间线，保存 URLSession 累计字节、generation/sourceByteCount、preview/final 发布、CADisplayLink 观察、publication fence 与 suppression 顺序；进程内 CGImage 指针只用于关联，写入报告前会映射为 `preview(generation)`、`final` 或 `other`，不会被当作跨运行身份。runner 对每份样本独立重算不变量和统计。正式证据必须从 clean commit 捕获。
+脚本保留 `.xcresult`、xcodebuild 日志、Simulator/Xcode/Swift 身份、Fovea commit/tree、工作树状态以及 ImageCraft/Akashic 精确 revision。v2 还从每次 XCTest 执行解析 Base64 JSON 时间线，保存 URLSession 累计字节、generation/sourceByteCount、preview/final 发布、CADisplayLink 观察、publication fence 与 suppression 顺序。trace 在单次测试内强持有参与关联的 CGImage，防止 allocator 复用指针地址造成 preview/final 假碰撞；进程内指针只作为存活期关联 token，写入报告前会映射为 `preview(generation)`、`final` 或 `other`，不会被当作跨运行身份。runner 对每份样本独立重算不变量和统计。正式证据必须从 clean commit 捕获。
