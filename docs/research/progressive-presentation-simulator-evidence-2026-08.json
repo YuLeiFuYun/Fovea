@@ -1,0 +1,1588 @@
+{
+  "capturedArtifactDigests": {
+    "rawReportSHA256": "0db69c2b6de7348a7a3ed1eb5d3324e2da1ef21a43b5b6a3095b6f6f4bfb2ad2",
+    "xcodebuildLogSHA256": "fe06b720f5002e559afa829c1bea99837b684552f75a26957aa8a1e68245b2d5",
+    "xcresultBundleByteCount": 451269,
+    "xcresultSummarySHA256": "0f1072a034bc56a12f70bc8dce2a31a765ba466ce0f97e01f5a00c15947d704f"
+  },
+  "claimBoundary": {
+    "applicability": "retained USDA progressive JPEG, test-only URLSession delegate, iPhone 17 Pro iOS 27.0 Simulator, FoveaImageView host seam",
+    "physicalPresentationMeasured": false,
+    "productionStreamingSupported": false,
+    "provisional": true,
+    "reason": "The experiment exercises real Simulator URLSession/ImageIO/UIKit/CADisplayLink behavior but bypasses production URLSessionTransport staging and does not observe Core Animation, GPU present, physical scanout, energy, or a physical device.",
+    "releasePerformanceClaimPermitted": false
+  },
+  "environment": {
+    "architecture": "arm64",
+    "deviceName": "iPhone 17 Pro",
+    "modelName": "iPhone 17 Pro",
+    "osBuildNumber": "24A5355p",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator",
+    "swiftVersion": "swift-driver version: 1.168.5 Apple Swift version 6.4 (swiftlang-6.4.0.27.1 clang-2100.3.27.1)\nTarget: arm64-apple-macosx27.0.0",
+    "testEnvironmentDescription": "Fovea-Package · Built with macOS 27.0",
+    "xcodeVersion": "Xcode 27.0\nBuild version 27A5228h"
+  },
+  "evidenceID": "FOVEA-PROGRESSIVE-PRESENTATION-SIMULATOR-V2-2026-08-04",
+  "execution": {
+    "evidenceSampleCount": 10,
+    "failedTests": 0,
+    "passedTestExecutions": 10,
+    "passedUniqueTests": 2,
+    "result": "Passed",
+    "scenarioCounts": {
+      "complete": 5,
+      "identity-replacement": 5
+    },
+    "skippedTests": 0,
+    "xctestDurationNanoseconds": {
+      "testChunkedURLSessionPreviewReachesDisplayLinkBeforeFinal_UI_PT_029": {
+        "samples": [
+          1130000000,
+          845000000,
+          835000000,
+          825000000,
+          817000000
+        ],
+        "statistics": {
+          "maximum": 1130000000,
+          "mean": 890400000,
+          "median": 835000000,
+          "minimum": 817000000,
+          "p90": 1130000000
+        }
+      },
+      "testIdentityReplacementClosesPublicationFenceBeforeOldPreview_UI_PT_030": {
+        "samples": [
+          113000000,
+          109000000,
+          111000000,
+          130000000,
+          108000000
+        ],
+        "statistics": {
+          "maximum": 130000000,
+          "mean": 114200000,
+          "median": 111000000,
+          "minimum": 108000000,
+          "p90": 130000000
+        }
+      }
+    }
+  },
+  "findings": [
+    "All five complete runs received exactly 23 chunks and emitted four generations in strict order [1,2,3,4] at cumulative source byte counts [32768,65536,81920,163840].",
+    "CADisplayLink first observed a preview at median 129144833 ns and final pixels at median 812619167 ns from per-test trace origin.",
+    "The median observed progressive-visible window was 683474334 ns; this is descriptive Simulator evidence, not physical presentation latency.",
+    "Across five identity replacements, publication fence to old-preview suppression had median 138125 ns and oldPreviewObservedAfterReplacementCount was zero.",
+    "Repeated execution exposed and corrected a test-oracle defect: process-local CGImage pointer addresses can be reused after deallocation, so trace correlation now strongly retains participating images and strips pointer tokens before evidence serialization."
+  ],
+  "generatedAt": "2026-08-04T06:42:31.161532+00:00",
+  "methodIdentity": {
+    "completeScenario": {
+      "chunkSizeBytes": 16384,
+      "interChunkDelayNanoseconds": 30000000,
+      "requiredBoundary": "URLSessionDataDelegate -> ImageCraft progressive session -> FoveaImageView -> CADisplayLink preview before final"
+    },
+    "identityReplacementScenario": {
+      "chunkSizeBytes": 32768,
+      "interChunkDelayNanoseconds": 20000000,
+      "requiredBoundary": "generated preview paused before publication -> view identity replacement -> publication fence close -> old preview suppression"
+    },
+    "iterationsPerTest": 5,
+    "labID": "fovea-progressive-presentation-simulator-v2",
+    "presentationBoundary": "CADisplayLink observation, not Core Animation/GPU/physical scanout",
+    "processRelaunchPerIteration": true,
+    "testClass": "FoveaTests/ProgressivePresentationHostTests",
+    "testExecutionCount": 10,
+    "testMethods": [
+      "testChunkedURLSessionPreviewReachesDisplayLinkBeforeFinal_UI_PT_029",
+      "testIdentityReplacementClosesPublicationFenceBeforeOldPreview_UI_PT_030"
+    ]
+  },
+  "remainingEvidence": [
+    "Integrate a bounded streaming fan-out seam into production URLSessionTransport without weakening staging, Content-Length, digest, ContentID, namespace-generation, revoke, no-store/private, and persistence boundaries.",
+    "Measure Core Animation transaction and presentation timestamps in a dedicated app host rather than treating CADisplayLink callbacks as scanout.",
+    "Repeat on physical devices, including lower-performance hardware, with energy, thermal state, memory, cancellation overlap, and network variability.",
+    "Add adversarial progressive streams, MIME/magic mismatch, truncation, oversized body, redirect, authentication, revoke, and multi-subscriber cancellation cases."
+  ],
+  "samples": [
+    {
+      "chunkSizeBytes": 16384,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 469625583,
+          "generation": 1,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 484827833,
+          "generation": 2,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 502933500,
+          "generation": 3,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 684987417,
+          "generation": 4,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 1084786708,
+          "kind": "final"
+        }
+      ],
+      "emittedPreviews": [
+        {
+          "elapsedNanoseconds": 461334792,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 470777083,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 499953750,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 674129250,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "finalEmittedElapsedNanoseconds": 1079464208,
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 461324167,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 470772917,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 499947458,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 674125375,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "intervalNanoseconds": 30000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 16384,
+          "elapsedNanoseconds": 372089458,
+          "index": 0
+        },
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 403336417,
+          "index": 1
+        },
+        {
+          "cumulativeByteCount": 49152,
+          "elapsedNanoseconds": 461465333,
+          "index": 2
+        },
+        {
+          "cumulativeByteCount": 65536,
+          "elapsedNanoseconds": 463585542,
+          "index": 3
+        },
+        {
+          "cumulativeByteCount": 81920,
+          "elapsedNanoseconds": 493750417,
+          "index": 4
+        },
+        {
+          "cumulativeByteCount": 98304,
+          "elapsedNanoseconds": 524169542,
+          "index": 5
+        },
+        {
+          "cumulativeByteCount": 114688,
+          "elapsedNanoseconds": 554614292,
+          "index": 6
+        },
+        {
+          "cumulativeByteCount": 131072,
+          "elapsedNanoseconds": 584980958,
+          "index": 7
+        },
+        {
+          "cumulativeByteCount": 147456,
+          "elapsedNanoseconds": 617177625,
+          "index": 8
+        },
+        {
+          "cumulativeByteCount": 163840,
+          "elapsedNanoseconds": 648080667,
+          "index": 9
+        },
+        {
+          "cumulativeByteCount": 180224,
+          "elapsedNanoseconds": 678077875,
+          "index": 10
+        },
+        {
+          "cumulativeByteCount": 196608,
+          "elapsedNanoseconds": 709429917,
+          "index": 11
+        },
+        {
+          "cumulativeByteCount": 212992,
+          "elapsedNanoseconds": 740215750,
+          "index": 12
+        },
+        {
+          "cumulativeByteCount": 229376,
+          "elapsedNanoseconds": 772365750,
+          "index": 13
+        },
+        {
+          "cumulativeByteCount": 245760,
+          "elapsedNanoseconds": 803162417,
+          "index": 14
+        },
+        {
+          "cumulativeByteCount": 262144,
+          "elapsedNanoseconds": 838173375,
+          "index": 15
+        },
+        {
+          "cumulativeByteCount": 278528,
+          "elapsedNanoseconds": 867612542,
+          "index": 16
+        },
+        {
+          "cumulativeByteCount": 294912,
+          "elapsedNanoseconds": 897734667,
+          "index": 17
+        },
+        {
+          "cumulativeByteCount": 311296,
+          "elapsedNanoseconds": 928694792,
+          "index": 18
+        },
+        {
+          "cumulativeByteCount": 327680,
+          "elapsedNanoseconds": 960975792,
+          "index": 19
+        },
+        {
+          "cumulativeByteCount": 344064,
+          "elapsedNanoseconds": 991753083,
+          "index": 20
+        },
+        {
+          "cumulativeByteCount": 360448,
+          "elapsedNanoseconds": 1022956417,
+          "index": 21
+        },
+        {
+          "cumulativeByteCount": 370199,
+          "elapsedNanoseconds": 1053192042,
+          "index": 22
+        }
+      ],
+      "previewDisplayedBeforeFinal": true,
+      "scenario": "complete",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [],
+      "targetHeight": 341,
+      "targetWidth": 512
+    },
+    {
+      "chunkSizeBytes": 32768,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 21694208,
+          "kind": "other"
+        }
+      ],
+      "emittedPreviews": [],
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 9121958,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "intervalNanoseconds": 20000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 4459750,
+          "index": 0
+        }
+      ],
+      "oldPreviewObservedAfterReplacement": false,
+      "publicationFenceBeforeSuppression": true,
+      "publicationFenceClosedElapsedNanoseconds": 19660667,
+      "scenario": "identity-replacement",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [
+        {
+          "elapsedNanoseconds": 19768250,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "targetHeight": 341,
+      "targetWidth": 512
+    },
+    {
+      "chunkSizeBytes": 16384,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 117018917,
+          "generation": 1,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 183694542,
+          "generation": 2,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 217019875,
+          "generation": 3,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 368496667,
+          "generation": 4,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 818517625,
+          "kind": "final"
+        }
+      ],
+      "emittedPreviews": [
+        {
+          "elapsedNanoseconds": 116379667,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 173990500,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 202422042,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 366716542,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "finalEmittedElapsedNanoseconds": 811084375,
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 116369917,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 173984250,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 202418667,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 366713167,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "intervalNanoseconds": 30000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 16384,
+          "elapsedNanoseconds": 68592000,
+          "index": 0
+        },
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 99855625,
+          "index": 1
+        },
+        {
+          "cumulativeByteCount": 49152,
+          "elapsedNanoseconds": 131319125,
+          "index": 2
+        },
+        {
+          "cumulativeByteCount": 65536,
+          "elapsedNanoseconds": 162901250,
+          "index": 3
+        },
+        {
+          "cumulativeByteCount": 81920,
+          "elapsedNanoseconds": 195044709,
+          "index": 4
+        },
+        {
+          "cumulativeByteCount": 98304,
+          "elapsedNanoseconds": 225694875,
+          "index": 5
+        },
+        {
+          "cumulativeByteCount": 114688,
+          "elapsedNanoseconds": 257764375,
+          "index": 6
+        },
+        {
+          "cumulativeByteCount": 131072,
+          "elapsedNanoseconds": 288596792,
+          "index": 7
+        },
+        {
+          "cumulativeByteCount": 147456,
+          "elapsedNanoseconds": 319683625,
+          "index": 8
+        },
+        {
+          "cumulativeByteCount": 163840,
+          "elapsedNanoseconds": 349868792,
+          "index": 9
+        },
+        {
+          "cumulativeByteCount": 180224,
+          "elapsedNanoseconds": 382056584,
+          "index": 10
+        },
+        {
+          "cumulativeByteCount": 196608,
+          "elapsedNanoseconds": 413526792,
+          "index": 11
+        },
+        {
+          "cumulativeByteCount": 212992,
+          "elapsedNanoseconds": 445265667,
+          "index": 12
+        },
+        {
+          "cumulativeByteCount": 229376,
+          "elapsedNanoseconds": 475525625,
+          "index": 13
+        },
+        {
+          "cumulativeByteCount": 245760,
+          "elapsedNanoseconds": 512061292,
+          "index": 14
+        },
+        {
+          "cumulativeByteCount": 262144,
+          "elapsedNanoseconds": 541243125,
+          "index": 15
+        },
+        {
+          "cumulativeByteCount": 278528,
+          "elapsedNanoseconds": 572843750,
+          "index": 16
+        },
+        {
+          "cumulativeByteCount": 294912,
+          "elapsedNanoseconds": 609990334,
+          "index": 17
+        },
+        {
+          "cumulativeByteCount": 311296,
+          "elapsedNanoseconds": 641613667,
+          "index": 18
+        },
+        {
+          "cumulativeByteCount": 327680,
+          "elapsedNanoseconds": 673031667,
+          "index": 19
+        },
+        {
+          "cumulativeByteCount": 344064,
+          "elapsedNanoseconds": 708195959,
+          "index": 20
+        },
+        {
+          "cumulativeByteCount": 360448,
+          "elapsedNanoseconds": 738505334,
+          "index": 21
+        },
+        {
+          "cumulativeByteCount": 370199,
+          "elapsedNanoseconds": 773421625,
+          "index": 22
+        }
+      ],
+      "previewDisplayedBeforeFinal": true,
+      "scenario": "complete",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [],
+      "targetHeight": 341,
+      "targetWidth": 512
+    },
+    {
+      "chunkSizeBytes": 32768,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 23400333,
+          "kind": "other"
+        }
+      ],
+      "emittedPreviews": [],
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 13560250,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "intervalNanoseconds": 20000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 6313166,
+          "index": 0
+        }
+      ],
+      "oldPreviewObservedAfterReplacement": false,
+      "publicationFenceBeforeSuppression": true,
+      "publicationFenceClosedElapsedNanoseconds": 19941875,
+      "scenario": "identity-replacement",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [
+        {
+          "elapsedNanoseconds": 20080000,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "targetHeight": 341,
+      "targetWidth": 512
+    },
+    {
+      "chunkSizeBytes": 16384,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 129144833,
+          "generation": 1,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 177664083,
+          "generation": 2,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 210987500,
+          "generation": 3,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 377640625,
+          "generation": 4,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 812619167,
+          "kind": "final"
+        }
+      ],
+      "emittedPreviews": [
+        {
+          "elapsedNanoseconds": 126142167,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 171175792,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 201831500,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 370119708,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "finalEmittedElapsedNanoseconds": 801018417,
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 126132792,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 171171292,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 201827083,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 370115167,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "intervalNanoseconds": 30000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 16384,
+          "elapsedNanoseconds": 72802917,
+          "index": 0
+        },
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 102628958,
+          "index": 1
+        },
+        {
+          "cumulativeByteCount": 49152,
+          "elapsedNanoseconds": 134728625,
+          "index": 2
+        },
+        {
+          "cumulativeByteCount": 65536,
+          "elapsedNanoseconds": 165572375,
+          "index": 3
+        },
+        {
+          "cumulativeByteCount": 81920,
+          "elapsedNanoseconds": 195931958,
+          "index": 4
+        },
+        {
+          "cumulativeByteCount": 98304,
+          "elapsedNanoseconds": 227997833,
+          "index": 5
+        },
+        {
+          "cumulativeByteCount": 114688,
+          "elapsedNanoseconds": 260073250,
+          "index": 6
+        },
+        {
+          "cumulativeByteCount": 131072,
+          "elapsedNanoseconds": 292144083,
+          "index": 7
+        },
+        {
+          "cumulativeByteCount": 147456,
+          "elapsedNanoseconds": 324220625,
+          "index": 8
+        },
+        {
+          "cumulativeByteCount": 163840,
+          "elapsedNanoseconds": 355966500,
+          "index": 9
+        },
+        {
+          "cumulativeByteCount": 180224,
+          "elapsedNanoseconds": 387540208,
+          "index": 10
+        },
+        {
+          "cumulativeByteCount": 196608,
+          "elapsedNanoseconds": 419088042,
+          "index": 11
+        },
+        {
+          "cumulativeByteCount": 212992,
+          "elapsedNanoseconds": 451163417,
+          "index": 12
+        },
+        {
+          "cumulativeByteCount": 229376,
+          "elapsedNanoseconds": 484544083,
+          "index": 13
+        },
+        {
+          "cumulativeByteCount": 245760,
+          "elapsedNanoseconds": 514871250,
+          "index": 14
+        },
+        {
+          "cumulativeByteCount": 262144,
+          "elapsedNanoseconds": 546649208,
+          "index": 15
+        },
+        {
+          "cumulativeByteCount": 278528,
+          "elapsedNanoseconds": 578046042,
+          "index": 16
+        },
+        {
+          "cumulativeByteCount": 294912,
+          "elapsedNanoseconds": 608813625,
+          "index": 17
+        },
+        {
+          "cumulativeByteCount": 311296,
+          "elapsedNanoseconds": 640802042,
+          "index": 18
+        },
+        {
+          "cumulativeByteCount": 327680,
+          "elapsedNanoseconds": 670985958,
+          "index": 19
+        },
+        {
+          "cumulativeByteCount": 344064,
+          "elapsedNanoseconds": 702924958,
+          "index": 20
+        },
+        {
+          "cumulativeByteCount": 360448,
+          "elapsedNanoseconds": 734920750,
+          "index": 21
+        },
+        {
+          "cumulativeByteCount": 370199,
+          "elapsedNanoseconds": 765643875,
+          "index": 22
+        }
+      ],
+      "previewDisplayedBeforeFinal": true,
+      "scenario": "complete",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [],
+      "targetHeight": 341,
+      "targetWidth": 512
+    },
+    {
+      "chunkSizeBytes": 32768,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 26991583,
+          "kind": "other"
+        }
+      ],
+      "emittedPreviews": [],
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 11351917,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "intervalNanoseconds": 20000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 5321375,
+          "index": 0
+        }
+      ],
+      "oldPreviewObservedAfterReplacement": false,
+      "publicationFenceBeforeSuppression": true,
+      "publicationFenceClosedElapsedNanoseconds": 18476958,
+      "scenario": "identity-replacement",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [
+        {
+          "elapsedNanoseconds": 18729250,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "targetHeight": 341,
+      "targetWidth": 512
+    },
+    {
+      "chunkSizeBytes": 16384,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 134095541,
+          "generation": 1,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 186637666,
+          "generation": 2,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 219941166,
+          "generation": 3,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 386654166,
+          "generation": 4,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 802308083,
+          "kind": "final"
+        }
+      ],
+      "emittedPreviews": [
+        {
+          "elapsedNanoseconds": 124212750,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 173283208,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 209060041,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 379821291,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "finalEmittedElapsedNanoseconds": 793353166,
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 124202791,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 173278375,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 209054375,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 379815375,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "intervalNanoseconds": 30000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 16384,
+          "elapsedNanoseconds": 74452541,
+          "index": 0
+        },
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 104369708,
+          "index": 1
+        },
+        {
+          "cumulativeByteCount": 49152,
+          "elapsedNanoseconds": 136550875,
+          "index": 2
+        },
+        {
+          "cumulativeByteCount": 65536,
+          "elapsedNanoseconds": 167442791,
+          "index": 3
+        },
+        {
+          "cumulativeByteCount": 81920,
+          "elapsedNanoseconds": 201108833,
+          "index": 4
+        },
+        {
+          "cumulativeByteCount": 98304,
+          "elapsedNanoseconds": 232070125,
+          "index": 5
+        },
+        {
+          "cumulativeByteCount": 114688,
+          "elapsedNanoseconds": 264009375,
+          "index": 6
+        },
+        {
+          "cumulativeByteCount": 131072,
+          "elapsedNanoseconds": 295147125,
+          "index": 7
+        },
+        {
+          "cumulativeByteCount": 147456,
+          "elapsedNanoseconds": 326512416,
+          "index": 8
+        },
+        {
+          "cumulativeByteCount": 163840,
+          "elapsedNanoseconds": 357440333,
+          "index": 9
+        },
+        {
+          "cumulativeByteCount": 180224,
+          "elapsedNanoseconds": 388725583,
+          "index": 10
+        },
+        {
+          "cumulativeByteCount": 196608,
+          "elapsedNanoseconds": 419858833,
+          "index": 11
+        },
+        {
+          "cumulativeByteCount": 212992,
+          "elapsedNanoseconds": 451392125,
+          "index": 12
+        },
+        {
+          "cumulativeByteCount": 229376,
+          "elapsedNanoseconds": 482011500,
+          "index": 13
+        },
+        {
+          "cumulativeByteCount": 245760,
+          "elapsedNanoseconds": 518048250,
+          "index": 14
+        },
+        {
+          "cumulativeByteCount": 262144,
+          "elapsedNanoseconds": 549769083,
+          "index": 15
+        },
+        {
+          "cumulativeByteCount": 278528,
+          "elapsedNanoseconds": 581524833,
+          "index": 16
+        },
+        {
+          "cumulativeByteCount": 294912,
+          "elapsedNanoseconds": 612833625,
+          "index": 17
+        },
+        {
+          "cumulativeByteCount": 311296,
+          "elapsedNanoseconds": 643752291,
+          "index": 18
+        },
+        {
+          "cumulativeByteCount": 327680,
+          "elapsedNanoseconds": 675029833,
+          "index": 19
+        },
+        {
+          "cumulativeByteCount": 344064,
+          "elapsedNanoseconds": 706912125,
+          "index": 20
+        },
+        {
+          "cumulativeByteCount": 360448,
+          "elapsedNanoseconds": 738020916,
+          "index": 21
+        },
+        {
+          "cumulativeByteCount": 370199,
+          "elapsedNanoseconds": 769287166,
+          "index": 22
+        }
+      ],
+      "previewDisplayedBeforeFinal": true,
+      "scenario": "complete",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [],
+      "targetHeight": 341,
+      "targetWidth": 512
+    },
+    {
+      "chunkSizeBytes": 32768,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 44212917,
+          "kind": "other"
+        }
+      ],
+      "emittedPreviews": [],
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 28268292,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "intervalNanoseconds": 20000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 4373792,
+          "index": 0
+        }
+      ],
+      "oldPreviewObservedAfterReplacement": false,
+      "publicationFenceBeforeSuppression": true,
+      "publicationFenceClosedElapsedNanoseconds": 33651875,
+      "scenario": "identity-replacement",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [
+        {
+          "elapsedNanoseconds": 33799083,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "targetHeight": 341,
+      "targetWidth": 512
+    },
+    {
+      "chunkSizeBytes": 16384,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 120440792,
+          "generation": 1,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 170571125,
+          "generation": 2,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 204302917,
+          "generation": 3,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 388167792,
+          "generation": 4,
+          "kind": "preview"
+        },
+        {
+          "elapsedNanoseconds": 804301625,
+          "kind": "final"
+        }
+      ],
+      "emittedPreviews": [
+        {
+          "elapsedNanoseconds": 117237333,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 169961125,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 201801583,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 372492333,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "finalEmittedElapsedNanoseconds": 795411208,
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 117227167,
+          "generation": 1,
+          "sourceByteCount": 32768
+        },
+        {
+          "elapsedNanoseconds": 169954917,
+          "generation": 2,
+          "sourceByteCount": 65536
+        },
+        {
+          "elapsedNanoseconds": 201796500,
+          "generation": 3,
+          "sourceByteCount": 81920
+        },
+        {
+          "elapsedNanoseconds": 372487292,
+          "generation": 4,
+          "sourceByteCount": 163840
+        }
+      ],
+      "intervalNanoseconds": 30000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 16384,
+          "elapsedNanoseconds": 69693750,
+          "index": 0
+        },
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 100361500,
+          "index": 1
+        },
+        {
+          "cumulativeByteCount": 49152,
+          "elapsedNanoseconds": 132440708,
+          "index": 2
+        },
+        {
+          "cumulativeByteCount": 65536,
+          "elapsedNanoseconds": 163777292,
+          "index": 3
+        },
+        {
+          "cumulativeByteCount": 81920,
+          "elapsedNanoseconds": 195784000,
+          "index": 4
+        },
+        {
+          "cumulativeByteCount": 98304,
+          "elapsedNanoseconds": 225965250,
+          "index": 5
+        },
+        {
+          "cumulativeByteCount": 114688,
+          "elapsedNanoseconds": 257471167,
+          "index": 6
+        },
+        {
+          "cumulativeByteCount": 131072,
+          "elapsedNanoseconds": 288293167,
+          "index": 7
+        },
+        {
+          "cumulativeByteCount": 147456,
+          "elapsedNanoseconds": 319994542,
+          "index": 8
+        },
+        {
+          "cumulativeByteCount": 163840,
+          "elapsedNanoseconds": 351432083,
+          "index": 9
+        },
+        {
+          "cumulativeByteCount": 180224,
+          "elapsedNanoseconds": 382175750,
+          "index": 10
+        },
+        {
+          "cumulativeByteCount": 196608,
+          "elapsedNanoseconds": 413327125,
+          "index": 11
+        },
+        {
+          "cumulativeByteCount": 212992,
+          "elapsedNanoseconds": 445255667,
+          "index": 12
+        },
+        {
+          "cumulativeByteCount": 229376,
+          "elapsedNanoseconds": 477314750,
+          "index": 13
+        },
+        {
+          "cumulativeByteCount": 245760,
+          "elapsedNanoseconds": 512137667,
+          "index": 14
+        },
+        {
+          "cumulativeByteCount": 262144,
+          "elapsedNanoseconds": 542493458,
+          "index": 15
+        },
+        {
+          "cumulativeByteCount": 278528,
+          "elapsedNanoseconds": 575640167,
+          "index": 16
+        },
+        {
+          "cumulativeByteCount": 294912,
+          "elapsedNanoseconds": 605047917,
+          "index": 17
+        },
+        {
+          "cumulativeByteCount": 311296,
+          "elapsedNanoseconds": 635967125,
+          "index": 18
+        },
+        {
+          "cumulativeByteCount": 327680,
+          "elapsedNanoseconds": 667773958,
+          "index": 19
+        },
+        {
+          "cumulativeByteCount": 344064,
+          "elapsedNanoseconds": 700240500,
+          "index": 20
+        },
+        {
+          "cumulativeByteCount": 360448,
+          "elapsedNanoseconds": 733155500,
+          "index": 21
+        },
+        {
+          "cumulativeByteCount": 370199,
+          "elapsedNanoseconds": 764076750,
+          "index": 22
+        }
+      ],
+      "previewDisplayedBeforeFinal": true,
+      "scenario": "complete",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [],
+      "targetHeight": 341,
+      "targetWidth": 512
+    },
+    {
+      "chunkSizeBytes": 32768,
+      "displayObservations": [
+        {
+          "elapsedNanoseconds": 36316875,
+          "kind": "other"
+        }
+      ],
+      "emittedPreviews": [],
+      "generatedPreviews": [
+        {
+          "elapsedNanoseconds": 12779250,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "intervalNanoseconds": 20000000,
+      "networkChunks": [
+        {
+          "cumulativeByteCount": 32768,
+          "elapsedNanoseconds": 6735666,
+          "index": 0
+        }
+      ],
+      "oldPreviewObservedAfterReplacement": false,
+      "publicationFenceBeforeSuppression": true,
+      "publicationFenceClosedElapsedNanoseconds": 19611958,
+      "scenario": "identity-replacement",
+      "schemaVersion": 1,
+      "source": {
+        "byteCount": 370199,
+        "pixelHeight": 1280,
+        "pixelWidth": 1920,
+        "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+        "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+      },
+      "suppressedPreviews": [
+        {
+          "elapsedNanoseconds": 19712708,
+          "generation": 1,
+          "sourceByteCount": 32768
+        }
+      ],
+      "targetHeight": 341,
+      "targetWidth": 512
+    }
+  ],
+  "schemaVersion": 1,
+  "sourceIdentity": {
+    "akashicRevision": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
+    "fixture": {
+      "byteCount": 370199,
+      "path": "Sources/FoveaTesting/Fixtures/progressive-people-usda-meeting-1920x1280.jpg",
+      "pixelHeight": 1280,
+      "pixelWidth": 1920,
+      "provenance": "USDA public-domain photograph, ImageCraft progressive-real-photo-v1 default-successive-v1",
+      "resourceID": "progressive-people-usda-meeting-1920x1280.jpg",
+      "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87"
+    },
+    "foveaCommit": "3c82fdc3b2633e77acfcd204c264cca5ed1a4fd1",
+    "foveaTree": "96fd9cbc03ef9951f4bf830d960ef98b4954046f",
+    "imageCraftRevision": "bc93b8df0337d7a57779b53106dd744ad97b095e",
+    "includesWorkingTreeChanges": false
+  },
+  "status": "clean-simulator-host-evidence-completed-production-streaming-gap",
+  "summary": {
+    "complete": {
+      "displayedGenerationSequences": [
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ]
+      ],
+      "finalDisplayLinkDelayNanoseconds": {
+        "maximum": 11600750,
+        "mean": 8440366,
+        "median": 8890417,
+        "minimum": 5322500,
+        "p90": 11600750
+      },
+      "finalDisplayLinkObservedElapsedNanoseconds": {
+        "maximum": 1084786708,
+        "mean": 864506641,
+        "median": 812619167,
+        "minimum": 802308083,
+        "p90": 1084786708
+      },
+      "finalEmittedElapsedNanoseconds": {
+        "maximum": 1079464208,
+        "mean": 856066274,
+        "median": 801018417,
+        "minimum": 793353166,
+        "p90": 1079464208
+      },
+      "firstPreviewDisplayLinkDelayNanoseconds": {
+        "maximum": 9892750,
+        "mean": 5013766,
+        "median": 3213625,
+        "minimum": 649000,
+        "p90": 9892750
+      },
+      "firstPreviewDisplayLinkObservedElapsedNanoseconds": {
+        "maximum": 469625583,
+        "mean": 194065133,
+        "median": 129144833,
+        "minimum": 117018917,
+        "p90": 469625583
+      },
+      "firstPreviewGeneratedElapsedNanoseconds": {
+        "maximum": 461324167,
+        "mean": 189051366,
+        "median": 124202791,
+        "minimum": 116369917,
+        "p90": 461324167
+      },
+      "fullBodyReceivedElapsedNanoseconds": {
+        "maximum": 1053192042,
+        "mean": 825124291,
+        "median": 769287166,
+        "minimum": 764076750,
+        "p90": 1053192042
+      },
+      "generatedPreviewCount": {
+        "maximum": 4,
+        "mean": 4,
+        "median": 4,
+        "minimum": 4,
+        "p90": 4
+      },
+      "generationSequences": [
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ]
+      ],
+      "generationSourceByteCounts": [
+        [
+          32768,
+          65536,
+          81920,
+          163840
+        ],
+        [
+          32768,
+          65536,
+          81920,
+          163840
+        ],
+        [
+          32768,
+          65536,
+          81920,
+          163840
+        ],
+        [
+          32768,
+          65536,
+          81920,
+          163840
+        ],
+        [
+          32768,
+          65536,
+          81920,
+          163840
+        ]
+      ],
+      "networkChunkCount": {
+        "maximum": 23,
+        "mean": 23,
+        "median": 23,
+        "minimum": 23,
+        "p90": 23
+      },
+      "progressiveVisibleWindowNanoseconds": {
+        "maximum": 701498708,
+        "mean": 670441508,
+        "median": 683474334,
+        "minimum": 615161125,
+        "p90": 701498708
+      },
+      "sampleCount": 5
+    },
+    "identityReplacement": {
+      "networkReceivedByteCount": {
+        "maximum": 32768,
+        "mean": 32768,
+        "median": 32768,
+        "minimum": 32768,
+        "p90": 32768
+      },
+      "oldPreviewObservedAfterReplacementCount": 0,
+      "publicationFenceClosedElapsedNanoseconds": {
+        "maximum": 33651875,
+        "mean": 22268666,
+        "median": 19660667,
+        "minimum": 18476958,
+        "p90": 33651875
+      },
+      "sampleCount": 5,
+      "suppressionAfterFenceNanoseconds": {
+        "maximum": 252292,
+        "mean": 149191,
+        "median": 138125,
+        "minimum": 100750,
+        "p90": 252292
+      },
+      "suppressionElapsedNanoseconds": {
+        "maximum": 33799083,
+        "mean": 22417858,
+        "median": 19768250,
+        "minimum": 18729250,
+        "p90": 33799083
+      }
+    }
+  }
+}

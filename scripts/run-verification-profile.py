@@ -302,6 +302,15 @@ def static_phases(include_docs: bool) -> list[Phase]:
             120,
         ),
         Phase("traceability", ("python3", "scripts/check-test-traceability.py"), 180),
+        Phase(
+            "progressive-presentation-evidence",
+            (
+                "python3",
+                "scripts/validate-progressive-presentation-evidence.py",
+                "docs/research/progressive-presentation-simulator-evidence-2026-08.json",
+            ),
+            180,
+        ),
         Phase("tooling-contract", ("python3", "scripts/check-tooling-syntax.py"), 240),
         Phase("sensitive-material", ("python3", "scripts/check-sensitive-material.py"), 120),
         Phase("supply-chain", ("python3", "scripts/check-supply-chain.py"), 180),

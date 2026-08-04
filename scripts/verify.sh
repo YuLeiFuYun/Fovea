@@ -96,6 +96,8 @@ python3 scripts/check-engineering-knowledge.py
 python3 scripts/verify-documentation.py
 python3 scripts/validate-documentation-report.py
 python3 scripts/check-test-traceability.py
+python3 scripts/validate-progressive-presentation-evidence.py \
+    docs/research/progressive-presentation-simulator-evidence-2026-08.json
 python3 scripts/check-process-group-cleanup.py
 python3 scripts/check-tooling-syntax.py
 python3 scripts/check-reference-provenance.py
