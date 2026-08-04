@@ -1,3 +1,10 @@
+
+## 当前组件 pin
+
+Fovea 当前支持的 ImageCraft revision 已从历史组合 campaign 的 `e147b349d4ff440af6f257c3fb8a7cb4788c953b` / `0.1.0-alpha.4` 前移到 `bc93b8df0337d7a57779b53106dd744ad97b095e` / `0.1.0-alpha.5`。新 pin 增加真实 progressive JPEG session、真实照片/scan checkpoint 证据和 network-to-host 离散事件模型；Fovea 的组合、clean-copy 与 iOS Simulator 宿主证据必须重新资格化，不能沿用旧 pin 的 478-test 结论。
+
+当前重新资格化进展：组件 pin、供应链、跨仓 conformance、codec capability/error mapping、完整 premerge、macOS root tests/Release/loopback、CacheLab、provider/codec 独立 conformance 与 iOS Simulator 485/485 测试均已通过；`UI-PT-029/030` 已在 iPhone 17 Pro / iOS 27.0 Simulator 上验证真实 URLSession delegate 分块、ImageCraft progressive session、`FoveaImageView` identity gate、CADisplayLink preview-before-final 和 publication-fence-before-cancel。该测试 loader 是研究宿主，不进入生产 transport；clean-copy、正式多轮证据和公开 CI 仍待本批次收口。
+
 # 当前实现状态
 
 > **权威性：当前实现事实。** 本页用于区分已交付能力、局部实现与候选设计；若与 Research 文档的愿景叙述冲突，以活动规格、Accepted ADR、代码和可执行证据为准。

@@ -24,6 +24,6 @@ python3 ConformanceKits/ImageCodec/v1/run.py \
   --factory-source /path/to/CodecUnderTest.swift
 ```
 
-v1 验证 descriptor、2,304 项有限能力域、声明格式的 probe/decode、资源估计组合和硬限制失败关闭。报告绑定 contract pin、backend source、factory、harness、Fovea kit tree、工具链和日志。
+v1 验证 descriptor、2,304 项有限能力域、格式特定 `progressiveFormats`、progressive session 构造/取消、声明格式的 probe/完整帧 decode、资源估计组合和硬限制失败关闭。`deliveryModes` 与 `formats` 不按笛卡尔积解释；声明 progressive 的 backend 必须实现 `ProgressiveImageDecoding`。报告绑定 contract pin、backend source、factory、harness、Fovea kit tree、工具链和日志。
 
 机器状态：`release-qualified: false`。参考小图不替代 hostile corpus、sanitizer、fuzz、真机资源、Fovea composition、shadow/canary 或 ImageIO fallback 证据。

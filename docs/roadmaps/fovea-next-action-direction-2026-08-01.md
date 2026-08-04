@@ -32,7 +32,7 @@
 - `ImageCraftImageIO`：Apple ImageIO/Core Graphics 参考实现；
 - 独立消费者、公共 API、平台矩阵、retained corpus、oracle、性能与 release-readiness 门。
 
-ImageCraft 当前公共提交 `e147b349d4ff440af6f257c3fb8a7cb4788c953b` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required CI，并以 `0.1.0-alpha.4` 标记。Fovea 通过公共 HTTPS exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy 通过。剩余缺口是真实独立 codec、hostile corpus 和真机资源证据。
+ImageCraft 当前公共提交 `bc93b8df0337d7a57779b53106dd744ad97b095e` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required CI，并以 `0.1.0-alpha.5` 标记。Fovea 通过公共 HTTPS exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy 通过。剩余缺口是真实独立 codec、hostile corpus 和真机资源证据。
 
 ### 2.2 缓存库也不需要从零拆分
 
@@ -130,7 +130,7 @@ Akashic 当前公共提交 `2715f23d50b5a17b7328be41608eaf1b1c99b0d6` 是唯一�
 
 - 公共 MIT 仓库、`0.1.0-alpha.4`、Hosted `xcode-27` required `core` check 已建立；
 - 公共 API、consumer、兼容与组件门在 GitHub CI 通过；
-- Fovea 只固定到 `e147b349d4ff440af6f257c3fb8a7cb4788c953b`；
+- Fovea 只固定到 `bc93b8df0337d7a57779b53106dd744ad97b095e`；
 - 内嵌源码已删除，宿主与 clean-copy 均为 475/475。
 
 剩余：真实独立 codec conformance、稳定真机 RSS/能耗和格式范围扩展证据。

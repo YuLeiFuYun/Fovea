@@ -238,6 +238,14 @@ final class PipelineFailureTests: XCTestCase {
                 (.frameLimitExceeded, .decode, .securityLimit, .decode, "frame-limit-exceeded"),
                 (.probeMismatch, .decode, .probe, .probe, "probe-does-not-match-bitstream"),
                 (.decodeFailed, .probe, .decode, .decode, "decode-failed"),
+                (
+                    .progressiveDecodingUnsupported, .decode, .decode, .decode,
+                    "progressive-decoding-unsupported"
+                ),
+                (
+                    .progressiveSessionFinished, .decode, .internalFailure, .decode,
+                    "progressive-session-finished"
+                ),
             ]
 
         for item in cases {
@@ -247,6 +255,15 @@ final class PipelineFailureTests: XCTestCase {
             XCTAssertEqual(failure.disposition, .terminal, String(describing: item.error))
             XCTAssertEqual(failure.reasonCode, item.reasonCode, String(describing: item.error))
         }
+
+        let cancelled = PipelineFailure.imageCraft(
+            ImageCraftError.progressiveSessionCancelled,
+            stage: .decode
+        )
+        XCTAssertEqual(cancelled.category, .cancelled)
+        XCTAssertEqual(cancelled.stage, .decode)
+        XCTAssertEqual(cancelled.disposition, .cancelled)
+        XCTAssertEqual(cancelled.reasonCode, "cancelled")
 
         let probeFallback = PipelineFailure.imageCraft(TestUnclassifiedFailure(), stage: .probe)
         XCTAssertEqual(probeFallback.category, .probe)

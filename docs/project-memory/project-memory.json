@@ -221,7 +221,7 @@
     {
       "id": "EVID-CURRENT-PUBLIC-COMPONENTS-SWIFT64",
       "status": "completed-current-public-xcode27-ci-green-required-checks",
-      "summary": "ImageCraft e147b349d4ff440af6f257c3fb8a7cb4788c953b (0.1.0-alpha.4) and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 (0.1.0-alpha.5) are the only supported public MIT component revisions. Both are green under required xcode-27 core checks; Fovea resolves only these exact revisions."
+      "summary": "ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 (0.1.0-alpha.5) are the only supported public MIT component revisions. Both are green under required xcode-27 core checks; Fovea resolves only these exact revisions."
     },
     {
       "id": "EVID-CACHE-LAB-V3-HOT20-LOCAL",
@@ -411,8 +411,8 @@
       "cleanCopyLogSHA256": "2b4855ed6c49e014442fed17be2aaffd9f7c7a085b85b9d75efbfedceaec1e34",
       "cleanCopySourceDigest": "a8e2da06e42d5e6d35398e839f04e8bfcb3b0003fef0c4f02147be37cb0034f2",
       "hostTestsPerScenario": 478,
-      "imageCraftRevision": "e147b349d4ff440af6f257c3fb8a7cb4788c953b",
-      "status": "current-imagecraft-alpha4-akashic-alpha5-clean-copy-478-passed"
+      "imageCraftRevision": "bc93b8df0337d7a57779b53106dd744ad97b095e",
+      "status": "imagecraft-alpha5-local-composition-and-ios-simulator-qualified-clean-public-ci-pending"
     },
     "finalATierHeadlessAggregateStatus": "current-clean-source-functional-30-spec-complete-performance-host-quiescence-blocked",
     "finalSwiftUISurfaceAggregateStatus": "current-clean-source-30-run-structural-complete-performance-host-quiescence-blocked",
@@ -428,7 +428,7 @@
     "imageCraftJPEGMarkerScanEvidence": "../ImageCraft/Evidence/Experiments/jpeg-marker-scan-ab-2026-07-31.json",
     "imageCraftJPEGMarkerScanEvidenceSHA256": "d00753208ed7b04954f0e7df9d030c2dc0704eac97b5cfc05f47374b34c65f88",
     "imageCraftJPEGMarkerScanStatus": "interleaved-ab-588-samples-6-paths-paired-median-improvement-8.9-to-16.9-percent",
-    "imageCraftPinnedCommit": "e147b349d4ff440af6f257c3fb8a7cb4788c953b",
+    "imageCraftPinnedCommit": "bc93b8df0337d7a57779b53106dd744ad97b095e",
     "imageIOCodecCapabilities": "PNG-JPEG-GIF-complete-primary-frame-SDR-CGImage-operation-boundary-cancellation",
     "independentCodecStatus": "external-development-not-integrated",
     "latestCacheLabAnalysis": ".artifacts/cache-lab/formal-analysis.json",
@@ -740,8 +740,8 @@
         },
         "ImageCraft": {
           "ci": "passed-xcode27-main",
-          "commit": "e147b349d4ff440af6f257c3fb8a7cb4788c953b",
-          "tag": "0.1.0-alpha.4"
+          "commit": "bc93b8df0337d7a57779b53106dd744ad97b095e",
+          "tag": "0.1.0-alpha.5"
         }
       },
       "deferred": [
@@ -904,7 +904,7 @@
       "id": "OPEN-IMAGECRAFT-PHYSICAL-INTEGRATION",
       "priority": 1,
       "status": "current-exact-pin-public-ci-green-device-evidence-pending",
-      "summary": "Fovea consumes ImageCraft e147b349d4ff440af6f257c3fb8a7cb4788c953b as the only supported revision. Public xcode-27 CI and current clean-copy integration pass; physical-device resource evidence remains open."
+      "summary": "Fovea consumes ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) as the only supported revision. Local premerge, both conformance kits, Release, CacheLab, loopback, macOS root tests and iOS Simulator 485/485 including progressive presentation UI-PT-029/030 pass; clean-copy, public CI and physical-device resource evidence remain open."
     },
     {
       "id": "OPEN-AKASHIC-INDEPENDENT-PACKAGE",

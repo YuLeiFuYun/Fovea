@@ -40,7 +40,7 @@
       "id": "P1-GOVERNANCE-001",
       "phase": "P1",
       "status": "completed-current-public-xcode27-ci-green-required-check-active",
-      "summary": "ImageCraft e147b349d4ff440af6f257c3fb8a7cb4788c953b and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 are the only supported component revisions. Both are public, MIT licensed, xcode-27 CI-green and protected by required core checks; physical-device evidence remains open."
+      "summary": "ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 are the only supported component revisions. Both are public, MIT licensed, xcode-27 CI-green and protected by required core checks; physical-device evidence remains open."
     },
     {
       "id": "P3-CONTRACT-001",
@@ -81,14 +81,14 @@
     {
       "id": "P2-IMAGECRAFT-EXTERNAL-SWITCH-001",
       "phase": "P2",
-      "status": "completed-current-alpha4-exact-switch-clean-copy",
-      "summary": "Fovea consumes ImageCraft e147b349d4ff440af6f257c3fb8a7cb4788c953b as the only supported exact revision, with no embedded production source. Current clean-copy integration passes; physical-device evidence remains open."
+      "status": "local-alpha5-composition-qualified-clean-public-ci-pending",
+      "summary": "Fovea consumes ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) as the only supported exact revision. Local premerge, conformance, Release and iOS Simulator 485/485 pass; clean-copy, public CI and physical-device presentation/resource evidence remain open."
     },
     {
       "id": "P6-CROSS-REPOSITORY-CONFORMANCE-001",
       "phase": "P6",
       "status": "local-schema4-seatbelt-contained-dual-component-composition-passed-release-evidence-pending",
-      "summary": "Persistent-store provider and ImageCodec v1 remain the sole current conformance kits and pass their independent self-host consumers. Source identity v2 binds component domain, complete coverage, exact exclusions, every file digest and executable bit. The schema-4 Fovea gate independently validates external identity documents, materializes byte-validated snapshots, and executes candidate manifests, package edit, dependency inspection and 478/478 tests inside FOVEA-COMPONENT-CANDIDATE-SANDBOX-V1. Seven runtime probes prove network denial, host-source read denial, host-write denial, isolated Fovea source write denial and both candidate snapshot write denials while the dedicated State root remains writable; immutable Fovea and component identities remain unchanged after testing. Akashic 5887e2facb07 (84 files) and ImageCraft 045aa7013b19 (94 files) also pass full local release-readiness and clean-copy campaigns. The same candidate bytes are now published as Akashic 2715f23d50b5 / 0.1.0-alpha.5 and ImageCraft e147b349d4ff / 0.1.0-alpha.4, with both component GitHub Verify workflows green and Fovea pinned to those exact revisions. The sandbox still uses deprecated SwiftPM native build system and candidates can read the isolated Fovea source graph, so default swiftbuild equivalence, mutual confidentiality, Fovea protected CI, real independent third-party implementations and physical-device qualification remain pending."
+      "summary": "Persistent-store provider and ImageCodec v1 remain the sole current conformance kits and pass their independent self-host consumers. Source identity v2 binds component domain, complete coverage, exact exclusions, every file digest and executable bit. The schema-4 Fovea gate independently validates external identity documents, materializes byte-validated snapshots, and executes candidate manifests, package edit, dependency inspection and 478/478 tests inside FOVEA-COMPONENT-CANDIDATE-SANDBOX-V1. Seven runtime probes prove network denial, host-source read denial, host-write denial, isolated Fovea source write denial and both candidate snapshot write denials while the dedicated State root remains writable; immutable Fovea and component identities remain unchanged after testing. Akashic 5887e2facb07 (84 files) and ImageCraft 045aa7013b19 (94 files) also pass full local release-readiness and clean-copy campaigns. The same candidate bytes are now published as Akashic 2715f23d50b5 / 0.1.0-alpha.5 and ImageCraft e147b349d4ff / 0.1.0-alpha.4, with both component GitHub Verify workflows green. That campaign used ImageCraft e147b349d4ff / 0.1.0-alpha.4; the current supported ImageCraft pin later advanced to bc93b8df0337 / 0.1.0-alpha.5 and requires the present composition requalification. The sandbox still uses deprecated SwiftPM native build system and candidates can read the isolated Fovea source graph, so default swiftbuild equivalence, mutual confidentiality, Fovea protected CI, real independent third-party implementations and physical-device qualification remain pending."
     },
     {
       "id": "P6-QUALIFIED-COMPOSITION-SEAMS-001",
@@ -111,8 +111,8 @@
     {
       "id": "P1-SWIFT64-IMAGECRAFT-001",
       "phase": "P1",
-      "status": "public-alpha4-xcode27-green-advanced-ownership-deferred",
-      "summary": "ImageCraft passes 64 tests, release, compatibility and macOS 12/iOS 15 platform builds under Swift 6.4. RawSpan hot parsing and public noncopyable preparation remain evidence-blocked."
+      "status": "public-alpha5-xcode27-green-progressive-evidence-physical-pending",
+      "summary": "ImageCraft 0.1.0-alpha.5 passes release-readiness, compatibility, macOS 12/iOS 15 platform builds, progressive real-photo/scan/pipeline evidence and public xcode-27 CI. Physical-device presentation and energy evidence remain open."
     },
     {
       "id": "P4-SWIFT64-AKASHIC-001",

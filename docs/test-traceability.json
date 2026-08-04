@@ -2074,7 +2074,7 @@
         {
           "file": "Tests/FoveaTests/ImageCodecConformanceTests.swift",
           "kind": "swiftTest",
-          "method": "testImageIOFailsClosedForReservedFutureSemantics"
+          "method": "testImageIOSupportsOnlyJPEGProgressiveAndFailsClosedForReservedFutureSemantics"
         }
       ],
       "id": "CODEC-PT-007",
@@ -5463,6 +5463,28 @@
         }
       ],
       "id": "FOVEA-ICT-006",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
+          "kind": "swiftTest",
+          "method": "testChunkedURLSessionPreviewReachesDisplayLinkBeforeFinal_UI_PT_029"
+        }
+      ],
+      "id": "UI-PT-029",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
+          "kind": "swiftTest",
+          "method": "testIdentityReplacementClosesPublicationFenceBeforeOldPreview_UI_PT_030"
+        }
+      ],
+      "id": "UI-PT-030",
       "status": "implemented"
     }
   ],

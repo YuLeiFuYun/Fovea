@@ -1,12 +1,12 @@
 {
-  "originHash" : "fc1c4b934c00655deb864eb79cbbc432f4ea6eab1983f89fde4c10d567c9c8f2",
+  "originHash" : "6e989a40f9c12edaf760c72a2f2e63fa3e1cea49d8c35e4f6eddc339a26ca107",
   "pins" : [
     {
       "identity" : "imagecraft",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/YuLeiFuYun/ImageCraft.git",
       "state" : {
-        "revision" : "e147b349d4ff440af6f257c3fb8a7cb4788c953b"
+        "revision" : "bc93b8df0337d7a57779b53106dd744ad97b095e"
       }
     }
   ],

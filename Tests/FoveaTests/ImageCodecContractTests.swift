@@ -43,6 +43,7 @@ final class ImageCodecContractTests: XCTestCase {
             capabilities: ImageCodecCapabilities(
                 formats: Set(EncodedImageFormat.allCases),
                 deliveryModes: Set(ImageDecodeDeliveryMode.allCases),
+                progressiveFormats: Set(EncodedImageFormat.allCases),
                 trackModes: Set(ImageDecodeTrackMode.allCases),
                 metadata: Set(ImageDecodeMetadataCapability.allCases),
                 dynamicRanges: Set(ImageDecodeDynamicRange.allCases),
@@ -106,6 +107,7 @@ final class ImageCodecContractTests: XCTestCase {
             capabilities: ImageCodecCapabilities(
                 formats: [.png],
                 deliveryModes: [.completeFrame],
+                progressiveFormats: [],
                 trackModes: [.primaryFrame],
                 metadata: [.orientation, .sourceColorProfile],
                 dynamicRanges: [.standard],

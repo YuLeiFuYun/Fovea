@@ -1,7 +1,7 @@
 # ADR-0011：版本化图像 codec 能力契约与保守准入
 
 - **状态：Accepted；公共可见性与装配边界由 ADR-0012 修订**
-- **日期：2026-07-27**
+- **日期：2026-07-27；2026-08-04 按 ImageCraft contract v2 修订格式特定 progressive 能力**
 
 ## 背景
 
@@ -24,6 +24,7 @@
 2. descriptor 明确声明有限能力集合：
    - 容器格式；
    - 完整帧或渐进代次；
+   - 能够交付渐进代次的格式子集 `progressiveFormats`，避免 delivery mode 与 format 被误建模为笛卡尔积；
    - 主帧或动画序列；
    - orientation、source color、HDR、frame timing 元数据；
    - SDR/HDR；
@@ -31,7 +32,7 @@
    - 只在操作边界观察取消，或真正可中断后端工作。
 3. 调用方把所需语义表示为 `ImageDecodeCapabilityRequest`。后端必须在任何像素分配和 working-set reservation 前通过能力协商；缺口返回稳定、可枚举的 `ImageCodecSupportFailure`，然后映射为结构化 `PipelineFailure`。
 4. Fovea 不为仅实现 `ImageDecoding` 的后端合成 descriptor 或资源估计；缺少完整 `ImageCodec` 契约的实现不能进入 Fovea 组合。
-5. ImageIO 适配器当前只声明已经由实现和测试兑现的能力：PNG/JPEG/GIF 容器探测、完整主帧、orientation/source color、SDR、`CGImage`、操作边界取消。它不声明 progressive、animated timeline、HDR、planar output 或 interruptible cancellation。
+5. ImageIO 适配器当前只声明已经由实现和测试兑现的能力：PNG/JPEG/GIF 容器探测与完整主帧、JPEG progressive generations、orientation/source color、SDR、`CGImage`、操作边界取消。PNG/GIF progressive、animated timeline、HDR、planar output 或 interruptible cancellation 继续 fail closed。codec 能力不等于 Fovea 生产 transport 已有 streaming path。
 6. working-set 准入采用：
 
    ```text
@@ -40,7 +41,7 @@
 
    两个估计都必须为正；后端低报不能降低通用下界，无效估计 fail closed。
 7. `DecodeKey`/`RenderKey` 同时包含 contract version 与 `identifier + implementationVersion + contractVersion` 组成的 fingerprint。任何可能改变像素、颜色、方向、元数据解释或 capability 语义的版本变化都必须改变身份。
-8. 渐进输出以严格递增的 `ImageProgressiveGeneration` 表示：只有 `g_new > g_previous` 才能替换已经发布的同帧结果。动画时间以无溢出的 timestamp/duration 值类型表示。当前只建立值语义，不宣称生产 pipeline 已支持渐进或动画。
+8. 渐进输出以严格递增的 `ImageProgressiveDecodeGeneration` 表示：只有同一 session 内 `g_new > g_previous` 才能替换已经发布的同帧结果；generation 不是跨 session 质量等级。动画时间以无溢出的 timestamp/duration 值类型表示。ImageCraft 已实现 JPEG session，但 Fovea 生产 pipeline 的流式 transport/fan-out 仍未完成。
 9. codec 契约错误使用独立 `ImageCodecContractError`，不把能力协商、无效时间轴和无效资源估计混入容器解析错误。
 10. Fovea 继续由 `DecodeStage` 负责调度、优先级、共享任务、预算和生命周期；codec 只负责有界 probe/decode 及后端事实。codec 不获得网络、cache namespace、用户身份或持久提交权限。
 11. 跨仓库 conformance kit 使用独立 fixture manifest、行为 oracle 和失败 taxonomy。外部 codec 只需依赖独立 `ImageCraftCore` 产品，不导入 Fovea 网络、缓存或 UI 模块；公共 bridge、默认装配和缓存插件政策由 ADR-0012 定义。
@@ -53,6 +54,7 @@
 supports(C, r)
 = format(r) ∈ formats(C)
 ∧ delivery(r) ∈ deliveryModes(C)
+∧ (delivery(r) ≠ progressive ∨ format(r) ∈ progressiveFormats(C))
 ∧ track(r) ∈ trackModes(C)
 ∧ metadata(r) ⊆ metadata(C)
 ∧ range(r) ∈ dynamicRanges(C)
@@ -101,7 +103,7 @@ supports(C, r)
 - 后端仍可拥有 prepared state、SIMD、硬件或专有内存布局，但不得把这些实现细节泄漏到 fetch/cache/UI；
 - contract 增加了版本治理责任：语义变化而不递增版本会造成缓存污染；
 - Fovea 不接受缺少 descriptor、capability 和 resource estimate 的后端；公共 contract 继续受 API review 与 contract version 治理；
-- progressive/animation/HDR 类型的存在不是生产能力声明。
+- codec progressive 类型与 JPEG session 的存在不是 Fovea 生产 streaming 能力声明；animation/HDR 仍未实现。
 
 ## 验证
 
@@ -121,8 +123,8 @@ supports(C, r)
 - **CODEC-PT-002**：能力不匹配在像素解码前失败，并释放一次性 preparation。
 - **CODEC-PT-003**：后端低报 working set 不能削弱通用资源下界。
 - **CODEC-PT-004**：当前有限 capability 域与独立 membership oracle 一致。
-- **CODEC-PT-005**：未实现的 progressive delivery 在 capability negotiation 中按稳定优先级失败，不保留虚构的 generation ordering 类型。
+- **CODEC-PT-005**：progressive 支持必须同时满足 delivery mode 与格式子集；JPEG 可通过，PNG/GIF 按稳定优先级失败。
 - **CODEC-PT-006**：ImageIO probe 得到的容器格式属于其 descriptor 声明。
-- **CODEC-PT-007**：progressive、animation、HDR 和未实现输出表示均失败关闭。
+- **CODEC-PT-007**：ImageIO 仅允许 JPEG progressive；PNG/GIF progressive、animation、HDR 和未实现输出表示均失败关闭。
 - **CODEC-PT-008**：无效后端资源估计在 decode 前转化为稳定 contract failure。
 - **CODEC-MATH-001**：有限模型穷举 capability、generation、resource join 与 timing 边界。

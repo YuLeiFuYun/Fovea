@@ -666,6 +666,8 @@ URLSessionTask.priority   网络栈提示
 - 206 range 仅保存为 `PartialTransferRecord`，必须绑定 FetchVariantKey、强 validator 和已覆盖 range；完整表示拼接并验证后才能生成 ContentID；
 - 中断的 200 body 不得作为 OriginalEncoded 可见。只有具备安全恢复条件时才可留下隔离的 partial staging；
 - ContentID 未确定前允许向当前订阅者交付 progressive preview，但只使用任务内 `EphemeralTransferID`，不得进入持久缓存或跨 fetch 复用；
+- 流式 preview 的宿主 publication fence 必须在等待 codec cancellation 前关闭；正在执行的 `append` 可以在取消请求后才返回 generation，但旧 view identity 不得再发布该像素；
+- `UI-PT-029/030` 的 iOS Simulator lab 使用 test-only URLProtocol/URLSession delegate 验证 URLSession 分块 → ImageCraft session → `FoveaImageView` → CADisplayLink 和身份替换竞态。该 lab 绕过生产 staging，只证明宿主接缝和栅栏顺序，不证明生产 transport 已支持流式交付，也不把 CADisplayLink 回调解释为 GPU/物理屏幕 scanout；
 - preview 不得写入最终 RenderKey；最终内容完成后才能提交可跨请求复用的 DecodeKey/RenderKey；
 - RepresentationRecord 与 blob 引用原子提交；304 只更新 record，不重写 blob；
 - 每个任务捕获 NamespaceGeneration，logout/revoke 后 Commit 再校验；旧 generation 的在途任务不得让已清理数据复活；
@@ -723,7 +725,7 @@ Planner 导出 DecodePlan 与 RenderPlan，把 region、orientation 和 resize �
 
 当前默认后端仍是 ImageIO，但它不再被当作管线结构本身。独立 `ImageCraftCore` 产品公开 `ImageCodecDescriptor`、`ImageCodec` 与 `PreparedImageDecoding`，以版本化有限集合声明容器格式、完整/渐进交付、主帧/动画轨道、metadata、SDR/HDR、输出表示、取消保证和资源估算。`DecodeStage` 在任何 working-set reservation 与像素分配前验证请求语义；能力缺口 fail closed。只实现最低 `ImageDecoding` 的 decoder 仍可使用，但只能获得按动态类型隔离的保守身份与通用资源估计。
 
-当前 ImageIO adapter 只声明 PNG/JPEG/GIF 的完整主帧、orientation/source color、SDR、`CGImage` 和 operation-boundary cancellation。它能够探测 GIF 多帧容器，不等于已经实现 animation timeline；存在 incremental ImageIO API，也不等于生产 pipeline 已经实现 progressive generations。
+当前 ImageIO adapter 声明 PNG/JPEG/GIF 的完整主帧，以及 **仅 JPEG** 的 progressive generations；`progressiveFormats` 与 `deliveryModes` 分开，禁止把所有格式与渐进交付误当成笛卡尔积。它仍只承诺 orientation/source color、SDR、`CGImage` 和 operation-boundary cancellation；能够探测 GIF 多帧容器不等于已经实现 animation timeline。ImageCraft progressive session 已可运行，也不等于 Fovea 的生产 `URLSessionTransport` 已具备流式 fan-out：当前生产 transport 仍先完成有界 staging、长度/摘要验证和最终 handoff。
 
 后端 identity 是：
 

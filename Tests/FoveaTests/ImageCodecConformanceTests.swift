@@ -16,6 +16,7 @@ final class ImageCodecConformanceTests: XCTestCase {
             capabilities: ImageCodecCapabilities(
                 formats: [.png, .jpeg],
                 deliveryModes: [.completeFrame],
+                progressiveFormats: [],
                 trackModes: [.primaryFrame],
                 metadata: [.orientation, .sourceColorProfile],
                 dynamicRanges: [.standard],
@@ -69,6 +70,7 @@ final class ImageCodecConformanceTests: XCTestCase {
             capabilities: ImageCodecCapabilities(
                 formats: [.png],
                 deliveryModes: [.completeFrame],
+                progressiveFormats: [],
                 trackModes: [.primaryFrame],
                 metadata: [.orientation],
                 dynamicRanges: [.standard],
@@ -109,6 +111,7 @@ final class ImageCodecConformanceTests: XCTestCase {
             capabilities: ImageCodecCapabilities(
                 formats: [.png],
                 deliveryModes: [.completeFrame],
+                progressiveFormats: [],
                 trackModes: [.primaryFrame],
                 metadata: [.orientation],
                 dynamicRanges: [.standard],
@@ -122,6 +125,7 @@ final class ImageCodecConformanceTests: XCTestCase {
             capabilities: ImageCodecCapabilities(
                 formats: Set(EncodedImageFormat.allCases),
                 deliveryModes: Set(ImageDecodeDeliveryMode.allCases),
+                progressiveFormats: Set(EncodedImageFormat.allCases),
                 trackModes: Set(ImageDecodeTrackMode.allCases),
                 metadata: Set(ImageDecodeMetadataCapability.allCases),
                 dynamicRanges: Set(ImageDecodeDynamicRange.allCases),
@@ -215,17 +219,28 @@ final class ImageCodecConformanceTests: XCTestCase {
         )
     }
 
-    func testImageIOFailsClosedForReservedFutureSemantics() {
+    func testImageIOSupportsOnlyJPEGProgressiveAndFailsClosedForReservedFutureSemantics() {
         let descriptor = ImageIOImageDecoder().codecDescriptor
-        XCTAssertEqual(
+        XCTAssertNil(
             descriptor.supportFailure(
                 for: ImageDecodeCapabilityRequest(
                     format: .jpeg,
                     deliveryMode: .progressiveGenerations
                 )
-            ),
-            .deliveryMode(.progressiveGenerations)
+            )
         )
+        for format in [EncodedImageFormat.png, .gif] {
+            XCTAssertEqual(
+                descriptor.supportFailure(
+                    for: ImageDecodeCapabilityRequest(
+                        format: format,
+                        deliveryMode: .progressiveGenerations
+                    )
+                ),
+                .deliveryMode(.progressiveGenerations),
+                String(describing: format)
+            )
+        }
         XCTAssertEqual(
             descriptor.supportFailure(
                 for: ImageDecodeCapabilityRequest(
@@ -302,6 +317,8 @@ final class ImageCodecConformanceTests: XCTestCase {
     ) -> Bool {
         capabilities.formats.contains(request.format)
             && capabilities.deliveryModes.contains(request.deliveryMode)
+            && (request.deliveryMode != .progressiveGenerations
+                || capabilities.progressiveFormats.contains(request.format))
             && capabilities.trackModes.contains(request.trackMode)
             && request.requiredMetadata.isSubset(of: capabilities.metadata)
             && capabilities.dynamicRanges.contains(request.dynamicRange)

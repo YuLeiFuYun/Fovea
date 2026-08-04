@@ -6,8 +6,9 @@ import UniformTypeIdentifiers
 import XCTest
 
 final class ImageCodecConformanceTests: XCTestCase {
-    func testDescriptorIsStableCurrentAndNonEmpty_ICT_001() {
-        let first = CodecUnderTest.make().codecDescriptor
+    func testDescriptorIsStableCurrentAndNonEmpty_ICT_001() throws {
+        let codec = CodecUnderTest.make()
+        let first = codec.codecDescriptor
         let second = CodecUnderTest.make().codecDescriptor
 
         XCTAssertEqual(first, second)
@@ -18,6 +19,30 @@ final class ImageCodecConformanceTests: XCTestCase {
         XCTAssertGreaterThan(first.implementationVersion, 0)
         XCTAssertFalse(first.capabilities.formats.isEmpty)
         XCTAssertFalse(first.capabilities.deliveryModes.isEmpty)
+        XCTAssertTrue(
+            first.capabilities.progressiveFormats.isSubset(of: first.capabilities.formats))
+        if first.capabilities.progressiveFormats.isEmpty {
+            XCTAssertFalse(
+                first.capabilities.deliveryModes.contains(.progressiveGenerations),
+                "progressive delivery without any supported format is an unusable capability"
+            )
+        } else {
+            XCTAssertTrue(first.capabilities.deliveryModes.contains(.progressiveGenerations))
+            let progressive = try XCTUnwrap(codec as? any ProgressiveImageDecoding)
+            let request = ImageDecodeRequest(
+                target: try TargetPixels(width: 1, height: 1),
+                contentMode: .fit,
+                colorPolicy: .preserveSource
+            )
+            for format in first.capabilities.progressiveFormats.sorted(by: formatOrder) {
+                let session = try progressive.makeProgressiveSession(
+                    format: format,
+                    request: request,
+                    limits: fixtureLimits()
+                )
+                session.cancel()
+            }
+        }
         XCTAssertFalse(first.capabilities.trackModes.isEmpty)
         XCTAssertFalse(first.capabilities.dynamicRanges.isEmpty)
         XCTAssertFalse(first.capabilities.outputRepresentations.isEmpty)
@@ -253,6 +278,8 @@ final class ImageCodecConformanceTests: XCTestCase {
     ) -> Bool {
         capabilities.formats.contains(request.format)
             && capabilities.deliveryModes.contains(request.deliveryMode)
+            && (request.deliveryMode != .progressiveGenerations
+                || capabilities.progressiveFormats.contains(request.format))
             && capabilities.trackModes.contains(request.trackMode)
             && request.requiredMetadata.isSubset(of: capabilities.metadata)
             && capabilities.dynamicRanges.contains(request.dynamicRange)

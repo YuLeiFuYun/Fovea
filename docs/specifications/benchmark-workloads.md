@@ -233,7 +233,7 @@ post-cancel bytes/decode work
 peak buffering memory
 ```
 
-当前状态：`capability-gap`。在生产 progressive event 路径、fixture corpus 和统一 adapter 合同完成前，不得从矩阵中删除，也不得以普通 JPEG 最终解码冒充支持。
+当前状态：`codec-and-host-lab-ready / production-streaming-gap`。ImageCraft 0.1.0-alpha.5 已提供 JPEG progressive session；Fovea 保留公共领域 progressive fixture，并以 `UI-PT-029/030` 在 iOS Simulator 验证 test-only URLSession delegate → codec → `FoveaImageView` → CADisplayLink 与 publication fence。生产 `URLSessionTransport` 仍完成 staging 后才交付正文，因此 W4 不得宣称产品路径完成，也不得用 host lab 结果替代真实 transport、真机能耗或物理 presentation 证据。
 
 ## W5：GIF/APNG/WebP 动图
 

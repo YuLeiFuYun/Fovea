@@ -125,6 +125,7 @@ extension ImageCodecCapabilities {
     static let foveaTestBaseline = ImageCodecCapabilities(
         formats: Set(EncodedImageFormat.allCases),
         deliveryModes: [.completeFrame],
+        progressiveFormats: [],
         trackModes: [.primaryFrame],
         metadata: [.orientation, .sourceColorProfile],
         dynamicRanges: [.standard],

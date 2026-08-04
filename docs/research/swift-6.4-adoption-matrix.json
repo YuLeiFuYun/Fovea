@@ -161,7 +161,7 @@
     "phase1DeclarationAllowed": false,
     "x86IdentityBuild": "passed-hosted-xcode27-direct-rosetta-xctest-run-30689587302",
     "componentReleases": {
-      "ImageCraft": "e147b349d4ff440af6f257c3fb8a7cb4788c953b@0.1.0-alpha.4",
+      "ImageCraft": "bc93b8df0337d7a57779b53106dd744ad97b095e@0.1.0-alpha.5",
       "Akashic": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6@0.1.0-alpha.5"
     },
     "foveaAlpha3CleanCopy": "475-of-475",

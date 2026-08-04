@@ -1,5 +1,5 @@
 {
-  "originHash" : "51dbe23ca9fc04f7c382a95a264476ab40af6d7ea284390bd5e3d346fefa646e",
+  "originHash" : "8c11b5a216feb2250fd3974d9160a96141d9f218c37572024fdee1261f46ab93",
   "pins" : [
     {
       "identity" : "akashic",
@@ -14,7 +14,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/YuLeiFuYun/ImageCraft.git",
       "state" : {
-        "revision" : "e147b349d4ff440af6f257c3fb8a7cb4788c953b"
+        "revision" : "bc93b8df0337d7a57779b53106dd744ad97b095e"
       }
     }
   ],

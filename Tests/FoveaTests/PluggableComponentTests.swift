@@ -274,6 +274,7 @@ private struct DelegatingTestCodec: ImageCodec, PreparedImageDecoding {
         capabilities: ImageCodecCapabilities(
             formats: [.png, .jpeg, .gif],
             deliveryModes: [.completeFrame],
+            progressiveFormats: [],
             trackModes: [.primaryFrame],
             metadata: [.orientation, .sourceColorProfile],
             dynamicRanges: [.standard],

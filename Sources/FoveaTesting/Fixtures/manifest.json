@@ -27,6 +27,19 @@
       "pixelHeight": 6000,
       "pixelWidth": 8000,
       "sha256": "40ffa4a5860aae9264eaba5191dd5c2c1d40defc568541ef441d5929221d27ed"
+    },
+    {
+      "byteCount": 370199,
+      "contentClass": "people-indoor",
+      "creator": "USDA; photo by Brien Aho",
+      "license": "Public domain",
+      "name": "progressive-people-usda-meeting-1920x1280.jpg",
+      "pixelHeight": 1280,
+      "pixelWidth": 1920,
+      "publicDomainBasis": "Created by a USDA employee as part of official duties.",
+      "sha256": "494941339b490cededbb482a47ff7e1352761a4dcc93c82527775ae46c573a87",
+      "sourcePageURL": "https://commons.wikimedia.org/wiki/File:2026041415-USDA-OSEC-AHO-025_copy.jpg",
+      "sourceVariant": "ImageCraft progressive-real-photo-v1 / default-successive-v1"
     }
   ],
   "schemaVersion": 1

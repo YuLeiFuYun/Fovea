@@ -3,7 +3,7 @@
     "imageCraftContract": {
       "packageIdentity": "ImageCraft",
       "product": "ImageCraftCore",
-      "revision": "e147b349d4ff440af6f257c3fb8a7cb4788c953b",
+      "revision": "bc93b8df0337d7a57779b53106dd744ad97b095e",
       "url": "https://github.com/YuLeiFuYun/ImageCraft.git"
     }
   },
@@ -17,12 +17,12 @@
   "obligations": [
     {
       "id": "FOVEA-ICT-001",
-      "summary": "Independent factory instances publish one stable, current and non-empty codec descriptor.",
+      "summary": "Independent factory instances publish one stable/current descriptor; progressive format claims are a subset of formats and require constructible ProgressiveImageDecoding sessions.",
       "testName": "testDescriptorIsStableCurrentAndNonEmpty_ICT_001"
     },
     {
       "id": "FOVEA-ICT-002",
-      "summary": "All 2304 finite capability requests agree with an independent membership oracle and exact failure precedence.",
+      "summary": "All 2304 finite capability requests, including format-specific progressive delivery, agree with an independent membership oracle and exact failure precedence.",
       "testName": "testFiniteCapabilityDomainMatchesIndependentOracle_ICT_002"
     },
     {

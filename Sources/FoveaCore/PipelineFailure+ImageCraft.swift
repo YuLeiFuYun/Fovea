@@ -87,6 +87,20 @@ extension PipelineFailure {
             return probeLimitFailure(error)
         case .unsupportedOrCorruptImage, .probeMismatch, .decodeFailed:
             return executionFailure(error)
+        case .progressiveDecodingUnsupported:
+            return Mapping(
+                category: .decode,
+                stage: stage,
+                disposition: .terminal,
+                reasonCode: "progressive-decoding-unsupported"
+            ).failure
+        case .progressiveSessionFinished:
+            return internalContractFailure(
+                stage: stage,
+                reasonCode: "progressive-session-finished"
+            )
+        case .progressiveSessionCancelled:
+            return cancelled(stage: stage)
         }
     }
 
