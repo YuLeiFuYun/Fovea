@@ -45,14 +45,33 @@ final class ComparativeBenchmarkSceneDelegate: UIResponder, UIWindowSceneDelegat
                 fflush(stdout)
                 exit(EXIT_SUCCESS)
             } catch {
+                let message = String(describing: error)
                 status.loadViewIfNeeded()
-                status.update("FAILED\n\(String(describing: error))")
-                NSLog("FOVEA_COMPARATIVE_FAILURE=%@", String(describing: error))
-                print("FOVEA_COMPARATIVE_FAILURE=\(String(describing: error))")
+                status.update("FAILED\n\(message)")
+                Self.writeFailureArtifact(message)
+                NSLog("FOVEA_COMPARATIVE_FAILURE=%@", message)
+                print("FOVEA_COMPARATIVE_FAILURE=\(message)")
                 fflush(stdout)
                 exit(EXIT_FAILURE)
             }
         }
+    }
+
+    private static func writeFailureArtifact(_ message: String) {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let outputIndex = arguments.firstIndex(of: "--output"),
+            arguments.indices.contains(outputIndex + 1)
+        else { return }
+        let outputName = arguments[outputIndex + 1]
+        guard !outputName.contains("/"), outputName.hasSuffix(".json") else { return }
+        guard
+            let documents = FileManager.default.urls(
+                for: .documentDirectory,
+                in: .userDomainMask
+            ).first
+        else { return }
+        let failureURL = documents.appendingPathComponent(outputName + ".failure")
+        try? Data(message.utf8).write(to: failureURL, options: .atomic)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

@@ -566,8 +566,6 @@ public final class AppleNativeComparatorAdapter: ComparatorProgressiveAdapter, @
         configuration.urlCredentialStorage = nil
         configuration.httpShouldSetCookies = false
         progressiveConfiguration = configuration.copy() as! URLSessionConfiguration
-        progressiveConfiguration.urlCache = nil
-        progressiveConfiguration.requestCachePolicy = .reloadIgnoringLocalCacheData
         let sessionDelegate = NativeSessionDelegate()
         self.sessionDelegate = sessionDelegate
         session = URLSession(

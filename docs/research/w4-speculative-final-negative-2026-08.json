@@ -1,0 +1,218 @@
+{
+  "baseline": {
+    "samples": [
+      {
+        "artifactSHA256": "8c538561fae3f407d4ce9ebb676aaccc9f8296125414610efbcd142717e3bbdd",
+        "finalNanoseconds": 565922417,
+        "firstPreviewNanoseconds": 185830792,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 966656,
+        "postCancellationBytes": 32768,
+        "previewCount": 4,
+        "sourceTreeDigest": "bc5c1892ab7773a286614983d3a192d5740e9526c2164ffbb62a479cec5a6e50"
+      },
+      {
+        "artifactSHA256": "6f9eea9acfa3b4c411048152dc665e0e5ce3edc713014659fd91a848c05257dc",
+        "finalNanoseconds": 530044792,
+        "firstPreviewNanoseconds": 167340917,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 606208,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "bc5c1892ab7773a286614983d3a192d5740e9526c2164ffbb62a479cec5a6e50"
+      },
+      {
+        "artifactSHA256": "fc6954806c4f0f507f47a39a621802d4e17fa45b92294d062e02e41c7af90245",
+        "finalNanoseconds": 531843959,
+        "firstPreviewNanoseconds": 156612959,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 638976,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "bc5c1892ab7773a286614983d3a192d5740e9526c2164ffbb62a479cec5a6e50"
+      },
+      {
+        "artifactSHA256": "1dc8e0a123fea4d29b3559ccb24fda129baa71d7c0805f6af52628c628b04054",
+        "finalNanoseconds": 519413000,
+        "firstPreviewNanoseconds": 152684167,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 557056,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "bc5c1892ab7773a286614983d3a192d5740e9526c2164ffbb62a479cec5a6e50"
+      },
+      {
+        "artifactSHA256": "857e01b5c20ba78382e5e7ffbe6e07d16eacb49fe7feb26bb80ab9e190060fb3",
+        "finalNanoseconds": 541125125,
+        "firstPreviewNanoseconds": 153893166,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 819152,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "bc5c1892ab7773a286614983d3a192d5740e9526c2164ffbb62a479cec5a6e50"
+      }
+    ],
+    "summary": {
+      "maximumFinalNanoseconds": 565922417,
+      "medianFinalNanoseconds": 531843959,
+      "medianFirstPreviewNanoseconds": 156612959,
+      "medianPhysicalFootprintDeltaBytes": 638976,
+      "nonzeroPostCancellationSampleCount": 1,
+      "sampleCount": 5,
+      "totalHitchCount": 0
+    }
+  },
+  "capturedOn": "2026-08-04",
+  "decision": {
+    "accepted": false,
+    "foveaProductionAction": "reverted",
+    "imageCraftEarlyReadinessAPI": "retained as an optional capability but not consumed by Fovea",
+    "reason": "The candidate reduced directional median final latency by only about 6.2 ms while increasing median footprint by about 1.63 MiB, slightly worsening first-preview median, and not improving maximum final latency. It is not a Pareto improvement."
+  },
+  "deltas": {
+    "maximumFinalNanoseconds": 2147749,
+    "medianFinalNanoseconds": -6190147,
+    "medianFirstPreviewNanoseconds": 1757520,
+    "medianPhysicalFootprintDeltaBytes": 1703936
+  },
+  "environment": {
+    "deviceProfileID": "ios26-4-simulator-calibration-v1",
+    "deviceRole": "primary-current-mid",
+    "osBuild": "23E254a",
+    "osChannel": "stable",
+    "osFamily": "iOS Simulator",
+    "osVersion": "26.4.1"
+  },
+  "experimentID": "w4-speculative-final-diagnostic-v1",
+  "harnessCommit": "0c8dfbf70a33d00900f6ba9c5a3eff31840b44ed",
+  "limitations": [
+    "Simulator diagnostic mode; host quiescence gate was intentionally skipped.",
+    "The order was not randomized and sample counts differ (5 baseline, 10 candidate).",
+    "Results guide rejection of this implementation only and do not support cross-library performance claims."
+  ],
+  "methodology": {
+    "baseline": "same early-preparation implementation compiled with the speculative branch disabled",
+    "candidate": "complete-prefix preparation decoded under normal Fovea working-set and decode permits before transport completion; publication remained digest/length/namespace gated",
+    "formalClaimEligible": false,
+    "hostQuiescenceRequired": false,
+    "randomizedOrder": false
+  },
+  "networkProfile": "NET-CONSTRAINED-V1",
+  "provisional": true,
+  "schemaVersion": 1,
+  "speculative": {
+    "samples": [
+      {
+        "artifactSHA256": "89ea058470276f5527fd5cc798c1e2970e724b68f52844ff93358e19648ee909",
+        "finalNanoseconds": 543037125,
+        "firstPreviewNanoseconds": 158262291,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 2424832,
+        "postCancellationBytes": 32768,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      },
+      {
+        "artifactSHA256": "de445e97e0f7b1042b20e73c122251eaa08ede5639142eae94a3cd04b9e68436",
+        "finalNanoseconds": 518275083,
+        "firstPreviewNanoseconds": 158478667,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 1703936,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      },
+      {
+        "artifactSHA256": "232586f8376e0338d4441ffd11fe31a2568594afd7068aa84bd43d81679a5101",
+        "finalNanoseconds": 568070166,
+        "firstPreviewNanoseconds": 190973416,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 1376280,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      },
+      {
+        "artifactSHA256": "bee93db39d7972b3ea47129b4081d6835ab6a1af208fbb74fae14ccce03aa1e6",
+        "finalNanoseconds": 513665334,
+        "firstPreviewNanoseconds": 167694584,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 1867776,
+        "postCancellationBytes": 32768,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      },
+      {
+        "artifactSHA256": "a47be02210e5adc5d4e97935f3fc24aed681da97ab38fc22200a60f8cf58301d",
+        "finalNanoseconds": 562536209,
+        "firstPreviewNanoseconds": 187161125,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 2097152,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      },
+      {
+        "artifactSHA256": "96d773c50cbfe3edc7633e9639f8c03defbc344ed6d9ab51c68fb3635aac2ca9",
+        "finalNanoseconds": 527386958,
+        "firstPreviewNanoseconds": 154743833,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 2260992,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      },
+      {
+        "artifactSHA256": "bbcab1ceb15dddc9ac46625cd07f7bcdfd106141d6fec1f39254ec9aa54fb046",
+        "finalNanoseconds": 515834083,
+        "firstPreviewNanoseconds": 150445375,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 2523136,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      },
+      {
+        "artifactSHA256": "bbd05afba0a772f53661d668f9a5ad42fc241108b1c67aea5582dd4151bc384b",
+        "finalNanoseconds": 527282416,
+        "firstPreviewNanoseconds": 153997208,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 2834432,
+        "postCancellationBytes": 32768,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      },
+      {
+        "artifactSHA256": "f2ad33c9f94cd7adf80bf4b39396e0d174b0fc348656ddfdd24eb8b3570829fc",
+        "finalNanoseconds": 524025209,
+        "firstPreviewNanoseconds": 154012875,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 2785280,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      },
+      {
+        "artifactSHA256": "a48f3a551489945cd13010fa785a2c3a9f3eadf38afaf79e96332d9ca3e26600",
+        "finalNanoseconds": 516444041,
+        "firstPreviewNanoseconds": 186387416,
+        "hitchCount": 0,
+        "physicalFootprintDeltaBytes": 2785280,
+        "postCancellationBytes": 0,
+        "previewCount": 4,
+        "sourceTreeDigest": "f0649f4e81e7f35b672bc7c00513886fdc093ca89355a2d0071a3fe8dbd3eb85"
+      }
+    ],
+    "summary": {
+      "maximumFinalNanoseconds": 568070166,
+      "medianFinalNanoseconds": 525653812,
+      "medianFirstPreviewNanoseconds": 158370479,
+      "medianPhysicalFootprintDeltaBytes": 2342912,
+      "nonzeroPostCancellationSampleCount": 3,
+      "sampleCount": 10,
+      "totalHitchCount": 0
+    }
+  },
+  "status": "rejected-directional-experiment",
+  "workloadID": "W4-PROGRESSIVE-JPEG-V1"
+}

@@ -1094,9 +1094,22 @@
       ],
       "exitCondition": "No hard-coded Simulator identity may return. Every Simulator entry point must inject an exact profile/version/build/channel and validate it before accepting a result.",
       "id": "NEG-SIMULATOR-ENVIRONMENT-HARDCODED-001"
+    },
+    {
+      "area": "progressive-jpeg-final-latency",
+      "claimRejected": "Starting final raster decode as soon as a complete JPEG prefix is observed will be a broadly superior production optimization for Fovea W4.",
+      "counterexample": "In the retained iOS 26.4 Simulator diagnostic A/B, the candidate reduced median final latency from 531.844 ms to 525.654 ms, but raised median footprint from 0.609 MiB to 2.234 MiB, slightly worsened median first-preview latency, and increased maximum final latency from 565.922 ms to 568.070 ms. The origin exposes almost no post-EOI transport tail, so speculative raster work overlaps too little useful latency and instead increases concurrent live memory.",
+      "decision": "Fovea reverted speculative final decode and remains on the complete-transport prepared-finalization path. ImageCraft retains the optional non-destructive early-readiness protocol for hosts with a demonstrably meaningful verified tail, but Fovea does not consume it.",
+      "evidencePaths": [
+        "docs/research/w4-speculative-final-negative-2026-08.json",
+        "Benchmarks/ComparativeLab/Apps/Shared/OtherWorkloads.swift",
+        "Sources/FoveaCore/PipelineProgressivePreview.swift"
+      ],
+      "exitCondition": "Reconsider only with a preregistered workload that has a meaningful post-EOI verification or transport tail, and only if the candidate improves both latency distribution and bounded memory without degrading first preview, cancellation or frame stability.",
+      "id": "NEG-W4-SPECULATIVE-FINAL-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",
-  "reviewedOn": "2026-08-03",
+  "reviewedOn": "2026-08-04",
   "schemaVersion": 1
 }

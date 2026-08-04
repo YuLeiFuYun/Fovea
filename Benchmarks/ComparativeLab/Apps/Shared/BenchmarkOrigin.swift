@@ -221,7 +221,8 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         let now = DispatchTime.now().uptimeNanoseconds
         lock.lock()
         stoppedRequestCount += 1
-        if let requestID, let marked = cancellationMarkedAtNanoseconds.removeValue(forKey: requestID),
+        if let requestID,
+            let marked = cancellationMarkedAtNanoseconds.removeValue(forKey: requestID),
             now >= marked
         {
             cancellationAcknowledgementNanoseconds.append(now - marked)

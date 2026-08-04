@@ -274,18 +274,20 @@ public final class KingfisherComparatorAdapter: ComparatorProgressiveAdapter, @u
         let processor: any ImageProcessor
         switch request.contentMode {
         case .aspectFit:
-            processor =
+            let fitted =
                 downsampling
                 |> ResizingImageProcessor(referenceSize: targetSize, mode: .aspectFit)
                 |> ExactPixelBoxProcessor(
                     width: request.target.width, height: request.target.height)
+            processor = fitted
         case .aspectFill:
-            processor =
+            let filled =
                 downsampling
                 |> ResizingImageProcessor(referenceSize: targetSize, mode: .aspectFill)
                 |> CroppingImageProcessor(size: targetSize)
                 |> ExactPixelBoxProcessor(
                     width: request.target.width, height: request.target.height)
+            processor = filled
         }
         let resource = KF.ImageResource(downloadURL: request.url, cacheKey: request.scopedCacheKey)
         let modifier = AnyModifier { urlRequest in

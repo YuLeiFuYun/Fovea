@@ -13,6 +13,7 @@ DESTINATION = ROOT / "Benchmarks/ComparativeLab/Apps/GeneratedResources"
 HEROES = ROOT / "Sources/FoveaTesting/Fixtures"
 DEVICE = ROOT / ".artifacts/phase0b/device-profile.json"
 PROBES = ROOT / "Benchmarks/ComparativeLab/Fixtures/correctness-probes.json"
+PROGRESSIVE = HEROES / "progressive-people-usda-meeting-1920x1280.jpg"
 
 
 def main() -> int:
@@ -56,6 +57,9 @@ def main() -> int:
         shutil.copy2(source, probe_directory / probe["resourceName"])
     shutil.copy2(PROBES, staging / "correctness-probes.json")
     shutil.copy2(DEVICE, staging / "device-profile.json")
+    progressive_payload = PROGRESSIVE.read_bytes()
+    progressive_name = "w4-progressive-1920x1280.jpg"
+    (staging / progressive_name).write_bytes(progressive_payload)
     metadata = {
         "schemaVersion": 1,
         "datasetDigest": data["datasetDigest"],
@@ -63,6 +67,11 @@ def main() -> int:
         "heroCount": 3,
         "correctnessProbeCount": len(probe_manifest["probes"]),
         "deviceProfileID": json.loads(DEVICE.read_text())["profileID"],
+        "progressiveFixture": {
+            "name": progressive_name,
+            "byteCount": len(progressive_payload),
+            "sha256": hashlib.sha256(progressive_payload).hexdigest(),
+        },
     }
     (staging / "resource-bundle.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n"

@@ -14,6 +14,9 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+QUICK = "--quick" in sys.argv[1:]
+if QUICK:
+    sys.argv.remove("--quick")
 errors: list[str] = []
 
 for path in sorted((ROOT / "scripts").glob("*.py")):
@@ -62,6 +65,40 @@ if "-collect-test-diagnostics never" not in verify_script:
     errors.append(
         "iOS package verification must disable Xcode sysdiagnose collection and rely on bounded logs"
     )
+
+try:
+    comparative_runner_path = ROOT / "scripts/run-comparative-simulator-lab.py"
+    comparative_spec = importlib.util.spec_from_file_location(
+        "fovea_comparative_simulator_runner",
+        comparative_runner_path,
+    )
+    if comparative_spec is None or comparative_spec.loader is None:
+        raise RuntimeError("unable to load comparative simulator runner")
+    comparative_runner = importlib.util.module_from_spec(comparative_spec)
+    comparative_spec.loader.exec_module(comparative_runner)
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        source = root / "result.json"
+        failure = root / "result.json.failure"
+        source.write_text("{}")
+        comparative_runner.wait_for_simulator_artifact(source, failure, timeout=0)
+        source.unlink()
+        failure.write_text("missingResource(w4-progressive)")
+        try:
+            comparative_runner.wait_for_simulator_artifact(source, failure, timeout=0)
+            errors.append("comparative simulator runner ignored an app failure artifact")
+        except RuntimeError as error:
+            if "missingResource(w4-progressive)" not in str(error):
+                errors.append("comparative simulator failure artifact lost its reason")
+        failure.unlink()
+        try:
+            comparative_runner.wait_for_simulator_artifact(source, failure, timeout=0)
+            errors.append("comparative simulator runner ignored a missing result timeout")
+        except RuntimeError as error:
+            if "missing simulator result after timeout" not in str(error):
+                errors.append("comparative simulator timeout lost its result identity")
+except (OSError, RuntimeError, ValueError) as error:
+    errors.append(f"comparative simulator runner contract failed: {error}")
 
 try:
     x86_runner_path = ROOT / "scripts/run-x86-identity-test.py"
@@ -322,197 +359,198 @@ try:
     else:
         errors.append("UI inactivity watchdog must reject a non-positive timeout")
 
-    inherited_output = verifier.run(
-        ["/bin/sh", "-c", "sleep 3 & echo inherited-output"],
-        env=os.environ.copy(), timeout=1,
-    )
-    if inherited_output.returncode != 0 or inherited_output.stdout.strip() != "inherited-output":
-        errors.append("file-backed subprocess capture must not wait for descendant pipe closure")
-
-    class _UnreapableTimedOutProcess:
-        pid = 424242
-        returncode = None
-
-        def __init__(self) -> None:
-            self.wait_calls: list[int | float | None] = []
-
-        def wait(self, timeout: int | float | None = None) -> int:
-            self.wait_calls.append(timeout)
-            if len(self.wait_calls) == 1:
-                raise subprocess.TimeoutExpired("unreapable", timeout)
-            raise AssertionError("timed-out process must not be waited on without a bound")
-
-        def poll(self) -> int | None:
-            return None
-
-    unreapable = _UnreapableTimedOutProcess()
-    original_process_popen = process_support.subprocess.Popen
-    original_process_terminate = process_support.terminate_process_group
-    terminated_processes: list[object] = []
-    process_support.subprocess.Popen = lambda *_args, **_kwargs: unreapable
-    process_support.terminate_process_group = lambda process: terminated_processes.append(process)
-    try:
-        timed_out_result = process_support.run(["unreapable"], env={}, timeout=1)
-    finally:
-        process_support.subprocess.Popen = original_process_popen
-        process_support.terminate_process_group = original_process_terminate
-    if (
-        timed_out_result.returncode != -1
-        or unreapable.wait_calls != [1]
-        or terminated_processes != [unreapable]
-    ):
-        errors.append("timed-out subprocess capture must return without an unbounded second wait")
-
-    visual_audit_path = ROOT / "scripts/audit-workbench-visuals.py"
-    visual_audit_spec = importlib.util.spec_from_file_location(
-        "fovea_workbench_visual_audit", visual_audit_path
-    )
-    if visual_audit_spec is None or visual_audit_spec.loader is None:
-        raise RuntimeError("unable to load Workbench visual audit")
-    visual_audit = importlib.util.module_from_spec(visual_audit_spec)
-    visual_audit_spec.loader.exec_module(visual_audit)
-    with tempfile.TemporaryDirectory(prefix="fovea-visual-watchdog-") as directory:
-        root = Path(directory)
-        normal_log = root / "normal.log"
-        normal_output = visual_audit.run_visual_xcode(
-            ["/bin/sh", "-c", "echo visual-start; sleep 0.1; echo visual-done"],
-            output=normal_log,
+    if not QUICK:
+        inherited_output = verifier.run(
+            ["/bin/sh", "-c", "sleep 3 & echo inherited-output"],
+            env=os.environ.copy(), timeout=1,
         )
-        if "visual-start" not in normal_output or "visual-done" not in normal_output:
-            errors.append("visual watchdog must retain successful streamed command output")
-        original_inactivity = visual_audit.VISUAL_XCODE_INACTIVITY_TIMEOUT_SECONDS
-        original_total = visual_audit.VISUAL_XCODE_TOTAL_TIMEOUT_SECONDS
-        visual_audit.VISUAL_XCODE_INACTIVITY_TIMEOUT_SECONDS = 1
-        visual_audit.VISUAL_XCODE_TOTAL_TIMEOUT_SECONDS = 5
-        stalled_log = root / "stalled.log"
+        if inherited_output.returncode != 0 or inherited_output.stdout.strip() != "inherited-output":
+            errors.append("file-backed subprocess capture must not wait for descendant pipe closure")
+
+        class _UnreapableTimedOutProcess:
+            pid = 424242
+            returncode = None
+
+            def __init__(self) -> None:
+                self.wait_calls: list[int | float | None] = []
+
+            def wait(self, timeout: int | float | None = None) -> int:
+                self.wait_calls.append(timeout)
+                if len(self.wait_calls) == 1:
+                    raise subprocess.TimeoutExpired("unreapable", timeout)
+                raise AssertionError("timed-out process must not be waited on without a bound")
+
+            def poll(self) -> int | None:
+                return None
+
+        unreapable = _UnreapableTimedOutProcess()
+        original_process_popen = process_support.subprocess.Popen
+        original_process_terminate = process_support.terminate_process_group
+        terminated_processes: list[object] = []
+        process_support.subprocess.Popen = lambda *_args, **_kwargs: unreapable
+        process_support.terminate_process_group = lambda process: terminated_processes.append(process)
         try:
-            visual_audit.run_visual_xcode(
-                ["/bin/sh", "-c", "echo visual-start; sleep 10"],
-                output=stalled_log,
-            )
-        except RuntimeError as error:
-            stalled_message = str(error)
-        else:
-            stalled_message = ""
+            timed_out_result = process_support.run(["unreapable"], env={}, timeout=1)
         finally:
-            visual_audit.VISUAL_XCODE_INACTIVITY_TIMEOUT_SECONDS = original_inactivity
-            visual_audit.VISUAL_XCODE_TOTAL_TIMEOUT_SECONDS = original_total
+            process_support.subprocess.Popen = original_process_popen
+            process_support.terminate_process_group = original_process_terminate
         if (
-            "no log progress for 1 seconds" not in stalled_message
-            or "=== visual xcodebuild made no log progress for 1 seconds ==="
-            not in stalled_log.read_text()
+            timed_out_result.returncode != -1
+            or unreapable.wait_calls != [1]
+            or terminated_processes != [unreapable]
         ):
-            errors.append("visual watchdog must terminate and retain a bounded inactivity marker")
+            errors.append("timed-out subprocess capture must return without an unbounded second wait")
 
-        original_artifact_root = visual_audit.ARTIFACT_ROOT
-        original_ensure_booted = visual_audit.ensure_booted
-        original_visual_runner = visual_audit.run_visual_xcode
-        original_run = visual_audit.run
-        visual_audit.ARTIFACT_ROOT = root / "artifacts"
-        visual_audit.ensure_booted = lambda _identifier: None
-        export_commands: list[list[str]] = []
-
-        def failed_visual_runner(_command: list[str], *, output: Path) -> str:
-            (visual_audit.ARTIFACT_ROOT / "iphone.xcresult").mkdir(
-                parents=True, exist_ok=True
-            )
-            output.parent.mkdir(parents=True, exist_ok=True)
-            output.write_text("partial result")
-            raise RuntimeError("visual xcodebuild made no log progress for 1 seconds")
-
-        visual_audit.run_visual_xcode = failed_visual_runner
-        visual_audit.run = lambda command, **_kwargs: export_commands.append(list(command)) or ""
-        try:
-            incomplete_failures = visual_audit.capture_visual_family("iphone", "test-device")
-        finally:
-            visual_audit.ARTIFACT_ROOT = original_artifact_root
-            visual_audit.ensure_booted = original_ensure_booted
-            visual_audit.run_visual_xcode = original_visual_runner
-            visual_audit.run = original_run
-        if (
-            len(incomplete_failures) != 1
-            or "visual test failed" not in incomplete_failures[0]
-            or export_commands
-        ):
-            errors.append(
-                "failed visual xcodebuild must preserve its primary error and skip attachment export"
-            )
-
-        original_artifact_root = visual_audit.ARTIFACT_ROOT
-        original_metadata_path = visual_audit.GENERATED_METADATA
-        original_run = visual_audit.run
-        original_capture = visual_audit.capture_visual_family
-        metadata = root / "WorkbenchBuildMetadata.generated.swift"
-        metadata.write_text("original metadata")
-        visual_audit.ARTIFACT_ROOT = root / "matrix-artifacts"
-        visual_audit.GENERATED_METADATA = metadata
-
-        def mutate_metadata(_command: list[str], **_kwargs: object) -> str:
-            metadata.write_text("generated metadata")
-            return ""
-
-        visual_audit.run = mutate_metadata
-        visual_audit.capture_visual_family = lambda _family, _identifier: []
-        try:
-            visual_audit.capture_visual_matrix("iphone", None)
-        finally:
-            visual_audit.ARTIFACT_ROOT = original_artifact_root
-            visual_audit.GENERATED_METADATA = original_metadata_path
-            visual_audit.run = original_run
-            visual_audit.capture_visual_family = original_capture
-        if metadata.read_text() != "original metadata":
-            errors.append("visual matrix must restore ephemeral build metadata")
-
-    documentation_path = ROOT / "scripts/verify-documentation.py"
-    documentation_spec = importlib.util.spec_from_file_location(
-        "fovea_verify_documentation", documentation_path
-    )
-    if documentation_spec is None or documentation_spec.loader is None:
-        raise RuntimeError("unable to load documentation verifier")
-    documentation = importlib.util.module_from_spec(documentation_spec)
-    documentation_spec.loader.exec_module(documentation)
-    with tempfile.TemporaryDirectory(prefix="fovea-documentation-watchdog-") as directory:
-        root = Path(directory)
-        normal_log = root / "normal.log"
-        normal_code, normal_failure = documentation.run_documentation_build(
-            ["/bin/sh", "-c", "echo doc-start; sleep 0.1; echo doc-done"],
-            env=os.environ.copy(),
-            platform_name="test-normal",
-            log=normal_log,
+        visual_audit_path = ROOT / "scripts/audit-workbench-visuals.py"
+        visual_audit_spec = importlib.util.spec_from_file_location(
+            "fovea_workbench_visual_audit", visual_audit_path
         )
-        normal_text = normal_log.read_text()
-        if (
-            normal_code != 0
-            or normal_failure is not None
-            or "doc-start" not in normal_text
-            or "doc-done" not in normal_text
-        ):
-            errors.append("documentation watchdog must retain successful streamed command output")
-        original_inactivity = documentation.DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS
-        original_total = documentation.DOC_BUILD_TOTAL_TIMEOUT_SECONDS
-        documentation.DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = 1
-        documentation.DOC_BUILD_TOTAL_TIMEOUT_SECONDS = 5
-        stalled_log = root / "stalled.log"
-        try:
-            stalled_code, stalled_failure = documentation.run_documentation_build(
-                ["/bin/sh", "-c", "echo doc-start; sleep 10"],
+        if visual_audit_spec is None or visual_audit_spec.loader is None:
+            raise RuntimeError("unable to load Workbench visual audit")
+        visual_audit = importlib.util.module_from_spec(visual_audit_spec)
+        visual_audit_spec.loader.exec_module(visual_audit)
+        with tempfile.TemporaryDirectory(prefix="fovea-visual-watchdog-") as directory:
+            root = Path(directory)
+            normal_log = root / "normal.log"
+            normal_output = visual_audit.run_visual_xcode(
+                ["/bin/sh", "-c", "echo visual-start; sleep 0.1; echo visual-done"],
+                output=normal_log,
+            )
+            if "visual-start" not in normal_output or "visual-done" not in normal_output:
+                errors.append("visual watchdog must retain successful streamed command output")
+            original_inactivity = visual_audit.VISUAL_XCODE_INACTIVITY_TIMEOUT_SECONDS
+            original_total = visual_audit.VISUAL_XCODE_TOTAL_TIMEOUT_SECONDS
+            visual_audit.VISUAL_XCODE_INACTIVITY_TIMEOUT_SECONDS = 1
+            visual_audit.VISUAL_XCODE_TOTAL_TIMEOUT_SECONDS = 5
+            stalled_log = root / "stalled.log"
+            try:
+                visual_audit.run_visual_xcode(
+                    ["/bin/sh", "-c", "echo visual-start; sleep 10"],
+                    output=stalled_log,
+                )
+            except RuntimeError as error:
+                stalled_message = str(error)
+            else:
+                stalled_message = ""
+            finally:
+                visual_audit.VISUAL_XCODE_INACTIVITY_TIMEOUT_SECONDS = original_inactivity
+                visual_audit.VISUAL_XCODE_TOTAL_TIMEOUT_SECONDS = original_total
+            if (
+                "no log progress for 1 seconds" not in stalled_message
+                or "=== visual xcodebuild made no log progress for 1 seconds ==="
+                not in stalled_log.read_text()
+            ):
+                errors.append("visual watchdog must terminate and retain a bounded inactivity marker")
+
+            original_artifact_root = visual_audit.ARTIFACT_ROOT
+            original_ensure_booted = visual_audit.ensure_booted
+            original_visual_runner = visual_audit.run_visual_xcode
+            original_run = visual_audit.run
+            visual_audit.ARTIFACT_ROOT = root / "artifacts"
+            visual_audit.ensure_booted = lambda _identifier: None
+            export_commands: list[list[str]] = []
+
+            def failed_visual_runner(_command: list[str], *, output: Path) -> str:
+                (visual_audit.ARTIFACT_ROOT / "iphone.xcresult").mkdir(
+                    parents=True, exist_ok=True
+                )
+                output.parent.mkdir(parents=True, exist_ok=True)
+                output.write_text("partial result")
+                raise RuntimeError("visual xcodebuild made no log progress for 1 seconds")
+
+            visual_audit.run_visual_xcode = failed_visual_runner
+            visual_audit.run = lambda command, **_kwargs: export_commands.append(list(command)) or ""
+            try:
+                incomplete_failures = visual_audit.capture_visual_family("iphone", "test-device")
+            finally:
+                visual_audit.ARTIFACT_ROOT = original_artifact_root
+                visual_audit.ensure_booted = original_ensure_booted
+                visual_audit.run_visual_xcode = original_visual_runner
+                visual_audit.run = original_run
+            if (
+                len(incomplete_failures) != 1
+                or "visual test failed" not in incomplete_failures[0]
+                or export_commands
+            ):
+                errors.append(
+                    "failed visual xcodebuild must preserve its primary error and skip attachment export"
+                )
+
+            original_artifact_root = visual_audit.ARTIFACT_ROOT
+            original_metadata_path = visual_audit.GENERATED_METADATA
+            original_run = visual_audit.run
+            original_capture = visual_audit.capture_visual_family
+            metadata = root / "WorkbenchBuildMetadata.generated.swift"
+            metadata.write_text("original metadata")
+            visual_audit.ARTIFACT_ROOT = root / "matrix-artifacts"
+            visual_audit.GENERATED_METADATA = metadata
+
+            def mutate_metadata(_command: list[str], **_kwargs: object) -> str:
+                metadata.write_text("generated metadata")
+                return ""
+
+            visual_audit.run = mutate_metadata
+            visual_audit.capture_visual_family = lambda _family, _identifier: []
+            try:
+                visual_audit.capture_visual_matrix("iphone", None)
+            finally:
+                visual_audit.ARTIFACT_ROOT = original_artifact_root
+                visual_audit.GENERATED_METADATA = original_metadata_path
+                visual_audit.run = original_run
+                visual_audit.capture_visual_family = original_capture
+            if metadata.read_text() != "original metadata":
+                errors.append("visual matrix must restore ephemeral build metadata")
+
+        documentation_path = ROOT / "scripts/verify-documentation.py"
+        documentation_spec = importlib.util.spec_from_file_location(
+            "fovea_verify_documentation", documentation_path
+        )
+        if documentation_spec is None or documentation_spec.loader is None:
+            raise RuntimeError("unable to load documentation verifier")
+        documentation = importlib.util.module_from_spec(documentation_spec)
+        documentation_spec.loader.exec_module(documentation)
+        with tempfile.TemporaryDirectory(prefix="fovea-documentation-watchdog-") as directory:
+            root = Path(directory)
+            normal_log = root / "normal.log"
+            normal_code, normal_failure = documentation.run_documentation_build(
+                ["/bin/sh", "-c", "echo doc-start; sleep 0.1; echo doc-done"],
                 env=os.environ.copy(),
-                platform_name="test-stalled",
-                log=stalled_log,
+                platform_name="test-normal",
+                log=normal_log,
             )
-        finally:
-            documentation.DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = original_inactivity
-            documentation.DOC_BUILD_TOTAL_TIMEOUT_SECONDS = original_total
-        if (
-            stalled_code != -1
-            or stalled_failure is None
-            or "no log progress for 1 seconds" not in stalled_failure
-            or "=== test-stalled documentation build made no log progress for 1 seconds ==="
-            not in stalled_log.read_text()
-        ):
-            errors.append(
-                "documentation watchdog must terminate and retain a bounded inactivity marker"
-            )
+            normal_text = normal_log.read_text()
+            if (
+                normal_code != 0
+                or normal_failure is not None
+                or "doc-start" not in normal_text
+                or "doc-done" not in normal_text
+            ):
+                errors.append("documentation watchdog must retain successful streamed command output")
+            original_inactivity = documentation.DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS
+            original_total = documentation.DOC_BUILD_TOTAL_TIMEOUT_SECONDS
+            documentation.DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = 1
+            documentation.DOC_BUILD_TOTAL_TIMEOUT_SECONDS = 5
+            stalled_log = root / "stalled.log"
+            try:
+                stalled_code, stalled_failure = documentation.run_documentation_build(
+                    ["/bin/sh", "-c", "echo doc-start; sleep 10"],
+                    env=os.environ.copy(),
+                    platform_name="test-stalled",
+                    log=stalled_log,
+                )
+            finally:
+                documentation.DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = original_inactivity
+                documentation.DOC_BUILD_TOTAL_TIMEOUT_SECONDS = original_total
+            if (
+                stalled_code != -1
+                or stalled_failure is None
+                or "no log progress for 1 seconds" not in stalled_failure
+                or "=== test-stalled documentation build made no log progress for 1 seconds ==="
+                not in stalled_log.read_text()
+            ):
+                errors.append(
+                    "documentation watchdog must terminate and retain a bounded inactivity marker"
+                )
 
     snapshot = verifier.generated_project_snapshot()
     if len(snapshot) != 3:
@@ -1035,7 +1073,11 @@ try:
     ):
         errors.append("Workbench smoke command must contain one copy of each bounded reuse flag")
 
-    source = profile_module.source_state()
+    source = (
+        profile_module.SourceState("0" * 40, "1" * 40, False)
+        if QUICK
+        else profile_module.source_state()
+    )
     if (
         len(source.head_commit) != 40
         or len(source.working_tree) != 40
@@ -1269,17 +1311,21 @@ except (OSError, RuntimeError, ValueError) as error:
     errors.append(f"invalid verification profile policy: {error}")
 
 json_roots = [ROOT / "docs", ROOT / "evidence", ROOT / "Examples", ROOT / "Benchmarks"]
+excluded_json_directories = {".build", ".swiftpm", ".artifacts", "DerivedData"}
 for json_root in json_roots:
     if not json_root.exists():
         continue
-    for path in sorted(json_root.rglob("*.json")):
-        relative_parts = path.relative_to(ROOT).parts
-        if any(part in {".build", ".swiftpm", ".artifacts", "DerivedData"} for part in relative_parts):
-            continue
-        try:
-            json.loads(path.read_text())
-        except (json.JSONDecodeError, UnicodeError) as error:
-            errors.append(f"JSON syntax error in {path.relative_to(ROOT)}: {error}")
+    for directory, directories, filenames in os.walk(json_root):
+        directories[:] = sorted(
+            name for name in directories if name not in excluded_json_directories
+        )
+        root = Path(directory)
+        for filename in sorted(name for name in filenames if name.endswith(".json")):
+            path = root / filename
+            try:
+                json.loads(path.read_text())
+            except (json.JSONDecodeError, UnicodeError) as error:
+                errors.append(f"JSON syntax error in {path.relative_to(ROOT)}: {error}")
 
 if errors:
     print("\n".join(errors), file=sys.stderr)

@@ -229,7 +229,7 @@ def classify(paths: list[str]) -> dict[str, object]:
                 model_scripts.add(path)
             known_prefixes = (
                 "verify", "check-", "validate-", "run-", "test-", "model-check-",
-                "analyze-", "audit-", "render-", "generate-", "select-", "write-",
+                "analyze-", "audit-", "render-", "generate-", "prepare-", "select-", "write-",
                 "ios_example_", "lint-", "prove-",
             )
             if name in {
@@ -366,6 +366,20 @@ def iteration_static_phases(impact: dict[str, object]) -> list[Phase]:
                 "docs/research/progressive-presentation-simulator-evidence-2026-08.json",
             ), 180,
         ))
+    if any(
+        path in {
+            "scripts/check-tooling-syntax.py",
+            "scripts/run-verification-profile.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "tooling-contract",
+                ("python3", "scripts/check-tooling-syntax.py", "--quick"),
+                120,
+            )
+        )
     unique: dict[str, Phase] = {}
     for phase in phases:
         unique.setdefault(phase.name, phase)

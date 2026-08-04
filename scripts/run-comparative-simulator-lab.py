@@ -112,6 +112,24 @@ def run(
     return result
 
 
+def wait_for_simulator_artifact(
+    source: Path,
+    failure: Path,
+    *,
+    timeout: float,
+    poll_interval: float = 0.5,
+) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline and not source.is_file() and not failure.is_file():
+        time.sleep(poll_interval)
+    if failure.is_file():
+        raise RuntimeError(
+            f"simulator benchmark failed: {failure.read_text(errors='replace').strip()}"
+        )
+    if not source.is_file():
+        raise RuntimeError(f"missing simulator result after timeout: {source.name}")
+
+
 def environment() -> dict[str, str]:
     env = os.environ.copy()
     if not env.get("DEVELOPER_DIR"):
@@ -523,18 +541,16 @@ def main() -> int:
             print(f"Simulator run {index}/{len(specs)}: {comparator} {spec['workload']} {spec['cache']}",flush=True)
             container=Path(run(["xcrun","simctl","get_app_container",udid,bundle,"data"],env=env,timeout=60).stdout.strip())
             source=container/"Documents"/name
+            failure=container/"Documents"/(name+".failure")
             source.unlink(missing_ok=True)
+            failure.unlink(missing_ok=True)
             run([
                 "xcrun","simctl","launch","--terminate-running-process",udid,bundle,
                 "--workload",spec["workload"],"--cache-state",spec["cache"],"--network-profile",
                 "NET-CONSTRAINED-V1" if spec["workload"] == "W4-PROGRESSIVE-JPEG-V1" else "NET-LOCAL-V1",
                 "--run-index","0","--time-scale",str(spec["scale"]),"--output",name,
             ],env=child,timeout=60)
-            deadline=time.monotonic()+240
-            while time.monotonic()<deadline and not source.is_file():
-                time.sleep(0.5)
-            if not source.is_file():
-                raise RuntimeError(f"missing simulator result after timeout: {name}")
+            wait_for_simulator_artifact(source, failure, timeout=240)
             data=json.loads(source.read_text()); validate(data,spec,identity,plan_digest,claim_family_digest)
             dest=artifact_path(spec)
             dest.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(source,dest); paths.append(dest)
