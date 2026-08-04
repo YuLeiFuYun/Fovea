@@ -215,7 +215,7 @@
     },
     {
       "planID": "FOVEA-W7-CONCURRENCY-V10",
-      "status": "preregistered-dirty-six-comparator-calibration-passed-clean-pending",
+      "status": "clean-six-comparator-simulator-calibration-passed-formal-pending",
       "archiveSuperseded": "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v9.json",
       "facts": {
         "comparatorsRun": 6,
@@ -223,26 +223,28 @@
         "sharedOriginRequestsEach": 16,
         "originPeakConcurrencyEach": 8,
         "foveaHardFailures": [],
-        "foveaThroughputRequestsPerSecond": 74.857,
-        "foveaP99Milliseconds": 8982.376292,
-        "foveaBackgroundProbeNewerBypasses": 8,
+        "foveaThroughputRequestsPerSecond": 74.77,
+        "foveaP99Milliseconds": 8979.810792,
+        "foveaImmediateP95Milliseconds": 8322.21,
+        "foveaBackgroundProbeNewerBypasses": 9,
         "nukeHardFailures": [
           "background-probe-bypass-bound"
         ],
         "nukeBackgroundProbeNewerBypasses": 31,
-        "appleThroughputRequestsPerSecond": 79.542,
-        "kingfisherThroughputRequestsPerSecond": 79.254
+        "appleThroughputRequestsPerSecond": 79.004,
+        "kingfisherThroughputRequestsPerSecond": 78.703
       },
-      "finding": "The first V10 six-comparator dirty-source calibration observed exactly eight shared gate waiters, sixteen shared origin requests and origin peak eight for every contestant. Fovea had no hard failures; Nuke again violated the observable starvation bound with thirty-one newer starts. Fovea remained slower than Apple native and Kingfisher, so V10 corrects causal comparability without creating a performance claim. Clean exact-source calibration remains pending.",
+      "finding": "The clean exact-source V10 calibration passed the new origin-capacity barrier for all six contestants. Fovea had no hard failures and preserved bounded fairness, but remained roughly five percent behind Apple native and Kingfisher on throughput and about six percent worse on p99. Its immediate-priority p95 was slightly lower than both. Nuke again failed the starvation bound. V10 therefore supplies a stable causal baseline, not a performance-leading claim; repeated formal and physical-device evidence remain pending.",
       "artifact": ".artifacts/w7-concurrency-lab/calibration-report-a-tier-headless.json",
-      "artifactSHA256": "4b7cc63b86e8f9ca7e9abaaee310a9e0951e23d4358a5cb8e26b0059ed49e15a",
+      "artifactSHA256": "e155a428d06f3257d0f2fd86731c1a2aed53ef95fa0f7f4c97de58ea22f526c3",
       "experimentPlanDigest": "11c91da869076b1589edc7b90735023819163654f14722eafbac90b7300c5ad9",
       "claimFamilyDigest": "13a5a72092b36733aca5ccc31ff36a9cda6de3ae609014cf3cf742d667636117",
       "sourceIdentity": {
-        "commit": "66491b5e14674196b7c5b2af4b678996dca58e62",
-        "includesWorkingTreeChanges": true,
-        "sourceTreeDigest": "33d04f81a797244f5b95d0630052bab63e48276d73f5794dba6eb05016523f88"
-      }
+        "commit": "97a3156a720a401750d2c1abedf3a05e774bbc03",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "f4595f046a3d30657ee8752787c71b9fac25764a16e11e0ce5f6086665ee94ed"
+      },
+      "evidenceRecord": "docs/research/w7-v10-clean-calibration-2026-08.json"
     }
   ]
 }

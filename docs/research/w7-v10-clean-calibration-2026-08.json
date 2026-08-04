@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "evidenceID": "FOVEA-W7-V10-CLEAN-SIMULATOR-CALIBRATION-2026-08-04",
+  "status": "clean-simulator-calibration-completed-formal-release-claim-blocked",
+  "generatedAt": "2026-08-04T01:19:08.529061+00:00",
+  "claimBoundary": {
+    "provisional": true,
+    "releaseClaimPermitted": false,
+    "reason": "one clean iOS 27 beta Simulator calibration per comparator is causal and functional evidence, not the preregistered repeated physical-device performance campaign",
+    "applicability": "W7-THOUSAND-CONCURRENT-V1 A-tier headless contract only"
+  },
+  "sourceIdentity": {
+    "commit": "97a3156a720a401750d2c1abedf3a05e774bbc03",
+    "includesWorkingTreeChanges": false,
+    "sourceTreeDigest": "f4595f046a3d30657ee8752787c71b9fac25764a16e11e0ce5f6086665ee94ed"
+  },
+  "methodIdentity": {
+    "planID": "FOVEA-W7-CONCURRENCY-V10",
+    "experimentPlanDigest": "11c91da869076b1589edc7b90735023819163654f14722eafbac90b7300c5ad9",
+    "claimFamilyDigest": "13a5a72092b36733aca5ccc31ff36a9cda6de3ae609014cf3cf742d667636117",
+    "buildManifestSHA256": "e165b4005ec6539407d786e1c502eb792605101cf5704f36cd79867287c7e16b",
+    "reportSHA256": "e155a428d06f3257d0f2fd86731c1a2aed53ef95fa0f7f4c97de58ea22f526c3",
+    "phaseDiagnosticsEnabled": false,
+    "simulatorIdentity": {
+      "deviceProfileID": "ios27-simulator-calibration-v1",
+      "deviceUDID": "1DC68032-B5A2-4543-B85A-2CB2D7572288",
+      "osBuild": "24A5355p",
+      "osChannel": "beta",
+      "osVersion": "27.0",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "runtimeSignatureState": "Unknown",
+      "runtimeStorageIdentifier": "6B6140CE-0851-4406-AF21-CDBBAF08B747"
+    }
+  },
+  "invariants": {
+    "logicalRequestsPerComparator": 1000,
+    "requiredOriginPreparationWaitersExact": 8,
+    "requiredSharedOriginRequests": 16,
+    "originConcurrentServiceLimit": 8,
+    "foveaHardFailures": []
+  },
+  "comparators": [
+    {
+      "name": "Apple URLSession + URLCache + ImageIO",
+      "hardFailures": [],
+      "artifact": ".artifacts/w7-concurrency-lab/runs/Apple URLSession + URLCache + ImageIO/w7-apple urlsession + urlcache + imageio-000.json",
+      "originPreparationWaiters": 8,
+      "sharedOriginRequests": 16,
+      "originPeakConcurrency": 8,
+      "backgroundProbeNewerBypasses": 0,
+      "throughputMilliRequestsPerSecond": 79004,
+      "p99LogicalLatencyNanoseconds": 8483046416,
+      "immediateP95LatencyNanoseconds": 8327099167,
+      "backgroundP95LatencyNanoseconds": 8325681291,
+      "immediateToBackgroundP95RatioPPM": 1000170,
+      "baselineThreadCount": 9,
+      "peakThreadCount": 18
+    },
+    {
+      "name": "Fovea",
+      "hardFailures": [],
+      "artifact": ".artifacts/w7-concurrency-lab/runs/Fovea/w7-fovea-000.json",
+      "originPreparationWaiters": 8,
+      "sharedOriginRequests": 16,
+      "originPeakConcurrency": 8,
+      "backgroundProbeNewerBypasses": 9,
+      "throughputMilliRequestsPerSecond": 74770,
+      "p99LogicalLatencyNanoseconds": 8979810792,
+      "immediateP95LatencyNanoseconds": 8322210000,
+      "backgroundP95LatencyNanoseconds": 8911601208,
+      "immediateToBackgroundP95RatioPPM": 933862,
+      "baselineThreadCount": 26,
+      "peakThreadCount": 27
+    },
+    {
+      "name": "Nuke",
+      "hardFailures": [
+        {
+          "check": "background-probe-bypass-bound",
+          "value": 16
+        }
+      ],
+      "artifact": ".artifacts/w7-concurrency-lab/runs/Nuke/w7-nuke-000.json",
+      "originPreparationWaiters": 8,
+      "sharedOriginRequests": 16,
+      "originPeakConcurrency": 8,
+      "backgroundProbeNewerBypasses": 31,
+      "throughputMilliRequestsPerSecond": 77516,
+      "p99LogicalLatencyNanoseconds": 8720380917,
+      "immediateP95LatencyNanoseconds": 5209665083,
+      "backgroundP95LatencyNanoseconds": 8876378458,
+      "immediateToBackgroundP95RatioPPM": 586913,
+      "baselineThreadCount": 23,
+      "peakThreadCount": 24
+    },
+    {
+      "name": "Kingfisher",
+      "hardFailures": [],
+      "artifact": ".artifacts/w7-concurrency-lab/runs/Kingfisher/w7-kingfisher-000.json",
+      "originPreparationWaiters": 8,
+      "sharedOriginRequests": 16,
+      "originPeakConcurrency": 8,
+      "backgroundProbeNewerBypasses": 0,
+      "throughputMilliRequestsPerSecond": 78703,
+      "p99LogicalLatencyNanoseconds": 8494873709,
+      "immediateP95LatencyNanoseconds": 8331065917,
+      "backgroundP95LatencyNanoseconds": 8330041750,
+      "immediateToBackgroundP95RatioPPM": 1000123,
+      "baselineThreadCount": 31,
+      "peakThreadCount": 32
+    },
+    {
+      "name": "SDWebImage",
+      "hardFailures": [],
+      "artifact": ".artifacts/w7-concurrency-lab/runs/SDWebImage/w7-sdwebimage-000.json",
+      "originPreparationWaiters": 8,
+      "sharedOriginRequests": 16,
+      "originPeakConcurrency": 8,
+      "backgroundProbeNewerBypasses": 0,
+      "throughputMilliRequestsPerSecond": 73917,
+      "p99LogicalLatencyNanoseconds": 8817306000,
+      "immediateP95LatencyNanoseconds": 8658063416,
+      "backgroundP95LatencyNanoseconds": 8655250916,
+      "immediateToBackgroundP95RatioPPM": 1000325,
+      "baselineThreadCount": 21,
+      "peakThreadCount": 22
+    },
+    {
+      "name": "PINRemoteImage",
+      "hardFailures": [],
+      "artifact": ".artifacts/w7-concurrency-lab/runs/PINRemoteImage/w7-pinremoteimage-000.json",
+      "originPreparationWaiters": 8,
+      "sharedOriginRequests": 16,
+      "originPeakConcurrency": 8,
+      "backgroundProbeNewerBypasses": 0,
+      "throughputMilliRequestsPerSecond": 76880,
+      "p99LogicalLatencyNanoseconds": 8748688375,
+      "immediateP95LatencyNanoseconds": 8586185959,
+      "backgroundP95LatencyNanoseconds": 8427996500,
+      "immediateToBackgroundP95RatioPPM": 1018770,
+      "baselineThreadCount": 20,
+      "peakThreadCount": 29
+    }
+  ],
+  "findings": [
+    "Every comparator reached exactly eight shared preparation-gate waiters before gate release.",
+    "Fovea completed with no hard failures, sixteen shared origin requests and origin peak concurrency eight.",
+    "Nuke exceeded the observable starvation bound with thirty-one newer origin starts and is not correctness-eligible for the registered efficiency family in this run.",
+    "Fovea immediate-priority p95 was slightly lower than Apple native and Kingfisher, while overall throughput and p99 remained worse; no overall W7 performance-leading claim is supported."
+  ],
+  "remainingEvidence": [
+    "quiet-host balanced twenty-block campaign",
+    "repeated physical-device run",
+    "stable non-beta iOS replication",
+    "lower-performance device replication",
+    "independent or trusted-CI reproduction"
+  ]
+}

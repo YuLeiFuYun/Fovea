@@ -591,7 +591,6 @@
         "CMP-ALAMOFIREIMAGE"
       ],
       "blockers": [
-        "clean six-comparator V10 Simulator calibration under one source digest",
         "quiet-host formal 20-block campaign",
         "formal repeated physical-device run",
         "stable iOS replication",
@@ -619,7 +618,7 @@
         "CH-CALLBACK-ONCE-018",
         "CH-MEMORY-CONCURRENCY-007"
       ],
-      "claimActivation": "preregistered-v10-dirty-six-comparator-passed-clean-calibration-pending-release-blocked",
+      "claimActivation": "clean-v10-simulator-calibration-passed-formal-and-physical-release-evidence-pending",
       "directComparators": [
         "CMP-APPLE-NATIVE",
         "CMP-NUKE",
@@ -642,7 +641,8 @@
         "Benchmarks/W7ConcurrencyLab/plans/claim-families-v8.json",
         "Benchmarks/W7ConcurrencyLab/plans/experiment-plan-v9.json",
         "Benchmarks/W7ConcurrencyLab/plans/claim-families-v9.json",
-        "docs/research/w7-control-plane-negative-results-2026-08.md"
+        "docs/research/w7-control-plane-negative-results-2026-08.md",
+        "docs/research/w7-v10-clean-calibration-2026-08.json"
       ],
       "hardInvariants": [
         "capacity-never-exceeded",
@@ -677,7 +677,7 @@
         "CMP-MOKA",
         "CMP-RISTRETTO"
       ],
-      "status": "implemented-v10-origin-capacity-barrier-dirty-six-comparator-passed-clean-pending",
+      "status": "implemented-v10-clean-six-comparator-calibration-passed-formal-physical-pending",
       "traceabilityIDs": [
         "SCHED-PT-022"
       ]
