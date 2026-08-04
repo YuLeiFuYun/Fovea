@@ -1146,6 +1146,20 @@
       ],
       "exitCondition": "Reconsider only with randomized interleaving and enough repeated Fovea-only and paired samples to show that Fovea own post-byte distribution improves without increasing memory, post-cancel bytes, ordering failures or incomplete-body risk.",
       "id": "NEG-W4-TERMINAL-CHUNK-SUSPEND-001"
+    },
+    {
+      "area": "ordinary-image-rendered-memory-delivery",
+      "claimRejected": "Checking rendered memory before creating the progressive subscription inside events(for:) will materially close Fovea warm-memory latency relative to ordinary image loaders.",
+      "counterexample": "The candidate preserved all focused progressive tests and skipped progressive setup on a validated memory hit, but the W2 warm-memory median changed from 0.293 ms to 0.315 ms and p95 from 0.356 ms to 0.390 ms. Nine-load total duration improved by only 0.389 ms, below directional Simulator scheduling noise, while the cold campaign also observed a higher footprint sample.",
+      "decision": "Revert the events-level memory fast path. The remaining sub-millisecond gap is dominated by the public event-stream and task delivery surface rather than progressive-producer construction; do not add a second production control path without a materially larger self-normalized benefit.",
+      "evidencePaths": [
+        "docs/research/ordinary-image-w2-directional-evidence-2026-08.json",
+        "Sources/FoveaCore/FoveaPipeline+Operations.swift",
+        "Sources/FoveaCore/ImageLoadCoordinator.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
+      ],
+      "exitCondition": "Reconsider only with a design that reduces the complete events delivery path, preserves cancellation cohort and progressive semantics, and demonstrates repeated Fovea-own warm-memory improvements without cold, disk, memory, hitch or correctness regressions.",
+      "id": "NEG-W2-EVENTS-RENDERED-MEMORY-FASTPATH-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",
