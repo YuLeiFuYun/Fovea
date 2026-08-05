@@ -207,6 +207,7 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
         let task = Task { @MainActor [weak self, weak cell] in
             guard let self, let cell else { return }
             do {
+                try Task.checkCancellation()
                 let target = try ComparatorPixelTarget(width: 320, height: 240)
                 let request = try ComparatorRequest(
                     resourceID: asset.assetID,
@@ -235,6 +236,7 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
             } catch is CancellationError {
                 return
             } catch {
+                guard !Task.isCancelled else { return }
                 let target = try? ComparatorPixelTarget(width: 320, height: 240)
                 if let target,
                     let measurement = try? ComparatorLoadResult(
