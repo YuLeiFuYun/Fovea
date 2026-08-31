@@ -1769,10 +1769,9 @@
       "counterexample": "At exact commit d64237a33ce91b0513dd850589fea32fa28f4f80, FrameDecimator returns every source index when levelOfIntegrity is 1.0 but sets Result.delayTime to delays.first. AnimatedImageState then maps every target timestamp using that one delay. The formal W5 variable-delay run therefore fails the native-timeline semantic gate rather than producing a timing rank.",
       "decision": "Keep GIF-VARIABLE-DELAY-60 as the primary source-timeline gate and record AnimatedImage as not-comparable there. Use GIF-UNIFORM-50MS-60 only as a secondary targetTimestamp/update-link mechanism fixture. Never substitute the uniform result for variable-delay correctness evidence.",
       "evidencePaths": [
-        ".artifacts/research/animation-libs/AnimatedImage/Sources/AnimatedImageCore/Processors/FrameDecimator.swift",
-        ".artifacts/research/animation-libs/AnimatedImage/Sources/AnimatedImageCore/Utilities/AnimatedImageState.swift",
-        "Benchmarks/ComparativeLab/Adapters/AnimatedImageAdapterPackage/Sources/AnimatedImageComparatorAdapter/AnimatedImageComparatorAdapter.swift",
-        ".artifacts/w5-player-timing/simulator/20260807T050706Z/manifest.json"
+        "docs/research/w5-simulator-negative-evidence-retention-2026-08.json",
+        "docs/research/animated-image-library-registry-2026-08.json",
+        "Benchmarks/ComparativeLab/Adapters/AnimatedImageAdapterPackage/Sources/AnimatedImageComparatorAdapter/AnimatedImageComparatorAdapter.swift"
       ],
       "exitCondition": "Remove only if the exact retained AnimatedImage player preserves independently verified per-frame source durations, at which point it must pass the primary variable-delay semantic gate before timing can be compared.",
       "id": "NEG-W5-ANIMATEDIMAGE-VARIABLE-DELAY-001"
@@ -1783,9 +1782,10 @@
       "counterexample": "On retained FLAnimatedImage 1.0.17, the Swift display override yielded no continuing W5 events and public currentFrame KVO yielded only the initial poster event; the bounded runner reported count=0/1 and zero progression while the player remained alive. An Objective-C subclass overriding the public/standard displayLayer: callback, calling super, and then reading public currentFrame produced a complete 61-observation/60-transition primary loop.",
       "decision": "Use a comparator-only Objective-C displayLayer: shim for FLAnimatedImage. It may read only public currentFrame and may not declare private readwrite properties or inspect private ivars. Continue forbidding a second CADisplayLink sampler because it would perturb timing and energy.",
       "evidencePaths": [
+        "docs/research/w5-simulator-negative-evidence-retention-2026-08.json",
+        "docs/research/animated-image-library-registry-2026-08.json",
         "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageBenchmarkShim/FoveaFLAnimatedImageBenchmarkView.m",
-        "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageComparatorAdapter/FLAnimatedImageComparatorAdapter.swift",
-        ".artifacts/w5-player-timing/simulator/20260807T053303Z/manifest.json"
+        "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageComparatorAdapter/FLAnimatedImageComparatorAdapter.swift"
       ],
       "exitCondition": "Replace only if the retained public Swift-imported surface gains a versioned frame-presentation callback that produces the same complete source-frame trace without private state or an extra refresh source.",
       "id": "NEG-W5-FLANIMATEDIMAGE-SWIFT-OBSERVATION-HOOK-001"
@@ -1796,10 +1796,9 @@
       "counterexample": "At retained commit 672a8d4fea3faf234518be2db00815936e55f85f, GIFImageView is declared public rather than open and its display override is not open. Swift 6 correctly rejects cross-module inheritance/override. The public GIFAnimatable protocol and Animator(withDelegate:) are the supported composition surface instead.",
       "decision": "Do not weaken access control or copy Gifu internals. The comparator owns a UIImageView that conforms to public GIFAnimatable; it invokes the public updateImageIfNeeded() extension from its own display callback and recovers source identity from the actually displayed pixel. Treat Gifu Swift 6 manifest iOS16 as the comparator deployment floor while Fovea remains iOS15.",
       "evidencePaths": [
-        ".artifacts/research/animation-libs/Gifu/Sources/Gifu/Classes/GIFImageView.swift",
-        ".artifacts/research/animation-libs/Gifu/Sources/Gifu/Classes/GIFAnimatable.swift",
-        "Benchmarks/ComparativeLab/Adapters/GifuAdapterPackage/Sources/GifuComparatorAdapter/GifuComparatorAdapter.swift",
-        ".artifacts/w5-player-timing/simulator/20260807T054742Z/manifest.json"
+        "docs/research/w5-simulator-negative-evidence-retention-2026-08.json",
+        "docs/research/animated-image-library-registry-2026-08.json",
+        "Benchmarks/ComparativeLab/Adapters/GifuAdapterPackage/Sources/GifuComparatorAdapter/GifuComparatorAdapter.swift"
       ],
       "exitCondition": "Replace only if a retained Gifu release makes GIFImageView open or adds a versioned public presentation callback that is at least as non-invasive as the protocol-composition path.",
       "id": "NEG-W5-GIFU-PUBLIC-SUBCLASS-001"
@@ -1825,7 +1824,7 @@
       "counterexample": "During the digest-bound GIF consolidation run rooted at .artifacts/w5-player-timing/simulator/20260807T074143Z, Kingfisher launch IPC entered the existing recovery path. Recovery uninstalled/reinstalled the app, changing its Simulator data-container UUID. The runner kept waiting on the pre-reinstall Documents path and reported a timeout, while the new container later contained a valid Kingfisher artifact. That late artifact validates as encoded-native with 61 observations and 60 transitions; SHA256 a9078402afdc96b36f419253fbaed3ae522491bc20fb68591eb65ecba1d58708.",
       "decision": "Resolve the app data container and derive result/failure paths after every install, including recovery reinstall. App bundle content is also digest-bound in each final runner result so prebuilt/current-run binary ambiguity is explicit.",
       "evidencePaths": [
-        ".artifacts/w5-player-timing/simulator/20260807T074143Z/kingfisher-gif_variable_delay_60-101-late-after-reinstall.json",
+        "docs/research/w5-simulator-negative-evidence-retention-2026-08.json",
         "scripts/run-w5-animated-simulator-lab.py",
         "scripts/test-w5-animated-simulator-runner.py"
       ],
@@ -1838,8 +1837,8 @@
       "counterexample": "In the digest-bound GIF run rooted at .artifacts/w5-player-timing/simulator/20260807T074837Z, Fovea, Kingfisher, SDWebImage and PINRemoteImage completed 61/60 sequentially, after which FLAnimatedImage produced a real workload failure with count=0. The exact same freshly built FLAnimatedImage app immediately completed 61/60 when run alone in .artifacts/w5-player-timing/simulator/20260807T075127Z. Therefore the zero-callback event is order/state dependent rather than an adapter or binary regression.",
       "decision": "Use the same exact registered Simulator/runtime but shutdown and boot it between comparator runs. Record comparatorIsolationMode=shutdown-boot-between-comparators-v1 in each result and the manifest. Continue to treat simulator timing as structural/non-ranking.",
       "evidencePaths": [
-        ".artifacts/w5-player-timing/simulator/20260807T074837Z",
-        ".artifacts/w5-player-timing/simulator/20260807T075127Z/manifest.json",
+        "docs/research/w5-simulator-negative-evidence-retention-2026-08.json",
+        "docs/research/animated-image-library-registry-2026-08.json",
         "scripts/run-w5-animated-simulator-lab.py",
         "scripts/test-w5-animated-simulator-runner.py"
       ],
@@ -1852,7 +1851,8 @@
       "counterexample": "The exact 1.0.17 adapter historically completed 61 observations/60 transitions in warm state and again as a warm single-comparator control at .artifacts/w5-player-timing/simulator/20260807T075127Z. Under fresh shutdown/boot conditions it repeatedly timed out with zero progression. A full public imageLazilyCachedAtIndex polling prewarm within the 32 MiB fixture budget still produced count=0. Terminal boot plus a 2 second settle produced only count=1/frame1. Waiting one main-queue turn and toggling public isHidden true/false to force FLAnimatedImageView visibility recomputation still produced count=0. Those comparator-specific experiments were reverted.",
       "decision": "Do not retain unsuccessful comparator-specific workarounds and do not retry until a passing run appears. Keep the public Objective-C displayLayer observation shim, preserve warm historical evidence separately, and classify only the narrow count0/1 progression0 primary-GIF failure as not-comparable-fresh-simulator-instability in the current isolated simulator protocol. Any other failure remains fail closed.",
       "evidencePaths": [
-        ".artifacts/w5-player-timing/simulator/20260807T075127Z/manifest.json",
+        "docs/research/w5-simulator-negative-evidence-retention-2026-08.json",
+        "docs/research/animated-image-library-registry-2026-08.json",
         "scripts/run-w5-animated-simulator-lab.py",
         "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageComparatorAdapter/FLAnimatedImageComparatorAdapter.swift",
         "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageBenchmarkShim/FoveaFLAnimatedImageBenchmarkView.m"
@@ -1866,8 +1866,8 @@
       "counterexample": "The first physical-Mac FoveaAnimationMacLab run ordered a real visible window front but received zero view-bound display-link callbacks and failed closed. A minimal independent probe showed callbacks only after NSApplication.finishLaunching(); an async @main probe with finishLaunching then received roughly one callback per display refresh without manually pumping a second display source.",
       "decision": "Every command-line AppKit display-link evidence process must call NSApplication.finishLaunching() before creating the evidence window. Do not interpret a zero-callback unlaunched AppKit process as product playback behavior.",
       "evidencePaths": [
-        "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift",
-        ".artifacts/performance/w5-appkit-display-link-preclamp-counterexample-v1/summary.json"
+        "docs/research/w5-appkit-display-link-physical-2026-08.json",
+        "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift"
       ],
       "exitCondition": "Remove only if Apple changes the command-line AppKit launch contract and a retained probe proves view-bound display-link callbacks before application launch completion.",
       "id": "NEG-W5-APPKIT-MAC-LAB-APPLICATION-LAUNCH-001"
@@ -1891,9 +1891,9 @@
       "counterexample": "CADisplayLink.targetTimestamp predicts a future presentation instant. In the physical-Mac pre-fix campaign, resume repeatedly failed with presenter effectiveVisibility=true while the display link remained paused=true. Diagnostic runs showed accepted targets and provider work frozen, driver mode still externalPresentationTicks. The deterministic W5_PT_144 reproduces the ordering with presentation target 100 while clock.now remains 0: without clamping, setVisible(false) regresses the cursor timestamp and fails with nonMonotonicClock.",
       "decision": "In externalPresentationTicks mode only, lifecycle, seek, restart and memory-pressure mutations use max(clock.now, last accepted external presentation target). Automatic deadline scheduling and the cursor non-monotonic invariant remain unchanged. The display clock can still pause immediately; the clamp only prevents Core state from moving backward behind an already-sampled future presentation instant.",
       "evidencePaths": [
+        "docs/research/w5-appkit-display-link-physical-2026-08.json",
         "Sources/FoveaCore/AnimationPlaybackDriver.swift",
-        "Tests/FoveaTests/AnimationPlaybackDriverTests.swift",
-        ".artifacts/performance/w5-appkit-display-link-preclamp-counterexample-v1/summary.json"
+        "Tests/FoveaTests/AnimationPlaybackDriverTests.swift"
       ],
       "exitCondition": "Remove the clamp only if presentation targets stop being future-predictive or the cursor adopts a separately proven dual-clock model that preserves monotonic lifecycle semantics under the same deterministic counterexample.",
       "id": "NEG-W5-EXTERNAL-PRESENTATION-LIFECYCLE-CLOCK-REGRESSION-001"
@@ -1918,7 +1918,7 @@
       "counterexample": "The fixed-six-pair Release callback capture completed without retries, but external targetTimestamp runs accumulated many oracle 'early' transitions because the presenter commits a frame before the future CADisplayLink.targetTimestamp it is intended for, while automatic-deadline commits occur on the current clock after a deadline. The two schedulers therefore use asymmetrical temporal coordinates even though both callbacks are MainActor image commits; the callback artifact's 15.5 ms versus 58.4 ms median p95 values are not a fair presentation-timing comparison.",
       "decision": "Keep the callback artifact as mechanism/counterexample evidence only. For the internal AppKit scheduler A/B, observe the currently committed source frame for both modes on the same view-bound NSView.displayLink.timestamp refresh coordinate. External mode uses that one link both as observer and future-target driver; automatic deadline mode uses it as observer only. Do not interpret either coordinate as hardware pixel scanout or energy evidence.",
       "evidencePaths": [
-        ".artifacts/performance/w5-appkit-callback-timing-physical-v1/manifest.json",
+        "docs/research/w5-appkit-refresh-timing-physical-2026-08.json",
         "Sources/FoveaAppKit/FoveaAnimationDisplayLinkDriver.swift",
         "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift",
         "Tools/Performance/capture_w5_appkit_refresh_timing.py"
@@ -1932,9 +1932,9 @@
       "counterexample": "On the retained physical Mac, NSScreen.maximumFramesPerSecond reports 120 while the view-bound NSView.displayLink refresh observer repeatedly measures a median interval near 16,666,625 ns, approximately 60 Hz. Using 1/120 s as if it were one observed refresh period therefore overstates missed/early deadline counts and mislabels the active display cadence.",
       "decision": "Record every actual view-display-link interval in refresh-sampled evidence. The primary internal scheduler direction gate uses playback-start-anchored p95 timing error and raw skipped source frames, neither of which depends on a tolerance. maximumFramesPerSecond-derived missed/early counts remain supplemental ComparativeLab-compatible diagnostics only and are not a primary physical-Mac gate.",
       "evidencePaths": [
+        "docs/research/w5-appkit-refresh-timing-physical-2026-08.json",
         "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift",
-        "Tools/Performance/capture_w5_appkit_refresh_timing.py",
-        ".artifacts/performance/w5-appkit-refresh-timing-physical-v1-first-observation-normalized/manifest.json"
+        "Tools/Performance/capture_w5_appkit_refresh_timing.py"
       ],
       "exitCondition": "Use a maximum-FPS-derived period as actual cadence only when a source-bound run proves the observed display-link interval distribution matches that period on the claim environment.",
       "id": "NEG-W5-APPKIT-MAXFPS-AS-ACTUAL-REFRESH-PERIOD-001"
@@ -1945,7 +1945,7 @@
       "counterexample": "A host Power Profiler probe exits with an Instruments issue stating that Power Profiler is not supported on macOS and should be recorded on iOS/iPadOS. /usr/bin/powermetrics exits because it must be invoked as superuser, and sudo -n reports that a password is required. Therefore the current environment has no unattended privileged Mac energy endpoint.",
       "decision": "Keep physical-Mac energy non-inferiority explicitly blocked. Do not rename CPU time, cycles, instructions, context switches, RSS, or ProcessInfo thermal state as energy. A fixed-pair /usr/bin/time -l resource study may only act as a non-energy falsifier for obvious resource-cost tradeoffs.",
       "evidencePaths": [
-        ".artifacts/performance/w5-appkit-energy-tooling-probe-v1/summary.json",
+        "docs/research/w5-appkit-resource-proxy-physical-2026-08.json",
         "Tools/Performance/capture_w5_appkit_resource_proxy.py"
       ],
       "exitCondition": "Reopen physical-Mac energy measurement only with a supported energy instrument or authorized powermetrics access under a preregistered non-perturbing protocol; otherwise satisfy the energy gate on an appropriate supported physical platform.",
@@ -1957,9 +1957,9 @@
       "counterexample": "A source-bound Release fixed-six-pair/no-retry 10-second resource proxy study, with no extra display observer in the deadline control, shows targetTimestamp higher in every pair for CPU time, cycles, retired instructions and context switches. Median paired external/deadline ratios are 3.819x CPU time, 3.875x cycles, 2.344x instructions and 5.714x context switches; maximum RSS is near parity at 1.003x. All coarse thermal states remain nominal, but no true energy endpoint is available on the host.",
       "decision": "Keep the strong refresh-timing improvement and resource-proxy cost as a tradeoff. Do not call AppKit targetTimestamp locally Pareto-dominant until a lower-overhead scheduler or mode preserves timing with non-inferior resource/energy evidence. CPU/cycles/context switches must never be relabeled as energy.",
       "evidencePaths": [
-        ".artifacts/performance/w5-appkit-resource-proxy-physical-v1/manifest.json",
         "docs/research/w5-appkit-resource-proxy-physical-2026-08.json",
-        "docs/research/w5-appkit-refresh-timing-physical-2026-08.json"
+        "docs/research/w5-appkit-refresh-timing-physical-2026-08.json",
+        "Tools/Performance/capture_w5_appkit_resource_proxy.py"
       ],
       "exitCondition": "A Pareto claim requires repeated same-host evidence that timing/skips remain no worse while process resource proxies are materially reduced and a supported real energy endpoint proves non-inferiority.",
       "id": "NEG-W5-APPKIT-TARGETTIMESTAMP-FREE-RESOURCE-COST-001"
@@ -1970,7 +1970,7 @@
       "counterexample": "The fixed-six-block Release/no-retry physical-Mac study completed 18 timing and 18 resource runs. Strict deadline improved median start-anchored p95 timing to about 16.82 ms from Task deadline 38.24 ms and reduced total source skips to 1 from 36, but median resource cost increased to 1.371x CPU, 1.245x cycles and 1.288x context switches versus Task deadline. Relative to external targetTimestamp, strict used roughly 0.324x CPU and 0.331x cycles but had about 1.356x p95 timing error.",
       "decision": "Treat strict Dispatch deadline timing as an intermediate timing/resource tradeoff, not a production default or Pareto result. Preserve the benchmark result; do not replace SystemAnimationPlaybackClock on this evidence.",
       "evidencePaths": [
-        ".artifacts/performance/w5-appkit-deadline-clock-physical-v1/manifest.json",
+        "docs/research/w5-appkit-scheduler-optimization-frontier-2026-08.json",
         "Tools/Performance/capture_w5_appkit_deadline_clock_experiment.py"
       ],
       "exitCondition": "Reconsider a strict timer only if a new scheduler proves repeated timing/skipped-frame non-regression together with CPU/cycles/context-switch non-regression against the production deadline clock and supported energy evidence.",
@@ -1982,7 +1982,6 @@
       "counterexample": "The Release fixed-six-pair exact-boundary study cut median CPU to 0.454x, cycles to 0.479x, instructions to 0.578x and context switches to 0.488x while reducing roughly 300 accepted timing targets to about 61. Despite favorable aggregate p95, the coalesced path produced 3 skipped source frames across six timing runs while every-refresh produced 0, and the preregistered all-pairs direction gate failed.",
       "decision": "Do not adopt exact next-frame-boundary Core tick coalescing. Every-refresh target sampling remains the product behavior. Resource savings do not override skipped-source-frame regression.",
       "evidencePaths": [
-        ".artifacts/performance/w5-appkit-external-coalescing-physical-v1/manifest.json",
         "docs/research/w5-appkit-scheduler-optimization-frontier-2026-08.json"
       ],
       "exitCondition": "A future coalescer must retain every source transition across repeated physical runs and pass the same timing/resource no-regression gate without retry-until-success.",
@@ -1994,7 +1993,6 @@
       "counterexample": "The fixed-six-pair one-refresh-lead study still produced 3 skipped source frames versus 0 for every-refresh and worsened median start-anchored p95 to 1.302x, even though CPU fell to 0.637x, cycles to 0.590x, instructions to 0.679x and context switches to 0.680x. The all-pairs timing/resource gate failed.",
       "decision": "Do not continue tuning boundary lead as an adoption strategy. The result indicates that reducing Core sampling opportunities itself weakens short-frame robustness on this variable-delay workload. Keep every-refresh sampling until a mechanism with a stronger correctness proof exists.",
       "evidencePaths": [
-        ".artifacts/performance/w5-appkit-external-coalescing-lead-physical-v1/manifest.json",
         "docs/research/w5-appkit-scheduler-optimization-frontier-2026-08.json"
       ],
       "exitCondition": "Reopen only with a mechanism that does not conditionally remove presentation samples needed to observe short source-frame boundaries, plus deterministic and physical no-skip evidence.",
@@ -2006,8 +2004,6 @@
       "counterexample": "Two fixed-six-pair physical-Mac studies consistently showed strong process-resource reductions when same-source-frame image assignment was suppressed: the current safe-identity callback/resource run reports median ratios about 0.579x CPU, 0.643x cycles, 0.708x instructions and 0.884x context switches. W5_PT_150-151 prove external image mutation and backing-scale refresh ownership semantics. However callback timing still failed the preregistered all-pairs gate: median p95 was 1.097x and total observed source skips were 7 versus 5 for every-tick. The earlier refresh-sampled study likewise failed its all-pairs p95 gate.",
       "decision": "Do not switch the product default to same-frame commit suppression on the current evidence. Preserve the resource finding and correctness tests as research input, but require a timing endpoint that passes the preregistered physical no-regression gate before adoption.",
       "evidencePaths": [
-        ".artifacts/performance/w5-appkit-frame-commit-dedup-physical-v1/manifest.json",
-        ".artifacts/performance/w5-appkit-frame-commit-dedup-callback-physical-v1/manifest.json",
         "docs/research/w5-appkit-scheduler-optimization-frontier-2026-08.json"
       ],
       "exitCondition": "Adopt only after source-transition commit suppression passes repeated physical timing/skipped-frame non-regression under the same external scheduler and retains external-image/backing-scale/lifecycle correctness.",
@@ -2019,7 +2015,6 @@
       "counterexample": "A Release fixed-six-pair/no-retry physical-Mac study kept every external targetTimestamp and every imageView.image assignment. Wrapper reuse reduced median CPU to 0.446x, cycles to 0.503x, retired instructions to 0.699x and context switches to 0.746x with RSS at 1.000x. All six p95 results stayed within the preregistered one-observed-refresh non-inferiority margin, but one reuse timing run produced one skipped source frame while its paired rebuild control produced zero. Because the preregistered gate required no additional skips in every pair, the adoption gate failed.",
       "decision": "Do not switch AppKit to wrapper reuse on this evidence. Preserve the resource finding, but remove the default-off product experiment rather than carrying an unadopted cache. Future evaluation should use a preregistered longer-run skip-rate protocol or another deterministic proof before reintroducing the optimization.",
       "evidencePaths": [
-        ".artifacts/performance/w5-appkit-image-wrapper-reuse-physical-v1/manifest.json",
         "docs/research/w5-appkit-scheduler-optimization-frontier-2026-08.json"
       ],
       "exitCondition": "Reopen only under a preregistered protocol that can distinguish rare physical scheduling noise from a real skip-rate regression while retaining every target tick/assignment and proving backing-scale/external-image semantics.",
@@ -2073,8 +2068,7 @@
       "evidencePaths": [
         "docs/research/animation-cancellation-reentrancy-audit-2026-08-08.md",
         "Sources/FoveaCore/AnimationPlaybackCoordinator.swift",
-        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
-        ".project-local/animation-cancel-root-stress-20260808.log"
+        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift"
       ],
       "exitCondition": "Do not remove post-await revalidation unless an alternative design proves the cancellation/publication invariant in one synchronous actor critical section and W5-PT-175/W5-PT-205 plus suite-order stress remain green.",
       "id": "NEG-W5-ACTOR-REENTRANCY-CANCEL-POSTAWAIT-SPAWN-001",
@@ -2108,14 +2102,12 @@
       "area": "urlsession-body-credit-window",
       "claimRejected": "Widening Fovea URLSession body credit from one outstanding callback to two or four will materially reduce transport latency while preserving a hard application-side outstanding-byte bound.",
       "counterexample": "Three final Release mechanism reports produced median-of-medians of 3.760 ms at credit 1, 3.793 ms at credit 2 and 3.786 ms at credit 4, so widening did not improve latency. All three configurations also observed up to a 4 MiB outstanding callback despite the 256 KiB application threshold, because URLSession callback coalescing is outside that threshold's control.",
-      "decision": "Keep production on direct one-callback suspend/resume with no body-credit controller on the hot path. Retain the package-only 1/2/4 seam strictly for research; describe maximumOutstandingBytes as an application suspend threshold, never as a hard resident-memory bound.",
+      "decision": "Keep production on direct one-callback suspend/resume with no body-credit controller on the hot path. The package-only 1/2/4 runtime seam was removed after follow-up full-suite evidence showed the callback-window oracle is scheduler/load sensitive; retain the measurements and negative-result record rather than runtime complexity. Describe maximumOutstandingBytes only as an application suspend threshold, never as a hard resident-memory bound.",
       "evidencePaths": [
         "docs/research/network-cancellation-and-body-credit-negative-results-2026-08.json",
-        "Sources/FoveaHTTP/URLSessionBodyCreditController.swift",
         "Sources/FoveaHTTP/URLSessionEventRouter.swift",
         "Sources/FoveaHTTP/URLSessionTransport.swift",
-        "Tests/FoveaTests/URLSessionTransportTests.swift",
-        "Tools/FoveaNetworkLab/BodyCreditMechanismLab.swift"
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
       ],
       "exitCondition": "Reopen only with a bounded design whose resource semantics remain true under URLSession callback coalescing and whose repeated self-normalized latency/cancellation/resource vector materially dominates the strict one-callback production path.",
       "id": "NEG-H009-BODY-CREDIT-WIDENING-001"
@@ -2132,14 +2124,13 @@
         "Sources/FoveaHTTP/URLSessionTransport.swift",
         "Tools/FoveaNetworkLab/SharedTaskRelayMechanismLab.swift",
         "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkOrigin.swift",
-        "Benchmarks/ComparativeLab/Apps/Shared/FeedBenchmark.swift",
-        ".artifacts/performance/h006-direct-producer-ab/report.json"
+        "Benchmarks/ComparativeLab/Apps/Shared/FeedBenchmark.swift"
       ],
       "exitCondition": "Reopen when stable physical-device or deterministic network tracing identifies material app-owned time before URLSessionTask.cancel, or a candidate improves cancellation waste without normal completion, latency, memory, correctness or lifecycle regressions.",
       "id": "NEG-H006-CANCELLATION-CONTROL-PLANE-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",
-  "reviewedOn": "2026-08-10",
+  "reviewedOn": "2026-08-31",
   "schemaVersion": 1
 }

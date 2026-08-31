@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "recordID": "FOVEA-W5-SIMULATOR-NEGATIVE-EVIDENCE-RETENTION-V1",
+  "reviewedOn": "2026-08-31",
+  "claimBoundary": "Historical W5 simulator/source counterexamples retained in a fresh-clone file. Historical .artifacts locations are provenance only; they are not required in a clone or promoted to release evidence. Simulator timing remains structural and non-ranking. Missing original failure-side artifacts are called out explicitly.",
+  "environment": {
+    "osFamily": "iOS Simulator",
+    "osVersion": "26.4.1",
+    "osBuild": "23E254a",
+    "profileID": "ios26-4-simulator-calibration-v1"
+  },
+  "cases": [
+    {
+      "negativeResultID": "NEG-W5-ANIMATEDIMAGE-VARIABLE-DELAY-001",
+      "comparator": "AnimatedImage",
+      "exactCommit": "d64237a33ce91b0513dd850589fea32fa28f4f80",
+      "rawEvidence": [
+        {
+          "historicalPath": ".artifacts/research/animation-libs/AnimatedImage/Sources/AnimatedImageCore/Processors/FrameDecimator.swift",
+          "sha256": "afe39a8ce2869008d2452376866fedd6a60cd3fe031d9568630b8b2ff8ff07a9",
+          "byteCount": 5280
+        },
+        {
+          "historicalPath": ".artifacts/research/animation-libs/AnimatedImage/Sources/AnimatedImageCore/Utilities/AnimatedImageState.swift",
+          "sha256": "b847bb396190318901336a95a2591490c7936eaab4f1d650481821137382e9b7",
+          "byteCount": 1549
+        },
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T050706Z/manifest.json",
+          "sha256": "b00c09d1b3bc553b0823170e8fbe40a38ca9b9b0e7b58ddd07d975dbe50b2ecf",
+          "byteCount": 1461
+        }
+      ],
+      "retainedFacts": {
+        "frameDecimator": "max-integrity selection retains frame indices while Result.delayTime is derived from delays.first",
+        "preparedState": "AnimatedImageState stores one delayTime scalar",
+        "simulatorStatus": "not-comparable-semantic-timeline",
+        "simulatorReason": "w5-native-timeline-semantic-mismatch"
+      }
+    },
+    {
+      "negativeResultID": "NEG-W5-FLANIMATEDIMAGE-SWIFT-OBSERVATION-HOOK-001",
+      "comparator": "FLAnimatedImage",
+      "exactCommit": "d4f07b6f164d53c1212c3e54d6460738b1981e9f",
+      "rawEvidence": [
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T053303Z/manifest.json",
+          "sha256": "886f7816780abec881f8ad2f02dc3a6902ea7dc8297066a6bdd721ed65d26a0d",
+          "byteCount": 1482
+        }
+      ],
+      "retainedFacts": {
+        "observationBoundary": "Comparator-only Objective-C subclass overrides public/standard displayLayer:, calls super, then reads public currentFrame; no private ivar/setter and no independent display link are used.",
+        "historicalShimRun": {
+          "status": "calibrated",
+          "observationCount": 61,
+          "transitionCount": 60
+        }
+      }
+    },
+    {
+      "negativeResultID": "NEG-W5-GIFU-PUBLIC-SUBCLASS-001",
+      "comparator": "Gifu",
+      "exactCommit": "672a8d4fea3faf234518be2db00815936e55f85f",
+      "rawEvidence": [
+        {
+          "historicalPath": ".artifacts/research/animation-libs/Gifu/Sources/Gifu/Classes/GIFImageView.swift",
+          "sha256": "c06e06fb64e30f773d9ba870a02fd8ac110467a372ea0174c3c0892e639b38e6",
+          "byteCount": 727
+        },
+        {
+          "historicalPath": ".artifacts/research/animation-libs/Gifu/Sources/Gifu/Classes/GIFAnimatable.swift",
+          "sha256": "1ef0fed07104fcf8ba503812306243393ab398c8ec9d99b26ae241ce0df25b09",
+          "byteCount": 8803
+        },
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T054742Z/manifest.json",
+          "sha256": "3359460313741442c637375b5e8809f3c49f29d279b139d9cb7c280490e3a51f",
+          "byteCount": 1467
+        }
+      ],
+      "retainedFacts": {
+        "GIFImageViewDeclaration": "public class GIFImageView: UIImageView, GIFAnimatable",
+        "GIFAnimatableDeclaration": "public protocol GIFAnimatable: AnyObject, Sendable",
+        "publicCompositionHook": "public func updateImageIfNeeded()",
+        "simulatorObservationCount": 61,
+        "simulatorTransitionCount": 60
+      }
+    },
+    {
+      "negativeResultID": "NEG-W5-SIMULATOR-REINSTALL-CONTAINER-PATH-001",
+      "comparator": "Kingfisher",
+      "rawEvidence": [
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T074143Z/kingfisher-gif_variable_delay_60-101-late-after-reinstall.json",
+          "sha256": "a9078402afdc96b36f419253fbaed3ae522491bc20fb68591eb65ecba1d58708",
+          "byteCount": 12020
+        }
+      ],
+      "retainedFacts": {
+        "historicalFilenameClass": "late-after-reinstall",
+        "runIndex": 101,
+        "exactCommit": "410984bf301f4fa224fe56277b3f8672cc465c79",
+        "observationCount": 61,
+        "transitionCount": 60,
+        "checksPassed": true
+      },
+      "interpretationLimit": "The JSON proves the late result itself is valid; reinstall/container-path causality is retained by the runner regression tests and negative-result history, not by the result JSON alone."
+    },
+    {
+      "negativeResultID": "NEG-W5-SIMULATOR-CROSS-COMPARATOR-STATE-001",
+      "rawEvidence": [
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T074837Z",
+          "treeDigestAlgorithm": "sorted-relative-path-nul-file-sha256-lf-v1",
+          "treeSHA256": "0c3c4f58f3aa06743ff92f69c8083df5e0eec7e4b405dfa219d714b24ee92b7e",
+          "files": [
+            {
+              "relativePath": "fovea-gif_variable_delay_60-110.json",
+              "sha256": "0b9af11dd843bc74f3ae962173ff76d4271cdcfdb837968154812a287a80d0e6",
+              "comparator": "Fovea",
+              "observationCount": 61,
+              "transitionCount": 60,
+              "checksPassed": true
+            },
+            {
+              "relativePath": "kingfisher-gif_variable_delay_60-111.json",
+              "sha256": "a38f5e59b8620ced55d0752e8f9dcefa1ff56fb892afc9bbcbf3e202a5442af5",
+              "comparator": "Kingfisher",
+              "observationCount": 61,
+              "transitionCount": 60,
+              "checksPassed": true
+            },
+            {
+              "relativePath": "pinremoteimage-gif_variable_delay_60-113.json",
+              "sha256": "bf770351868de3142415dda814f2975724b494d7c9b204bfe0feac1b7330361a",
+              "comparator": "PINRemoteImage",
+              "observationCount": 61,
+              "transitionCount": 60,
+              "checksPassed": true
+            },
+            {
+              "relativePath": "sdwebimage-gif_variable_delay_60-112.json",
+              "sha256": "299b5b3adba1be66d024d025966e0ab0a7db6a45d5e5fc5092b62e390887ca19",
+              "comparator": "SDWebImage",
+              "observationCount": 61,
+              "transitionCount": 60,
+              "checksPassed": true
+            }
+          ]
+        },
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T075127Z/manifest.json",
+          "sha256": "686241a7f4373e3c4503e72cd22c9d03f7cb8e2bfe0dd27c7c27b883156368cf",
+          "byteCount": 2149
+        },
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+          "sha256": "54e28f46938af1fdc95eaa686f1b82af6ef6d63d793fc318db7c6917f007697d",
+          "byteCount": 9417
+        },
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T081734Z/flanimatedimage-gif_variable_delay_60-154.failure.txt",
+          "sha256": "88a849f2de34a897339547e827dc274cac4c90d1b2ed5701c5b38055eda62e22",
+          "byteCount": 76
+        }
+      ],
+      "retainedFacts": {
+        "sequentialRunRetainedSuccesses": [
+          "Fovea",
+          "Kingfisher",
+          "PINRemoteImage",
+          "SDWebImage"
+        ],
+        "singleComparatorFLAnimatedImage": {
+          "status": "calibrated",
+          "observationCount": 61,
+          "transitionCount": 60
+        },
+        "laterIsolationMode": "shutdown-boot-between-comparators-v1",
+        "laterFreshFLAnimatedImageFailure": "runFailed(\"w5-player-timing-timeout:count=0:progression=0:first=-1:last=-1\")"
+      },
+      "interpretationLimit": "The 07:48 sequential directory retains four successful comparator results but no FLAnimatedImage failure-side file. It supports the historical order/state counterexample only together with the tracked runner contract and the retained warm-pass/fresh-failure evidence; it does not independently prove the missing failure event."
+    },
+    {
+      "negativeResultID": "NEG-W5-FLANIMATEDIMAGE-FRESH-SIMULATOR-WORKAROUNDS-001",
+      "comparator": "FLAnimatedImage",
+      "exactCommit": "d4f07b6f164d53c1212c3e54d6460738b1981e9f",
+      "rawEvidence": [
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T075127Z/manifest.json",
+          "sha256": "686241a7f4373e3c4503e72cd22c9d03f7cb8e2bfe0dd27c7c27b883156368cf",
+          "byteCount": 2149
+        },
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+          "sha256": "54e28f46938af1fdc95eaa686f1b82af6ef6d63d793fc318db7c6917f007697d",
+          "byteCount": 9417
+        },
+        {
+          "historicalPath": ".artifacts/w5-player-timing/simulator/20260807T081734Z/flanimatedimage-gif_variable_delay_60-154.failure.txt",
+          "sha256": "88a849f2de34a897339547e827dc274cac4c90d1b2ed5701c5b38055eda62e22",
+          "byteCount": 76
+        }
+      ],
+      "retainedFacts": {
+        "historicalSingleComparatorPass": {
+          "observationCount": 61,
+          "transitionCount": 60
+        },
+        "freshIsolationMode": "shutdown-boot-between-comparators-v1",
+        "freshFailure": "runFailed(\"w5-player-timing-timeout:count=0:progression=0:first=-1:last=-1\")",
+        "currentBoundary": "The exact same public-API adapter/app can complete 61/60 on a warm Simulator but repeatedly produces count=0 or count=1/progression=0 on fresh dedicated Simulator launches. Public full-cache prewarming and public visibility re-trigger experiments did not make fresh-state playback reproducible and were reverted. Current isolated manifests must preserve this as not-comparable-fresh-simulator-instability rather than retrying until success."
+      }
+    }
+  ]
+}
