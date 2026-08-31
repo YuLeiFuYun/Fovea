@@ -17,7 +17,7 @@ PINS = ROOT / "docs/project-memory/component-pins.json"
 ARTIFACT = ROOT / ".artifacts/external-components/clean-copy.json"
 LOG = ROOT / ".artifacts/external-components/swift-test.log"
 COPY_PATHS = ("Sources", "Tests", "Tools", "Examples/FoveaGalleryDemo")
-EXPECTED_XCTEST_COUNT = 925
+EXPECTED_XCTEST_COUNT = 927
 EXPECTED_SWIFT_TESTING_COUNT = 3
 EXPECTED_TEST_COUNT = EXPECTED_XCTEST_COUNT + EXPECTED_SWIFT_TESTING_COUNT
 

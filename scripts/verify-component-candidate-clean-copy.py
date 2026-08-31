@@ -32,7 +32,7 @@ ARTIFACT = ROOT / ".artifacts/external-components/candidate-clean-copy.json"
 LOG = ROOT / ".artifacts/external-components/candidate-clean-copy-swift-test.log"
 SANDBOX_ARTIFACT = ROOT / ".artifacts/external-components/candidate-sandbox-probes.json"
 COPY_PATHS = ("Sources", "Tests", "Tools", "Examples/FoveaGalleryDemo")
-EXPECTED_TEST_COUNT = 925
+EXPECTED_TEST_COUNT = 927
 
 
 @dataclass(frozen=True)
