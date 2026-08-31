@@ -555,9 +555,9 @@ def main() -> int:
     adapter_evidence = imagecraft_adapter_study.get("evidence") or {}
     if (
         adapter_source.get("imageCraftWorkingTree")
-        != "5c07f313cf57495b6ffc7f578be8acbdd3e64c13"
+        != "659a0e2fd6595123f3bf43ea8fefedcd7d6250d3"
         or adapter_source.get("sourcesUnchangedDuringRun") is not True
-        or adapter_source.get("foveaImplementationFileCount") != 12
+        or adapter_source.get("foveaImplementationFileCount") != 20
         or adapter_source.get("foveaImplementationUnchangedDuringRun") is not True
     ):
         errors.append("ImageCraft animation adapter source identity changed")

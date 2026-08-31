@@ -9,6 +9,7 @@ import pathlib
 import sys
 
 PERFORMANCE = pathlib.Path(__file__).resolve().parent
+ROOT = PERFORMANCE.parents[1]
 APNGKIT_COMMIT = "341383f61000e8d2e55d45db0f0756b239d0a2f1"
 
 
@@ -164,8 +165,9 @@ def main() -> None:
     apngkit = validate_snapshot("APNGKit", sources.get("APNGKit"))
     if apngkit.get("headCommit") != APNGKIT_COMMIT or apngkit.get("dirty") is not False:
         fail("APNGKit source identity is not the clean exact fixture commit")
-    if fovea.get("dirty") is not True:
-        fail("Fovea tile capture must bind the current dirty research tree")
+    current_fovea = capture.support.git_snapshot(ROOT)
+    if fovea != current_fovea:
+        fail("Fovea tile capture no longer binds the current exact source tree")
 
     policy_sources = source_identity.get("policySources")
     if not isinstance(policy_sources, dict) or policy_sources != manifest.get(
