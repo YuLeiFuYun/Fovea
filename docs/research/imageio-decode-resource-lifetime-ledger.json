@@ -10,19 +10,24 @@
       "component://ImageCraft/Sources/ImageCraftImageIO/ImageIOImageDecoder.swift",
       "component://ImageCraft/Sources/ImageCraftCore/ImageDecodeWorkingSetEstimator.swift",
       "component://ImageCraft/Sources/ImageCraftCore/ImageCodecContract.swift",
-      "Sources/FoveaCore/DecodeStage.swift"
+      "Sources/FoveaCore/DecodeStage.swift",
+      "component://ImageCraft/Sources/ImageCraftCore/ImageTypes.swift",
+      "component://ImageCraft/Sources/ImageCraftCore/ImageDecodeResourceLedger.swift",
+      "Sources/FoveaCore/FoveaCodecBoundary.swift",
+      "Sources/FoveaCore/FoveaDecodePermitController.swift",
+      "Sources/FoveaCore/FoveaDecodeExecution.swift"
     ]
   },
   "currentAdmissionRule": {
-    "expression": "max(hostGenericWorkingSetBytes, backendWorkingSetBytes)",
+    "expression": "max(max(hostGenericWorkingSetBytes, backendWorkingSetBytes), knownTransferredOutputBytes)",
     "backendDefault": "hostGenericWorkingSetBytes",
-    "classification": "not-proven-complete-live-set-bound",
-    "reason": "The two scalar reports do not declare physical coverage, aliases, overlap, ownership transfer, framework-private allocations or reclaim tails."
+    "classification": "explicit-phase-ledger-with-framework-unknowns",
+    "reason": "ImageCraft now separates retained-between-calls, operation-peak and transferred-output authority. Fovea honors a known transferred-output upper bound without inventing one for framework-chosen layouts; ImageIO operationPeak and framework-native output layout remain explicitly unknown, so this is still not a complete physical live-set theorem."
   },
   "codeAnchors": [
     {
-      "path": "component://ImageCraft/Sources/ImageCraftImageIO/ImageIOImageDecoder.swift",
-      "anchor": "private static let maximumEntryCount = 1_024"
+      "path": "component://ImageCraft/Sources/ImageCraftCore/ImageTypes.swift",
+      "anchor": "maximumEntryCount: Int = 1_024"
     },
     {
       "path": "component://ImageCraft/Sources/ImageCraftImageIO/ImageIOImageDecoder.swift",
@@ -41,11 +46,11 @@
       "anchor": "let cropped = image.cropping(to: crop)"
     },
     {
-      "path": "Sources/FoveaCore/DecodeStage.swift",
-      "anchor": "try await workingSetPermit.withPermit"
+      "path": "Sources/FoveaCore/FoveaDecodePermitController.swift",
+      "anchor": "return try await workingSetPermit.withPermit {"
     },
     {
-      "path": "Sources/FoveaCore/DecodeStage.swift",
+      "path": "Sources/FoveaCore/FoveaCodecBoundary.swift",
       "anchor": "return try ImageDecodeResourceEstimate.conservativeMaximum("
     }
   ],
@@ -72,11 +77,10 @@
       "permit": "no probe or working-set permit is retained",
       "liveResourceIDs": [
         "encoded-input-data",
-        "imageio-source",
-        "source-color-space",
+        "embedded-icc-profile",
         "preparation-registry-entry"
       ],
-      "notes": "The registry is count-bounded at 1024 entries but has no aggregate encoded-byte or framework-private-memory budget."
+      "notes": "The public decoder uses encodedDataOnly prepared state: the store is bounded by both entry count (default 1024) and aggregate known retained payload bytes (default 64 MiB). It does not retain CGImageSource across calls. Value/object overhead and allocator metadata are not part of the byte charge."
     },
     {
       "id": "raster-create",
@@ -90,7 +94,7 @@
         "thumbnail-surface",
         "imageio-private-raster-scratch"
       ],
-      "notes": "The host estimator models a thumbnail-sized surface but cannot observe ImageIO private scratch or decoder-specific coefficient state."
+      "notes": "The host combines generic/backend working-set estimates and any known transferred-output upper bound. The ImageIO ledger explicitly marks operationPeak as frameworkPrivateOperationAllocation, so private scratch and decoder-specific coefficient state remain unknown rather than being hidden behind the scalar estimate."
     },
     {
       "id": "color-normalize",
@@ -119,11 +123,11 @@
       "id": "result-transfer",
       "begins": "DecodedImage returned from executor",
       "ends": "caller/cache/display releases final image",
-      "permit": "working-set permit is released immediately after decode returns",
+      "permit": "working-set and decode permits cover synchronous decode plus output-contract validation, then release before caller/cache/display lifetime",
       "liveResourceIDs": [
         "final-output-surface"
       ],
-      "notes": "The final surface outlives the decode working-set permit. This is an ownership transfer to rendered-memory/display accounting, but the transfer is not represented in the codec resource contract."
+      "notes": "The codec contract now has an explicit transferredOutput phase. Owned output modes can publish a bounded payload charge; framework-native ImageIO output reports frameworkChosenOutputLayout instead of pretending tight pixels bound row stride/backing. The final surface still outlives decode permits and is charged by rendered-memory/display accounting."
     },
     {
       "id": "operation-boundary-cancellation",
@@ -161,11 +165,11 @@
     },
     {
       "id": "imageio-source",
-      "owner": "ImageIO preparation entry",
+      "owner": "ImageIO inspection/decode operation; retainedSource exists only as a qualification control",
       "physicalIdentity": "opaque-framework-object",
       "sizeModel": "unknown",
       "currentWorkingSetCoverage": "not-declared",
-      "lifetime": "inspection through preparation consumption/discard and raster creation",
+      "lifetime": "operation-local in the public encodedDataOnly path; qualification retainedSource mode may extend across calls",
       "evidenceClass": "framework-opaque"
     },
     {
@@ -188,21 +192,21 @@
     },
     {
       "id": "source-color-space",
-      "owner": "preparation entry",
+      "owner": "operation-local Core Graphics state in the public encodedDataOnly path",
       "physicalIdentity": "opaque Core Graphics object",
       "sizeModel": "unknown but metadata-derived",
       "currentWorkingSetCoverage": "not-declared",
-      "lifetime": "inspection through color normalization",
+      "lifetime": "constructed from bounded metadata for inspection/decode normalization; not retained as production prepared state",
       "evidenceClass": "framework-opaque"
     },
     {
       "id": "preparation-registry-entry",
       "owner": "ImageIOPreparationStore",
-      "physicalIdentity": "dictionary entry retaining Data, CGImageSource, probe and color space",
-      "sizeModel": "count bounded to 1024; aggregate bytes not bounded",
-      "currentWorkingSetCoverage": "excluded",
+      "physicalIdentity": "dictionary entry retaining encoded Data, probe, limits and pure-value security/color metadata in production encodedDataOnly mode",
+      "sizeModel": "entry count defaults to 1024 and aggregate known retained payload charge defaults to 64 MiB; object/allocator overhead is outside the charge",
+      "currentWorkingSetCoverage": "separate prepared-state admission budget; not held under the transient decode working-set permit",
       "lifetime": "prepare to take/discard",
-      "evidenceClass": "static-code-inspection"
+      "evidenceClass": "declared-known-byte-bound-with-unmeasured-object-overhead"
     },
     {
       "id": "thumbnail-surface",
@@ -253,17 +257,17 @@
       "id": "final-output-surface",
       "owner": "Fovea rendered pipeline/cache/display",
       "physicalIdentity": "selected normalized or cropped CGImage",
-      "sizeModel": "output dimensions with actual provider/row cost not reported",
-      "currentWorkingSetCoverage": "counted during decode but permit ownership ends on return",
+      "sizeModel": "explicit transferredOutput bound for codec-owned output; framework-native layout is explicitly unknown rather than inferred from tight pixels",
+      "currentWorkingSetCoverage": "transfer authority is validated before decode permits release; post-return residency is charged by rendered-memory/display accounting",
       "lifetime": "post-decode persistent",
-      "evidenceClass": "ownership-transfer-not-modeled"
+      "evidenceClass": "explicit-transfer-contract-framework-layout-may-remain-unknown"
     }
   ],
   "requiredGaps": [
     {
       "id": "prepared-state-outlives-probe-permit",
       "severity": "high",
-      "closure": "Add aggregate prepared-state admission/accounting or prove a tighter lifetime that cannot accumulate under queued decode pressure."
+      "closure": "Known prepared payload bytes now have aggregate admission. Close the residual gap by bounding or measuring value/object and allocator overhead for retained prepared entries, and keep qualification-only retainedSource state out of production."
     },
     {
       "id": "framework-private-allocation-unbounded",
@@ -273,12 +277,12 @@
     {
       "id": "final-output-transfer-not-explicit",
       "severity": "medium",
-      "closure": "Represent output ownership transfer so decode admission and rendered-memory accounting cannot both omit or indefinitely double-count the same physical surface."
+      "closure": "Historical gap ID retained for audit continuity: transferredOutput is now explicit. Close the residual gap by binding framework-chosen output backing to a trustworthy charge or measurement and proving handoff to rendered-memory/display accounting."
     },
     {
       "id": "alias-and-branch-composition-implicit",
       "severity": "high",
-      "closure": "Replace scalar-only composition with a minimum identity/lifetime-aware envelope or backend-specific validated total bound."
+      "closure": "The phase ledger now distinguishes retained, operation-peak and transferred output, but ImageIO aliasing and framework-private operation allocations remain unknown; close with backend-specific validated bounds or retained measurements."
     },
     {
       "id": "operation-boundary-reclaim-tail-unmeasured",
