@@ -10,7 +10,7 @@
         "ImageCraftCore",
         "ImageCraftImageIO"
       ],
-      "releaseTag": "0.1.0-alpha.5"
+      "releaseTag": "0.1.0-alpha.6"
     },
     "Akashic": {
       "repositoryURL": "https://github.com/YuLeiFuYun/Akashic.git",
@@ -20,7 +20,7 @@
         "AkashicMemory",
         "AkashicDisk"
       ],
-      "releaseTag": "0.1.0-alpha.5"
+      "releaseTag": "0.1.0-alpha.6"
     }
   },
   "hostIntegration": {

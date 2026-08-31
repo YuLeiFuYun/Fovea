@@ -55,7 +55,7 @@
   "pinUpgradeDiscovery": {
     "issue": "Fovea PipelineFailure+ImageCraft previously exhausted the ImageCraftError cases present at the old exact pin. Current ImageCraft adds animation error cases, causing the overlay to fail compilation before the adapter could build.",
     "oldPinRegression": "PipelineFailureTests 13/13 passed after the forward-compatible default was added.",
-    "productionPinStill": "736d0fb75e9e128642ce418ad984ce5151b1f324",
+    "productionPinStill": "eaa981c779a71838babb3c99905bdab5dfbd17ab",
     "resolution": "Replace the top-level exhaustive dependency-enum switch with explicit Equatable classification for adopted cases and a final unexpectedImageCraftFailure fallback. This avoids both the old-pin unreachable-default warning and the current-pin non-exhaustive-switch error under warnings-as-errors. Old production-pin PipelineFailureTests remain 13/13 and the iOS15 warnings-as-errors FoveaUIKit build passes; the current ImageCraft overlay also compiles warnings-as-errors."
   },
   "productionPinReadiness": {
@@ -65,11 +65,12 @@
       "adapterQualificationImageCraftClean": true,
       "adapterQualificationSourcesUnchanged": true,
       "releaseReadinessSourceIdentitySHA256": "df362e75328daa98ccead322c922e2e92092d018e063087b4ca75b7e17e4b457",
-      "remoteBranch": "develop",
+      "releaseTag": "0.1.0-alpha.6",
+      "remoteBranch": "main",
       "remoteRevision": "eaa981c779a71838babb3c99905bdab5dfbd17ab"
     },
     "authorizationRule": "Production ImageCraft pin may not move to the animation candidate until the candidate bytes are published as an immutable Git revision and the adapter qualification is rerun against that exact clean revision.",
-    "currentProductionRevision": "736d0fb75e9e128642ce418ad984ce5151b1f324",
+    "currentProductionRevision": "eaa981c779a71838babb3c99905bdab5dfbd17ab",
     "pinUpgradeAuthorized": true,
     "publishedImmutableCandidateRevision": "eaa981c779a71838babb3c99905bdab5dfbd17ab",
     "qualificationSourceIsClean": true,
