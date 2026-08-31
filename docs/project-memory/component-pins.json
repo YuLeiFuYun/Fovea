@@ -5,12 +5,12 @@
   "components": {
     "ImageCraft": {
       "repositoryURL": "https://github.com/YuLeiFuYun/ImageCraft.git",
-      "revision": "eaa981c779a71838babb3c99905bdab5dfbd17ab",
+      "revision": "3b7f7ef212acfa42a022d7cd0bfad73c0cd2d252",
       "requiredProducts": [
         "ImageCraftCore",
         "ImageCraftImageIO"
       ],
-      "releaseTag": "0.1.0-alpha.6"
+      "releaseTag": "0.1.0-alpha.7"
     },
     "Akashic": {
       "repositoryURL": "https://github.com/YuLeiFuYun/Akashic.git",

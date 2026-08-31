@@ -24,6 +24,9 @@ final class FoveaWorkbenchTests: XCTestCase {
             XCTAssertEqual(asset.bundledURL, url)
             XCTAssertGreaterThan(data.count, 100_000)
             XCTAssertGreaterThan(Set(data.prefix(4_096)).count, 64)
+            XCTAssertEqual(Array(data.prefix(8)), [137, 80, 78, 71, 13, 10, 26, 10])
+            XCTAssertGreaterThanOrEqual(data.count, 16)
+            XCTAssertEqual(String(decoding: data[12..<16], as: UTF8.self), "IHDR")
             identities.insert(fixture.cacheIdentity)
             payloadDigests.insert(data.hashValue)
         }

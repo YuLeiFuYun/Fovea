@@ -10,7 +10,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/YuLeiFuYun/ImageCraft.git",
-            revision: "eaa981c779a71838babb3c99905bdab5dfbd17ab"
+            revision: "3b7f7ef212acfa42a022d7cd0bfad73c0cd2d252"
         )
     ],
     targets: [

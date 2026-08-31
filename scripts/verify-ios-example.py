@@ -105,6 +105,23 @@ def validate_generated_project_text(text: str) -> None:
         raise RuntimeError("FoveaWorkbench deployment target is not iOS 15.0")
     if "name = Fovea; path = ../..;" not in text:
         raise RuntimeError("FoveaWorkbench package reference is not the canonical Fovea ../.. path")
+    local_media_folder_reference = (
+        "lastKnownFileType = folder; name = LocalMedia; "
+        "path = FoveaWorkbench/Resources/LocalMedia; sourceTree = SOURCE_ROOT;"
+    )
+    if local_media_folder_reference not in text or "LocalMedia in Resources" not in text:
+        raise RuntimeError(
+            "FoveaWorkbench LocalMedia must be copied as one folder reference so encoded media "
+            "bytes are not rewritten by per-file resource tools"
+        )
+    deterministic_png_references = (
+        "local-000-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781.png",
+        "local-015-flaming-star-nebula-ic-405-png-11c3c5b390.png",
+    )
+    if any(name in text for name in deterministic_png_references):
+        raise RuntimeError(
+            "FoveaWorkbench deterministic PNG fixtures must not be individual PBX image resources"
+        )
     missing = [name for name in REQUIRED_GENERATED_REFERENCES if name not in text]
     if missing:
         raise RuntimeError(f"generated FoveaWorkbench project omits required sources: {missing}")
