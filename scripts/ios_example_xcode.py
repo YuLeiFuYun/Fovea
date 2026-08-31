@@ -24,6 +24,7 @@ ARTIFACTS = ROOT / ".artifacts/ios-example"
 UI_TEST_SUITE_BASE_TIMEOUT_SECONDS = 1_200
 UI_TEST_CASE_TIMEOUT_SECONDS = 180
 UI_TEST_INACTIVITY_TIMEOUT_SECONDS = 240
+XCTEST_TERMINAL_EXIT_GRACE_SECONDS = 30
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,25 @@ class PhaseAttempt:
 def test_count(output: str) -> int:
     counts = [int(value) for value in re.findall(r"Executed (\d+) tests?, with 0 failures", output)]
     return max(counts, default=0)
+
+
+def xctest_terminal_success(output: str) -> bool:
+    attempt_marker = "=== attempt "
+    latest_attempt = output[output.rfind(attempt_marker) :] if attempt_marker in output else output
+    terminal = re.search(
+        r"Test Suite '(?:Selected tests|All tests)' passed at [^\n]+\.\n"
+        r"\s*Executed [1-9][0-9]* tests?, with 0 failures \(0 unexpected\)",
+        latest_attempt,
+    )
+    if terminal is None:
+        return False
+    failure_markers = (
+        "** TEST FAILED **",
+        "Testing failed:",
+        "Test Suite 'Selected tests' failed",
+        "Test Suite 'All tests' failed",
+    )
+    return not any(marker in latest_attempt for marker in failure_markers)
 
 
 def ui_test_methods(source: Path) -> list[str]:
@@ -220,8 +240,11 @@ def phase_signal_handlers(process: subprocess.Popen[str]) -> Iterator[None]:
 def monitor_xcode_process(
     process: subprocess.Popen[str], log: Path, stream: object,
     timeout_seconds: int, inactivity_timeout_seconds: int | None,
+    *, accept_terminal_test_success: bool = False,
+    terminal_exit_grace_seconds: int = XCTEST_TERMINAL_EXIT_GRACE_SECONDS,
 ) -> tuple[int, bool, bool]:
     started_at = last_activity_at = time.monotonic()
+    terminal_success_at: float | None = None
     last_size = log.stat().st_size
     while True:
         if (return_code := process.poll()) is not None:
@@ -231,6 +254,23 @@ def monitor_xcode_process(
         current_size = log.stat().st_size
         if current_size != last_size:
             last_size, last_activity_at = current_size, now
+            if accept_terminal_test_success:
+                stream.flush()
+                if xctest_terminal_success(log.read_text(errors="replace")):
+                    terminal_success_at = terminal_success_at or now
+                else:
+                    terminal_success_at = None
+        if (
+            terminal_success_at is not None
+            and now - terminal_success_at >= terminal_exit_grace_seconds
+        ):
+            stream.write(
+                "=== XCTest terminal success observed; xcodebuild exit grace exceeded after "
+                f"{terminal_exit_grace_seconds} seconds ===\n"
+            )
+            stream.flush()
+            terminate_process_group(process)
+            return 0, False, False
         if inactivity_expired(last_activity_at, now, inactivity_timeout_seconds):
             stream.write(
                 "=== infrastructure stall: no log progress for "
@@ -262,7 +302,8 @@ def execute_xcode_attempt(
         )
         with phase_signal_handlers(process):
             return_code, timed_out, stalled = monitor_xcode_process(
-                process, log, stream, timeout_seconds, inactivity_timeout_seconds
+                process, log, stream, timeout_seconds, inactivity_timeout_seconds,
+                accept_terminal_test_success="test" in actions,
             )
     return PhaseAttempt(
         command, destination, log, return_code, log.read_text(errors="replace"),

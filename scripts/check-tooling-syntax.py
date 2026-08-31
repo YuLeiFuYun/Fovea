@@ -767,6 +767,67 @@ try:
     ):
         errors.append("simulator discovery must preserve both failures after bounded recovery")
 
+    terminal_success = (
+        "Test Suite 'Selected tests' passed at 2026-08-31 00:00:00.000.\n"
+        "\t Executed 2 tests, with 0 failures (0 unexpected) in 1.000 seconds\n"
+    )
+    retry_terminal_success = (
+        "=== attempt 1/2 simulator=test-device ===\n"
+        "** TEST FAILED **\n"
+        "=== attempt 2/2 simulator=test-device ===\n"
+        + terminal_success
+    )
+    if (
+        not xcode_support.xctest_terminal_success(terminal_success)
+        or not xcode_support.xctest_terminal_success(retry_terminal_success)
+        or xcode_support.xctest_terminal_success(
+            terminal_success.replace("2 tests", "0 tests")
+        )
+        or xcode_support.xctest_terminal_success(
+            terminal_success + "** TEST FAILED **\n"
+        )
+    ):
+        errors.append(
+            "XCTest terminal-success recovery must require a positive zero-failure aggregate from the latest attempt"
+        )
+
+    with tempfile.TemporaryDirectory(prefix="fovea-xctest-exit-grace-") as directory:
+        terminal_log = Path(directory) / "terminal.log"
+        terminal_child = (
+            "import sys,time; sys.stdout.write("
+            + repr(terminal_success)
+            + "); sys.stdout.flush(); time.sleep(10)"
+        )
+        with terminal_log.open("w") as stream:
+            terminal_process = subprocess.Popen(
+                [sys.executable, "-c", terminal_child],
+                text=True,
+                stdout=stream,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+            terminal_code, terminal_timeout, terminal_stall = (
+                xcode_support.monitor_xcode_process(
+                    terminal_process,
+                    terminal_log,
+                    stream,
+                    timeout_seconds=5,
+                    inactivity_timeout_seconds=4,
+                    accept_terminal_test_success=True,
+                    terminal_exit_grace_seconds=1,
+                )
+            )
+        terminal_text = terminal_log.read_text()
+    if (
+        terminal_code != 0
+        or terminal_timeout
+        or terminal_stall
+        or "XCTest terminal success observed" not in terminal_text
+    ):
+        errors.append(
+            "completed XCTest aggregate must bound a hung Xcode wrapper exit without weakening test failure handling"
+        )
+
     original_simulator = xcode_support.simulator
     original_ensure_booted = xcode_support.ensure_simulator_booted
     original_execute_attempt = xcode_support.execute_xcode_attempt
