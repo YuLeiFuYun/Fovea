@@ -21,13 +21,17 @@ private enum FoveaAnimationMacLab {
         defer { window.close() }
         switch options.experiment {
         case .mechanism:
-            try await runMechanism(options: options, screen: screen, window: window, playback: playback)
+            try await runMechanism(
+                options: options, screen: screen, window: window, playback: playback)
         case .callbackTiming:
-            try await runCallbackTiming(options: options, screen: screen, window: window, playback: playback)
+            try await runCallbackTiming(
+                options: options, screen: screen, window: window, playback: playback)
         case .refreshTiming:
-            try await runRefreshTiming(options: options, screen: screen, window: window, playback: playback)
+            try await runRefreshTiming(
+                options: options, screen: screen, window: window, playback: playback)
         case .resourceProxy:
-            try await runResourceProxy(options: options, screen: screen, window: window, playback: playback)
+            try await runResourceProxy(
+                options: options, screen: screen, window: window, playback: playback)
         }
     }
 }
@@ -405,7 +409,8 @@ private func verifiedDriverMode(
     handle: AnimationPlaybackHandle
 ) async throws -> AnimationPlaybackSchedulingMode {
     let mode = await handle.driver.schedulingModeForTesting()
-    let expected: AnimationPlaybackSchedulingMode = options.schedulingControl.usesExternalPresentationTicks
+    let expected: AnimationPlaybackSchedulingMode =
+        options.schedulingControl.usesExternalPresentationTicks
         ? .externalPresentationTicks : .automaticDeadlineLoop
     guard mode == expected else { throw MacLabError.callbackTimingDriverModeMismatch }
     return mode
@@ -486,20 +491,28 @@ func makeFrame(index: Int) -> DecodedImage {
     var bytes = Data(count: bytesPerRow * height)
     bytes.withUnsafeMutableBytes { raw in
         guard let base = raw.bindMemory(to: UInt8.self).baseAddress else { return }
-        let color = (UInt8((index * 37) & 0xFF), UInt8((index * 67) & 0xFF), UInt8((index * 97) & 0xFF))
+        let color = (
+            UInt8((index * 37) & 0xFF), UInt8((index * 67) & 0xFF), UInt8((index * 97) & 0xFF)
+        )
         for offset in stride(from: 0, to: raw.count, by: 4) {
             if native {
-                base[offset] = color.2; base[offset + 1] = color.1; base[offset + 2] = color.0
+                base[offset] = color.2
+                base[offset + 1] = color.1
+                base[offset + 2] = color.0
             } else {
-                base[offset] = color.0; base[offset + 1] = color.1; base[offset + 2] = color.2
+                base[offset] = color.0
+                base[offset + 1] = color.1
+                base[offset + 2] = color.2
             }
             base[offset + 3] = 255
         }
     }
     let provider = CGDataProvider(data: bytes as CFData)!
     let colorSpace = native ? CGColorSpace(name: CGColorSpace.sRGB)! : CGColorSpaceCreateDeviceRGB()
-    let bitmapInfo = native
-        ? CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue).union(.byteOrder32Little)
+    let bitmapInfo =
+        native
+        ? CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue).union(
+            .byteOrder32Little)
         : CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
     let image = CGImage(
         width: width,

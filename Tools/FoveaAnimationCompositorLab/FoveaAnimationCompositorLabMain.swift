@@ -53,7 +53,10 @@ private enum FoveaAnimationCompositorLab {
         throw NSError(
             domain: "FoveaAnimationCompositorLab",
             code: 78,
-            userInfo: [NSLocalizedDescriptionKey: "desktop-visible compositor lab disabled: automated experiments must not present test UI"]
+            userInfo: [
+                NSLocalizedDescriptionKey:
+                    "desktop-visible compositor lab disabled: automated experiments must not present test UI"
+            ]
         )
         guard #available(macOS 14.0, *), CommandLine.arguments.count == 5 else {
             throw NSError(domain: "FoveaAnimationCompositorLab", code: 1)
