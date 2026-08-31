@@ -44,6 +44,25 @@ package enum FoveaCodecAdmission {
         ).workingSetBytes
     }
 
+    package static func preparedResourceLedger(
+        codec: any ImageCodec,
+        executor: DispatchWorkExecutor,
+        preparation: ImageDecodePreparation?,
+        request: ImageDecodeRequest,
+        limits: DecodeLimits
+    ) async throws -> ImageDecodeResourceLedgerSnapshot? {
+        guard let preparation,
+            let inspector = codec as? any PreparedImageResourceInspecting
+        else { return nil }
+        return try await executor.run {
+            inspector.preparationResourceLedger(
+                preparation,
+                request: request,
+                limits: limits
+            )
+        }
+    }
+
     package static func pixelCount(width: Int, height: Int) -> Int {
         let (result, overflow) = width.multipliedReportingOverflow(by: height)
         return overflow ? Int.max : result
@@ -61,14 +80,41 @@ package enum FoveaCodecOutputContract {
         probe: ImageProbe,
         request: ImageDecodeRequest,
         limits: DecodeLimits,
-        admittedWorkingSetBytes: Int
+        admittedWorkingSetBytes: Int,
+        preparedResourceLedger: ImageDecodeResourceLedgerSnapshot?
     ) throws {
         try validateGeometry(image, request: request, limits: limits)
-        guard image.estimatedByteCost <= admittedWorkingSetBytes else {
-            throw failure("codec-output-exceeds-admitted-working-set")
+        if let preparedResourceLedger {
+            try validateTransferredOutput(
+                image,
+                ledger: preparedResourceLedger
+            )
+        } else {
+            guard image.estimatedByteCost <= admittedWorkingSetBytes else {
+                throw failure("codec-output-exceeds-admitted-working-set")
+            }
         }
         guard image.colorDescription.sourceProfile == probe.sourceColorProfile else {
             throw failure("codec-output-source-profile-mismatch")
+        }
+    }
+
+    private static func validateTransferredOutput(
+        _ image: DecodedImage,
+        ledger: ImageDecodeResourceLedgerSnapshot
+    ) throws {
+        switch ledger.transferredOutput {
+        case .bounded(let bytes):
+            guard image.estimatedByteCost <= bytes else {
+                throw failure("codec-output-exceeds-declared-transfer-bound")
+            }
+        case .unknown(.frameworkChosenOutputLayout),
+            .unknown(.frameworkChosenOutputColorState):
+            guard ledger.outputLayoutAuthority == .frameworkChosen else {
+                throw failure("codec-output-resource-authority-mismatch")
+            }
+        case .unknown:
+            throw failure("codec-output-resource-bound-unknown")
         }
     }
 

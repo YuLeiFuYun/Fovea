@@ -10,6 +10,8 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BUDGET = ROOT / "docs/public-api-budget.json"
 PRODUCTS = ROOT / ".build/out/Products/Debug-iphonesimulator"
+GENERATED_MODULE_MAPS = ROOT / ".build/out/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator"
+CAKASHIC_MODULE_MAP = GENERATED_MODULE_MAPS / "CAkashicAtomics.modulemap"
 MODULE = PRODUCTS / "FoveaUIKit.swiftmodule/arm64-apple-ios-simulator.swiftmodule"
 EXPECTED_SPI_TITLES = {
     "FoveaAnimationPresentationDiagnosticsSnapshot",
@@ -77,6 +79,10 @@ def extract(
         "FoveaUIKit",
         "-I",
         str(PRODUCTS),
+        "-I",
+        str(GENERATED_MODULE_MAPS),
+        "-Xcc",
+        f"-fmodule-map-file={CAKASHIC_MODULE_MAP}",
         "-F",
         str(PRODUCTS / "PackageFrameworks"),
         "-target",
@@ -147,6 +153,10 @@ def main() -> int:
                 str(consumer),
                 "-I",
                 str(PRODUCTS),
+                "-I",
+                str(GENERATED_MODULE_MAPS),
+                "-Xcc",
+                f"-fmodule-map-file={CAKASHIC_MODULE_MAP}",
                 "-F",
                 str(PRODUCTS / "PackageFrameworks"),
                 "-target",

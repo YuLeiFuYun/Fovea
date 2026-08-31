@@ -1,12 +1,12 @@
 {
-  "originHash" : "b2eb806d8ac75affede15ee627018c9dc40ec11cfe78d3a05feefc537297f19d",
+  "originHash" : "f7e68c3ac7ba375ba6470c2aeb425280bda59dff5457bce887e188508da53be7",
   "pins" : [
     {
       "identity" : "akashic",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/YuLeiFuYun/Akashic.git",
       "state" : {
-        "revision" : "2715f23d50b5a17b7328be41608eaf1b1c99b0d6"
+        "revision" : "2846d4715cc5917711ffa2f100ee310c2290de40"
       }
     },
     {
@@ -14,7 +14,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/YuLeiFuYun/ImageCraft.git",
       "state" : {
-        "revision" : "736d0fb75e9e128642ce418ad984ce5151b1f324"
+        "revision" : "eaa981c779a71838babb3c99905bdab5dfbd17ab"
       }
     }
   ],

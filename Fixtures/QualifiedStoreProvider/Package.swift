@@ -14,7 +14,7 @@ let package = Package(
         .package(path: "../.."),
         .package(
             url: "https://github.com/YuLeiFuYun/Akashic.git",
-            revision: "2715f23d50b5a17b7328be41608eaf1b1c99b0d6"
+            revision: "2846d4715cc5917711ffa2f100ee310c2290de40"
         ),
     ],
     targets: [

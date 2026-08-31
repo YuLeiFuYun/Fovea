@@ -77,6 +77,7 @@ package enum FoveaRasterDecodeStage {
         request: ImageRequest,
         decodeRequest: ImageDecodeRequest,
         workEstimate: Int,
+        preparedResourceLedger: ImageDecodeResourceLedgerSnapshot?,
         keyDigest: String,
         priorityControl: SharedTaskPriorityControl,
         codec: any ImageCodec,
@@ -106,7 +107,8 @@ package enum FoveaRasterDecodeStage {
                     probe: plan.probe,
                     request: decodeRequest,
                     limits: limits,
-                    admittedWorkingSetBytes: workEstimate
+                    admittedWorkingSetBytes: workEstimate,
+                    preparedResourceLedger: preparedResourceLedger
                 )
                 return timed
             }

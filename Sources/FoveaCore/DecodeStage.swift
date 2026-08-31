@@ -275,11 +275,22 @@ package final class DecodeStage: Sendable {
             try Task.checkCancellation()
             let estimateStarted =
                 detailedDiagnosticsEnabled ? DispatchTime.now().uptimeNanoseconds : 0
-            let workingSetBytes = try await FoveaCodecAdmission.workingSetBytes(
+            let modeledWorkingSetBytes = try await FoveaCodecAdmission.workingSetBytes(
                 codec: codec,
                 executor: executor,
                 probe: plan.probe,
                 request: decodeRequest
+            )
+            let preparedResourceLedger = try await FoveaCodecAdmission.preparedResourceLedger(
+                codec: codec,
+                executor: executor,
+                preparation: plan.preparation,
+                request: decodeRequest,
+                limits: limits
+            )
+            let workingSetBytes = max(
+                modeledWorkingSetBytes,
+                preparedResourceLedger?.transferredOutput.bytesUpperBound ?? 0
             )
             if detailedDiagnosticsEnabled {
                 await diagnostics.record(
@@ -299,6 +310,7 @@ package final class DecodeStage: Sendable {
                 request: request,
                 decodeRequest: decodeRequest,
                 workEstimate: workingSetBytes,
+                preparedResourceLedger: preparedResourceLedger,
                 keyDigest: keyDigest,
                 priorityControl: priorityControl,
                 codec: codec,

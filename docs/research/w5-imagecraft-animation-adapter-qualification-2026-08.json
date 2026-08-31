@@ -2,7 +2,7 @@
   "claimBoundary": [
     "V1 machine-governance fields below are retained unchanged as historical evidence identity",
     "V2 isolated copied-source overlay extends qualification to automatic APNG, owned GIF, bounded subrect GIF replay and three-part whole-track cost accounting",
-    "production Fovea Package.swift and exact ImageCraft dependency pin are not changed",
+    "historical overlay qualification did not change production Fovea dependency pins; the current clean-candidate pin upgrade is authorized separately by productionPinReadiness",
     "adapter timing normalization remains explicit and caller-versioned",
     "no physical-device timing, RSS, energy, thermal, publication, or release-readiness claim"
   ],
@@ -59,21 +59,30 @@
     "resolution": "Replace the top-level exhaustive dependency-enum switch with explicit Equatable classification for adopted cases and a final unexpectedImageCraftFailure fallback. This avoids both the old-pin unreachable-default warning and the current-pin non-exhaustive-switch error under warnings-as-errors. Old production-pin PipelineFailureTests remain 13/13 and the iOS15 warnings-as-errors FoveaUIKit build passes; the current ImageCraft overlay also compiles warnings-as-errors."
   },
   "productionPinReadiness": {
+    "authorizationEvidence": {
+      "adapterQualificationCapture": ".artifacts/qualification/w5-imagecraft-animation-adapter-v7-manifest-final/report.json",
+      "adapterQualificationCaptureSHA256": "4221640ae8190ebc8fa31f8d20b9151f52f46f1103c87d1de6c348946b6a2c04",
+      "adapterQualificationImageCraftClean": true,
+      "adapterQualificationSourcesUnchanged": true,
+      "releaseReadinessSourceIdentitySHA256": "df362e75328daa98ccead322c922e2e92092d018e063087b4ca75b7e17e4b457",
+      "remoteBranch": "develop",
+      "remoteRevision": "eaa981c779a71838babb3c99905bdab5dfbd17ab"
+    },
     "authorizationRule": "Production ImageCraft pin may not move to the animation candidate until the candidate bytes are published as an immutable Git revision and the adapter qualification is rerun against that exact clean revision.",
     "currentProductionRevision": "736d0fb75e9e128642ce418ad984ce5151b1f324",
-    "pinUpgradeAuthorized": false,
-    "publishedImmutableCandidateRevision": null,
-    "qualificationSourceIsClean": false,
-    "qualifiedCandidateHeadCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
-    "qualifiedCandidateIncludesWorkingTreeChanges": true,
-    "qualifiedCandidateWorkingTree": "5c07f313cf57495b6ffc7f578be8acbdd3e64c13",
+    "pinUpgradeAuthorized": true,
+    "publishedImmutableCandidateRevision": "eaa981c779a71838babb3c99905bdab5dfbd17ab",
+    "qualificationSourceIsClean": true,
+    "qualifiedCandidateHeadCommit": "eaa981c779a71838babb3c99905bdab5dfbd17ab",
+    "qualifiedCandidateIncludesWorkingTreeChanges": false,
+    "qualifiedCandidateWorkingTree": "659a0e2fd6595123f3bf43ea8fefedcd7d6250d3",
     "requiredBeforeAuthorization": [
       "publish candidate animation API/runtime as immutable ImageCraft Git revision",
       "rerun ImageCraft release readiness from the published revision",
       "rerun Fovea adapter qualification against the exact published revision with no ImageCraft working-tree changes",
       "update this record with the published revision and explicit authorization before changing Fovea Package.swift/component-pins"
     ],
-    "status": "blocked-unpublished-working-tree-candidate"
+    "status": "ready-published-clean-qualified"
   },
   "results": {
     "allThreeTimelineFramesStandardSRGBPremultipliedRGBAExactVsDirectImageCraft": true,
@@ -132,20 +141,20 @@
     "timelineQualificationTest": "W5_ADAPTER_PT_002",
     "warningsAsErrorsOverlayExecutablePassed": true
   },
-  "reviewedOn": "2026-08-08",
+  "reviewedOn": "2026-08-31",
   "schemaVersion": 1,
   "sourceIdentity": {
-    "akashicHeadCommit": "688e9a262199e1a9225b35820f085b61b8c7e75b",
-    "akashicWorkingTree": "8745aa13a980a663d0654e26624ff222f0797c25",
-    "foveaHeadCommit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
-    "foveaImplementationFileCount": 12,
+    "akashicHeadCommit": "2846d4715cc5917711ffa2f100ee310c2290de40",
+    "akashicWorkingTree": "3597631d3dcdaaaa376edb1fd91ad890a82dd423",
+    "foveaHeadCommit": "24aa17cc2722a116315cfb0f558646e7f1d67769",
+    "foveaImplementationFileCount": 20,
     "foveaImplementationUnchangedDuringRun": true,
-    "foveaWorkingTreeAtCapture": "8b32bbf206c0b66fcd56f17a835f111d204e067f",
-    "imageCraftHeadCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
-    "imageCraftWorkingTree": "5c07f313cf57495b6ffc7f578be8acbdd3e64c13",
+    "foveaWorkingTreeAtCapture": "66a4fc3fb17130aa120f5430a710c7233252d792",
+    "imageCraftHeadCommit": "eaa981c779a71838babb3c99905bdab5dfbd17ab",
+    "imageCraftWorkingTree": "659a0e2fd6595123f3bf43ea8fefedcd7d6250d3",
     "sourcesUnchangedDuringRun": true
   },
-  "status": "historical-v1-contract-retained-v2-overlay-qualified-production-pin-unchanged",
+  "status": "historical-v1-contract-retained-current-clean-requalified-production-pin-authorized",
   "studyID": "FOVEA-W5-IMAGECRAFT-ANIMATION-ADAPTER-OVERLAY-QUALIFICATION-2026-08",
   "v2Qualification": {
     "allQualificationTestsPassed": true,

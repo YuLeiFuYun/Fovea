@@ -3,7 +3,7 @@
     "codec": {
       "classification": "current-contract-only",
       "contractVersion": 1,
-      "currentRevision": "736d0fb75e9e128642ce418ad984ce5151b1f324",
+      "currentRevision": "eaa981c779a71838babb3c99905bdab5dfbd17ab",
       "currentStatus": "self-hosted-independent-consumer-passed",
       "kit": "ImageCodec/v1/manifest.json",
       "releaseQualified": false
