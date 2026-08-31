@@ -16,7 +16,8 @@ final class T100AnimationPlaybackResidentFramesSnapshotTests: XCTestCase {
         ]
         XCTAssertTrue(memory.insert(firstImage, for: keys[0]).isEmpty)
         XCTAssertTrue(memory.insert(secondImage, for: keys[1]).isEmpty)
-        var lease: AnimationFrameMemoryPinLease? = try XCTUnwrap(memory.pinResidentFrames(for: keys))
+        var lease: AnimationFrameMemoryPinLease? = try XCTUnwrap(
+            memory.pinResidentFrames(for: keys))
         let timeline = try AnimationPlaybackTimeline(
             frameDurationsNanoseconds: [100, 200],
             additionalRepeatCount: 1,
@@ -24,11 +25,12 @@ final class T100AnimationPlaybackResidentFramesSnapshotTests: XCTestCase {
             timingPolicyVersion: 7
         )
 
-        var snapshot: AnimationPlaybackResidentFramesSnapshot? = AnimationPlaybackResidentFramesSnapshot(
-            timeline: timeline,
-            mode: .playOnce,
-            pinLease: try XCTUnwrap(lease)
-        )
+        var snapshot: AnimationPlaybackResidentFramesSnapshot? =
+            AnimationPlaybackResidentFramesSnapshot(
+                timeline: timeline,
+                mode: .playOnce,
+                pinLease: try XCTUnwrap(lease)
+            )
 
         XCTAssertEqual(snapshot?.timeline, timeline)
         XCTAssertEqual(snapshot?.mode, .playOnce)
@@ -46,7 +48,8 @@ final class T100AnimationPlaybackResidentFramesSnapshotTests: XCTestCase {
         let decodeKey = try XCTUnwrap(makeDecodeKey(seed: "lease-lifetime"))
         let key = try XCTUnwrap(makeMemoryKey(decodeKey: decodeKey, frameIndex: 0))
         XCTAssertTrue(memory.insert(image, for: key).isEmpty)
-        var lease: AnimationFrameMemoryPinLease? = try XCTUnwrap(memory.pinResidentFrames(for: [key]))
+        var lease: AnimationFrameMemoryPinLease? = try XCTUnwrap(
+            memory.pinResidentFrames(for: [key]))
         XCTAssertEqual(memory.pinnedCostForTesting, 64)
         let timeline = try AnimationPlaybackTimeline(
             frameDurationsNanoseconds: [100],
@@ -54,11 +57,12 @@ final class T100AnimationPlaybackResidentFramesSnapshotTests: XCTestCase {
             zeroDurationReplacementNanoseconds: 1,
             timingPolicyVersion: 7
         )
-        var snapshot: AnimationPlaybackResidentFramesSnapshot? = AnimationPlaybackResidentFramesSnapshot(
-            timeline: timeline,
-            mode: .normal,
-            pinLease: try XCTUnwrap(lease)
-        )
+        var snapshot: AnimationPlaybackResidentFramesSnapshot? =
+            AnimationPlaybackResidentFramesSnapshot(
+                timeline: timeline,
+                mode: .normal,
+                pinLease: try XCTUnwrap(lease)
+            )
 
         lease = nil
         XCTAssertEqual(memory.pinnedCostForTesting, 64)

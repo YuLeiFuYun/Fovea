@@ -2,6 +2,142 @@
   "entries": [
     {
       "evidence": [
+        "Tests/FoveaTests/AnimatedPlatformPresenterTests.swift",
+        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift"
+      ],
+      "path": "Sources/FoveaAppKit/FoveaAnimatedImageViewPresenter.swift",
+      "reason": "FoveaAnimatedImageViewPresenter remains one MainActor presentation-ownership state machine for a single AppKit image view: it owns presentation generation, mutual exclusion between finite animation and live MJPEG, visibility propagation, compositor/display-link attachment, late-result rejection and final pixel publication. Decode, network, frame memory and playback clocks remain delegated to FoveaCore.",
+      "responsibilities": [
+        "view-bound animation/live presentation identity and replacement",
+        "visibility and application-lifecycle propagation",
+        "AppKit compositor/display-link attachment and upgrade decisions",
+        "MainActor decoded-image publication and stale-generation rejection"
+      ],
+      "reviewedLineCount": 596,
+      "sha256": "b35b55b4d6ac1b9cb95f4acc312ec619b071f8f42168f9fa1f8b4e530a1099ca",
+      "splitTriggers": [
+        "compositor policy becomes reusable without the image-view presentation identity",
+        "finite animation and live MJPEG acquire independent view ownership lifecycles",
+        "the presenter gains decode, network or cache authority",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/AnimatedPlatformPresenterTests.swift",
+        "docs/specifications/animation-policy.md"
+      ],
+      "path": "Sources/FoveaAppKit/FoveaAnimationDisplayLinkDriver.swift",
+      "reason": "This file is the AppKit animation presentation mechanism below the presenter: scheduling control and diagnostics describe the same external-tick contract, the visibility runner preserves ordered handle state, the compositor controller owns the Core Animation fast path, and FoveaAnimationDisplayLinkDriver owns CADisplayLink tick delivery. These collaborators share MainActor geometry, visibility and timing semantics.",
+      "responsibilities": [
+        "AppKit external-tick scheduling and presentation diagnostics",
+        "ordered visibility application for animation handles",
+        "Core Animation compositor installation, geometry and finite completion",
+        "CADisplayLink lifecycle, tick draining and playback activation"
+      ],
+      "reviewedLineCount": 608,
+      "sha256": "4f23804a7871779d2dd4c75e39bcb2526e9264607abab4260c421b7dff8634f8",
+      "splitTriggers": [
+        "the compositor becomes usable without the AppKit presentation timing contract",
+        "a second platform driver needs the same compositor independently",
+        "display-link scheduling becomes a standalone public API",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/PlatformImageViewTests.swift",
+        "Tests/FoveaTests/AnimatedPlatformPresenterTests.swift",
+        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
+      ],
+      "path": "Sources/FoveaAppKit/FoveaImageView.swift",
+      "reason": "FoveaImageView is the single AppKit view lifecycle boundary for static, finite-animation and live-MJPEG presentation. It owns request replacement/cancellation, window-attachment suspension, accessibility/image-view policy and effective animation visibility while delegating loading and playback work to pipeline sessions and the animation presenter. The start runner translates this exact view lifecycle into playback startup.",
+      "responsibilities": [
+        "public AppKit image-view request and cancellation surface",
+        "window attachment, static-load suspension and stale-token rejection",
+        "animation/live presentation handoff and effective visibility",
+        "view accessibility, geometry policy and startup-mode translation"
+      ],
+      "reviewedLineCount": 536,
+      "sha256": "cd37c5efa25fbe2dd831549ddb1bd78d50af3d8838528ae2ece7f53684bad2bc",
+      "splitTriggers": [
+        "static load lifecycle can move without reading NSView/window state",
+        "animation startup becomes independent of this view visibility contract",
+        "the view gains transport, decode or cache ownership",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/AnimationPlaybackDriverTests.swift",
+        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
+        "docs/specifications/animation-policy.md"
+      ],
+      "path": "Sources/FoveaCore/AnimationPlaybackDriver.swift",
+      "reason": "AnimationPlaybackDriver is one per-presentation actor state machine that linearizes start, visibility, application activity, explicit pause, seek/restart, memory pressure, external display ticks and the automatic deadline loop against one AnimationPlaybackSession. The clock abstraction and tick result enums are contract types for that same state machine; moving scheduling transitions elsewhere would create two lifecycle authorities.",
+      "responsibilities": [
+        "single-session playback lifecycle and generation fencing",
+        "automatic deadline-loop scheduling and cancellation",
+        "external presentation tick validation and coalescing",
+        "visibility, pause, seek and memory-pressure transitions"
+      ],
+      "reviewedLineCount": 573,
+      "sha256": "6f8659df8de8f8930222571882aace68f1910ac744f9d1564e321a570be4d268",
+      "splitTriggers": [
+        "external and automatic scheduling no longer share playback generation",
+        "clock policy becomes independently reusable across non-animation subsystems",
+        "the actor begins owning frame decode, network or UI publication",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
+        "Tests/FoveaTests/AuthorizedAnimationPlaybackAssetTests.swift",
+        "Tests/FoveaTests/SystemEncodedAnimationPlaybackTests.swift"
+      ],
+      "path": "Sources/FoveaCore/AnimationPlaybackRuntime.swift",
+      "reason": "AnimationPlaybackRuntime is the composition and registry actor for animation playback owned by one pipeline: it validates authorized handle registration, creates drivers over shared frame memory, tracks live MJPEG sessions, propagates application/memory-pressure state, cancels by identifier or namespace, and participates in namespace revocation. The handle values are thin capabilities into this exact registry.",
+      "responsibilities": [
+        "authorized animation handle construction and registration",
+        "shared frame-memory and frame-strategy coordination",
+        "finite-driver and live-session registry lifecycle",
+        "application activity, memory pressure and namespace-revocation propagation"
+      ],
+      "reviewedLineCount": 594,
+      "sha256": "de4f1f2e437585cc45277b8437aca4c84da5f2a7d8908beec6f3f370d4cec44e",
+      "splitTriggers": [
+        "live and finite playback no longer share runtime budgets or namespace cancellation",
+        "frame-memory strategy becomes an independently released service",
+        "handle validation can move without registry state",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/DerivedRasterAdmissionPolicyTests.swift",
+        "Tests/FoveaTests/DerivedRasterPipelineIntegrationTests.swift",
+        "docs/specifications/derived-raster-persistence-contract.md"
+      ],
+      "path": "Sources/FoveaCore/DerivedRasterAdmissionPolicy.swift",
+      "reason": "This file is the pure derived-raster identity and admission contract: format identity and artifact keys bind source/codec/transform/namespace authority, reuse policy checks live authorization, admission policy applies observed-hit and budget thresholds, and artifact validation rechecks persisted records and output geometry before reuse. Keeping these pure operations together prevents creation and reuse from using different canonical rules.",
+      "responsibilities": [
+        "canonical derived-raster format and artifact identity",
+        "live authorization and reuse eligibility checks",
+        "observed-hit/resource-budget admission decisions",
+        "persisted artifact record, surface and output-geometry validation"
+      ],
+      "reviewedLineCount": 599,
+      "sha256": "10d7896ef0ffaf7a69fb68edf4d5b279e59dee9db9f63982cdf0afa76af8b69c",
+      "splitTriggers": [
+        "artifact identity becomes a cross-repository public contract",
+        "admission thresholds evolve independently from reuse authorization",
+        "a second container/backend requires separate validation semantics",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
         "Tests/FoveaTests/DerivedRasterContainerTests.swift",
         "Tests/FoveaTests/DerivedRasterPersistenceTests.swift",
         "docs/specifications/derived-raster-persistence-contract.md",
@@ -15,12 +151,81 @@
         "adaptive row filter and LZFSE payload coding",
         "pixel, payload and reconstructed-output integrity checks"
       ],
-      "reviewedLineCount": 527,
-      "sha256": "41ea40fb229d3d1fdc03ed5cb609892f5cc2ce44682cd96af1a54f777406ccdb",
+      "reviewedLineCount": 565,
+      "sha256": "da2e1465da2886c33e9bb95bf230479576de5a58c7e447aee92f1bb19c38889f",
       "splitTriggers": [
         "a second container schema or compression backend requires independent evolution",
         "streaming decode can be implemented without duplicating header or integrity rules",
         "the container becomes a public or cross-repository contract",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/DerivedRasterPipelineIntegrationTests.swift",
+        "Tests/FoveaTests/DerivedRasterRuntimeTests.swift",
+        "Tests/FoveaTests/DerivedRasterPersistenceTests.swift"
+      ],
+      "path": "Sources/FoveaCore/DerivedRasterLoadCoordinator.swift",
+      "reason": "DerivedRasterLoadCoordinator and its collaborators implement one optional derived-raster reuse branch between rendered memory and original encoded decode. The coordinator derives authorized artifact keys and schedules creation, the reader loads and validates hot or persisted artifacts, and the reusable lookup coordinator orders derived, rendered and original reuse without taking persistence ownership. They share the same request authorization and fallback transaction.",
+      "responsibilities": [
+        "authorized derived-artifact key lookup and creation scheduling",
+        "hot/stored artifact loading with fail-closed validation",
+        "reusable rendered/derived/original lookup ordering",
+        "fallback to original decode while preserving namespace and representation identity"
+      ],
+      "reviewedLineCount": 592,
+      "sha256": "7d2cb2951306d47762fa46958c8886d59d31bfadc0a16293f4d642dc95c4d08b",
+      "splitTriggers": [
+        "artifact reading is reused outside the request-level reuse transaction",
+        "derived creation gains an independent scheduler or persistence lifecycle",
+        "another reuse tier requires its own ordering authority",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/DerivedRasterRuntimeTests.swift",
+        "Tests/FoveaTests/DerivedRasterContainerTests.swift",
+        "docs/specifications/derived-raster-persistence-contract.md"
+      ],
+      "path": "Sources/FoveaCore/DerivedRasterRuntimeTypes.swift",
+      "reason": "DerivedRasterRuntimeTypes holds package-only contracts used exclusively by the derived-raster path: configuration and measured cost estimates, the validated loaded-image aggregate, and fail-closed LZFSE/container-codec helpers that parse block descriptors, enforce encoded/decoded bounds, validate digests and decode chunks. The codec is not a general compression service; it enforces the exact runtime representation consumed by derived-raster loading.",
+      "responsibilities": [
+        "derived-raster runtime configuration and cost-estimation values",
+        "validated loaded-image runtime aggregate",
+        "bounded LZFSE frame and chunk descriptor validation",
+        "derived-container compressed region verification, decode and compression helpers"
+      ],
+      "reviewedLineCount": 550,
+      "sha256": "f76b880016402ad6341aa4407716813b3e7174174386ffed9be91111e869166f",
+      "splitTriggers": [
+        "DerivedRasterContainerCodec is reused outside derived-raster persistence/runtime",
+        "a second compression backend or container representation is introduced",
+        "runtime configuration evolves independently from the encoded representation contract",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/EncodedDataCoordinatorTests.swift",
+        "Tests/FoveaTests/ImagePrefetchingTests.swift",
+        "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift"
+      ],
+      "path": "Sources/FoveaCore/EncodedDataCoordinator.swift",
+      "reason": "EncodedDataCoordinator and ValidatedOriginalPrefetchCoordinator are the two execution modes of one authorized encoded-byte acquisition boundary. The first selects and validates cached or fetched bytes for immediate consumers; the second performs reusable original prefetch including bounded validated range resumption and persistence. The FoveaPipeline extension exposes this boundary while preserving request authorization checks.",
+      "responsibilities": [
+        "authorized encoded-byte lookup and content-type validation",
+        "fresh cached-original selection and network fallback",
+        "validated original prefetch, resumable range capture and persistence",
+        "pipeline-facing encoded-data capability and authorization revalidation"
+      ],
+      "reviewedLineCount": 581,
+      "sha256": "3d3c2bc1817ce5d17f22ee33e0b3ff4638e0e7c7e7915786aa37d69c837df1bf",
+      "splitTriggers": [
+        "prefetch gains a lifecycle or retry policy independent of encoded-data authorization",
+        "resumable transfer becomes a transport-level reusable service",
+        "the pipeline facade exposes mutable persistence internals",
         "the file changes after this frozen review"
       ]
     },
@@ -42,13 +247,36 @@
         "shared ordinary/live transport admission and redacted response diagnostics",
         "progress-only transport capability invocation without body ownership"
       ],
-      "reviewedLineCount": 648,
-      "sha256": "4bc2958d4562705db441153db4da8993c9c7d900939d2a881ce6ab757953e005",
+      "reviewedLineCount": 587,
+      "sha256": "c442db0c7249c77c95873982bd0432644caa9803ddfade67db72f57bc50ec74c",
       "splitTriggers": [
         "live transport gains retry, caching, parser or subscriber-sharing authority independent of FetchStage",
         "a common admission collaborator can move without exposing or duplicating the permit pool",
         "progress-only execution requires body or staging ownership in FoveaCore",
         "retry or priority policy can move without transaction ordering",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/PipelineTests.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Tests/FoveaTests/DerivedRasterPipelineIntegrationTests.swift"
+      ],
+      "path": "Sources/FoveaCore/FoveaPipeline+Operations.swift",
+      "reason": "This extension is the public/package operational facade of one FoveaPipeline composition root. It does not implement codec, transport or persistence backends; it sequences image/event loading through existing coordinators, centralizes admission/cancellation and access validation, exposes cache maintenance and namespace revocation, and publishes benchmark/testing observations from the same owned subsystems. Keeping the facade together prevents divergent authorization or cancellation semantics across entry points.",
+      "responsibilities": [
+        "public image and progressive-event entry points",
+        "shared image-load admission, cancellation and authorization validation",
+        "pipeline cache maintenance, memory reclamation and namespace revocation",
+        "benchmark/testing control-plane snapshots and waits over owned coordinators"
+      ],
+      "reviewedLineCount": 592,
+      "sha256": "9871c16bd537aed344bf10d3c4d83a43b967bd121e77ac8b6aba393cfdd1c4e3",
+      "splitTriggers": [
+        "the operational facade grows materially beyond the current load/control-plane boundary",
+        "benchmark/testing methods require production state not used by public operations",
+        "maintenance/revocation can move without duplicating pipeline ownership checks",
         "the file changes after this frozen review"
       ]
     },
@@ -67,8 +295,8 @@
         "representation commit barriers",
         "verified-byte and progressive-preparation delivery handoff"
       ],
-      "reviewedLineCount": 736,
-      "sha256": "03ba8d9a84375b6f6b7ea44116e2659cd60c2a99a104fa9e8096a10e2bcbbe17",
+      "reviewedLineCount": 938,
+      "sha256": "2078c1a3f9b1062d26b6ce451264ad7c2df5e58643704e825273ec24102a3e3f",
       "splitTriggers": [
         "a stable responsibility can move without sharing mutable state or transaction ordering",
         "progressive finalization gains independent persistence or retry authority",
@@ -80,24 +308,23 @@
       "evidence": [
         "Tests/FoveaTests/PipelineTests.swift",
         "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
-        "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift",
-        "Tests/FoveaTests/DerivedRasterPipelineIntegrationTests.swift",
-        "Tools/FoveaWarmMemoryLab/FoveaWarmMemoryLabMain.swift"
+        "Tests/FoveaTests/RenderedImageCacheTests.swift",
+        "Tests/FoveaTests/DerivedRasterPipelineIntegrationTests.swift"
       ],
-      "path": "Sources/FoveaCore/ImageLoadCoordinator.swift",
-      "reason": "ImageLoadCoordinator remains the request-level ordering boundary for namespace generation, task-local versus reusable transport, rendered memory, transient verified handoff, selected HTTP representation, original encoded reuse, conditional fetch, stale fallback and 200/304 response processing. The optional derived branch delegates artifact identity, per-hit authorization and background creation to DerivedRasterLoadCoordinator; this file only places that branch between rendered memory and original encoded I/O. Splitting further would duplicate conditional record selection or stale/fetch transaction ordering.",
+      "path": "Sources/FoveaCore/ImageDeliveryCoordinator.swift",
+      "reason": "ImageDeliveryCoordinator is the request-local decode/transform/publication transaction after encoded bytes are authorized. It owns codec admission, progressive preparation disposal, shared transform subscription, rendered-memory lookup/publication and optional derived-raster publication; the transport-verified helper materializes the same transaction from a verified transient body. All paths converge on render identity and namespace-generation checks before publication.",
       "responsibilities": [
-        "request-level task-local and reusable execution selection",
-        "rendered, transient handoff, derived and original-encoded reuse ordering",
-        "conditional fetch, stale fallback and response dispatch",
-        "namespace generation and benchmark-only control-plane attribution"
+        "codec admission, decode and progressive-preparation lifecycle",
+        "shared transform execution and subscription cancellation",
+        "rendered-memory hit/publication under scoped render identity",
+        "delivery from reusable or transport-verified bytes plus optional derived publication"
       ],
-      "reviewedLineCount": 624,
-      "sha256": "7b4cf51cbb5aa6e0993fcb06a5a65c896e1c5b9cd4e57bb7008290f3594a1175",
+      "reviewedLineCount": 558,
+      "sha256": "d24273fd89e61cc02b1107d080993821ba3f1f36924199a3b74a8e9b96e2d8a3",
       "splitTriggers": [
-        "selected-representation lookup can move without sharing stale or conditional-fetch ordering",
-        "benchmark attribution begins changing normal production execution",
-        "another optional reuse tier requires independent transaction authority",
+        "transport handoff delivery becomes usable without the same decode/publish transaction",
+        "transform sharing gains independent persistence or retry policy",
+        "derived publication becomes a separate request lifecycle",
         "the file changes after this frozen review"
       ]
     },
@@ -116,8 +343,8 @@
         "prevalidated retarget and reprioritize construction",
         "Vary and credential fingerprint derivation"
       ],
-      "reviewedLineCount": 565,
-      "sha256": "2707ca236ebf11de3c3ba33b02c0a2fe7e61a582bb1b6c4d063287ac70ef886f",
+      "reviewedLineCount": 607,
+      "sha256": "0decaa33aefccc793f759b3300a3e473a5ea913acc42a38a2c9cf5ea4fc6ecba",
       "splitTriggers": [
         "an identity family can move without re-reading mutable request state",
         "a public builder replaces the immutable aggregate without weakening validation",
@@ -146,6 +373,52 @@
         "a stable responsibility can move without sharing mutable state or transaction ordering",
         "the file changes after this frozen review",
         "a second production backend or workload demonstrates a better boundary"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/URLSessionTransportTests.swift",
+        "Tests/FoveaTests/T100URLSessionTransportProgressOnlyAdoptionTests.swift",
+        "Tests/FoveaTests/HTTPConformanceTests.swift"
+      ],
+      "path": "Sources/FoveaHTTP/URLSessionTransport.swift",
+      "reason": "URLSessionTransport is one actor-isolated HTTP transport adapter covering secure configuration sanitation, task registration/lifetime, ordinary execution, progress-only execution, priority propagation, staged-body ownership and response-head/body construction. URLSessionTaskLifetime is the synchronous callback bridge for tasks created by this actor and is separately lock-audited; it does not create a second transport authority.",
+      "responsibilities": [
+        "sanitized URLSession construction and invalidation",
+        "ordinary and progress-only request execution",
+        "task lifetime, priority propagation and event-router registration",
+        "bounded staging plus response metadata/body materialization"
+      ],
+      "reviewedLineCount": 520,
+      "sha256": "e9879c1a471d89e5ae84f854ff1f5c0cc3d70ef2928e03ed3aff475379fa7048",
+      "splitTriggers": [
+        "progress-only execution diverges into an independent transport lifecycle",
+        "staging becomes a reusable service outside URLSession transport",
+        "task routing is shared by a second transport implementation",
+        "the file changes after this frozen review"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/DerivedRasterPersistenceTests.swift",
+        "Tests/FoveaTests/DerivedRasterPipelineIntegrationTests.swift",
+        "Tests/FoveaTests/T100DerivedRasterStorageContractsTests.swift"
+      ],
+      "path": "Sources/FoveaPersistence/AkashicDerivedRasterStore.swift",
+      "reason": "AkashicDerivedRasterStore is one actor-owned adapter that maps the derived-raster persistence contract onto Akashic blob partitions and the record manifest. It opens bounded partitions, commits blob then alias under publication permission and durable write budget, removes aliases/blobs, performs reachability garbage collection and trims soft-budget victims. The two lock-audited metadata caches only accelerate recent-access and partition lookup and have no independent persistence authority.",
+      "responsibilities": [
+        "Akashic partition opening and bounded store configuration",
+        "derived blob/alias commit under publication and write-budget fences",
+        "namespace/item removal and unreferenced-blob cleanup",
+        "reachability garbage collection, soft-budget grouping and deterministic trimming"
+      ],
+      "reviewedLineCount": 558,
+      "sha256": "17b42c8c03acb8ca53301d82342e797d40705124ddfe74c99d0265bb608bdd9d",
+      "splitTriggers": [
+        "budget eviction becomes shared by non-derived Akashic stores",
+        "partition selection becomes an independent persistence service",
+        "record aliases and blob lifecycle no longer share one commit/GC authority",
+        "the file changes after this frozen review"
       ]
     }
   ],
@@ -187,6 +460,6 @@
     }
   ],
   "reviewID": "FOVEA-PRODUCTION-COHESION-REVIEWS-V1",
-  "reviewedOn": "2026-08-06",
+  "reviewedOn": "2026-08-31",
   "schemaVersion": 1
 }

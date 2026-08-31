@@ -159,11 +159,13 @@ package enum DerivedRasterPixelBridge {
             getBytesAtPosition: derivedRasterProviderGetBytesAtPosition,
             releaseInfo: derivedRasterProviderReleaseInfo
         )
-        guard let provider = CGDataProvider(
-            directInfo: retained.toOpaque(),
-            size: off_t(surface.decodedByteCount),
-            callbacks: &callbacks
-        ) else {
+        guard
+            let provider = CGDataProvider(
+                directInfo: retained.toOpaque(),
+                size: off_t(surface.decodedByteCount),
+                callbacks: &callbacks
+            )
+        else {
             retained.release()
             throw DerivedRasterContainerError.invalidInput
         }
@@ -230,10 +232,12 @@ private final class DerivedRasterDirectChunkSource: @unchecked Sendable {
                 guard let chunkDecodedRange = surface.decodedRange(forChunkAt: chunkIndex) else {
                     throw DerivedRasterContainerError.compressionFailed
                 }
-                let overlap = max(decodedOffset, chunkDecodedRange.lowerBound)..<min(
-                    end,
-                    chunkDecodedRange.upperBound
-                )
+                let overlap =
+                    max(
+                        decodedOffset, chunkDecodedRange.lowerBound)..<min(
+                        end,
+                        chunkDecodedRange.upperBound
+                    )
                 guard !overlap.isEmpty else {
                     throw DerivedRasterContainerError.compressionFailed
                 }

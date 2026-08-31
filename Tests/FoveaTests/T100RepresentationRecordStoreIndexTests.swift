@@ -5,7 +5,9 @@ import FoveaStorage
 import XCTest
 
 final class T100RepresentationRecordStoreIndexTests: XCTestCase {
-    func testExactLookupRequiresUniqueNamespaceGenerationCandidate_RECORD_STORE_PT_001() async throws {
+    func testExactLookupRequiresUniqueNamespaceGenerationCandidate_RECORD_STORE_PT_001()
+        async throws
+    {
         let root = try t100RecordStoreTemporaryDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let store = try await RepresentationRecordStore.open(root: root)
@@ -82,7 +84,8 @@ final class T100RepresentationRecordStoreIndexTests: XCTestCase {
                 namespaceGeneration: 2
             )
         )
-        XCTAssertEqual(snapshot.map(\.variantKeyDigest), [second.variantKeyDigest, first.variantKeyDigest])
+        XCTAssertEqual(
+            snapshot.map(\.variantKeyDigest), [second.variantKeyDigest, first.variantKeyDigest])
     }
 
     func testPersistenceFailureDoesNotPublishGhostIndexEntry_RECORD_STORE_PT_003() async throws {

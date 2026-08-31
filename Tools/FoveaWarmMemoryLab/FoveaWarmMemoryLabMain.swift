@@ -237,42 +237,42 @@ private func makeReport(
     samples: WarmMemorySamples
 ) -> Report {
     Report(
-            schemaVersion: 1,
-            evidenceVersion: "fovea-warm-memory-control-plane-v1",
-            runtime: runtimeFingerprint(),
-            fixtureName: fixture.fixtureName,
-            fixtureByteCount: fixture.fixtureByteCount,
-            fixtureSHA256: fixture.fixtureSHA256,
-            targetWidth: options.targetWidth,
-            targetHeight: options.targetHeight,
-            outputWidth: fixture.initial.pixelWidth,
-            outputHeight: fixture.initial.pixelHeight,
-            warmupIterations: 20,
-            measuredIterations: options.iterations,
-            orderCounts: samples.orderCounts,
-            publicImage: summary(samples.publicImage),
-            publicEvents: summary(samples.publicEvents),
-            internalBreakdown: BreakdownSamples(
-                requestValidation: summary(samples.timings.map(\.requestValidationNanoseconds)),
-                namespaceGeneration: summary(samples.timings.map(\.namespaceGenerationNanoseconds)),
-                aliasAuthorization: summary(samples.timings.map(\.aliasAuthorizationNanoseconds)),
-                aliasIndexLookup: summary(samples.timings.map(\.aliasIndexLookupNanoseconds)),
-                representationAuthorization: summary(
-                    samples.timings.map(\.representationAuthorizationNanoseconds)
-                ),
-                varySelection: summary(samples.timings.map(\.varySelectionNanoseconds)),
-                fixedIdentityAuthorization: summary(
-                    samples.timings.map(\.fixedIdentityAuthorizationNanoseconds)
-                ),
-                renderedImageLookup: summary(samples.timings.map(\.renderedImageLookupNanoseconds)),
-                freshnessClock: summary(samples.timings.map(\.freshnessClockNanoseconds)),
-                freshnessEvaluation: summary(samples.timings.map(\.freshnessEvaluationNanoseconds)),
-                activeNamespaceFence: summary(samples.timings.map(\.activeNamespaceFenceNanoseconds)),
-                cancellationFence: summary(samples.timings.map(\.cancellationFenceNanoseconds)),
-                coordinatorTotal: summary(samples.timings.map(\.coordinatorTotalNanoseconds)),
-                total: summary(samples.timings.map(\.totalNanoseconds))
-            )
+        schemaVersion: 1,
+        evidenceVersion: "fovea-warm-memory-control-plane-v1",
+        runtime: runtimeFingerprint(),
+        fixtureName: fixture.fixtureName,
+        fixtureByteCount: fixture.fixtureByteCount,
+        fixtureSHA256: fixture.fixtureSHA256,
+        targetWidth: options.targetWidth,
+        targetHeight: options.targetHeight,
+        outputWidth: fixture.initial.pixelWidth,
+        outputHeight: fixture.initial.pixelHeight,
+        warmupIterations: 20,
+        measuredIterations: options.iterations,
+        orderCounts: samples.orderCounts,
+        publicImage: summary(samples.publicImage),
+        publicEvents: summary(samples.publicEvents),
+        internalBreakdown: BreakdownSamples(
+            requestValidation: summary(samples.timings.map(\.requestValidationNanoseconds)),
+            namespaceGeneration: summary(samples.timings.map(\.namespaceGenerationNanoseconds)),
+            aliasAuthorization: summary(samples.timings.map(\.aliasAuthorizationNanoseconds)),
+            aliasIndexLookup: summary(samples.timings.map(\.aliasIndexLookupNanoseconds)),
+            representationAuthorization: summary(
+                samples.timings.map(\.representationAuthorizationNanoseconds)
+            ),
+            varySelection: summary(samples.timings.map(\.varySelectionNanoseconds)),
+            fixedIdentityAuthorization: summary(
+                samples.timings.map(\.fixedIdentityAuthorizationNanoseconds)
+            ),
+            renderedImageLookup: summary(samples.timings.map(\.renderedImageLookupNanoseconds)),
+            freshnessClock: summary(samples.timings.map(\.freshnessClockNanoseconds)),
+            freshnessEvaluation: summary(samples.timings.map(\.freshnessEvaluationNanoseconds)),
+            activeNamespaceFence: summary(samples.timings.map(\.activeNamespaceFenceNanoseconds)),
+            cancellationFence: summary(samples.timings.map(\.cancellationFenceNanoseconds)),
+            coordinatorTotal: summary(samples.timings.map(\.coordinatorTotalNanoseconds)),
+            total: summary(samples.timings.map(\.totalNanoseconds))
         )
+    )
 }
 
 private func write(_ report: Report, to output: URL) throws {

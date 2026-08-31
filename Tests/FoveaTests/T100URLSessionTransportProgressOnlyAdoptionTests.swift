@@ -146,7 +146,6 @@ final class T100URLSessionTransportProgressOnlyAdoptionTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: staging.path))
     }
 
-
     func testMaterializingExecutionCancellationAfterDataPreservesCancellation_T100_HTTP_PT_004()
         async throws
     {

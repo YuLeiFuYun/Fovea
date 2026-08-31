@@ -1,9 +1,10 @@
 import CoreGraphics
 import Foundation
-@testable import FoveaCore
 import FoveaHTTP
 import ImageCraftCore
 import XCTest
+
+@testable import FoveaCore
 
 final class T100MultipartJPEGLiveDiagnosticsTests: XCTestCase {
     func testPublicationRecordsDroppedDeltaAndDecodeMetrics_MJPEG_LIVE_DIAG_PT_000() async {
@@ -28,11 +29,13 @@ final class T100MultipartJPEGLiveDiagnosticsTests: XCTestCase {
         XCTAssertEqual(returnedDroppedCount, 5)
         XCTAssertEqual(events.count, 2)
         XCTAssertEqual(events[0].kind, .responseAnomaly)
-        XCTAssertEqual(events[0].keyDigest, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        XCTAssertEqual(
+            events[0].keyDigest, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         XCTAssertEqual(events[0].itemCount, 3)
         XCTAssertEqual(events[0].reason, "mjpeg-live-frame-superseded")
         XCTAssertEqual(events[1].kind, .decodeCompleted)
-        XCTAssertEqual(events[1].keyDigest, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        XCTAssertEqual(
+            events[1].keyDigest, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         XCTAssertEqual(events[1].itemCount, 1)
         XCTAssertEqual(events[1].outputPixelCount, 6)
         XCTAssertEqual(events[1].targetWidth, 3)
@@ -60,7 +63,9 @@ final class T100MultipartJPEGLiveDiagnosticsTests: XCTestCase {
             let events = await sink.snapshot()
             XCTAssertEqual(events.count, 1)
             XCTAssertEqual(events.first?.kind, .responseAnomaly)
-            XCTAssertEqual(events.first?.keyDigest, "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+            XCTAssertEqual(
+                events.first?.keyDigest,
+                "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
             XCTAssertEqual(events.first?.reason, expectedReason)
         }
     }
@@ -106,7 +111,9 @@ final class T100MultipartJPEGLiveDiagnosticsTests: XCTestCase {
 
         XCTAssertEqual(events.count, 1)
         XCTAssertEqual(events.first?.kind, .responseAnomaly)
-        XCTAssertEqual(events.first?.keyDigest, "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")
+        XCTAssertEqual(
+            events.first?.keyDigest,
+            "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")
         XCTAssertEqual(events.first?.reason, "mjpeg-live-failed")
         XCTAssertFalse(events.first?.reason?.contains("example.invalid") ?? true)
         XCTAssertFalse(events.first?.reason?.contains("token") ?? true)

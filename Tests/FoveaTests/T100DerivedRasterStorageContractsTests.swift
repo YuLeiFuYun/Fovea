@@ -45,7 +45,8 @@ final class T100DerivedRasterStorageContractsTests: XCTestCase {
         object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         object["pixelWidth"] = 0
         let wrongGeometry = try JSONSerialization.data(withJSONObject: object)
-        XCTAssertThrowsError(try JSONDecoder().decode(DerivedRasterRecord.self, from: wrongGeometry))
+        XCTAssertThrowsError(
+            try JSONDecoder().decode(DerivedRasterRecord.self, from: wrongGeometry))
     }
 
     func testWriteBudgetErrorProjectsStableDiagnosticFields_STORAGE_CONTRACT_PT_004() {

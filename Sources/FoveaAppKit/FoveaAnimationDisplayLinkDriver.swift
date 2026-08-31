@@ -109,15 +109,17 @@
         ) async {
             if let previousTask { await previousTask.value }
             guard isCurrent() else { return }
-            guard await applyAnimationVisibility(
-                visible: visible,
-                handle: handle,
-                animationDriverHasStarted: animationDriverHasStarted,
-                startedNow: startedNow,
-                startTask: startTask,
-                isCurrent: isCurrent,
-                recordFailure: recordFailure
-            ) else { return }
+            guard
+                await applyAnimationVisibility(
+                    visible: visible,
+                    handle: handle,
+                    animationDriverHasStarted: animationDriverHasStarted,
+                    startedNow: startedNow,
+                    startTask: startTask,
+                    isCurrent: isCurrent,
+                    recordFailure: recordFailure
+                )
+            else { return }
             guard isCurrent() else { return }
             activateAutomaticPresentation()
             if let liveSession { await liveSession.setVisible(visible) }
@@ -202,7 +204,8 @@
         ) async -> Bool {
             guard isEligible(), !isActive, supportsGeometry else { return false }
             guard let resident = await handle.driver.fullyResidentFramesSnapshotForCompositor(),
-                let playbackStart = await handle.driver.systemPlaybackStartNanosecondsForPresentation()
+                let playbackStart = await handle.driver
+                    .systemPlaybackStartNanosecondsForPresentation()
             else { return false }
             try? Task.checkCancellation()
             guard !Task.isCancelled, isEligible(), !isActive, supportsGeometry,
@@ -222,13 +225,15 @@
                 playbackStartNanoseconds: playbackStart,
                 layer: compositorLayer
             )
-            guard configurePlayback(
-                animation,
-                snapshot: resident,
-                playbackStartNanoseconds: playbackStart,
-                layer: compositorLayer,
-                finiteCompletion: finiteCompletion
-            ) else {
+            guard
+                configurePlayback(
+                    animation,
+                    snapshot: resident,
+                    playbackStartNanoseconds: playbackStart,
+                    layer: compositorLayer,
+                    finiteCompletion: finiteCompletion
+                )
+            else {
                 _ = removePresentation(preserveCurrentImage: true)
                 return false
             }
@@ -357,9 +362,11 @@
         ) -> UInt64? {
             guard let additionalRepeatCount = timeline.additionalRepeatCount else { return nil }
             let playCount = UInt64(additionalRepeatCount) + 1
-            let finiteDuration = timeline.totalDurationNanoseconds.multipliedReportingOverflow(by: playCount)
+            let finiteDuration = timeline.totalDurationNanoseconds.multipliedReportingOverflow(
+                by: playCount)
             guard !finiteDuration.overflow else { return nil }
-            let deadline = playbackStartNanoseconds.addingReportingOverflow(finiteDuration.partialValue)
+            let deadline = playbackStartNanoseconds.addingReportingOverflow(
+                finiteDuration.partialValue)
             return deadline.overflow ? nil : deadline.partialValue
         }
 
@@ -370,7 +377,9 @@
             completionGeneration &+= 1
             let generation = completionGeneration
             finiteCompletionDeadlineNanoseconds = deadlineNanoseconds
-            DispatchQueue.main.asyncAfter(deadline: DispatchTime(uptimeNanoseconds: deadlineNanoseconds)) {
+            DispatchQueue.main.asyncAfter(
+                deadline: DispatchTime(uptimeNanoseconds: deadlineNanoseconds)
+            ) {
                 guard self.isActive,
                     self.completionGeneration == generation,
                     self.finiteCompletionDeadlineNanoseconds == deadlineNanoseconds
@@ -380,7 +389,8 @@
         }
 
         private func preserveCurrentFrame(from layer: CALayer) -> DecodedImage? {
-            guard let imageView, let contents = layer.presentation()?.contents ?? layer.contents else {
+            guard let imageView, let contents = layer.presentation()?.contents ?? layer.contents
+            else {
                 return nil
             }
             let image = contents as! CGImage
@@ -394,7 +404,8 @@
             )
             imageView.image = NSImage(
                 cgImage: image,
-                size: NSSize(width: CGFloat(image.width) / scale, height: CGFloat(image.height) / scale)
+                size: NSSize(
+                    width: CGFloat(image.width) / scale, height: CGFloat(image.height) / scale)
             )
             return resident
         }

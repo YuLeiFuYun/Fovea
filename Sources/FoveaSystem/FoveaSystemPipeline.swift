@@ -236,7 +236,8 @@ public struct FoveaSystemPipeline: Sendable {
         await pipeline.retainLifetimeAnchor(stores)
         let lifecycleMonitor = FoveaLifecycleNotificationMonitor(animationRuntime: animationRuntime)
         await animationRuntime.retainLifetimeAnchor(lifecycleMonitor)
-        let monitor = automaticallyPurgesMemoryOnPressure
+        let monitor =
+            automaticallyPurgesMemoryOnPressure
             ? FoveaMemoryPressureMonitor(
                 pipeline: pipeline,
                 animationRuntime: animationRuntime,
@@ -246,7 +247,8 @@ public struct FoveaSystemPipeline: Sendable {
         if let monitor { await pipeline.retainLifetimeAnchor(monitor) }
         return FoveaSystemPipeline(
             pipeline: pipeline,
-            storageGenerationIdentifier: stores.generation.identifier.rawValue.uuidString.lowercased(),
+            storageGenerationIdentifier: stores.generation.identifier.rawValue.uuidString
+                .lowercased(),
             persistentStoreProviderFingerprint: stores.providerIdentity.cacheFingerprint,
             memoryPressureMonitor: monitor,
             animationRuntime: animationRuntime,

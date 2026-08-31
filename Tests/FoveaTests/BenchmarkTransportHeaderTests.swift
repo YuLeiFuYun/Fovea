@@ -1,6 +1,7 @@
 import Foundation
 import ImageCraftCore
 import Testing
+
 @_spi(FoveaBenchmarking) @testable import FoveaCore
 
 @Suite("Benchmark transport headers")

@@ -73,6 +73,24 @@
     },
     {
       "evidence": [
+        "Tests/FoveaTests/DerivedRasterContainerTests.swift",
+        "Tests/FoveaTests/DerivedRasterRuntimeTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/DerivedRasterPixelBridge.swift",
+      "reason": "DerivedRasterDirectChunkSource is a synchronous CoreGraphics data-provider bridge that may receive concurrent positional reads. The compressed surface is immutable; one private NSLock protects only the optional immutable decoded-chunk memo and its index. Decompression and caller buffer copies run outside the lock, while every cache publication, lookup and clear is serialized.",
+      "requiredTokens": [
+        "private final class DerivedRasterDirectChunkSource: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var cachedChunkIndex: Int?",
+        "private var cachedChunk: DecodedChunkScratch?",
+        "private func cachedChunkIfPresent(",
+        "private func clearCachedChunk()"
+      ],
+      "type": "DerivedRasterDirectChunkSource"
+    },
+    {
+      "evidence": [
         "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
         "Tests/FoveaTests/SharedTaskTests.swift",
         "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift"
@@ -131,20 +149,72 @@
     },
     {
       "evidence": [
+        "Tests/FoveaTests/ProgressiveResourceEnvelopeTests.swift",
+        "Tests/FoveaTests/T100ResourceSpineAdoptionTests.swift"
+      ],
+      "expectedCount": 2,
+      "path": "Sources/FoveaCore/FoveaProgressiveResourceDiagnostics.swift",
+      "reason": "The H013 progressive resource recorder is a bounded diagnostic-only synchronization boundary: all mutable owner maps, barrier state, sequence counters and samples are protected by one private NSLock, while the injected footprint providers are Sendable closures. The preparation resource lease has a separate private lock protecting its one monotone released bit so converging decode, discard and cancellation paths can end recorder ownership exactly once.",
+      "requiredTokens": [
+        "package final class FoveaProgressiveResourceRecorder: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var samples: [FoveaProgressiveResourceSample] = []",
+        "private func mutate(",
+        "package final class FoveaProgressivePreparationResourceLease: @unchecked Sendable",
+        "private var released = false",
+        "let shouldRelease = lock.withLock {"
+      ],
+      "type": "FoveaProgressiveResourceRecorder + FoveaProgressivePreparationResourceLease"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Tests/FoveaTests/ProgressiveResourceEnvelopeTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/PipelineProgressiveLifecycle.swift",
+      "reason": "PipelineProgressiveObservationState is a minimal synchronous bridge used by progress callbacks and response finalization to agree whether this subscriber observed progress. Its only mutable field is one Boolean, and both mutation and observation are serialized by the same private NSLock-backed withLock operation; it stores no pipeline, task, continuation or decoder reference.",
+      "requiredTokens": [
+        "final class PipelineProgressiveObservationState: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var observed = false",
+        "lock.withLock { observed = true }",
+        "func hasObservedProgress() -> Bool"
+      ],
+      "type": "PipelineProgressiveObservationState"
+    },
+    {
+      "evidence": [
         "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
         "Tests/FoveaTests/URLSessionTransportTests.swift"
       ],
-      "expectedCount": 2,
+      "expectedCount": 1,
       "path": "Sources/FoveaCore/PipelineProgressivePreview.swift",
-      "reason": "TransportProgressRelay and PipelineProgressiveObservationState bridge synchronous transport callbacks into asynchronous progressive processing. Each type owns only lock-protected scalar or bounded buffer state; continuations are resumed after unlocking, the relay enforces one consumer, and the observation state records only whether this exact subscriber received any progress before response completion.",
+      "reason": "TransportProgressRelay is the synchronous linearization boundary between transport progress callbacks and one asynchronous progressive consumer. One private NSLock protects its bounded buffer, waiter and terminal state; the relay enforces one consumer, and continuations are resumed only after the protected state transition has been decided.",
       "requiredTokens": [
         "final class TransportProgressRelay: @unchecked Sendable",
-        "final class PipelineProgressiveObservationState: @unchecked Sendable",
         "private let lock = NSLock()",
-        "precondition(waiter == nil, \"TransportProgressRelay supports one consumer\")",
-        "func hasObservedProgress() -> Bool"
+        "precondition(waiter == nil, \"TransportProgressRelay supports one consumer\")"
       ],
       "type": "TransportProgressRelay"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/RenderedImageCacheTests.swift",
+        "Tests/FoveaTests/FoveaSystemPipelineTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/RenderedImageCaching.swift",
+      "reason": "DefaultRenderedImageCache is the synchronous rendered-image hot path. Its probation, large-probation, main shards and identity governor are independently lock-protected cache primitives, while one coordination NSLock serializes the only wrapper-owned mutable cross-tier budget owner and compound promotion, removal and trim transitions. The resident payload and keys are Sendable values, and the cache concurrency tests exercise mixed parallel access.",
+      "requiredTokens": [
+        "package final class DefaultRenderedImageCache: @unchecked Sendable",
+        "private let coordinationLock = NSLock()",
+        "private let probation: FoveaCompactSieveCache",
+        "private let largeProbation: FoveaCompactSieveCache",
+        "private var expandedMainBudgetOwnerKey: RenderedImageCacheKey?",
+        "coordinationLock.lock()"
+      ],
+      "type": "DefaultRenderedImageCache"
     },
     {
       "evidence": [
@@ -162,6 +232,24 @@
         "DispatchWorkExecutor("
       ],
       "type": "TransportVerifiedHandoffDiskStore"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/ImagePrefetchingTests.swift",
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/ValidatedOriginalResumption.swift",
+      "reason": "ValidatedOriginalResumeCapture bridges synchronous transport progress callbacks with later candidate extraction. Its seed and byte limits are immutable, and one private NSLock serializes the complete optional State machine including response reset, bounded prefix append, completion and candidate snapshot. Invalid cumulative counts or bounds fail closed by clearing state rather than publishing partial mutable data.",
+      "requiredTokens": [
+        "package final class ValidatedOriginalResumeCapture: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var state: State?",
+        "package func observe(_ event: TransportProgressEvent)",
+        "package func candidate() -> ValidatedOriginalResumeCandidate?",
+        "defer { lock.unlock() }"
+      ],
+      "type": "ValidatedOriginalResumeCapture"
     },
     {
       "evidence": [
@@ -220,6 +308,98 @@
     },
     {
       "evidence": [
+        "Tests/FoveaTests/URLSessionTransportTests.swift",
+        "Tests/FoveaTests/T100URLSessionTransportProgressOnlyAdoptionTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaHTTP/URLSessionTransport.swift",
+      "reason": "URLSessionTaskLifetime reconciles registration completion, cancellation and normal finish callbacks that may race outside the transport actor. The task, router and priority task references are immutable; one private NSLock protects the three monotone lifecycle flags, and cancellation or router unregistration happens only after unlocking so callbacks cannot re-enter the critical section or unregister twice.",
+      "requiredTokens": [
+        "private final class URLSessionTaskLifetime: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var isFinished = false",
+        "private var isRegistered = false",
+        "private var didUnregister = false",
+        "func didRegister()",
+        "func finishOnce()"
+      ],
+      "type": "URLSessionTaskLifetime"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/DerivedRasterPersistenceTests.swift",
+        "Tests/FoveaTests/DerivedRasterRuntimeTests.swift"
+      ],
+      "expectedCount": 2,
+      "path": "Sources/FoveaPersistence/AkashicDerivedRasterStore.swift",
+      "reason": "The two synchronous helpers expose only bounded metadata beside the actor-isolated Akashic derived-raster store. DerivedRasterRecentAccessIndex protects its String set with one private NSLock for insert, remove and atomic consume; DerivedRasterPartitionCache protects a capacity-bounded fingerprint-to-partition dictionary with its own private NSLock. Neither helper owns blob bytes, filesystem state or mutable actor state.",
+      "requiredTokens": [
+        "private final class DerivedRasterRecentAccessIndex: @unchecked Sendable",
+        "private var keys: Set<String> = []",
+        "func consumeAny(_ candidates: [String]) -> Bool",
+        "private final class DerivedRasterPartitionCache: @unchecked Sendable",
+        "private let maximumCount: Int",
+        "private var values: [StorageNamespaceFingerprint: CachePartitionID] = [:]",
+        "func insertIfSpace("
+      ],
+      "type": "DerivedRasterRecentAccessIndex + DerivedRasterPartitionCache"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/T100DerivedRasterRecordStoreIndexTests.swift",
+        "Tests/FoveaTests/DerivedRasterPersistenceTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaPersistence/DerivedRasterRecordStore.swift",
+      "reason": "DerivedRasterRecordLookupIndex is a read-optimized snapshot beside the actor-owned durable record store. One private NSLock protects the immutable-record dictionary and mutationInProgress fence; reads fail closed while a persistent mutation is active, replacement constructs validated digest snapshots outside the lock and publishes them atomically, and no filesystem mutation occurs through this helper.",
+      "requiredTokens": [
+        "private final class DerivedRasterRecordLookupIndex: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var recordsByArtifact: [String: IndexedDerivedRasterRecord] = [:]",
+        "private var mutationInProgress = false",
+        "guard !mutationInProgress",
+        "func beginMutation()"
+      ],
+      "type": "DerivedRasterRecordLookupIndex"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/T100RepresentationRecordCapabilityTests.swift",
+        "Tests/FoveaTests/VaryCacheTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaPersistence/RepresentationRecordStore.swift",
+      "reason": "RepresentationRecordExactLookupIndex is a synchronous read-only acceleration snapshot beside the actor-isolated durable Vary store. One private NSLock protects the grouped immutable record arrays and mutationInProgress fence; exact lookups fail closed during mutation, and replaceAll builds and sorts the next snapshot off-lock before one atomic publication. It cannot write manifests or bypass namespace checks.",
+      "requiredTokens": [
+        "private final class RepresentationRecordExactLookupIndex: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var recordsByBaseKey: [String: [RepresentationRecord]] = [:]",
+        "private var mutationInProgress = false",
+        "guard !mutationInProgress",
+        "func replaceAll(_ records: [String: RepresentationRecord])"
+      ],
+      "type": "RepresentationRecordExactLookupIndex"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/SwiftUIAnimatedImageTests.swift",
+        "Tests/FoveaTests/SwiftUIStateTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaSwiftUI/FoveaAnimatedImageModel.swift",
+      "reason": "FoveaSwiftUIVisibilitySequencer serializes visibility operations onto MainActor while allowing synchronous submission from lifecycle callbacks. One private NSLock protects the sole mutable tail Task reference; each replacement captures the previous Sendable task, cancels it after creating the ordered successor, and cancel removes the tail under lock before cancellation. UI mutation remains confined to the supplied MainActor operation.",
+      "requiredTokens": [
+        "package final class FoveaSwiftUIVisibilitySequencer: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var tail: Task<Void, Never>?",
+        "_ operation: @escaping @MainActor @Sendable () async -> Void",
+        "previous?.cancel()",
+        "private func currentTail() -> Task<Void, Never>?"
+      ],
+      "type": "FoveaSwiftUIVisibilitySequencer"
+    },
+    {
+      "evidence": [
         "Tests/FoveaTests/AnimationSystemIntegrationTests.swift",
         "Tests/FoveaTests/FoveaSystemPipelineTests.swift"
       ],
@@ -236,6 +416,6 @@
       "type": "FoveaLifecycleNotificationMonitor"
     }
   ],
-  "reviewedOn": "2026-08-05",
+  "reviewedOn": "2026-08-31",
   "schemaVersion": 1
 }

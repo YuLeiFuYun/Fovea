@@ -270,7 +270,8 @@
             loadTask?.cancel()
             loadTask = nil
             activeStaticLoadToken = nil
-            displaySession.invalidate(clear: retentionPolicy == .clearImmediately) { [weak self] phase in
+            displaySession.invalidate(clear: retentionPolicy == .clearImmediately) {
+                [weak self] phase in
                 self?.apply(phase, completion: nil)
             }
         }

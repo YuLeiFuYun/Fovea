@@ -107,9 +107,12 @@ package actor FoveaDecodePermitLifetimeRecorder {
             completedOperationCount: completedOperationCount,
             admittedBytes: admittedBytes,
             localWorkingSetWaitNanoseconds: localWorkingSetWaitNanoseconds,
-            localWorkingSetHeldWaitingGlobalNanoseconds: localWorkingSetHeldWaitingGlobalNanoseconds,
-            workingSetsHeldWaitingLocalDecodeNanoseconds: workingSetsHeldWaitingLocalDecodeNanoseconds,
-            workingSetsAndLocalDecodeHeldWaitingGlobalDecodeNanoseconds: workingSetsAndLocalDecodeHeldWaitingGlobalDecodeNanoseconds,
+            localWorkingSetHeldWaitingGlobalNanoseconds:
+                localWorkingSetHeldWaitingGlobalNanoseconds,
+            workingSetsHeldWaitingLocalDecodeNanoseconds:
+                workingSetsHeldWaitingLocalDecodeNanoseconds,
+            workingSetsAndLocalDecodeHeldWaitingGlobalDecodeNanoseconds:
+                workingSetsAndLocalDecodeHeldWaitingGlobalDecodeNanoseconds,
             codecOperationNanoseconds: codecOperationNanoseconds,
             localWorkingSetLeaseNanoseconds: localWorkingSetLeaseNanoseconds,
             globalWorkingSetLeaseNanoseconds: globalWorkingSetLeaseNanoseconds,

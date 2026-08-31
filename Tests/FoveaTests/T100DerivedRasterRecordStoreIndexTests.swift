@@ -116,7 +116,8 @@ final class T100DerivedRasterRecordStoreIndexTests: XCTestCase {
 
 private func t100DerivedRecordStoreTempDirectory() throws -> URL {
     FileManager.default.temporaryDirectory
-        .appendingPathComponent("fovea-t100-derived-record-store-\(UUID().uuidString)", isDirectory: true)
+        .appendingPathComponent(
+            "fovea-t100-derived-record-store-\(UUID().uuidString)", isDirectory: true)
 }
 
 private func t100DRDigest(_ nibble: Character) -> String {
@@ -132,7 +133,8 @@ private func t100DerivedRecord(
         artifactKeyDigest: t100DRDigest(artifactNibble),
         baseKeyDigest: t100DRDigest("b"),
         variantKeyDigest: t100DRDigest("c"),
-        namespaceFingerprint: StorageNamespaceFingerprint(validatedValue: t100DRDigest(namespaceNibble)),
+        namespaceFingerprint: StorageNamespaceFingerprint(
+            validatedValue: t100DRDigest(namespaceNibble)),
         namespaceGeneration: generation,
         containerContentID: "sha256:\(t100DRDigest("d")):3",
         containerByteCount: 3,

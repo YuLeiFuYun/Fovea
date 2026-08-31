@@ -121,9 +121,11 @@ final class FoveaSystemPipelineTests: XCTestCase {
         XCTAssertGreaterThan(firstPurge.byteCount ?? 0, firstPurge.itemCount ?? Int.max)
     }
 
-    func testWarningPressurePreservesPromotedRenderedMainButCriticalPurges_RES_PT_020() async throws {
+    func testWarningPressurePreservesPromotedRenderedMainButCriticalPurges_RES_PT_020() async throws
+    {
         let body = try makePNG(width: 40, height: 20)
-        let rendered = DefaultRenderedImageCache(costLimit: 1024 * 1024, probationCostLimit: 256 * 1024)
+        let rendered = DefaultRenderedImageCache(
+            costLimit: 1024 * 1024, probationCostLimit: 256 * 1024)
         let (pipeline, transport, _, _) = try await makePipeline(
             stubs: [
                 .init(

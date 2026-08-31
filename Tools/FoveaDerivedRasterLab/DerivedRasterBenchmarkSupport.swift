@@ -41,7 +41,8 @@ struct DerivedRasterDecodeFixture {
             limits: limits,
             probe: probe,
             request: request,
-            reference: try decoder.decode(data: input, probe: probe, request: request, limits: limits)
+            reference: try decoder.decode(
+                data: input, probe: probe, request: request, limits: limits)
         )
     }
 }
@@ -100,8 +101,10 @@ struct DerivedRasterReferenceFixture {
             containerContentDigestAlreadyVerified: true,
             expectedFormat: format
         )
-        guard sha256(try rgbData(from: try DerivedRasterPixelBridge.lazyImage(from: compressed).cgImage))
-            == displayDigest
+        guard
+            sha256(
+                try rgbData(from: try DerivedRasterPixelBridge.lazyImage(from: compressed).cgImage))
+                == displayDigest
         else { throw LabError.outputMismatch }
         return DerivedRasterReferenceFixture(
             decode: decode,
@@ -181,7 +184,8 @@ struct DerivedRasterStoreFixture {
             createdAt: Date(timeIntervalSinceReferenceDate: 1_000)
         )
         try await store.commit(container: reference.container, record: record)
-        return DerivedRasterStoreFixture(root: root, store: store, namespace: namespace, record: record)
+        return DerivedRasterStoreFixture(
+            root: root, store: store, namespace: namespace, record: record)
     }
 }
 
@@ -239,8 +243,10 @@ struct DerivedRasterBenchmarkContext {
         return DerivedRasterBenchmarkContext(
             options: options,
             reference: reference,
-            persistence: try await DerivedRasterStoreFixture.make(options: options, reference: reference),
-            directBlob: try await DerivedRasterDirectBlobFixture.make(container: reference.container),
+            persistence: try await DerivedRasterStoreFixture.make(
+                options: options, reference: reference),
+            directBlob: try await DerivedRasterDirectBlobFixture.make(
+                container: reference.container),
             readExecutor: DispatchWorkExecutor(
                 label: "dev.fovea.derived-raster-lab-read",
                 qos: .userInitiated,
@@ -308,21 +314,25 @@ enum DerivedRasterBenchmarkRunner {
             return [
                 "direct", "container", "file-blob-physical-id", "direct-blob-file",
                 "direct-blob-file-digest", "file-blob", "store", "container-display-ready",
-                "raw-bridge", "lazy-bridge", "raw-bridge-display-ready", "lazy-bridge-display-ready",
+                "raw-bridge", "lazy-bridge", "raw-bridge-display-ready",
+                "lazy-bridge-display-ready",
                 "raw-bridge-w2-materialization", "opaque-premultiplied-raw-w2-materialization",
                 "packed-rgb24-raw-w2-materialization", "packed-rgb24-lazy-w2-materialization",
                 "lazy-bridge-w2-materialization", "opaque-premultiplied-lazy-w2-materialization",
-                "direct-materialized", "store-display-ready", "encode-surface", "materialize-encode",
+                "direct-materialized", "store-display-ready", "encode-surface",
+                "materialize-encode",
                 "creation", "png-creation", "png-display-ready",
             ]
         case 1:
             return [
                 "container", "direct-materialized", "png-display-ready", "store-display-ready",
-                "lazy-bridge-display-ready", "raw-bridge-display-ready", "encode-surface", "creation",
+                "lazy-bridge-display-ready", "raw-bridge-display-ready", "encode-surface",
+                "creation",
                 "direct-blob-file-digest", "file-blob", "store", "file-blob-physical-id",
                 "png-creation", "direct-blob-file", "materialize-encode",
                 "lazy-bridge-w2-materialization", "opaque-premultiplied-lazy-w2-materialization",
-                "opaque-premultiplied-raw-w2-materialization", "packed-rgb24-raw-w2-materialization",
+                "opaque-premultiplied-raw-w2-materialization",
+                "packed-rgb24-raw-w2-materialization",
                 "packed-rgb24-lazy-w2-materialization", "raw-bridge-w2-materialization",
                 "lazy-bridge", "raw-bridge", "container-display-ready", "direct",
             ]
@@ -332,7 +342,8 @@ enum DerivedRasterBenchmarkRunner {
                 "lazy-bridge", "raw-bridge", "direct-blob-file", "materialize-encode", "file-blob",
                 "container", "file-blob-physical-id", "lazy-bridge-display-ready",
                 "raw-bridge-display-ready", "png-display-ready", "raw-bridge-w2-materialization",
-                "opaque-premultiplied-raw-w2-materialization", "packed-rgb24-raw-w2-materialization",
+                "opaque-premultiplied-raw-w2-materialization",
+                "packed-rgb24-raw-w2-materialization",
                 "packed-rgb24-lazy-w2-materialization", "lazy-bridge-w2-materialization",
                 "opaque-premultiplied-lazy-w2-materialization", "direct-blob-file-digest",
                 "encode-surface", "direct-materialized", "store-display-ready",
@@ -376,7 +387,8 @@ enum DerivedRasterBenchmarkRunner {
                 try samples.durationSummary("executor-trusted-decode-bridge"),
             rawSurfaceBridgeConstruction: try samples.durationSummary("raw-bridge"),
             rawSurfaceBridgeDisplayReady: try samples.durationSummary("raw-bridge-display-ready"),
-            rawSurfaceBridgeW2Materialization: try samples.durationSummary("raw-bridge-w2-materialization"),
+            rawSurfaceBridgeW2Materialization: try samples.durationSummary(
+                "raw-bridge-w2-materialization"),
             opaquePremultipliedRawSurfaceW2Materialization:
                 try samples.durationSummary("opaque-premultiplied-raw-w2-materialization"),
             packedRGB24RawSurfaceW2Materialization:
@@ -384,7 +396,8 @@ enum DerivedRasterBenchmarkRunner {
             packedRGB24LazyCompressedBridgeW2Materialization:
                 try samples.durationSummary("packed-rgb24-lazy-w2-materialization"),
             lazyCompressedBridgeConstruction: try samples.durationSummary("lazy-bridge"),
-            lazyCompressedBridgeDisplayReady: try samples.durationSummary("lazy-bridge-display-ready"),
+            lazyCompressedBridgeDisplayReady: try samples.durationSummary(
+                "lazy-bridge-display-ready"),
             lazyCompressedBridgeW2Materialization:
                 try samples.durationSummary("lazy-bridge-w2-materialization"),
             opaquePremultipliedLazyCompressedBridgeW2Materialization:

@@ -513,7 +513,7 @@ package actor AnimationPlaybackDriver {
                 switch try await nextAutomaticLoopStep(generation: generation) {
                 case .stop:
                     return
-                case let .sleep(deadline):
+                case .sleep(let deadline):
                     try await clock.sleep(untilNanoseconds: deadline)
                 }
             } catch is CancellationError {

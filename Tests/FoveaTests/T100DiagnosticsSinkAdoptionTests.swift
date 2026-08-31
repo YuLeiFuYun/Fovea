@@ -1,6 +1,7 @@
 import CryptoKit
 import Foundation
 import XCTest
+
 @_spi(FoveaBenchmarking) @testable import FoveaCore
 
 final class T100DiagnosticsSinkAdoptionTests: XCTestCase {

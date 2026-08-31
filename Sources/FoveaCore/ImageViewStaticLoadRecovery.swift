@@ -15,8 +15,7 @@ package final class ImageViewStaticLoadRecovery {
     }
 
     private var recipe: Recipe?
-    private var completion:
-        (@MainActor @Sendable (Result<DecodedImage, PipelineFailure>) -> Void)?
+    private var completion: (@MainActor @Sendable (Result<DecodedImage, PipelineFailure>) -> Void)?
     private var resumesWhenAttached = false
 
     package init() {}

@@ -184,9 +184,10 @@ final class DerivedRasterLoadCoordinator: Sendable {
 struct DerivedRasterArtifactReader: Sendable {
     let store: any DerivedRasterStoring
     let diagnostics: any DiagnosticsSink
-    let hotArtifacts: FoveaCompactSieveCache<
-        DerivedRasterArtifactKey, DerivedRasterCompressedSurface
-    >
+    let hotArtifacts:
+        FoveaCompactSieveCache<
+            DerivedRasterArtifactKey, DerivedRasterCompressedSurface
+        >
 
     func load(key: DerivedRasterArtifactKey) async throws -> DerivedRasterLoadedImage? {
         if let loaded = try loadHotArtifact(key: key) { return loaded }
@@ -360,11 +361,13 @@ struct ReusableImageLookupCoordinator: Sendable {
         guard selected.isFresh(at: await clock.now()), selected.disposition != .noStore else {
             return ReusableImageLookup(conditionalRecord: selected, image: nil)
         }
-        guard let contentID = await validatedContentID(
-            selected,
-            request: request,
-            generation: generation
-        ) else {
+        guard
+            let contentID = await validatedContentID(
+                selected,
+                request: request,
+                generation: generation
+            )
+        else {
             return ReusableImageLookup(conditionalRecord: nil, image: nil)
         }
         return try await lookupFresh(

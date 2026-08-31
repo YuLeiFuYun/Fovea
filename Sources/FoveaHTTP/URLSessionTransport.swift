@@ -178,10 +178,11 @@ public actor URLSessionTransport: HTTPTransporting, TransportProgressOnlyExecuti
             // 取消回调可能先于 register 命令到达；注册确认后必须再次检查并注销。
             try Task.checkCancellation()
             task.resume()
-            let received: (
-                response: HTTPURLResponse,
-                networkMetrics: TransportNetworkMetrics?
-            )
+            let received:
+                (
+                    response: HTTPURLResponse,
+                    networkMetrics: TransportNetworkMetrics?
+                )
             do {
                 received = try await consume(
                     events: events,
@@ -247,12 +248,13 @@ public actor URLSessionTransport: HTTPTransporting, TransportProgressOnlyExecuti
             defer { lifetime.finishOnce() }
             try Task.checkCancellation()
             task.resume()
-            let received: (
-                response: HTTPURLResponse,
-                networkMetrics: TransportNetworkMetrics?,
-                digest: SHA256,
-                byteCount: Int
-            )
+            let received:
+                (
+                    response: HTTPURLResponse,
+                    networkMetrics: TransportNetworkMetrics?,
+                    digest: SHA256,
+                    byteCount: Int
+                )
             do {
                 received = try await consumeProgressOnly(
                     events: events,

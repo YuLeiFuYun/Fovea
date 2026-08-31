@@ -336,7 +336,8 @@
             loadTask?.cancel()
             loadTask = nil
             activeStaticLoadToken = nil
-            displaySession.invalidate(clear: retentionPolicy == .clearImmediately) { [weak self] phase in
+            displaySession.invalidate(clear: retentionPolicy == .clearImmediately) {
+                [weak self] phase in
                 self?.apply(phase, completion: nil)
             }
         }
@@ -434,11 +435,14 @@
             usesExternalPresentationTicks: Bool,
             output: @escaping AnimationPlaybackDriver.OutputHandler,
             failure: @escaping AnimationPlaybackDriver.FailureHandler,
-            externalPresentationState: @escaping AnimationPlaybackDriver
+            externalPresentationState:
+                @escaping AnimationPlaybackDriver
                 .ExternalPresentationStateHandler,
-            externalPresentationInvalidation: @escaping AnimationPlaybackDriver
+            externalPresentationInvalidation:
+                @escaping AnimationPlaybackDriver
                 .ExternalPresentationInvalidationHandler,
-            externalPresentationRevalidation: @escaping AnimationPlaybackDriver
+            externalPresentationRevalidation:
+                @escaping AnimationPlaybackDriver
                 .ExternalPresentationRevalidationHandler,
             isCurrent: @escaping @MainActor @Sendable () -> Bool
         ) async throws {
@@ -475,11 +479,14 @@
             presentationDriver: any FoveaAppKitAnimationPresentationDriving,
             output: @escaping AnimationPlaybackDriver.OutputHandler,
             failure: @escaping AnimationPlaybackDriver.FailureHandler,
-            externalPresentationState: @escaping AnimationPlaybackDriver
+            externalPresentationState:
+                @escaping AnimationPlaybackDriver
                 .ExternalPresentationStateHandler,
-            externalPresentationInvalidation: @escaping AnimationPlaybackDriver
+            externalPresentationInvalidation:
+                @escaping AnimationPlaybackDriver
                 .ExternalPresentationInvalidationHandler,
-            externalPresentationRevalidation: @escaping AnimationPlaybackDriver
+            externalPresentationRevalidation:
+                @escaping AnimationPlaybackDriver
                 .ExternalPresentationRevalidationHandler,
             isCurrent: @escaping @MainActor @Sendable () -> Bool
         ) async throws {

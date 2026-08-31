@@ -4,7 +4,9 @@ import FoveaStorage
 import XCTest
 
 final class T100NamespaceRegistryFingerprintTests: XCTestCase {
-    func testFingerprintOverloadsMatchNamespaceGenerationAndActivity_NAMESPACE_FP_PT_001() async throws {
+    func testFingerprintOverloadsMatchNamespaceGenerationAndActivity_NAMESPACE_FP_PT_001()
+        async throws
+    {
         let namespace = SecurityNamespaceID("fingerprint-equivalence")
         let fingerprint = StorageNamespaceFingerprint(namespace: namespace.value)
         let registry = NamespaceRegistry()
@@ -31,7 +33,8 @@ final class T100NamespaceRegistryFingerprintTests: XCTestCase {
         let revokedGeneration = try await registry.beginRevocation(namespace)
         XCTAssertEqual(revokedGeneration, NamespaceGeneration(1))
         let originalActiveDuringRevocation = await registry.isActive(original, for: fingerprint)
-        let revokedActiveDuringRevocation = await registry.isActive(revokedGeneration, for: fingerprint)
+        let revokedActiveDuringRevocation = await registry.isActive(
+            revokedGeneration, for: fingerprint)
         XCTAssertFalse(originalActiveDuringRevocation)
         XCTAssertFalse(revokedActiveDuringRevocation)
 

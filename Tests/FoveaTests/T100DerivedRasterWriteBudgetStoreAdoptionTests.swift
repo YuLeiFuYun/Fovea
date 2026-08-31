@@ -14,19 +14,21 @@ final class T100DerivedRasterWriteBudgetStoreAdoptionTests: XCTestCase {
         var budget: DerivedRasterWriteBudgetStore? = try await DerivedRasterWriteBudgetStore.open(
             root: root
         )
-        let firstReservation = try await budget?.reserve(
-            byteCount: 60,
-            at: started,
-            maximumBytes: 100,
-            windowNanoseconds: window
-        ) ?? false
+        let firstReservation =
+            try await budget?.reserve(
+                byteCount: 60,
+                at: started,
+                maximumBytes: 100,
+                windowNanoseconds: window
+            ) ?? false
         XCTAssertTrue(firstReservation)
-        let overBudgetReservation = try await budget?.reserve(
-            byteCount: 41,
-            at: started.addingTimeInterval(1),
-            maximumBytes: 100,
-            windowNanoseconds: window
-        ) ?? true
+        let overBudgetReservation =
+            try await budget?.reserve(
+                byteCount: 41,
+                at: started.addingTimeInterval(1),
+                maximumBytes: 100,
+                windowNanoseconds: window
+            ) ?? true
         XCTAssertFalse(overBudgetReservation)
         budget = nil
 
@@ -64,7 +66,9 @@ final class T100DerivedRasterWriteBudgetStoreAdoptionTests: XCTestCase {
             windowNanoseconds: 1
         )
         XCTAssertFalse(oversized)
-        for (bytes, maximum, window) in [(0, 100, UInt64(1)), (1, 0, UInt64(1)), (1, 100, UInt64(0))] {
+        for (bytes, maximum, window) in [
+            (0, 100, UInt64(1)), (1, 0, UInt64(1)), (1, 100, UInt64(0)),
+        ] {
             do {
                 _ = try await budget.reserve(
                     byteCount: bytes,
@@ -87,12 +91,13 @@ final class T100DerivedRasterWriteBudgetStoreAdoptionTests: XCTestCase {
         var budget: DerivedRasterWriteBudgetStore? = try await DerivedRasterWriteBudgetStore.open(
             root: root
         )
-        let initialReservation = try await budget?.reserve(
-            byteCount: 1,
-            at: Date(timeIntervalSinceReferenceDate: 30_000),
-            maximumBytes: 10,
-            windowNanoseconds: 1_000_000_000
-        ) ?? false
+        let initialReservation =
+            try await budget?.reserve(
+                byteCount: 1,
+                at: Date(timeIntervalSinceReferenceDate: 30_000),
+                maximumBytes: 10,
+                windowNanoseconds: 1_000_000_000
+            ) ?? false
         XCTAssertTrue(initialReservation)
         budget = nil
 
@@ -108,6 +113,7 @@ final class T100DerivedRasterWriteBudgetStoreAdoptionTests: XCTestCase {
 
     private func temporaryDirectory() throws -> URL {
         FileManager.default.temporaryDirectory
-            .appendingPathComponent("fovea-t100-write-budget-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent(
+                "fovea-t100-write-budget-\(UUID().uuidString)", isDirectory: true)
     }
 }

@@ -453,7 +453,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
             }
         }
         largeProbation.insert(resident, for: key, cost: resident.cost)
-        precondition(probation.currentCost + largeProbation.currentCost + main.currentCost <= totalCostLimit)
+        precondition(
+            probation.currentCost + largeProbation.currentCost + main.currentCost <= totalCostLimit)
     }
 
     private func placeResidentUsingBorrowedProbationBudgetLocked(

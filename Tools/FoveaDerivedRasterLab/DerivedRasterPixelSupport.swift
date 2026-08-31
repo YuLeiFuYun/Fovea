@@ -187,27 +187,30 @@ func packedRGB24CompressedImage(
         getBytesAtPosition: packedRGB24ProviderGetBytesAtPosition,
         releaseInfo: packedRGB24ProviderReleaseInfo
     )
-    guard let provider = CGDataProvider(
-        directInfo: retained.toOpaque(),
-        size: off_t(surface.decodedByteCount),
-        callbacks: &callbacks
-    ) else {
+    guard
+        let provider = CGDataProvider(
+            directInfo: retained.toOpaque(),
+            size: off_t(surface.decodedByteCount),
+            callbacks: &callbacks
+        )
+    else {
         retained.release()
         throw LabError.pixelConversionFailed
     }
-    guard let image = CGImage(
-        width: surface.width,
-        height: surface.height,
-        bitsPerComponent: 8,
-        bitsPerPixel: 24,
-        bytesPerRow: surface.width * 3,
-        space: colorSpace,
-        bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
-        provider: provider,
-        decode: nil,
-        shouldInterpolate: false,
-        intent: .defaultIntent
-    ), image.alphaInfo == .none
+    guard
+        let image = CGImage(
+            width: surface.width,
+            height: surface.height,
+            bitsPerComponent: 8,
+            bitsPerPixel: 24,
+            bytesPerRow: surface.width * 3,
+            space: colorSpace,
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent
+        ), image.alphaInfo == .none
     else { throw LabError.pixelConversionFailed }
     return image
 }
@@ -253,10 +256,12 @@ final class PackedRGB24DirectChunkSource: @unchecked Sendable {
                 guard let decodedRange = surface.decodedRange(forChunkAt: chunkIndex) else {
                     throw LabError.pixelConversionFailed
                 }
-                let overlap = max(decodedOffset, decodedRange.lowerBound)..<min(
-                    end,
-                    decodedRange.upperBound
-                )
+                let overlap =
+                    max(
+                        decodedOffset, decodedRange.lowerBound)..<min(
+                        end,
+                        decodedRange.upperBound
+                    )
                 guard !overlap.isEmpty else { throw LabError.pixelConversionFailed }
                 let chunk = try decodedChunk(at: chunkIndex, decodedRange: decodedRange)
                 let offsetInChunk = overlap.lowerBound - decodedRange.lowerBound

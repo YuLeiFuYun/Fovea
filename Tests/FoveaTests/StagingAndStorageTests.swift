@@ -479,7 +479,8 @@ final class StagingAndStorageTests: XCTestCase {
     func testRemoveDoesNotDeleteBlobWhenManifestPublicationFails_CACHE_PT_013() async throws {
         let root = try makeTemporaryDirectory()
         let blobsRoot = root.appendingPathComponent("blobs", isDirectory: true)
-        var store: AkashicOriginalEncodedStore? = try await AkashicOriginalEncodedStore.open(root: root)
+        var store: AkashicOriginalEncodedStore? = try await AkashicOriginalEncodedStore.open(
+            root: root)
         let data = Data("remove-transaction".utf8)
         let contentID = ContentID(data: data).description
         let stored = try await XCTUnwrap(store).commit(
@@ -491,7 +492,8 @@ final class StagingAndStorageTests: XCTestCase {
 
         func setMetadataWriteEnabled(_ enabled: Bool) throws {
             let mode = NSNumber(value: Int16(enabled ? 0o700 : 0o500))
-            try FileManager.default.setAttributes([.posixPermissions: mode], ofItemAtPath: root.path)
+            try FileManager.default.setAttributes(
+                [.posixPermissions: mode], ofItemAtPath: root.path)
             try FileManager.default.setAttributes(
                 [.posixPermissions: mode],
                 ofItemAtPath: blobsRoot.path

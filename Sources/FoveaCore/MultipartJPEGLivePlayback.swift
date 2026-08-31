@@ -262,7 +262,9 @@ package actor MultipartJPEGLivePlaybackSession {
         return true
     }
 
-    private func decode(_ part: MultipartJPEGPart) async throws -> (image: DecodedImage, duration: UInt64) {
+    private func decode(_ part: MultipartJPEGPart) async throws -> (
+        image: DecodedImage, duration: UInt64
+    ) {
         let decodeStarted = await clock.nowNanoseconds()
         let next = decodeStarted.addingReportingOverflow(policy.minimumFrameIntervalNanoseconds)
         guard !next.overflow else { throw MultipartJPEGLivePlaybackError.deadlineOverflow }

@@ -78,7 +78,8 @@ enum DerivedRasterWriteAccountingLab {
             writes: writes
         )
         try validate(options: options, context: context, writes: writes, snapshot: snapshot)
-        let report = makeReport(options: options, context: context, writes: writes, snapshot: snapshot)
+        let report = makeReport(
+            options: options, context: context, writes: writes, snapshot: snapshot)
         try write(report, to: options.output)
     }
 
@@ -172,7 +173,8 @@ enum DerivedRasterWriteAccountingLab {
             root: context.root.appendingPathComponent("write-budget", isDirectory: true)
         )
         let reserved = await budget.reservedBytesForTesting()
-        let accounted = writes.payloadBytes
+        let accounted =
+            writes.payloadBytes
             + writes.aliasManifestBytes
             + recordBytes
             + writes.budgetLedgerBytes
@@ -288,11 +290,13 @@ enum DerivedRasterWriteAccountingLab {
 
     private static func regularFiles(under root: URL) throws -> [URL] {
         guard FileManager.default.fileExists(atPath: root.path) else { return [] }
-        guard let enumerator = FileManager.default.enumerator(
-            at: root,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: []
-        ) else { throw WriteAccountingError.accountingInvariant }
+        guard
+            let enumerator = FileManager.default.enumerator(
+                at: root,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: []
+            )
+        else { throw WriteAccountingError.accountingInvariant }
         var result: [URL] = []
         for case let url as URL in enumerator {
             if try url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true {

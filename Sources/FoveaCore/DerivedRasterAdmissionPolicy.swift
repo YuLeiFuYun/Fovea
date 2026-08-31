@@ -378,7 +378,8 @@ package enum DerivedRasterAdmissionPolicy {
         safetyMarginHits: Int
     ) -> Int? {
         let perHitSavings = originalDecodeNanoseconds - derivedReadNanoseconds
-        let amortizationHits = creationNanoseconds / perHitSavings
+        let amortizationHits =
+            creationNanoseconds / perHitSavings
             + (creationNanoseconds % perHitSavings == 0 ? 0 : 1)
         let (requiredHits, overflow) = amortizationHits.addingReportingOverflow(
             UInt64(safetyMarginHits)
@@ -437,12 +438,14 @@ package enum DerivedRasterAdmissionPolicy {
         ) {
             return .reject(rejection)
         }
-        guard let required = requiredObservedHits(
-            creationNanoseconds: creationNanoseconds,
-            originalDecodeNanoseconds: originalDecodeNanoseconds,
-            derivedReadNanoseconds: derivedReadNanoseconds,
-            safetyMarginHits: safetyMarginHits
-        ) else {
+        guard
+            let required = requiredObservedHits(
+                creationNanoseconds: creationNanoseconds,
+                originalDecodeNanoseconds: originalDecodeNanoseconds,
+                derivedReadNanoseconds: derivedReadNanoseconds,
+                safetyMarginHits: safetyMarginHits
+            )
+        else {
             return .reject(.invalidMetrics)
         }
         guard observedReuseHits >= required else {

@@ -74,7 +74,8 @@ final class PipelineCache: Sendable {
         namespaceFingerprint suppliedNamespaceFingerprint: StorageNamespaceFingerprint? = nil,
         generation: NamespaceGeneration
     ) async -> [RepresentationRecord] {
-        let namespaceFingerprint = suppliedNamespaceFingerprint
+        let namespaceFingerprint =
+            suppliedNamespaceFingerprint
             ?? StorageNamespaceFingerprint(namespace: namespace.value)
         if let snapshot = recordStore as? any RepresentationRecordSnapshotLookingUp,
             let fast = snapshot.recordsSnapshot(

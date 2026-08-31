@@ -335,7 +335,7 @@ def validate_codec(support_source: str) -> int:
     validate_sources([harness, fixture_source, factory_source])
     harness_source = harness.read_text()
     for marker in (
-        "2_304",
+        "3_072",
         "ImageDecodeResourceEstimate.conservativeMaximum",
         ".encodedBytesExceeded",
         ".unsupportedFormat",

@@ -1,7 +1,8 @@
 import Foundation
-@testable import FoveaCore
 import FoveaObservability
 import XCTest
+
+@testable import FoveaCore
 
 final class T100DiagnosticsVocabularyAdoptionTests: XCTestCase {
     func testAddedDiagnosticKindsRoundTripUnderSchema19_T100_AUTH_PT_008() throws {

@@ -68,7 +68,9 @@ private struct BaseOnlyRecordStore: RepresentationRecordStoring {
     func removeAll(namespace: String) async throws {}
 }
 
-private struct SnapshotRecordStore: RepresentationRecordStoring, RepresentationRecordSnapshotLookingUp {
+private struct SnapshotRecordStore: RepresentationRecordStoring,
+    RepresentationRecordSnapshotLookingUp
+{
     func records(
         for baseKeyDigest: String,
         namespace: String,

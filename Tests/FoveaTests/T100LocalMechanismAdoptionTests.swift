@@ -1,7 +1,8 @@
 import Foundation
-@testable import FoveaCore
 import ImageCraftCore
 import XCTest
+
+@testable import FoveaCore
 
 final class T100LocalMechanismAdoptionTests: XCTestCase {
     func testAnimationPlaybackTimelineNormalizesExactBoundariesAndRejectsOverflow_T100_AUTH_PT_003()
@@ -40,7 +41,8 @@ final class T100LocalMechanismAdoptionTests: XCTestCase {
         }
     }
 
-    func testDecodePermitLifetimeRecorderClampsNegativeBytesAndSaturatesArithmetic_T100_AUTH_PT_004()
+    func
+        testDecodePermitLifetimeRecorderClampsNegativeBytesAndSaturatesArithmetic_T100_AUTH_PT_004()
         async
     {
         let recorder = FoveaDecodePermitLifetimeRecorder()
@@ -93,7 +95,8 @@ final class T100LocalMechanismAdoptionTests: XCTestCase {
     }
 
     @MainActor
-    func testStaticLoadRecoveryConsumesResumeOnceRejectsStaleTokenAndClearPreventsRevival_T100_AUTH_PT_005()
+    func
+        testStaticLoadRecoveryConsumesResumeOnceRejectsStaleTokenAndClearPreventsRevival_T100_AUTH_PT_005()
         throws
     {
         let recovery = ImageViewStaticLoadRecovery()

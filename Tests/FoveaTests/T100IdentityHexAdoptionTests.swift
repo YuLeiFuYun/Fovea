@@ -1,7 +1,8 @@
 import CryptoKit
 import Foundation
-@testable import FoveaCore
 import XCTest
+
+@testable import FoveaCore
 
 final class T100IdentityHexAdoptionTests: XCTestCase {
     func testLowercaseHexMatchesLegacyFormatterAcrossEntireByteDomain_T100_AUTH_PT_008() {
@@ -20,7 +21,7 @@ final class T100IdentityHexAdoptionTests: XCTestCase {
         }
 
         let allBytes = (0...255).map(UInt8.init)
-        XCTAssertEqual(lowercaseHexString(allBytes), legacyLowercaseHex_T100(allBytes))
+        XCTAssertEqual(lowercaseHexString(allBytes), legacyLowercaseHexT100(allBytes))
         XCTAssertEqual(lowercaseHexString(allBytes).utf8.count, 512)
     }
 
@@ -29,17 +30,17 @@ final class T100IdentityHexAdoptionTests: XCTestCase {
             let bytes = (0..<length).map {
                 UInt8(truncatingIfNeeded: ($0 &* 131) ^ ($0 >> 1) ^ 0xA5)
             }
-            XCTAssertEqual(lowercaseHexString(bytes), legacyLowercaseHex_T100(bytes))
+            XCTAssertEqual(lowercaseHexString(bytes), legacyLowercaseHexT100(bytes))
 
             let data = Data(bytes)
-            let expectedDigest = legacyLowercaseHex_T100(SHA256.hash(data: data))
+            let expectedDigest = legacyLowercaseHexT100(SHA256.hash(data: data))
             XCTAssertEqual(data.sha256Hex, expectedDigest)
             XCTAssertEqual(data.sha256Hex.utf8.count, 64)
         }
     }
 }
 
-private func legacyLowercaseHex_T100<Bytes: Sequence>(_ bytes: Bytes) -> String
+private func legacyLowercaseHexT100<Bytes: Sequence>(_ bytes: Bytes) -> String
 where Bytes.Element == UInt8 {
     bytes.map { String(format: "%02x", $0) }.joined()
 }

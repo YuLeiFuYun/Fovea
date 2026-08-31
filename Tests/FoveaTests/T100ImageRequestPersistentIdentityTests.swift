@@ -1,8 +1,9 @@
 import Foundation
-@testable import FoveaCore
 import FoveaStorage
 import ImageCraftCore
 import XCTest
+
+@testable import FoveaCore
 
 final class T100ImageRequestPersistentIdentityTests: XCTestCase {
     func testInitialRequestPrecomputesPersistentIdentity_IMAGE_REQUEST_PT_001() throws {

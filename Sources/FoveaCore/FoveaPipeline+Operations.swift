@@ -145,7 +145,9 @@ extension FoveaPipeline {
                     try await fence.requireOpen()
                     if case .terminated = continuation.yield(
                         .preview(preview.image, quality: preview.quality)
-                    ) { throw CancellationError() }
+                    ) {
+                        throw CancellationError()
+                    }
                 }
             } catch {
                 // 最终结果或取消都会关闭渐进发布 fence。
@@ -177,7 +179,9 @@ extension FoveaPipeline {
                             try Task.checkCancellation()
                             if case .terminated = continuation.yield(
                                 .preview(preview, quality: UInt16.max)
-                            ) { throw CancellationError() }
+                            ) {
+                                throw CancellationError()
+                            }
                         },
                         progressObserver: { event in
                             cancellationHandoffLease.observe(event)

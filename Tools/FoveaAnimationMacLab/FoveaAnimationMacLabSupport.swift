@@ -268,12 +268,14 @@ final class CallbackTimingRecorder {
     init(frameCount: Int) { self.frameCount = frameCount }
 
     func record(frameIndex: Int, timestamp: UInt64) {
-        guard observedSourceOrdinal < UInt64(frameCount), (0..<frameCount).contains(frameIndex) else {
+        guard observedSourceOrdinal < UInt64(frameCount), (0..<frameCount).contains(frameIndex)
+        else {
             return
         }
         guard observations.last?.frameIndex != frameIndex else { return }
         if let previous = observations.last?.frameIndex {
-            let delta = frameIndex > previous ? frameIndex - previous : frameCount - previous + frameIndex
+            let delta =
+                frameIndex > previous ? frameIndex - previous : frameCount - previous + frameIndex
             observedSourceOrdinal &+= UInt64(delta)
         }
         let first = firstTimestamp ?? timestamp
@@ -348,23 +350,26 @@ struct PlaybackFixture {
             frameMemoryCostLimit: predecodeAll ? 512 * 1024 : 16 * 1024
         )
         let provider = MacLabProvider(frameCount: frameCount)
-        guard let decodeKey = AnimationDecodeKey(
-            contentID: ContentID(data: Data("fovea-appkit-physical-display-link-v1".utf8)),
-            target: try TargetPixels(width: 32, height: 32),
-            contentMode: .fit,
-            colorPolicy: .convertToSRGB,
-            codecFingerprint: "fovea-animation-mac-lab-v1",
-            animationPolicyVersion: 1,
-            timingPolicyVersion: 1,
-            frameStrategy: predecodeAll ? .predecodeAll : .boundedFrameCache
-        ) else { throw MacLabError.decodeKeyUnavailable }
+        guard
+            let decodeKey = AnimationDecodeKey(
+                contentID: ContentID(data: Data("fovea-appkit-physical-display-link-v1".utf8)),
+                target: try TargetPixels(width: 32, height: 32),
+                contentMode: .fit,
+                colorPolicy: .convertToSRGB,
+                codecFingerprint: "fovea-animation-mac-lab-v1",
+                animationPolicyVersion: 1,
+                timingPolicyVersion: 1,
+                frameStrategy: predecodeAll ? .predecodeAll : .boundedFrameCache
+            )
+        else { throw MacLabError.decodeKeyUnavailable }
         let timeline = try AnimationPlaybackTimeline(
             frameDurationsNanoseconds: frameDurations,
             additionalRepeatCount: nil,
             zeroDurationReplacementNanoseconds: 10_000_000,
             timingPolicyVersion: 1
         )
-        let clock: any AnimationPlaybackClock = options.deadlineClockControl == .strictDispatch
+        let clock: any AnimationPlaybackClock =
+            options.deadlineClockControl == .strictDispatch
             ? StrictDispatchAnimationClock() : SystemAnimationPlaybackClock()
         let handle = try await runtime.makeHandle(
             namespace: SecurityNamespaceID("fovea-appkit-mac-lab"),

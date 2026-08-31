@@ -58,7 +58,8 @@ final class RenderedImageCacheTests: XCTestCase {
         }
 
         for _ in 0..<64 {
-            XCTAssertNotNil(cache.image(for: hotKey), "hot resident must remain readable before count pressure")
+            XCTAssertNotNil(
+                cache.image(for: hotKey), "hot resident must remain readable before count pressure")
         }
 
         let newcomer = makeKey(16)
@@ -135,7 +136,8 @@ final class RenderedImageCacheTests: XCTestCase {
 
         cache.insert(image, for: makeKey(2), cost: 40)
         XCTAssertEqual(cache.currentCost, 100, "first large-probation admit must preserve hot main")
-        XCTAssertEqual(cache.count, 2, "first large-probation admit must replace ordinary probation only")
+        XCTAssertEqual(
+            cache.count, 2, "first large-probation admit must replace ordinary probation only")
         for index in 3..<102 {
             cache.insert(image, for: makeKey(index), cost: 40)
         }

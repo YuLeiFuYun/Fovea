@@ -393,9 +393,10 @@ struct FetchSharedExecutionCoordinator: Sendable {
         handoffLease: FetchCancellationHandoffLease?,
         handoffRemainingByteLimit: Int
     ) async {
-        let grace = handoffLease?.eligibleGraceNanoseconds(
-            maximumRemainingBytes: handoffRemainingByteLimit
-        ) ?? 0
+        let grace =
+            handoffLease?.eligibleGraceNanoseconds(
+                maximumRemainingBytes: handoffRemainingByteLimit
+            ) ?? 0
         if grace > 0 {
             await subscription.detach(handoffGraceNanoseconds: grace)
         } else {

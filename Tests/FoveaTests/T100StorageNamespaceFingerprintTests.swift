@@ -11,7 +11,7 @@ final class T100StorageNamespaceFingerprintTests: XCTestCase {
             "account:alpha",
             "space and punctuation:/?#[]@!$&'()*+,;=",
             "unicode-命名空间-🔒",
-            String(repeating: "x", count: 4_096)
+            String(repeating: "x", count: 4_096),
         ]
 
         for namespace in namespaces {

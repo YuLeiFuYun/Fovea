@@ -1,10 +1,11 @@
 import CoreGraphics
 import Foundation
-@testable import FoveaCore
 import FoveaHTTP
 import ImageCraftCore
 import ImageIO
 import XCTest
+
+@testable import FoveaCore
 
 final class T100MultipartJPEGFrameDecoder048DirectTests: XCTestCase {
     func testT100_048_DIRECT_001_ordinaryTargetAndColorDecode() async throws {
@@ -109,12 +110,14 @@ private func makeT100FrameDecoderJPEG(width: Int, height: Int) throws -> Data {
     else { throw NSError(domain: "T100FrameDecoder048", code: 1) }
 
     let output = NSMutableData()
-    guard let destination = CGImageDestinationCreateWithData(
-        output,
-        "public.jpeg" as CFString,
-        1,
-        nil
-    ) else { throw NSError(domain: "T100FrameDecoder048", code: 2) }
+    guard
+        let destination = CGImageDestinationCreateWithData(
+            output,
+            "public.jpeg" as CFString,
+            1,
+            nil
+        )
+    else { throw NSError(domain: "T100FrameDecoder048", code: 2) }
     CGImageDestinationAddImage(destination, image, nil)
     guard CGImageDestinationFinalize(destination) else {
         throw NSError(domain: "T100FrameDecoder048", code: 3)

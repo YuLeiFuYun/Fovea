@@ -239,8 +239,7 @@ func akashicManifestRecordFixtures(root: URL) throws -> [AkashicManifestRecordFi
 
     for url in children where !url.lastPathComponent.hasPrefix(".") {
         for name in try akashicExtendedAttributeNames(at: url)
-            where name.hasPrefix("dev.akashic.manifest-entry-")
-        {
+        where name.hasPrefix("dev.akashic.manifest-entry-") {
             let data = try akashicExtendedAttributeData(name, at: url)
             fixtures.append(
                 try AkashicManifestRecordFixture(

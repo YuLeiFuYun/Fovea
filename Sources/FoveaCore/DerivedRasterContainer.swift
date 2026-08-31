@@ -71,7 +71,8 @@ package struct DerivedRasterCompressedSurface: Sendable {
         guard index >= 0, index < compressedChunkRanges.count else { return nil }
         let start = index.multipliedReportingOverflow(by: decodedChunkByteCount)
         guard !start.overflow, start.partialValue < decodedByteCount else { return nil }
-        return start.partialValue..<min(decodedByteCount, start.partialValue + decodedChunkByteCount)
+        return start
+            .partialValue..<min(decodedByteCount, start.partialValue + decodedChunkByteCount)
     }
 }
 
@@ -209,11 +210,12 @@ package enum DerivedRasterContainer {
     package static func pixelLayout(
         for format: DerivedRasterFormatIdentity
     ) -> DerivedRasterPixelLayout? {
-        guard format == formatIdentity
-            || format == preserveSourceEmbeddedICCFormatIdentity
-            || format == preserveSourceStandardSRGBFormatIdentity
-            || format == preserveSourceAbsentFormatIdentity
-            || format == preserveSourceUnknownFormatIdentity
+        guard
+            format == formatIdentity
+                || format == preserveSourceEmbeddedICCFormatIdentity
+                || format == preserveSourceStandardSRGBFormatIdentity
+                || format == preserveSourceAbsentFormatIdentity
+                || format == preserveSourceUnknownFormatIdentity
         else { return nil }
         return .rgb24
     }
@@ -270,7 +272,8 @@ package enum DerivedRasterContainer {
         for chunkIndex in 0..<chunkCount {
             let start = chunkIndex * decodedChunkByteCount
             let end = min(pixelData.count, start + decodedChunkByteCount)
-            let remainingBudget = limits.maximumContainerBytes - fixedBytes.partialValue - payload.count
+            let remainingBudget =
+                limits.maximumContainerBytes - fixedBytes.partialValue - payload.count
             guard remainingBudget > 0 else { throw DerivedRasterContainerError.limitExceeded }
             let compressed = try DerivedRasterContainerCodec.compress(
                 Data(pixelData[start..<end]),
@@ -365,7 +368,7 @@ package enum DerivedRasterContainer {
         }
         // Creation/standalone validation has no authenticated outer content identity, so prove
         // the decoded bytes as well. Record-backed loads already authenticate the full container.
-        if (verifyDecodedPixelDigest || !parsed.outerContentDigestVerified),
+        if verifyDecodedPixelDigest || !parsed.outerContentDigestVerified,
             Data(SHA256.hash(data: pixelData)) != parsed.expectedPixelDigest
         {
             throw DerivedRasterContainerError.integrityMismatch
@@ -454,7 +457,6 @@ package enum DerivedRasterContainer {
         )
     }
 
-
     private static func readHeader(
         _ cursor: inout DerivedRasterByteCursor,
         expectedFormat: DerivedRasterFormatIdentity?
@@ -494,7 +496,8 @@ package enum DerivedRasterContainer {
         return header
     }
 
-    private static func readStoredChunkShape(_ cursor: inout DerivedRasterByteCursor) throws -> Int {
+    private static func readStoredChunkShape(_ cursor: inout DerivedRasterByteCursor) throws -> Int
+    {
         guard try cursor.readBoundedInt32() == decodedChunkByteCount else {
             throw DerivedRasterContainerError.unsupportedFormat
         }
@@ -537,9 +540,6 @@ package enum DerivedRasterContainer {
         return tableBytes.partialValue
     }
 
-
-
-
     /// Validates only LZFSE's outer block framing; it intentionally does not expand pixels.
     ///
     /// The authenticated chunk range must contain one or more non-empty blocks followed by a
@@ -547,10 +547,6 @@ package enum DerivedRasterContainer {
     /// size is the header plus literal and L/M/D payload byte counts. Payload semantics remain
     /// the Compression decoder's responsibility; this parser exists so its permissive handling
     /// of bytes after `bvx$` cannot weaken the container's canonical exact-input contract.
-
-
-
-
 
     /// 把一个已经通过外层 LZFSE frame canonicality 验证的独立 chunk 单步解码到
     /// 调用方最终目标 buffer。frame parser 证明 EOS 恰好落在 chunk 末尾；这里要求

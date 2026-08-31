@@ -207,8 +207,7 @@
             if let previousTask { await previousTask.value }
             guard isPresenting, self.presentationID == presentationID else { return }
             if let handle {
-                do { try await handle.driver.setVisible(visible) }
-                catch {
+                do { try await handle.driver.setVisible(visible) } catch {
                     guard isPresenting, self.presentationID == presentationID else { return }
                     recordFailure(error, presentationID: presentationID)
                 }

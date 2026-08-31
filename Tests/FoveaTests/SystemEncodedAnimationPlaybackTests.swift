@@ -578,7 +578,8 @@ final class SystemEncodedAnimationPlaybackTests: XCTestCase {
             )
         }
         try await waitUntil("system priority requests enter shared peak queue") {
-            await system.animationRuntime.automaticWholeTrackPredecodePeakQueuedCountForTesting() == 2
+            await system.animationRuntime.automaticWholeTrackPredecodePeakQueuedCountForTesting()
+                == 2
         }
         let lowCallsWhileBlocked = await lowProvider.callCount()
         let highCallsWhileBlocked = await highProvider.callCount()

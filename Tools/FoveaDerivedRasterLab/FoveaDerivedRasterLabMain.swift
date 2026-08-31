@@ -1,10 +1,8 @@
-import Foundation
 import Dispatch
+import Foundation
 import FoveaCore
 import FoveaPersistence
 import FoveaStorage
-
-
 
 enum LabError: Error, CustomStringConvertible {
     case invalidArguments
@@ -141,7 +139,9 @@ struct DerivedRasterBenchmarkOperations {
                 try await opaquePremultipliedRawW2Materialization()
             },
             "packed-rgb24-raw-w2-materialization": { try await packedRGB24RawW2Materialization() },
-            "packed-rgb24-lazy-w2-materialization": { try await packedRGB24LazyW2Materialization() },
+            "packed-rgb24-lazy-w2-materialization": {
+                try await packedRGB24LazyW2Materialization()
+            },
             "lazy-bridge": { try await lazyBridgeConstruction() },
             "lazy-bridge-display-ready": { try await lazyBridgeDisplayReady() },
             "lazy-bridge-w2-materialization": { try await lazyBridgeW2Materialization() },
@@ -166,15 +166,19 @@ struct DerivedRasterBenchmarkOperations {
     private var r: DerivedRasterReferenceFixture { context.reference }
 
     private func directDecode() async throws -> UInt64 {
-        try measure { _ = try r.decode.decoder.decode(
-            data: r.decode.input, probe: r.decode.probe, request: r.decode.request, limits: r.decode.limits
-        ) }
+        try measure {
+            _ = try r.decode.decoder.decode(
+                data: r.decode.input, probe: r.decode.probe, request: r.decode.request,
+                limits: r.decode.limits
+            )
+        }
     }
 
     private func directMaterialized() async throws -> UInt64 {
         try measure {
             let image = try r.decode.decoder.decode(
-                data: r.decode.input, probe: r.decode.probe, request: r.decode.request, limits: r.decode.limits
+                data: r.decode.input, probe: r.decode.probe, request: r.decode.request,
+                limits: r.decode.limits
             )
             guard sha256(try rgbData(from: image.cgImage)) == r.displayDigest else {
                 throw LabError.outputMismatch
@@ -196,7 +200,8 @@ struct DerivedRasterBenchmarkOperations {
 
     private func materializeAndEncode() async throws -> UInt64 {
         try measure {
-            let surface = try DerivedRasterPixelBridge.surface(from: r.decode.reference, format: r.format)
+            let surface = try DerivedRasterPixelBridge.surface(
+                from: r.decode.reference, format: r.format)
             let value = try DerivedRasterContainer.encode(
                 pixelData: surface.pixelData,
                 width: r.decode.reference.pixelWidth,
@@ -210,7 +215,8 @@ struct DerivedRasterBenchmarkOperations {
     private func creation() async throws -> UInt64 {
         try measure {
             let image = try r.decode.decoder.decode(
-                data: r.decode.input, probe: r.decode.probe, request: r.decode.request, limits: r.decode.limits
+                data: r.decode.input, probe: r.decode.probe, request: r.decode.request,
+                limits: r.decode.limits
             )
             let surface = try DerivedRasterPixelBridge.surface(from: image, format: r.format)
             let value = try DerivedRasterContainer.encode(
@@ -376,18 +382,21 @@ struct DerivedRasterBenchmarkOperations {
     }
 
     private func loadArtifact() async throws -> DerivedRasterStoredArtifact {
-        guard let artifact = try await context.persistence.store.load(
-            artifactKeyDigest: context.persistence.record.artifactKeyDigest,
-            namespaceFingerprint: context.persistence.namespace,
-            namespaceGeneration: 1
-        ) else { throw LabError.storageMiss }
+        guard
+            let artifact = try await context.persistence.store.load(
+                artifactKeyDigest: context.persistence.record.artifactKeyDigest,
+                namespaceFingerprint: context.persistence.namespace,
+                namespaceGeneration: 1
+            )
+        else { throw LabError.storageMiss }
         return artifact
     }
 
     private func pngCreation() async throws -> UInt64 {
         try measure {
             let image = try r.decode.decoder.decode(
-                data: r.decode.input, probe: r.decode.probe, request: r.decode.request, limits: r.decode.limits
+                data: r.decode.input, probe: r.decode.probe, request: r.decode.request,
+                limits: r.decode.limits
             )
             let png = try pngData(from: image.cgImage)
             guard !png.isEmpty else { throw LabError.outputMismatch }
@@ -457,7 +466,6 @@ struct DerivedRasterBenchmarkOperations {
         return DispatchTime.now().uptimeNanoseconds &- started
     }
 }
-
 
 @main
 private enum FoveaDerivedRasterLab {

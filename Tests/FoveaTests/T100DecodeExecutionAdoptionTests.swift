@@ -1,10 +1,12 @@
 import Foundation
-@testable import FoveaCore
 import ImageCraftCore
 import XCTest
 
+@testable import FoveaCore
+
 final class T100DecodeExecutionAdoptionTests: XCTestCase {
-    func testProgressivePermitRoutingQueuesBehindGlobalWithoutBypassingLocalAndReleasesOnThrow_T100_AUTH_PT_006()
+    func
+        testProgressivePermitRoutingQueuesBehindGlobalWithoutBypassingLocalAndReleasesOnThrow_T100_AUTH_PT_006()
         async throws
     {
         let localDecode = AsyncPermitPool(limit: 2, queueLimit: 8)
@@ -43,7 +45,7 @@ final class T100DecodeExecutionAdoptionTests: XCTestCase {
             }
         }
 
-        try await waitUntil_T100_AUTH {
+        try await waitUntilT100Auth {
             let localUsedUnits = await localDecode.usedUnits
             let globalQueuedCount = await globalDecode.queuedCount()
             return localUsedUnits == 2 && globalQueuedCount == 2
@@ -63,12 +65,13 @@ final class T100DecodeExecutionAdoptionTests: XCTestCase {
         XCTAssertEqual(finalGlobalUsedUnits, 0)
 
         do {
-            _ = try await controller.withProgressiveDecodePermits(
-                priority: .normal,
-                workEstimate: 1
-            ) {
-                throw T100DecodeExecutionTestError.expected
-            } as Int
+            _ =
+                try await controller.withProgressiveDecodePermits(
+                    priority: .normal,
+                    workEstimate: 1
+                ) {
+                    throw T100DecodeExecutionTestError.expected
+                } as Int
             XCTFail("throwing operation must propagate")
         } catch T100DecodeExecutionTestError.expected {
             // Expected.
@@ -89,7 +92,7 @@ final class T100DecodeExecutionAdoptionTests: XCTestCase {
                 return 3
             }
         }
-        try await waitUntil_T100_AUTH {
+        try await waitUntilT100Auth {
             let localUsedUnits = await localDecode.usedUnits
             let globalQueuedCount = await globalDecode.queuedCount()
             return localUsedUnits == 1 && globalQueuedCount == 1
@@ -159,14 +162,15 @@ final class T100DecodeExecutionAdoptionTests: XCTestCase {
         )
 
         do {
-            _ = try await controller.withRasterPermits(
-                bytes: 11,
-                request: request,
-                keyDigest: request.fetchBaseKey.digestHex,
-                priorityControl: priorityControl
-            ) {
-                throw T100DecodeExecutionTestError.expected
-            } as Int
+            _ =
+                try await controller.withRasterPermits(
+                    bytes: 11,
+                    request: request,
+                    keyDigest: request.fetchBaseKey.digestHex,
+                    priorityControl: priorityControl
+                ) {
+                    throw T100DecodeExecutionTestError.expected
+                } as Int
             XCTFail("throwing operation must propagate")
         } catch T100DecodeExecutionTestError.expected {
             // Expected.
@@ -189,7 +193,7 @@ private actor T100ProgressiveOperationProbe {
     }
 }
 
-private func waitUntil_T100_AUTH(
+private func waitUntilT100Auth(
     timeoutNanoseconds: UInt64 = 1_000_000_000,
     condition: @escaping () async -> Bool
 ) async throws {

@@ -73,7 +73,8 @@ final class T100ResourceSpineAdoptionTests: XCTestCase {
         XCTAssertEqual(snapshot.preparationEncodedBytes, 0)
     }
 
-    func testProgressivePermitRoutingHoldsLocalWhileQueuedGlobalAndReleasesOnThrow_T100_AUTH_PT_013()
+    func
+        testProgressivePermitRoutingHoldsLocalWhileQueuedGlobalAndReleasesOnThrow_T100_AUTH_PT_013()
         async throws
     {
         let localDecode = AsyncPermitPool(limit: 2, queueLimit: 8)
@@ -122,9 +123,12 @@ final class T100ResourceSpineAdoptionTests: XCTestCase {
         XCTAssertEqual(finalGlobalUsed, 0)
 
         do {
-            _ = try await controller.withProgressiveDecodePermits(priority: .normal, workEstimate: 1) {
-                throw T100SpineError.expected
-            } as Int
+            _ =
+                try await controller.withProgressiveDecodePermits(
+                    priority: .normal, workEstimate: 1
+                ) {
+                    throw T100SpineError.expected
+                } as Int
             XCTFail("throwing operation must propagate")
         } catch T100SpineError.expected {
         }
@@ -166,14 +170,15 @@ final class T100ResourceSpineAdoptionTests: XCTestCase {
         XCTAssertGreaterThan(snapshot.localDecodeLeaseNanoseconds, 0)
 
         do {
-            _ = try await controller.withRasterPermits(
-                bytes: 11,
-                request: request,
-                keyDigest: request.fetchBaseKey.digestHex,
-                priorityControl: priorityControl
-            ) {
-                throw T100SpineError.expected
-            } as Int
+            _ =
+                try await controller.withRasterPermits(
+                    bytes: 11,
+                    request: request,
+                    keyDigest: request.fetchBaseKey.digestHex,
+                    priorityControl: priorityControl
+                ) {
+                    throw T100SpineError.expected
+                } as Int
             XCTFail("throwing raster operation must propagate")
         } catch T100SpineError.expected {
         }

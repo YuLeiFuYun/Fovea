@@ -99,11 +99,11 @@ enum DerivedRasterContainerCodec {
     private static let lzfseV1HeaderByteCount = 772
     private static let lzfseV2FixedHeaderByteCount = 32
     private static let lzfseV2MaximumHeaderByteCount = 752
-    private static let lzfseEndOfStreamBlockMagic: UInt32 = 0x2478_7662 // bvx$
-    private static let lzfseUncompressedBlockMagic: UInt32 = 0x2d78_7662 // bvx-
-    private static let lzfseCompressedV1BlockMagic: UInt32 = 0x3178_7662 // bvx1
-    private static let lzfseCompressedV2BlockMagic: UInt32 = 0x3278_7662 // bvx2
-    private static let lzfseCompressedLZVNBlockMagic: UInt32 = 0x6e78_7662 // bvxn
+    private static let lzfseEndOfStreamBlockMagic: UInt32 = 0x2478_7662  // bvx$
+    private static let lzfseUncompressedBlockMagic: UInt32 = 0x2d78_7662  // bvx-
+    private static let lzfseCompressedV1BlockMagic: UInt32 = 0x3178_7662  // bvx1
+    private static let lzfseCompressedV2BlockMagic: UInt32 = 0x3278_7662  // bvx2
+    private static let lzfseCompressedLZVNBlockMagic: UInt32 = 0x6e78_7662  // bvxn
     static func validateLZFSEFrame(
         in data: UnsafeRawBufferPointer,
         range: Range<Int>,

@@ -26,7 +26,10 @@ package final class FoveaSystemOrderedEventExecutor<Event: Sendable>: @unchecked
         operation: @escaping @Sendable (Event) async -> Void
     ) {
         lock.lock()
-        guard !isClosed else { lock.unlock(); return }
+        guard !isClosed else {
+            lock.unlock()
+            return
+        }
         let previous = tail
         let next = Task { [previous] in
             if let previous { await previous.value }
@@ -223,13 +226,21 @@ package final class FoveaLifecycleNotificationMonitor: @unchecked Sendable {
         self.eventExecutor = eventExecutor
         #if canImport(UIKit)
             tokens = [
-                Self.observe(UIApplication.didEnterBackgroundNotification, active: false, animationRuntime: animationRuntime, eventExecutor: eventExecutor),
-                Self.observe(UIApplication.didBecomeActiveNotification, active: true, animationRuntime: animationRuntime, eventExecutor: eventExecutor),
+                Self.observe(
+                    UIApplication.didEnterBackgroundNotification, active: false,
+                    animationRuntime: animationRuntime, eventExecutor: eventExecutor),
+                Self.observe(
+                    UIApplication.didBecomeActiveNotification, active: true,
+                    animationRuntime: animationRuntime, eventExecutor: eventExecutor),
             ]
         #elseif canImport(AppKit)
             tokens = [
-                Self.observe(NSApplication.didResignActiveNotification, active: false, animationRuntime: animationRuntime, eventExecutor: eventExecutor),
-                Self.observe(NSApplication.didBecomeActiveNotification, active: true, animationRuntime: animationRuntime, eventExecutor: eventExecutor),
+                Self.observe(
+                    NSApplication.didResignActiveNotification, active: false,
+                    animationRuntime: animationRuntime, eventExecutor: eventExecutor),
+                Self.observe(
+                    NSApplication.didBecomeActiveNotification, active: true,
+                    animationRuntime: animationRuntime, eventExecutor: eventExecutor),
             ]
         #else
             tokens = []
@@ -247,7 +258,8 @@ package final class FoveaLifecycleNotificationMonitor: @unchecked Sendable {
         animationRuntime: AnimationPlaybackRuntime,
         eventExecutor: FoveaSystemOrderedEventExecutor<Bool>
     ) -> NSObjectProtocol {
-        NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { [weak animationRuntime] _ in
+        NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) {
+            [weak animationRuntime] _ in
             eventExecutor.submit(active) { [weak animationRuntime] active in
                 _ = await animationRuntime?.setApplicationActive(active)
             }

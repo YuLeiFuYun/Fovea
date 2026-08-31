@@ -22,9 +22,10 @@ package final class DerivedRasterRuntime: Sendable {
     private let creationCoordinator: DerivedRasterCreationCoordinator
     private let creationPermits: AsyncPermitPool
     private let reuseObservations = DerivedRasterReuseObservationTracker()
-    private let hotArtifacts: FoveaCompactSieveCache<
-        DerivedRasterArtifactKey, DerivedRasterCompressedSurface
-    >
+    private let hotArtifacts:
+        FoveaCompactSieveCache<
+            DerivedRasterArtifactKey, DerivedRasterCompressedSurface
+        >
     private let creationExecutor = DispatchWorkExecutor(
         label: "dev.fovea.derived-raster.creation",
         qos: .utility,
@@ -260,8 +261,6 @@ package final class DerivedRasterRuntime: Sendable {
         )
     }
 
-
-
     private func requireAdmission(
         candidate: DerivedRasterEncodedCandidate,
         key: DerivedRasterArtifactKey,
@@ -433,7 +432,6 @@ package final class DerivedRasterRuntime: Sendable {
         default: preconditionFailure("Non-budget rejection reached budgetReason")
         }
     }
-
 
     private static func scaledByteBudget(_ bytes: Int, permille: Int) -> Int {
         let product = bytes.multipliedReportingOverflow(by: permille)

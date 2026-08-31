@@ -1,7 +1,8 @@
 import CryptoKit
 import Foundation
-@_spi(FoveaBenchmarking) @testable import FoveaHTTP
 import XCTest
+
+@_spi(FoveaBenchmarking) @testable import FoveaHTTP
 
 final class T100HTTPTypesAdoptionTests: XCTestCase {
     func testHTTPHexHelperMatchesIndependentReferenceForEveryByte_HTTP_TYPES_PT_001() {
@@ -29,7 +30,10 @@ final class T100HTTPTypesAdoptionTests: XCTestCase {
         )
     }
 
-    func testReassembledResponseRehashesWholeBodyAndPreservesNetworkByteAccounting_HTTP_TYPES_PT_003() throws {
+    func
+        testReassembledResponseRehashesWholeBodyAndPreservesNetworkByteAccounting_HTTP_TYPES_PT_003()
+        throws
+    {
         let head = try TransportResponseHead(statusCode: 206, headers: [:], url: nil)
         let body = Data([0, 1, 2, 3, 254, 255])
         let expectedDigest = SHA256.hash(data: body)
@@ -90,7 +94,8 @@ private struct ProgressOnlyTransportFixture: TransportProgressOnlyExecuting {
     let reusePolicy = TransportReusePolicy.taskLocal
 
     func execute(_ request: TransportRequest) async throws -> TransportResponse {
-        let head = try TransportResponseHead(statusCode: 200, headers: [:], url: request.request.url)
+        let head = try TransportResponseHead(
+            statusCode: 200, headers: [:], url: request.request.url)
         return TransportResponse(
             head: head,
             body: Data(),
@@ -98,8 +103,11 @@ private struct ProgressOnlyTransportFixture: TransportProgressOnlyExecuting {
         )
     }
 
-    func executeProgressOnly(_ request: TransportRequest) async throws -> TransportProgressCompletion {
-        let head = try TransportResponseHead(statusCode: 200, headers: [:], url: request.request.url)
+    func executeProgressOnly(_ request: TransportRequest) async throws
+        -> TransportProgressCompletion
+    {
+        let head = try TransportResponseHead(
+            statusCode: 200, headers: [:], url: request.request.url)
         return TransportProgressCompletion(
             head: head,
             digestHex: "fixture-digest",
