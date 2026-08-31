@@ -79,11 +79,15 @@ if "-collect-test-diagnostics never" not in verify_script:
     errors.append(
         "iOS package verification must disable Xcode sysdiagnose collection and rely on bounded logs"
     )
-if "-only-testing:FoveaTests" not in verify_script:
-    errors.append(
-        "iOS package verification must limit the synthesized package scheme to FoveaTests"
-    )
 
+mac_lab_main = (ROOT / "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift").read_text()
+mac_lab_support = (ROOT / "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabSupport.swift").read_text()
+if not mac_lab_main.startswith("#if os(macOS)\n") or "FoveaAnimationMacLabUnsupported" not in mac_lab_main:
+    errors.append(
+        "FoveaAnimationMacLab main must keep its AppKit implementation macOS-only with an explicit unsupported-platform entry point"
+    )
+if not mac_lab_support.startswith("#if os(macOS)\n") or not mac_lab_support.rstrip().endswith("#endif"):
+    errors.append("FoveaAnimationMacLab support must remain guarded to macOS")
 try:
     comparative_runner_path = ROOT / "scripts/run-comparative-simulator-lab.py"
     comparative_spec = importlib.util.spec_from_file_location(
