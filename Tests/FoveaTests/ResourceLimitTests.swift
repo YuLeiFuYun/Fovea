@@ -301,7 +301,7 @@ final class ResourceLimitTests: XCTestCase {
             codec: DelayedDecoder(delay: 0.08)
         )
 
-        let started = ContinuousClock.now
+        let started = testUptimeNanoseconds()
         try await withThrowingTaskGroup(of: Void.self) { group in
             for index in 0..<3 {
                 group.addTask {
@@ -315,8 +315,113 @@ final class ResourceLimitTests: XCTestCase {
             }
             try await group.waitForAll()
         }
-        let elapsed = started.duration(to: .now)
-        XCTAssertGreaterThanOrEqual(elapsed, .milliseconds(210))
+        let elapsed = testUptimeNanoseconds() &- started
+        XCTAssertGreaterThanOrEqual(elapsed, TestDuration.milliseconds(210).nanoseconds)
+    }
+
+    func testProgressiveAppendObeysLocalDecodeConcurrency_RES_PT_022() async throws {
+        let codec = BlockingProgressiveCodec(delay: 0.05)
+        let stage = DecodeStage(
+            codec: codec,
+            limits: .coreV1,
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 1,
+            maximumDecodeWorkingSetBytes: 8 * 1024 * 1024,
+            maximumQueuedDecodes: 8
+        )
+        let firstRequest = try progressiveRequest("local-a")
+        let secondRequest = try progressiveRequest("local-b")
+        let firstSession = try XCTUnwrap(
+            stage.makeProgressiveSession(for: firstRequest, format: .jpeg)
+        )
+        let secondSession = try XCTUnwrap(
+            stage.makeProgressiveSession(for: secondRequest, format: .jpeg)
+        )
+
+        async let first = stage.appendProgressive(
+            Data([0x01]), to: firstSession, for: firstRequest
+        )
+        async let second = stage.appendProgressive(
+            Data([0x02]), to: secondSession, for: secondRequest
+        )
+        _ = try await (first, second)
+
+        XCTAssertEqual(codec.peakConcurrentOperations, 1)
+    }
+
+    func testProgressiveFinishObeysLocalDecodeConcurrency_RES_PT_024() async throws {
+        let codec = BlockingProgressiveCodec(delay: 0.05)
+        let stage = DecodeStage(
+            codec: codec,
+            limits: .coreV1,
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 1,
+            maximumDecodeWorkingSetBytes: 8 * 1024 * 1024,
+            maximumQueuedDecodes: 8
+        )
+        let firstRequest = try progressiveRequest("finish-a")
+        let secondRequest = try progressiveRequest("finish-b")
+        let firstSession = try XCTUnwrap(
+            stage.makeProgressiveSession(for: firstRequest, format: .jpeg)
+        )
+        let secondSession = try XCTUnwrap(
+            stage.makeProgressiveSession(for: secondRequest, format: .jpeg)
+        )
+
+        async let first: Void = stage.finishProgressive(firstSession, for: firstRequest)
+        async let second: Void = stage.finishProgressive(secondSession, for: secondRequest)
+        _ = try await (first, second)
+
+        XCTAssertEqual(codec.peakConcurrentOperations, 1)
+    }
+
+    func testProgressiveAppendObeysSharedGlobalDecodeConcurrency_RES_PT_023() async throws {
+        let codec = BlockingProgressiveCodec(delay: 0.05)
+        let globalDecodePermits = AsyncPermitPool(limit: 1, queueLimit: 8)
+        let firstStage = DecodeStage(
+            codec: codec,
+            limits: .coreV1,
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 2,
+            maximumDecodeWorkingSetBytes: 8 * 1024 * 1024,
+            maximumQueuedDecodes: 8,
+            globalDecodePermits: globalDecodePermits
+        )
+        let secondStage = DecodeStage(
+            codec: codec,
+            limits: .coreV1,
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 2,
+            maximumDecodeWorkingSetBytes: 8 * 1024 * 1024,
+            maximumQueuedDecodes: 8,
+            globalDecodePermits: globalDecodePermits
+        )
+        let firstRequest = try progressiveRequest("global-a")
+        let secondRequest = try progressiveRequest("global-b")
+        let firstSession = try XCTUnwrap(
+            firstStage.makeProgressiveSession(for: firstRequest, format: .jpeg)
+        )
+        let secondSession = try XCTUnwrap(
+            secondStage.makeProgressiveSession(for: secondRequest, format: .jpeg)
+        )
+
+        async let first = firstStage.appendProgressive(
+            Data([0x01]), to: firstSession, for: firstRequest
+        )
+        async let second = secondStage.appendProgressive(
+            Data([0x02]), to: secondSession, for: secondRequest
+        )
+        _ = try await (first, second)
+
+        XCTAssertEqual(codec.peakConcurrentOperations, 1)
+    }
+
+    private func progressiveRequest(_ suffix: String) throws -> ImageRequest {
+        try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/progressive-\(suffix).jpg")),
+            target: TargetPixels(width: 64, height: 64),
+            appID: "progressive-resource-limit-tests"
+        )
     }
 
     func testWorkingSetWaiterDoesNotHoldDecodeCountPermit_RES_PT_014() async throws {
@@ -458,12 +563,12 @@ private final class TrackingTransport: HTTPTransporting, Sendable {
 
     private let tracker = ConcurrencyTracker()
     private let body: Data
-    private let delay: Duration
+    private let delay: TestDuration
     private let headers: [String: String]
 
     init(
         body: Data,
-        delay: Duration,
+        delay: TestDuration,
         headers: [String: String] = [
             "Content-Type": "image/png",
             "Cache-Control": "no-store",
@@ -477,7 +582,7 @@ private final class TrackingTransport: HTTPTransporting, Sendable {
     func execute(_ request: TransportRequest) async throws -> TransportResponse {
         await tracker.begin()
         do {
-            try await Task.sleep(for: delay)
+            try await testSleep(delay)
             try Task.checkCancellation()
             await tracker.end()
         } catch {
@@ -620,6 +725,109 @@ private struct OverBudgetDecoder: TestImageCodec {
         limits: DecodeLimits
     ) throws -> DecodedImage {
         throw ImageCraftError.decodeFailed
+    }
+}
+
+private final class BlockingProgressiveCodec:
+    ImageCodec, ProgressiveImageDecoding, @unchecked Sendable
+{
+    let codecDescriptor = ImageCodecDescriptor(
+        identifier: ImageCodecIdentifier(rawValue: "test.blocking-progressive-resource-limit"),
+        implementationVersion: 1,
+        capabilities: ImageCodecCapabilities(
+            formats: [.jpeg],
+            deliveryModes: [.completeFrame, .progressiveGenerations],
+            progressiveFormats: [.jpeg],
+            trackModes: [.primaryFrame],
+            metadata: [.orientation, .sourceColorProfile],
+            dynamicRanges: [.standard],
+            outputRepresentations: [.coreGraphicsImage],
+            cancellationMode: .operationBoundary
+        )
+    )
+
+    private let lock = NSLock()
+    private let delay: TimeInterval
+    private var activeOperations = 0
+    private var peakOperations = 0
+
+    init(delay: TimeInterval) {
+        self.delay = delay
+    }
+
+    var peakConcurrentOperations: Int {
+        lock.withLock { peakOperations }
+    }
+
+    func probe(data _: Data, limits _: DecodeLimits) throws -> ImageProbe {
+        try ImageProbe(
+            pixelWidth: 64,
+            pixelHeight: 64,
+            frameCount: 1,
+            format: .jpeg,
+            sourceColorProfile: .standardSRGB
+        )
+    }
+
+    func decode(
+        data _: Data,
+        probe _: ImageProbe,
+        request _: ImageDecodeRequest,
+        limits _: DecodeLimits
+    ) throws -> DecodedImage {
+        throw ImageCraftError.decodeFailed
+    }
+
+    func makeProgressiveSession(
+        format: EncodedImageFormat,
+        request _: ImageDecodeRequest,
+        limits _: DecodeLimits
+    ) throws -> any ImageProgressiveDecodeSession {
+        guard format == .jpeg else { throw ImageCraftError.progressiveDecodingUnsupported }
+        return Session(codec: self)
+    }
+
+    fileprivate func performBlockingOperation() {
+        lock.withLock {
+            activeOperations += 1
+            peakOperations = max(peakOperations, activeOperations)
+        }
+        Thread.sleep(forTimeInterval: delay)
+        lock.withLock { activeOperations -= 1 }
+    }
+
+    private final class Session: ImageProgressiveDecodeSession, @unchecked Sendable {
+        private let lock = NSLock()
+        private let codec: BlockingProgressiveCodec
+        private var byteCount = 0
+        private var isClosed = false
+
+        init(codec: BlockingProgressiveCodec) {
+            self.codec = codec
+        }
+
+        var receivedByteCount: Int { lock.withLock { byteCount } }
+
+        func append(_ chunk: Data) throws -> ImageProgressiveDecodeGeneration? {
+            try lock.withLock {
+                guard !isClosed else { throw ImageCraftError.progressiveSessionFinished }
+                byteCount += chunk.count
+            }
+            codec.performBlockingOperation()
+            return nil
+        }
+
+        func finish() throws {
+            try lock.withLock {
+                guard !isClosed else { throw ImageCraftError.progressiveSessionFinished }
+                isClosed = true
+            }
+            codec.performBlockingOperation()
+        }
+
+        func cancel() {
+            lock.withLock { isClosed = true }
+        }
     }
 }
 

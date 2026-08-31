@@ -20,6 +20,18 @@ struct RenderedRequestAlias: Sendable {
     let representation: RepresentationRecord
 }
 
+struct RenderedMemoryBenchmarkLookup: Sendable {
+    let image: DecodedImage?
+    let aliasAuthorizationNanoseconds: UInt64
+    let aliasIndexLookupNanoseconds: UInt64
+    let representationAuthorizationNanoseconds: UInt64
+    let varySelectionNanoseconds: UInt64
+    let fixedIdentityAuthorizationNanoseconds: UInt64
+    let renderedImageLookupNanoseconds: UInt64
+    let freshnessClockNanoseconds: UInt64
+    let freshnessEvaluationNanoseconds: UInt64
+}
+
 extension PipelineCache {
     func renderedImage(for key: ScopedRenderKey) async -> DecodedImage? {
         memory.image(for: key.renderedImageCacheKey)
@@ -43,11 +55,13 @@ extension PipelineCache {
             additionalSensitiveNames: request.credentialHeaderNames,
             sensitiveFingerprints: request.headerVariantFingerprints
         )
-        guard representation.isValidPersistentRecord(),
+        // `insertRenderedAlias` 是唯一插入点，发布前已验证不可变持久记录。
+        // 命中仍需重新验证当前请求、namespace、generation、Vary 与新鲜度授权。
+        guard
             representation.securityNamespaceFingerprint
-                == StorageNamespaceFingerprint(namespace: request.namespace.value),
+                == request.storageNamespaceFingerprint,
             representation.namespaceGeneration == generation.value,
-            representation.baseKeyDigest == request.fetchBaseKey.digestHex,
+            representation.baseKeyDigest == request.fetchBaseDigest,
             representation.disposition != .noStore,
             selected?.variantKeyDigest == representation.variantKeyDigest,
             let image = memory.image(for: alias.renderKey.renderedImageCacheKey)
@@ -61,6 +75,188 @@ extension PipelineCache {
             return nil
         }
         return image
+    }
+
+    func renderedImageForBenchmarking(
+        for request: ImageRequest,
+        generation: NamespaceGeneration,
+        currentDate: @Sendable () async -> Date
+    ) async -> RenderedMemoryBenchmarkLookup {
+        let authorizationStarted = DispatchTime.now().uptimeNanoseconds
+        let aliasKey = ScopedRenderedRequestAliasKey(
+            namespace: request.namespace,
+            generation: generation,
+            requestIdentity: request.renderAliasIdentity
+        )
+        let aliasLookupStarted = DispatchTime.now().uptimeNanoseconds
+        guard let alias = renderedAliases.value(for: aliasKey) else {
+            let finished = DispatchTime.now().uptimeNanoseconds
+            return benchmarkResult(
+                image: nil,
+                authorization: finished &- authorizationStarted,
+                aliasLookup: finished &- aliasLookupStarted
+            )
+        }
+        let aliasLookupFinished = DispatchTime.now().uptimeNanoseconds
+        return await benchmarkRenderedAlias(
+            alias,
+            aliasKey: aliasKey,
+            request: request,
+            generation: generation,
+            currentDate: currentDate,
+            authorizationStarted: authorizationStarted,
+            aliasLookupStarted: aliasLookupStarted,
+            aliasLookupFinished: aliasLookupFinished
+        )
+    }
+
+    private func benchmarkRenderedAlias(
+        _ alias: RenderedRequestAlias,
+        aliasKey: ScopedRenderedRequestAliasKey,
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        currentDate: @Sendable () async -> Date,
+        authorizationStarted: UInt64,
+        aliasLookupStarted: UInt64,
+        aliasLookupFinished: UInt64
+    ) async -> RenderedMemoryBenchmarkLookup {
+        let representationStarted = aliasLookupFinished
+        let representation = alias.representation
+        let varyStarted = DispatchTime.now().uptimeNanoseconds
+        let selected = HTTPCachePolicy.selectRecord(
+            from: [representation],
+            requestHeaders: request.headers,
+            additionalSensitiveNames: request.credentialHeaderNames,
+            sensitiveFingerprints: request.headerVariantFingerprints
+        )
+        let varyFinished = DispatchTime.now().uptimeNanoseconds
+        let fixedIdentityStarted = varyFinished
+        // `insertRenderedAlias` 是唯一插入点，发布前已验证不可变持久记录。
+        // 命中仍需重新验证当前请求、namespace、generation、Vary 与新鲜度授权。
+        guard
+            representation.securityNamespaceFingerprint
+                == request.storageNamespaceFingerprint,
+            representation.namespaceGeneration == generation.value,
+            representation.baseKeyDigest == request.fetchBaseDigest,
+            representation.disposition != .noStore,
+            selected?.variantKeyDigest == representation.variantKeyDigest
+        else {
+            renderedAliases.remove(aliasKey)
+            let finished = DispatchTime.now().uptimeNanoseconds
+            return benchmarkResult(
+                image: nil,
+                authorization: finished &- authorizationStarted,
+                aliasLookup: aliasLookupFinished &- aliasLookupStarted,
+                representationAuthorization: finished &- representationStarted,
+                varySelection: varyFinished &- varyStarted,
+                fixedIdentityAuthorization: finished &- fixedIdentityStarted
+            )
+        }
+        let representationFinished = DispatchTime.now().uptimeNanoseconds
+        let imageLookupStarted = representationFinished
+        guard let image = memory.image(for: alias.renderKey.renderedImageCacheKey) else {
+            renderedAliases.remove(aliasKey)
+            let finished = DispatchTime.now().uptimeNanoseconds
+            return benchmarkResult(
+                image: nil,
+                authorization: finished &- authorizationStarted,
+                aliasLookup: aliasLookupFinished &- aliasLookupStarted,
+                representationAuthorization: representationFinished &- representationStarted,
+                varySelection: varyFinished &- varyStarted,
+                fixedIdentityAuthorization: representationFinished &- fixedIdentityStarted,
+                imageLookup: finished &- imageLookupStarted
+            )
+        }
+        let imageLookupFinished = DispatchTime.now().uptimeNanoseconds
+        return await benchmarkFreshness(
+            image: image,
+            representation: representation,
+            aliasKey: aliasKey,
+            currentDate: currentDate,
+            authorizationStarted: authorizationStarted,
+            aliasLookupStarted: aliasLookupStarted,
+            aliasLookupFinished: aliasLookupFinished,
+            representationStarted: representationStarted,
+            representationFinished: representationFinished,
+            varyStarted: varyStarted,
+            varyFinished: varyFinished,
+            fixedIdentityStarted: fixedIdentityStarted,
+            imageLookupStarted: imageLookupStarted,
+            imageLookupFinished: imageLookupFinished
+        )
+    }
+
+    private func benchmarkFreshness(
+        image: DecodedImage,
+        representation: RepresentationRecord,
+        aliasKey: ScopedRenderedRequestAliasKey,
+        currentDate: @Sendable () async -> Date,
+        authorizationStarted: UInt64,
+        aliasLookupStarted: UInt64,
+        aliasLookupFinished: UInt64,
+        representationStarted: UInt64,
+        representationFinished: UInt64,
+        varyStarted: UInt64,
+        varyFinished: UInt64,
+        fixedIdentityStarted: UInt64,
+        imageLookupStarted: UInt64,
+        imageLookupFinished: UInt64
+    ) async -> RenderedMemoryBenchmarkLookup {
+        let clockStarted = imageLookupFinished
+        let date = await currentDate()
+        let clockFinished = DispatchTime.now().uptimeNanoseconds
+        let freshnessStarted = clockFinished
+        let isFresh = representation.isFresh(at: date)
+        let freshnessFinished = DispatchTime.now().uptimeNanoseconds
+        guard isFresh else {
+            renderedAliases.remove(aliasKey)
+            return benchmarkResult(
+                image: nil,
+                authorization: imageLookupFinished &- authorizationStarted,
+                aliasLookup: aliasLookupFinished &- aliasLookupStarted,
+                representationAuthorization: representationFinished &- representationStarted,
+                varySelection: varyFinished &- varyStarted,
+                fixedIdentityAuthorization: representationFinished &- fixedIdentityStarted,
+                imageLookup: imageLookupFinished &- imageLookupStarted,
+                freshnessClock: clockFinished &- clockStarted,
+                freshnessEvaluation: freshnessFinished &- freshnessStarted
+            )
+        }
+        return benchmarkResult(
+            image: image,
+            authorization: imageLookupFinished &- authorizationStarted,
+            aliasLookup: aliasLookupFinished &- aliasLookupStarted,
+            representationAuthorization: representationFinished &- representationStarted,
+            varySelection: varyFinished &- varyStarted,
+            fixedIdentityAuthorization: representationFinished &- fixedIdentityStarted,
+            imageLookup: imageLookupFinished &- imageLookupStarted,
+            freshnessClock: clockFinished &- clockStarted,
+            freshnessEvaluation: freshnessFinished &- freshnessStarted
+        )
+    }
+
+    private func benchmarkResult(
+        image: DecodedImage?,
+        authorization: UInt64,
+        aliasLookup: UInt64,
+        representationAuthorization: UInt64 = 0,
+        varySelection: UInt64 = 0,
+        fixedIdentityAuthorization: UInt64 = 0,
+        imageLookup: UInt64 = 0,
+        freshnessClock: UInt64 = 0,
+        freshnessEvaluation: UInt64 = 0
+    ) -> RenderedMemoryBenchmarkLookup {
+        RenderedMemoryBenchmarkLookup(
+            image: image,
+            aliasAuthorizationNanoseconds: authorization,
+            aliasIndexLookupNanoseconds: aliasLookup,
+            representationAuthorizationNanoseconds: representationAuthorization,
+            varySelectionNanoseconds: varySelection,
+            fixedIdentityAuthorizationNanoseconds: fixedIdentityAuthorization,
+            renderedImageLookupNanoseconds: imageLookup,
+            freshnessClockNanoseconds: freshnessClock,
+            freshnessEvaluationNanoseconds: freshnessEvaluation
+        )
     }
 
     func insertRendered(_ image: DecodedImage, for key: ScopedRenderKey) async {
@@ -80,9 +276,9 @@ extension PipelineCache {
         guard representation.disposition != .noStore,
             representation.isValidPersistentRecord(),
             representation.securityNamespaceFingerprint
-                == StorageNamespaceFingerprint(namespace: request.namespace.value),
+                == request.storageNamespaceFingerprint,
             representation.namespaceGeneration == generation.value,
-            representation.baseKeyDigest == request.fetchBaseKey.digestHex
+            representation.baseKeyDigest == request.fetchBaseDigest
         else { return }
 
         try await requireActive(generation, for: request.namespace)
@@ -104,6 +300,26 @@ extension PipelineCache {
 
     func removeRendered(_ key: ScopedRenderKey) async {
         memory.remove(key.renderedImageCacheKey)
+    }
+
+    /// Memory-warning reclaim keeps only proven rendered hot state when the configured cache
+    /// explicitly supports Fovea's tiered refinement. Aliases are retained on that path: an alias
+    /// for an evicted probation entry is self-invalidating because the next lookup observes the
+    /// rendered-memory miss and removes it, while aliases for retained main entries preserve the
+    /// warm-hit path. Third-party caches fall back to the historical full purge.
+    func reclaimRenderedForWarning() async -> RenderedImageCacheRemovalSummary {
+        let rendered: RenderedImageCacheRemovalSummary
+        if let tiered = memory as? any TieredRenderedImageReclaiming {
+            rendered = tiered.reclaimLowValueAndReport()
+        } else {
+            renderedAliases.removeAll()
+            rendered = memory.removeAllAndReport()
+        }
+        let handoffs = await transportVerifiedHandoffs.removeAllAndReport()
+        return RenderedImageCacheRemovalSummary(
+            itemCount: rendered.itemCount + handoffs.itemCount,
+            costBytes: rendered.costBytes + handoffs.costBytes
+        )
     }
 
     func purgeRendered() async -> RenderedImageCacheRemovalSummary {

@@ -184,4 +184,4 @@ manifest 仍是单 JSON 文件并在变更时全量原子重写，因此当前�
 - transport staging 是每个 transport 独占目录，活跃状态同时由进程内 registry 与跨进程 owner lock 保护；崩溃失主目录在下一次租约取得时清理；
 - `RefreshingImageLoader<Base>` 只有在 `Base: NamespaceRevoking` 时才获得统一 revoke 能力；当 `Base: ProgressiveImageLoading` 时也保留 progressive 事件能力并复用同一 401 refresh/replay 契约；
 - Fetch、Decode 与 Transform 均按各自稳定身份 single-flight；相同 `ScopedRenderKey` 的并发 transform 只执行一次，namespace revoke 会取消对应变换且禁止迟到内存发布；
-- current critical mutation catalog 为 101 项；最终证据仍必须绑定当前 workspace tree，旧 tree 的 81/81 报告不得复用。
+- current critical mutation catalog 为 102 项；最终证据仍必须绑定当前 workspace tree，旧 tree 的 mutation 报告不得复用。

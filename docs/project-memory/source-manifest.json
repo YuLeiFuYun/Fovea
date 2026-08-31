@@ -98,6 +98,14 @@
       "retention": "official-public-announcement-normalized-machine-readable-evidence",
       "role": "authoritative availability and provenance boundary for explicit xcode-27 hosted CI selection",
       "sha256": "714729ebf31681141dc1329bf56266bf31ec785565e0ac0eedd9b36a4bb5ffc0"
+    },
+    {
+      "byteCount": 876,
+      "id": "SRC-DISCUSSION-INTEGRATED-PARETO-AND-EVIDENCE-ROUTING-2026-08-10",
+      "originalName": "2026-08-10 user instruction: integrated Fovea ImageCraft Akashic Pareto target and overloaded-host evidence routing",
+      "retention": "conversation-source-digest-and-normalized-decisions",
+      "role": "accepted instruction to evolve Fovea ImageCraft and Akashic as one system, pursue large advantages on comparable metrics, use research and upstream source, treat load-constrained host measurements as directional only, prefer physical-device evidence when available, and remove superseded production implementations without erasing required historical evidence",
+      "sha256": "22f270dc7d1d73be15f0299696cbe0f4894ad5d2d16ea49eca8ee08f4af7cd9c"
     }
   ]
 }

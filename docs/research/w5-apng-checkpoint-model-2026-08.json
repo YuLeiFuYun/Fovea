@@ -1,0 +1,521 @@
+{
+  "claimBoundary": {
+    "formalClaimEligible": false,
+    "reasons": [
+      "This is an analytical byte/replay model, not a runtime implementation or physical-memory measurement.",
+      "Synthetic source sizes and access distributions are preregistered scenario inputs rather than observed production distributions.",
+      "Allocator fragmentation, framework-private state, decode latency, CPU, energy, thermal behavior and physical-device memory pressure are excluded.",
+      "ImageCraft animation source remains dirty and unpublished and Fovea does not consume it as a production dependency revision."
+    ]
+  },
+  "date": "2026-08-06",
+  "evidence": {
+    "captureManifest": ".artifacts/performance/w5-apng-checkpoint-model-v1/capture-manifest.json",
+    "captureManifestSHA256": "8ac67a02c8ed00f8a2650ee48323c3df2b1a394070d479058d72767fa9d4569f",
+    "captureRunner": "Tools/Performance/capture_w5_apng_checkpoint_model.py",
+    "model": "Tools/Performance/w5_apng_checkpoint_model.py",
+    "modelTests": "Tools/Performance/test_w5_apng_checkpoint_model.py",
+    "plan": "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+    "report": ".artifacts/performance/w5-apng-checkpoint-model-v1/report.json",
+    "reportSHA256": "1d2c9169954e844560449f8aaaa743693db011b37f2f67502656e2697ec75b24",
+    "sourceIdentity": ".artifacts/performance/w5-apng-checkpoint-model-v1/source-identity.json",
+    "sourceIdentitySHA256": "cfb610d84f363c03f99d281e64f400d639d084b6114359a42c6f41bdae0394e1",
+    "tamperContract": "Tools/Performance/test_w5_apng_checkpoint_capture.py",
+    "validator": "Tools/Performance/validate_w5_apng_checkpoint_model.py"
+  },
+  "interpretation": [
+    "Only two of twenty-eight reference-policy cases are feasible; they are uniform and tail-hot access for the same SUBRECT-NONE-1024-60 encoded-source-retained combination.",
+    "No synthetic scenario is feasible at the 32 MiB / 8-frame point under both retention strategies, so the reference point has no fully feasible scenario.",
+    "The feasible 1024x1024, 60-frame source-retained case uses eight logical checkpoint starts, seven retained 4 MiB canvases plus a 4 MiB encoded source, exactly 32 MiB retained state, and a 44 MiB modeled peak including working and output canvases.",
+    "Full-canvas checkpoints dominate sparse 2048x2048 cases: a 16 MiB canvas multiplied by the checkpoint count overwhelms the small raw subrect payload. SPARSE-2048-256 requires 512 MiB at an eight-frame replay bound even when only the encoded source is retained.",
+    "Raw-subrect retention is useful for exact composition and sequential playback, but retaining all raw frames plus full-canvas checkpoints is not a general bounded random-access policy under the current budgets.",
+    "The next candidate must reduce checkpoint representation cost, for example persistent tiles, bounded dirty-region snapshots, or independently validated compressed checkpoints; merely increasing checkpoint spacing trades memory for replay without solving both bounds."
+  ],
+  "objective": "Determine whether a raw-subrect APNG compositor can bound random-access replay with retained full-canvas pre-frame checkpoints under the current 32 MiB Fovea animation-frame reference budget and wider 8-512 MiB sensitivity grid.",
+  "results": {
+    "minimumFeasibleRetainedBudgetBytesUniformAccess": {
+      "BALL-2048-120": {
+        "encoded-source-retained": {
+          "16": 134217728,
+          "4": 536870912,
+          "8": 268435456
+        },
+        "raw-subrect-retained": {
+          "16": null,
+          "4": null,
+          "8": null
+        }
+      },
+      "FULL-1024-60": {
+        "encoded-source-retained": {
+          "16": 33554432,
+          "4": 67108864,
+          "8": 67108864
+        },
+        "raw-subrect-retained": {
+          "16": 268435456,
+          "4": 536870912,
+          "8": 536870912
+        }
+      },
+      "FULL-2048-32": {
+        "encoded-source-retained": {
+          "16": 67108864,
+          "4": 268435456,
+          "8": 134217728
+        },
+        "raw-subrect-retained": {
+          "16": null,
+          "4": null,
+          "8": null
+        }
+      },
+      "MIXED-PREVIOUS-2048-120": {
+        "encoded-source-retained": {
+          "16": 268435456,
+          "4": 536870912,
+          "8": 268435456
+        },
+        "raw-subrect-retained": {
+          "16": null,
+          "4": null,
+          "8": null
+        }
+      },
+      "SPARSE-2048-256": {
+        "encoded-source-retained": {
+          "16": 268435456,
+          "4": null,
+          "8": 536870912
+        },
+        "raw-subrect-retained": {
+          "16": 536870912,
+          "4": null,
+          "8": null
+        }
+      },
+      "SUBRECT-NONE-1024-60": {
+        "encoded-source-retained": {
+          "16": 16777216,
+          "4": 67108864,
+          "8": 33554432
+        },
+        "raw-subrect-retained": {
+          "16": 134217728,
+          "4": 268435456,
+          "8": 268435456
+        }
+      },
+      "SUBRECT-PREVIOUS-1024-120": {
+        "encoded-source-retained": {
+          "16": 67108864,
+          "4": 134217728,
+          "8": 67108864
+        },
+        "raw-subrect-retained": {
+          "16": 268435456,
+          "4": 536870912,
+          "8": 536870912
+        }
+      }
+    },
+    "nativeRawSubrectRatios": {
+      "BALL-MOTION": {
+        "frameCount": 20,
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 0.31733
+      },
+      "EXTREME-SPARSE": {
+        "frameCount": 3,
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 0.3333449074074074
+      },
+      "FULL-BACKGROUND": {
+        "frameCount": 3,
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 1.0
+      },
+      "FULL-NONE": {
+        "frameCount": 3,
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 1.0
+      },
+      "FULL-PREVIOUS": {
+        "frameCount": 3,
+        "previousDisposalFrameCount": 2,
+        "rawSubrectOverFullTrackRatio": 1.0
+      },
+      "MIXED-PREVIOUS-SOURCE": {
+        "frameCount": 6,
+        "previousDisposalFrameCount": 2,
+        "rawSubrectOverFullTrackRatio": 0.38285812672176306
+      },
+      "SUBRECT-BACKGROUND": {
+        "frameCount": 3,
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 0.4167073567708333
+      },
+      "SUBRECT-NONE": {
+        "frameCount": 3,
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 0.4167073567708333
+      },
+      "SUBRECT-PREVIOUS": {
+        "frameCount": 3,
+        "previousDisposalFrameCount": 1,
+        "rawSubrectOverFullTrackRatio": 0.4167073567708333
+      }
+    },
+    "referencePolicyCases": [
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "selectedPlan": {
+          "checkpointCount": 8,
+          "checkpointStarts": [
+            0,
+            7,
+            14,
+            21,
+            28,
+            36,
+            44,
+            52
+          ],
+          "expectedReplayFrames": 4.266666666666667,
+          "modeledPeakBytesUpperBound": 46137344,
+          "p95ReplayFrames": 8,
+          "retainedBytes": 33554432,
+          "retainedCheckpointCount": 7,
+          "worstReplayFrames": 8
+        },
+        "status": "feasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "selectedPlan": {
+          "checkpointCount": 8,
+          "checkpointStarts": [
+            0,
+            8,
+            16,
+            24,
+            32,
+            40,
+            46,
+            53
+          ],
+          "expectedReplayFrames": 4.219047619047619,
+          "modeledPeakBytesUpperBound": 46137344,
+          "p95ReplayFrames": 7,
+          "retainedBytes": 33554432,
+          "retainedCheckpointCount": 7,
+          "worstReplayFrames": 8
+        },
+        "status": "feasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "uniform",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot hold source/raw state",
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "infeasible"
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "reason": "retained budget cannot satisfy the maximum replay constraint",
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "infeasible"
+      }
+    ],
+    "summary": {
+      "feasibleCaseCount": 156,
+      "infeasibleCaseCount": 432,
+      "matrixCaseCount": 588,
+      "referencePolicyCaseCount": 28,
+      "referencePolicyFeasibleCaseCount": 2,
+      "referencePolicyFeasibleCombinations": [
+        {
+          "retentionStrategyID": "encoded-source-retained",
+          "scenarioID": "SUBRECT-NONE-1024-60"
+        }
+      ],
+      "referencePolicyFullyFeasibleScenarios": [],
+      "referencePolicyInfeasibleCaseCount": 26,
+      "referencePolicyScenarioCaseCounts": {
+        "BALL-2048-120": {
+          "feasible": 0,
+          "infeasible": 4
+        },
+        "FULL-1024-60": {
+          "feasible": 0,
+          "infeasible": 4
+        },
+        "FULL-2048-32": {
+          "feasible": 0,
+          "infeasible": 4
+        },
+        "MIXED-PREVIOUS-2048-120": {
+          "feasible": 0,
+          "infeasible": 4
+        },
+        "SPARSE-2048-256": {
+          "feasible": 0,
+          "infeasible": 4
+        },
+        "SUBRECT-NONE-1024-60": {
+          "feasible": 2,
+          "infeasible": 2
+        },
+        "SUBRECT-PREVIOUS-1024-120": {
+          "feasible": 0,
+          "infeasible": 4
+        }
+      },
+      "referencePolicyScenariosWithAnyFeasibleCase": [
+        "SUBRECT-NONE-1024-60"
+      ],
+      "referencePolicyScenariosWithNoFeasibleCase": [
+        "BALL-2048-120",
+        "FULL-1024-60",
+        "FULL-2048-32",
+        "MIXED-PREVIOUS-2048-120",
+        "SPARSE-2048-256",
+        "SUBRECT-PREVIOUS-1024-120"
+      ]
+    }
+  },
+  "schemaVersion": 1,
+  "scope": {
+    "accessProfiles": [
+      "uniform",
+      "tail-hot"
+    ],
+    "checkpointRepresentation": "retained full-canvas pre-frame RGBA state; frame-zero transparent state is implicit and not retained",
+    "matrixCaseCount": 588,
+    "maximumReplayFrames": [
+      4,
+      8,
+      16
+    ],
+    "nativeFixtureCount": 9,
+    "referencePolicyPoint": {
+      "maximumReplayFrames": 8,
+      "retainedBudgetBytes": 33554432
+    },
+    "retainedBudgetMiB": [
+      8,
+      16,
+      32,
+      64,
+      128,
+      256,
+      512
+    ],
+    "retentionStrategies": [
+      "raw-subrect-retained",
+      "encoded-source-retained"
+    ],
+    "syntheticScenarioCount": 7
+  },
+  "sourceIdentity": {
+    "governingFilesUnchangedDuringCapture": true,
+    "inputSourcesUnchangedDuringCapture": true,
+    "policySourcesUnchangedDuringCapture": true,
+    "sourceUnchangedDuringCapture": true,
+    "sources": {
+      "APNGKit": {
+        "dirty": false,
+        "headCommit": "341383f61000e8d2e55d45db0f0756b239d0a2f1",
+        "headTree": "02fb85b92d6200ef03c0f207b68ba652eb2a9b99",
+        "workingTree": "02fb85b92d6200ef03c0f207b68ba652eb2a9b99"
+      },
+      "Fovea": {
+        "dirty": true,
+        "headCommit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+        "headTree": "2909946901b525e108d147fca4eb14da1d722ba5",
+        "workingTree": "332c781e0c606fed7a7fa1b7adc8164465d8b875"
+      },
+      "ImageCraft": {
+        "dirty": true,
+        "headCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+        "headTree": "b8dfb362ce6eb3b07cd48f72247edd2b7401cabf",
+        "workingTree": "d30856f58e0b6485bd88c94881705209c48aa989"
+      }
+    }
+  },
+  "status": "completed-local-analytical-full-canvas-checkpoint-default-rejected-tile-or-compressed-state-next",
+  "studyID": "FOVEA-W5-APNG-CHECKPOINT-MODEL-SOURCE-BOUND-2026-08"
+}

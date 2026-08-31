@@ -25,6 +25,9 @@ final class ManifestSemanticValidationTests: XCTestCase {
                     namespace: "public:manifest-tests"
                 )
             }
+            if try akashicManifestSchemaVersion(root: root) == 4 {
+                try await forceAkashicManifestSnapshotCheckpoint(try XCTUnwrap(store))
+            }
             store = nil
             await Task.yield()
 
@@ -35,6 +38,7 @@ final class ManifestSemanticValidationTests: XCTestCase {
                 writes = try [
                     OriginalManifestMutationWrite(
                         url: snapshotURL,
+                        xattrName: nil,
                         data: mutation.applyToSnapshot(
                             Data(contentsOf: snapshotURL)
                         )
@@ -44,7 +48,11 @@ final class ManifestSemanticValidationTests: XCTestCase {
                 writes = try mutation.apply(to: recordFixtures)
             }
             for write in writes {
-                try writeAkashicManifestFixture(write.data, to: write.url)
+                try writeAkashicManifestFixture(
+                    write.data,
+                    to: write.url,
+                    xattrName: write.xattrName
+                )
             }
 
             do {
@@ -54,7 +62,13 @@ final class ManifestSemanticValidationTests: XCTestCase {
                 XCTAssertEqual(error, .invalidManifest)
             }
             for write in writes {
-                XCTAssertEqual(try Data(contentsOf: write.url), write.data)
+                XCTAssertEqual(
+                    try akashicManifestFixtureData(
+                        at: write.url,
+                        xattrName: write.xattrName
+                    ),
+                    write.data
+                )
             }
         }
     }
@@ -75,48 +89,69 @@ final class ManifestSemanticValidationTests: XCTestCase {
                 namespace: namespace
             )
         }
+        if try akashicManifestSchemaVersion(root: root) == 4 {
+            try await forceAkashicManifestSnapshotCheckpoint(try XCTUnwrap(store))
+        }
         store = nil
         await Task.yield()
 
         let oversizedDigest = "sha256:\(String(repeating: "0", count: 64)):33"
         let corruptedURL: URL
+        let corruptedXattrName: String?
         let corrupted: Data
         let recordFixtures = try akashicManifestRecordFixtures(root: root)
         if var fixture = recordFixtures.singleElement {
-            var entry = try dictionary(fixture.object["entry"])
-            let partition = try dictionary(entry["partition"])
-            let partitionValue = try XCTUnwrap(partition["value"] as? String)
-            let partitionBytes = try XCTUnwrap(Data(base64Encoded: partitionValue))
-            XCTAssertEqual(partitionBytes.count, 32)
-
-            entry["byteCount"] = 33
-            entry["digest"] = ["canonical": oversizedDigest]
+            var entry = try XCTUnwrap(try fixture.entryObject())
+            let partitionBytes = try fixture.entryPartitionBytes(entry)
+            fixture.setEntryDigestBytes(Data(repeating: 0, count: 32), byteCount: 33, in: &entry)
             let newKey = manifestKey(partitionBytes: partitionBytes, digest: oversizedDigest)
-            fixture.object["key"] = newKey
-            fixture.object["entry"] = entry
+            try fixture.setEmbeddedManifestKey(newKey)
+            fixture.setEntryObject(entry)
             corrupted = try JSONSerialization.data(
                 withJSONObject: fixture.object,
                 options: [.sortedKeys]
             )
-            corruptedURL = akashicManifestRecordURL(root: root, key: newKey)
-            try FileManager.default.removeItem(at: fixture.url)
-            try writeAkashicManifestFixture(corrupted, to: corruptedURL)
+            let target = try fixture.retargetedCarrier(forManifestKey: newKey)
+            corruptedURL = target.url
+            corruptedXattrName = target.xattrName
+            try removeAkashicManifestFixture(at: fixture.url, xattrName: fixture.xattrName)
+            try writeAkashicManifestFixture(
+                corrupted,
+                to: corruptedURL,
+                xattrName: corruptedXattrName
+            )
         } else {
             corruptedURL = root.appendingPathComponent("manifest.json")
+            corruptedXattrName = nil
             var manifest = try jsonObject(Data(contentsOf: corruptedURL))
-            var entries = try dictionary(manifest["entries"])
-            let oldKey = try XCTUnwrap(entries.keys.first)
-            var entry = try dictionary(entries.removeValue(forKey: oldKey))
-            let partition = try dictionary(entry["partition"])
-            let partitionValue = try XCTUnwrap(partition["value"] as? String)
-            let partitionBytes = try XCTUnwrap(Data(base64Encoded: partitionValue))
-            XCTAssertEqual(partitionBytes.count, 32)
-
-            entry["byteCount"] = 33
-            entry["digest"] = ["canonical": oversizedDigest]
-            let newKey = manifestKey(partitionBytes: partitionBytes, digest: oversizedDigest)
-            entries[newKey] = entry
-            manifest["entries"] = entries
+            if var compact = manifest["e"] as? [[String: Any]] {
+                guard compact.count == 1 else { throw ManifestFixtureError.invalidFixture }
+                var entry = compact[0]
+                guard let partitionValue = entry["p"] as? String,
+                    let partitionBytes = Data(base64Encoded: partitionValue),
+                    partitionBytes.count == 32
+                else { throw ManifestFixtureError.invalidFixture }
+                entry["n"] = 33
+                entry["h"] = Data(repeating: 0, count: 32).base64EncodedString()
+                compact[0] = entry
+                manifest["e"] = compact
+                if (manifest["schemaVersion"] as? NSNumber)?.intValue == 4 {
+                    try resealAkashicDirectoryHeadSnapshotFixture(&manifest)
+                }
+            } else {
+                var entries = try dictionary(manifest["entries"])
+                let oldKey = try XCTUnwrap(entries.keys.first)
+                var entry = try dictionary(entries.removeValue(forKey: oldKey))
+                let partition = try dictionary(entry["partition"])
+                let partitionValue = try XCTUnwrap(partition["value"] as? String)
+                let partitionBytes = try XCTUnwrap(Data(base64Encoded: partitionValue))
+                XCTAssertEqual(partitionBytes.count, 32)
+                entry["byteCount"] = 33
+                entry["digest"] = ["canonical": oversizedDigest]
+                let newKey = manifestKey(partitionBytes: partitionBytes, digest: oversizedDigest)
+                entries[newKey] = entry
+                manifest["entries"] = entries
+            }
             corrupted = try JSONSerialization.data(
                 withJSONObject: manifest,
                 options: [.sortedKeys]
@@ -130,7 +165,13 @@ final class ManifestSemanticValidationTests: XCTestCase {
         )
         _ = reconciledStore
 
-        XCTAssertNotEqual(try Data(contentsOf: corruptedURL), corrupted)
+        XCTAssertNotEqual(
+            try? akashicManifestFixtureData(
+                at: corruptedURL,
+                xattrName: corruptedXattrName
+            ),
+            Optional(corrupted)
+        )
         XCTAssertTrue(try akashicEffectiveManifestEntries(root: root).isEmpty)
         XCTAssertTrue(try akashicBlobPayloadURLs(root: root).isEmpty)
     }
@@ -257,8 +298,22 @@ final class ManifestSemanticValidationTests: XCTestCase {
     }
 }
 
+private func forceAkashicManifestSnapshotCheckpoint(
+    _ store: AkashicOriginalEncodedStore
+) async throws {
+    let namespace = "public:manifest-checkpoint-\(UUID().uuidString)"
+    let marker = Data("manifest-checkpoint".utf8)
+    _ = try await store.commit(
+        data: marker,
+        contentID: ContentID(data: marker).description,
+        namespace: namespace
+    )
+    try await store.removeAll(namespace: namespace)
+}
+
 private struct OriginalManifestMutationWrite {
     let url: URL
+    let xattrName: String?
     let data: Data
 }
 
@@ -269,6 +324,29 @@ private enum OriginalManifestMutation: String, CaseIterable {
 
     func applyToSnapshot(_ data: Data) throws -> Data {
         var root = try jsonObject(data)
+        if var compact = root["e"] as? [[String: Any]] {
+            guard compact.count == 2,
+                (root["schemaVersion"] as? NSNumber)?.intValue == 4
+            else { throw ManifestFixtureError.invalidFixture }
+            switch self {
+            case .mismatchedKey:
+                compact.reverse()
+                root["e"] = compact
+                try resealAkashicDirectoryHeadSnapshotFixture(&root)
+            case .negativeByteCount:
+                compact[0]["n"] = -1
+                root["e"] = compact
+            case .duplicatePhysicalID:
+                guard let physicalID = compact[0]["u"] else {
+                    throw ManifestFixtureError.invalidFixture
+                }
+                compact[1]["u"] = physicalID
+                root["e"] = compact
+                try resealAkashicDirectoryHeadSnapshotFixture(&root)
+            }
+            return try JSONSerialization.data(withJSONObject: root, options: [.sortedKeys])
+        }
+
         var entries = try dictionary(root["entries"])
         let keys = entries.keys.sorted()
         guard keys.count == 2 else { throw ManifestFixtureError.invalidFixture }
@@ -300,18 +378,22 @@ private enum OriginalManifestMutation: String, CaseIterable {
 
         switch self {
         case .mismatchedKey:
-            first.object["key"] = String(repeating: "0", count: 64)
+            try first.setEmbeddedManifestKey(String(repeating: "0", count: 64))
             return try [write(for: first)]
         case .negativeByteCount:
-            var entry = try dictionary(first.object["entry"])
-            entry["byteCount"] = -1
-            first.object["entry"] = entry
+            guard var entry = try first.entryObject() else {
+                throw ManifestFixtureError.invalidFixture
+            }
+            first.setEntryByteCount(-1, in: &entry)
+            first.setEntryObject(entry)
             return try [write(for: first)]
         case .duplicatePhysicalID:
-            let firstEntry = try dictionary(first.object["entry"])
-            var secondEntry = try dictionary(second.object["entry"])
-            secondEntry["physicalID"] = firstEntry["physicalID"]
-            second.object["entry"] = secondEntry
+            guard let firstEntry = try first.entryObject(),
+                var secondEntry = try second.entryObject()
+            else { throw ManifestFixtureError.invalidFixture }
+            let physicalID = try first.entryPhysicalID(firstEntry)
+            second.setEntryPhysicalID(physicalID, in: &secondEntry)
+            second.setEntryObject(secondEntry)
             return try [write(for: second)]
         }
     }
@@ -321,6 +403,7 @@ private enum OriginalManifestMutation: String, CaseIterable {
     ) throws -> OriginalManifestMutationWrite {
         try OriginalManifestMutationWrite(
             url: fixture.url,
+            xattrName: fixture.xattrName,
             data: JSONSerialization.data(
                 withJSONObject: fixture.object,
                 options: [.sortedKeys]

@@ -310,7 +310,7 @@ R2/R3 至少使用一类，R3 至少使用三类：
 
 ### 8.1 Phase 0a curated mutant runner
 
-当前 curated required mutants `001...099` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。每个结果完成后都会原子写入 tree-bound checkpoint；`--resume` 只复用 commit/tree 一致、状态为 killed 且日志 SHA-256 匹配的结果。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定，并由零依赖的 `scripts/validate-critical-mutation-report.py` 复核 commit、实际工作树 tree hash、是否包含未提交修改、Xcode/Swift 版本、结果集合、日志存在性和 SHA-256。本地 dirty workspace 会先被快照到隔离 worktree；可信 CI 只接受 `includesWorkingTreeChanges == false` 且 tree hash 等于 `HEAD^{tree}` 的报告。
+当前 curated required mutants `001...102` 由 `scripts/run-critical-mutants.py` 在隔离 Git worktree 中执行。每个 mutant 绑定一个明确产品测试；只有测试实际开始执行并转红才记为 `killed`。编译失败、超时或 mutation pattern 失配记为 `invalid`，不能冒充有效击杀。每个结果完成后都会原子写入 tree-bound checkpoint；`--resume` 只复用 commit/tree 一致、状态为 killed 且日志 SHA-256 匹配的结果。报告写入 `.artifacts/mutation/critical-mutants.json`，结构由 `docs/schemas/critical-mutation-report.schema.json` 固定，并由零依赖的 `scripts/validate-critical-mutation-report.py` 复核 commit、实际工作树 tree hash、是否包含未提交修改、Xcode/Swift 版本、结果集合、日志存在性和 SHA-256。本地 dirty workspace 会先被快照到隔离 worktree；可信 CI 只接受 `includesWorkingTreeChanges == false` 且 tree hash 等于 `HEAD^{tree}` 的报告。除组件 checkout 外，runner 允许把 mutant 的测试根显式绑定到仓库内独立 Swift package；该根仍必须位于同一 tree-bound snapshot 内。
 
 该 runner 是 visible oracle，仍不能替代 protected CI、held-out evaluator 或 human attestation。
 
@@ -478,4 +478,4 @@ Phase 0b 再启用完整 R3 mutant catalog、FoveaAgentEval、供应链和发布
 
 ## 当前关键变异扩展
 
-当前 required critical mutation catalog 为 `AIQA-MUT-001...099`。082–099 专门覆盖第二次反向复审发现的插件后置条件、严格 HTTP、强制重验证、取消语义、representation 冲突、decoder probe、retry sleeper、owner 析构、OSLog 回绕、staging 所有权、metadata fail-closed、统一注销与 GC 证据。新增定义必须通过全 catalog anchor 预检；无法应用的 mutant 视为治理漂移而不是 killed。
+当前 required critical mutation catalog 为 `AIQA-MUT-001...102`。082–099 专门覆盖第二次反向复审发现的插件后置条件、严格 HTTP、强制重验证、取消语义、representation 冲突、decoder probe、retry sleeper、owner 析构、OSLog 回绕、staging 所有权、metadata fail-closed、统一注销与 GC 证据；100–102 继续覆盖 durable namespace generation、auth-like custom header 与 comparator telemetry/request-identity 对称性。新增定义必须通过全 catalog anchor 预检；无法应用的 mutant 视为治理漂移而不是 killed。

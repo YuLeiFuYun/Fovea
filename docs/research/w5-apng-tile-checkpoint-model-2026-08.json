@@ -1,0 +1,1678 @@
+{
+  "claimBoundary": {
+    "formalClaimEligible": false,
+    "reasons": [
+      "Candidate layouts are not a global optimality proof.",
+      "Tile changes are conservatively charged as whole immutable tile versions and roots as flat reference tables.",
+      "Synthetic motion, source sizes and access profiles are preregistered analytical inputs rather than observed production distributions.",
+      "The model excludes allocator fragmentation, compressed-source decode workspace, latency, CPU, energy, thermal and physical-device pressure.",
+      "ImageCraft animation source remains dirty and unpublished and Fovea does not consume it as a production animation revision."
+    ]
+  },
+  "date": "2026-08-06",
+  "evidence": {
+    "basePlan": "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+    "captureManifest": ".artifacts/performance/w5-apng-tile-checkpoint-model-v1/capture-manifest.json",
+    "captureManifestSHA256": "fe17bb0caea51729ddb05903c3bb50e767c0fda34d71f61866a57b795327cf9f",
+    "captureRunner": "Tools/Performance/capture_w5_apng_tile_checkpoint_model.py",
+    "model": "Tools/Performance/w5_apng_tile_checkpoint_model.py",
+    "modelTests": "Tools/Performance/test_w5_apng_tile_checkpoint_model.py",
+    "plan": "Benchmarks/ComparativeLab/apng-tile-checkpoint-plan.json",
+    "report": ".artifacts/performance/w5-apng-tile-checkpoint-model-v1/report.json",
+    "reportSHA256": "aef0ee7484769543b34d415d96dc1c3a8435bd9a3ac2bd110abab25182bdc213",
+    "sourceIdentity": ".artifacts/performance/w5-apng-tile-checkpoint-model-v1/source-identity.json",
+    "sourceIdentitySHA256": "d5a61e5d37b54e91612c539175c23d096a8fbc38d08c3a73a302e3d57b9c0f92",
+    "tamperContract": "Tools/Performance/test_w5_apng_tile_checkpoint_capture.py",
+    "validator": "Tools/Performance/validate_w5_apng_tile_checkpoint_model.py"
+  },
+  "interpretation": [
+    "Persistent tiles materially improve the extreme sparse case but do not establish a general default. At the 32 MiB/eight-frame point only four of 112 cases are feasible, representing uniform and tail-hot access for the same SPARSE-2048-256 encoded-source strategy at 32- and 64-pixel tiles.",
+    "The best retained candidate is 64-pixel tiles with every frame rooted: about 25.98 MiB retained, one-frame replay, and about 57.98 MiB conservative modeled peak. The 32-pixel candidate retains about 28.98 MiB and peaks near 61.01 MiB.",
+    "No reference-policy candidate for full-frame, half-canvas, moving-ball, mixed previous/source, or repeated previous-disposal scenarios fits the retained budget. No feasible reference candidate fits the 32 MiB Fovea hard cap after adding a materialized output and conservative working/root scratch.",
+    "The matrix is a deterministic candidate-family search, not a proof that every tile layout is impossible. Nevertheless, it rejects persistent tiles as a universal default and retains them only as a possible sparse specialization pending a lower-peak implementation and physical-device evidence.",
+    "The next general candidate should reduce retained state beyond full tile granularity or use independently validated compressed checkpoint state; any candidate must preserve the owned straight-alpha exactness and separate-default fail-closed boundary."
+  ],
+  "objective": "Evaluate immutable persistent tile versions with shared checkpoint roots after retained full-canvas checkpoints failed the 32 MiB/eight-frame reference policy.",
+  "results": {
+    "minimumFeasibleRetainedBudgetBytesUniformAccess": {
+      "BALL-2048-120": {
+        "encoded-source-retained": {
+          "128": {
+            "16": 67108864,
+            "4": 268435456,
+            "8": 134217728
+          },
+          "256": {
+            "16": 67108864,
+            "4": 268435456,
+            "8": 134217728
+          },
+          "32": {
+            "16": 67108864,
+            "4": 134217728,
+            "8": 67108864
+          },
+          "64": {
+            "16": 67108864,
+            "4": 268435456,
+            "8": 134217728
+          }
+        },
+        "raw-subrect-retained": {
+          "128": {
+            "16": null,
+            "4": null,
+            "8": null
+          },
+          "256": {
+            "16": null,
+            "4": null,
+            "8": null
+          },
+          "32": {
+            "16": null,
+            "4": null,
+            "8": null
+          },
+          "64": {
+            "16": null,
+            "4": null,
+            "8": null
+          }
+        }
+      },
+      "FULL-1024-60": {
+        "encoded-source-retained": {
+          "128": {
+            "16": 33554432,
+            "4": 134217728,
+            "8": 67108864
+          },
+          "256": {
+            "16": 33554432,
+            "4": 134217728,
+            "8": 67108864
+          },
+          "32": {
+            "16": 33554432,
+            "4": 134217728,
+            "8": 67108864
+          },
+          "64": {
+            "16": 33554432,
+            "4": 134217728,
+            "8": 67108864
+          }
+        },
+        "raw-subrect-retained": {
+          "128": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          },
+          "256": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          },
+          "32": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          },
+          "64": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          }
+        }
+      },
+      "FULL-2048-32": {
+        "encoded-source-retained": {
+          "128": {
+            "16": 67108864,
+            "4": 268435456,
+            "8": 134217728
+          },
+          "256": {
+            "16": 67108864,
+            "4": 268435456,
+            "8": 134217728
+          },
+          "32": {
+            "16": 67108864,
+            "4": 268435456,
+            "8": 134217728
+          },
+          "64": {
+            "16": 67108864,
+            "4": 268435456,
+            "8": 134217728
+          }
+        },
+        "raw-subrect-retained": {
+          "128": {
+            "16": null,
+            "4": null,
+            "8": null
+          },
+          "256": {
+            "16": null,
+            "4": null,
+            "8": null
+          },
+          "32": {
+            "16": null,
+            "4": null,
+            "8": null
+          },
+          "64": {
+            "16": null,
+            "4": null,
+            "8": null
+          }
+        }
+      },
+      "MIXED-PREVIOUS-2048-120": {
+        "encoded-source-retained": {
+          "128": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          },
+          "256": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          },
+          "32": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          },
+          "64": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          }
+        },
+        "raw-subrect-retained": {
+          "128": {
+            "16": null,
+            "4": null,
+            "8": null
+          },
+          "256": {
+            "16": null,
+            "4": null,
+            "8": null
+          },
+          "32": {
+            "16": null,
+            "4": null,
+            "8": null
+          },
+          "64": {
+            "16": null,
+            "4": null,
+            "8": null
+          }
+        }
+      },
+      "SPARSE-2048-256": {
+        "encoded-source-retained": {
+          "128": {
+            "16": 67108864,
+            "4": 67108864,
+            "8": 67108864
+          },
+          "256": {
+            "16": 134217728,
+            "4": 134217728,
+            "8": 134217728
+          },
+          "32": {
+            "16": 33554432,
+            "4": 33554432,
+            "8": 33554432
+          },
+          "64": {
+            "16": 33554432,
+            "4": 33554432,
+            "8": 33554432
+          }
+        },
+        "raw-subrect-retained": {
+          "128": {
+            "16": 67108864,
+            "4": 67108864,
+            "8": 67108864
+          },
+          "256": {
+            "16": 134217728,
+            "4": 134217728,
+            "8": 134217728
+          },
+          "32": {
+            "16": 67108864,
+            "4": 67108864,
+            "8": 67108864
+          },
+          "64": {
+            "16": 67108864,
+            "4": 67108864,
+            "8": 67108864
+          }
+        }
+      },
+      "SUBRECT-NONE-1024-60": {
+        "encoded-source-retained": {
+          "128": {
+            "16": 33554432,
+            "4": 67108864,
+            "8": 67108864
+          },
+          "256": {
+            "16": 33554432,
+            "4": 67108864,
+            "8": 67108864
+          },
+          "32": {
+            "16": 33554432,
+            "4": 67108864,
+            "8": 67108864
+          },
+          "64": {
+            "16": 33554432,
+            "4": 67108864,
+            "8": 67108864
+          }
+        },
+        "raw-subrect-retained": {
+          "128": {
+            "16": 134217728,
+            "4": 268435456,
+            "8": 268435456
+          },
+          "256": {
+            "16": 134217728,
+            "4": 268435456,
+            "8": 268435456
+          },
+          "32": {
+            "16": 134217728,
+            "4": 268435456,
+            "8": 268435456
+          },
+          "64": {
+            "16": 134217728,
+            "4": 268435456,
+            "8": 268435456
+          }
+        }
+      },
+      "SUBRECT-PREVIOUS-1024-120": {
+        "encoded-source-retained": {
+          "128": {
+            "16": 67108864,
+            "4": 134217728,
+            "8": 134217728
+          },
+          "256": {
+            "16": 67108864,
+            "4": 134217728,
+            "8": 134217728
+          },
+          "32": {
+            "16": 67108864,
+            "4": 134217728,
+            "8": 134217728
+          },
+          "64": {
+            "16": 67108864,
+            "4": 134217728,
+            "8": 134217728
+          }
+        },
+        "raw-subrect-retained": {
+          "128": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          },
+          "256": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          },
+          "32": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          },
+          "64": {
+            "16": 268435456,
+            "4": 536870912,
+            "8": 536870912
+          }
+        }
+      }
+    },
+    "referencePolicyCases": [
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 281076160,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 37806528,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 281076160,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 37806528,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 281033152,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 37763520,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 281033152,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 37763520,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 281022400,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 37752768,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 281022400,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 37752768,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 281019712,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 37750080,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 281019712,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 37750080,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 134285760,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 33612224,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 134285760,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 33612224,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 134242752,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 33569216,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 134242752,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 33569216,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 134232000,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 33558464,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 134232000,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 33558464,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 134229312,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 12,
+        "minimumCandidateRetainedBytes": 33555776,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 134229312,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 33555776,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-NONE-1024-60",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 268571520,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 67224448,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 268571520,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 67224448,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 268485504,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 67138432,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 268485504,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 67138432,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 268464000,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 67116928,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 268464000,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 67116928,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 268458624,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 67111552,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 268458624,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 67111552,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SUBRECT-PREVIOUS-1024-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 1006551232,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 268895104,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 1006551232,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 268895104,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 1006207168,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 268551040,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 1006207168,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 268551040,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 1006121152,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 268465024,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 1006121152,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 268465024,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 1006099648,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 268443520,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 1006099648,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 268443520,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "MIXED-PREVIOUS-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 682492192,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 58852352,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 673604000,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 49964160,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 692584736,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 68944896,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 684966304,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 61326464,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 710967584,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 87327744,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 706908576,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 83268736,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 730603232,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 106963392,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 734272672,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 110632832,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "BALL-2048-120",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 35556284,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 17,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "selectedPlan": {
+          "checkpointCount": 256,
+          "expectedReplayFrames": 1.0,
+          "layoutFamily": "fixed-interval-1",
+          "modeledPeakBytesUpperBound": 63971328,
+          "p95ReplayFrames": 1,
+          "retainedBytes": 30384064,
+          "retainedRootBytes": 8372160,
+          "retainedRootCount": 255,
+          "retainedSourceBytes": 4194304,
+          "retainedTileVersionBytes": 17817600,
+          "worstReplayFrames": 1
+        },
+        "status": "feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 35556284,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "selectedPlan": {
+          "checkpointCount": 256,
+          "expectedReplayFrames": 1.0,
+          "layoutFamily": "fixed-interval-1",
+          "modeledPeakBytesUpperBound": 63971328,
+          "p95ReplayFrames": 1,
+          "retainedBytes": 30384064,
+          "retainedRootBytes": 8372160,
+          "retainedRootCount": 255,
+          "retainedSourceBytes": 4194304,
+          "retainedTileVersionBytes": 17817600,
+          "worstReplayFrames": 1
+        },
+        "status": "feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 37743548,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 17,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "selectedPlan": {
+          "checkpointCount": 256,
+          "expectedReplayFrames": 1.0,
+          "layoutFamily": "fixed-interval-1",
+          "modeledPeakBytesUpperBound": 60801024,
+          "p95ReplayFrames": 1,
+          "retainedBytes": 27238336,
+          "retainedRootBytes": 2105280,
+          "retainedRootCount": 255,
+          "retainedSourceBytes": 4194304,
+          "retainedTileVersionBytes": 20938752,
+          "worstReplayFrames": 1
+        },
+        "status": "feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 37743548,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "selectedPlan": {
+          "checkpointCount": 256,
+          "expectedReplayFrames": 1.0,
+          "layoutFamily": "fixed-interval-1",
+          "modeledPeakBytesUpperBound": 60801024,
+          "p95ReplayFrames": 1,
+          "retainedBytes": 27238336,
+          "retainedRootBytes": 2105280,
+          "retainedRootCount": 255,
+          "retainedSourceBytes": 4194304,
+          "retainedTileVersionBytes": 20938752,
+          "worstReplayFrames": 1
+        },
+        "status": "feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 49349564,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 36765632,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 49349564,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 36765632,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 88885692,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 17,
+        "minimumCandidateRetainedBytes": 76301760,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 87313404,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 19,
+        "minimumCandidateRetainedBytes": 74729472,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "SPARSE-2048-256",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 587301056,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 83984576,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 16,
+        "minimumCandidateRetainedBytes": 587301056,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 16,
+        "minimumCandidateRetainedBytes": 83984576,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 32
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 587227328,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 83910848,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 16,
+        "minimumCandidateRetainedBytes": 587227328,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 16,
+        "minimumCandidateRetainedBytes": 83910848,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 64
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 587208896,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 83892416,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 16,
+        "minimumCandidateRetainedBytes": 587208896,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 16,
+        "minimumCandidateRetainedBytes": 83892416,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 128
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 587204288,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "uniform",
+        "candidateLayoutCount": 14,
+        "minimumCandidateRetainedBytes": 83887808,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 16,
+        "minimumCandidateRetainedBytes": 587204288,
+        "retentionStrategyID": "raw-subrect-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      },
+      {
+        "accessProfileID": "tail-hot",
+        "candidateLayoutCount": 16,
+        "minimumCandidateRetainedBytes": 83887808,
+        "retentionStrategyID": "encoded-source-retained",
+        "scenarioID": "FULL-2048-32",
+        "status": "no-feasible-candidate",
+        "tileSize": 256
+      }
+    ],
+    "scenarioSummaries": {
+      "BALL-2048-120": {
+        "backgroundDisposalFrameCount": 60,
+        "canvasHeight": 2048,
+        "canvasRGBABytes": 16777216,
+        "canvasWidth": 2048,
+        "encodedSourceBytes": 16777216,
+        "frameCount": 120,
+        "id": "BALL-2048-120",
+        "patternFixture": "BALL-MOTION",
+        "patternMode": "repeat-scaled-area-ratios",
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 0.3180985927581787,
+        "totalFullCanvasTrackRGBABytes": 2013265920,
+        "totalRawSubrectRGBABytes": 640417056
+      },
+      "FULL-1024-60": {
+        "backgroundDisposalFrameCount": 0,
+        "canvasHeight": 1024,
+        "canvasRGBABytes": 4194304,
+        "canvasWidth": 1024,
+        "encodedSourceBytes": 8388608,
+        "frameCount": 60,
+        "id": "FULL-1024-60",
+        "patternFixture": "FULL-NONE",
+        "patternMode": "repeat-scaled-area-ratios",
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 1.0,
+        "totalFullCanvasTrackRGBABytes": 251658240,
+        "totalRawSubrectRGBABytes": 251658240
+      },
+      "FULL-2048-32": {
+        "backgroundDisposalFrameCount": 0,
+        "canvasHeight": 2048,
+        "canvasRGBABytes": 16777216,
+        "canvasWidth": 2048,
+        "encodedSourceBytes": 33554432,
+        "frameCount": 32,
+        "id": "FULL-2048-32",
+        "patternFixture": "FULL-NONE",
+        "patternMode": "repeat-scaled-area-ratios",
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 1.0,
+        "totalFullCanvasTrackRGBABytes": 536870912,
+        "totalRawSubrectRGBABytes": 536870912
+      },
+      "MIXED-PREVIOUS-2048-120": {
+        "backgroundDisposalFrameCount": 0,
+        "canvasHeight": 2048,
+        "canvasRGBABytes": 16777216,
+        "canvasWidth": 2048,
+        "encodedSourceBytes": 33554432,
+        "frameCount": 120,
+        "id": "MIXED-PREVIOUS-2048-120",
+        "patternFixture": "MIXED-PREVIOUS-SOURCE",
+        "patternMode": "repeat-scaled-area-ratios",
+        "previousDisposalFrameCount": 40,
+        "rawSubrectOverFullTrackRatio": 0.38306442896525067,
+        "totalFullCanvasTrackRGBABytes": 2013265920,
+        "totalRawSubrectRGBABytes": 771210560
+      },
+      "SPARSE-2048-256": {
+        "backgroundDisposalFrameCount": 0,
+        "canvasHeight": 2048,
+        "canvasRGBABytes": 16777216,
+        "canvasWidth": 2048,
+        "encodedSourceBytes": 4194304,
+        "frameCount": 256,
+        "id": "SPARSE-2048-256",
+        "patternFixture": "EXTREME-SPARSE",
+        "patternMode": "first-full-then-one-pixel",
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 0.003906487487256527,
+        "totalFullCanvasTrackRGBABytes": 4294967296,
+        "totalRawSubrectRGBABytes": 16778236
+      },
+      "SUBRECT-NONE-1024-60": {
+        "backgroundDisposalFrameCount": 0,
+        "canvasHeight": 1024,
+        "canvasRGBABytes": 4194304,
+        "canvasWidth": 1024,
+        "encodedSourceBytes": 4194304,
+        "frameCount": 60,
+        "id": "SUBRECT-NONE-1024-60",
+        "patternFixture": "SUBRECT-NONE",
+        "patternMode": "repeat-scaled-area-ratios",
+        "previousDisposalFrameCount": 0,
+        "rawSubrectOverFullTrackRatio": 0.4167073567708333,
+        "totalFullCanvasTrackRGBABytes": 251658240,
+        "totalRawSubrectRGBABytes": 104867840
+      },
+      "SUBRECT-PREVIOUS-1024-120": {
+        "backgroundDisposalFrameCount": 0,
+        "canvasHeight": 1024,
+        "canvasRGBABytes": 4194304,
+        "canvasWidth": 1024,
+        "encodedSourceBytes": 8388608,
+        "frameCount": 120,
+        "id": "SUBRECT-PREVIOUS-1024-120",
+        "patternFixture": "SUBRECT-PREVIOUS",
+        "patternMode": "repeat-scaled-area-ratios",
+        "previousDisposalFrameCount": 40,
+        "rawSubrectOverFullTrackRatio": 0.4167073567708333,
+        "totalFullCanvasTrackRGBABytes": 503316480,
+        "totalRawSubrectRGBABytes": 209735680
+      }
+    },
+    "summary": {
+      "candidateFamilyGlobalOptimalityClaim": false,
+      "feasibleCandidateCaseCount": 774,
+      "matrixCaseCount": 2352,
+      "noFeasibleCandidateCaseCount": 1578,
+      "referencePolicyCaseCount": 112,
+      "referencePolicyFeasibleCandidateCaseCount": 4,
+      "referencePolicyFeasibleCandidateCombinations": [
+        {
+          "retentionStrategyID": "encoded-source-retained",
+          "scenarioID": "SPARSE-2048-256",
+          "tileSize": 32
+        },
+        {
+          "retentionStrategyID": "encoded-source-retained",
+          "scenarioID": "SPARSE-2048-256",
+          "tileSize": 64
+        }
+      ],
+      "referencePolicyNoFeasibleCandidateCaseCount": 108,
+      "referencePolicyPeakWithinFoveaHardCapCount": 0,
+      "referencePolicyScenarioCaseCounts": {
+        "BALL-2048-120": {
+          "feasibleCandidate": 0,
+          "noFeasibleCandidate": 16
+        },
+        "FULL-1024-60": {
+          "feasibleCandidate": 0,
+          "noFeasibleCandidate": 16
+        },
+        "FULL-2048-32": {
+          "feasibleCandidate": 0,
+          "noFeasibleCandidate": 16
+        },
+        "MIXED-PREVIOUS-2048-120": {
+          "feasibleCandidate": 0,
+          "noFeasibleCandidate": 16
+        },
+        "SPARSE-2048-256": {
+          "feasibleCandidate": 4,
+          "noFeasibleCandidate": 12
+        },
+        "SUBRECT-NONE-1024-60": {
+          "feasibleCandidate": 0,
+          "noFeasibleCandidate": 16
+        },
+        "SUBRECT-PREVIOUS-1024-120": {
+          "feasibleCandidate": 0,
+          "noFeasibleCandidate": 16
+        }
+      },
+      "referencePolicyScenariosWithAnyFeasibleCandidate": [
+        "SPARSE-2048-256"
+      ],
+      "referencePolicyScenariosWithNoFeasibleCandidate": [
+        "BALL-2048-120",
+        "FULL-1024-60",
+        "FULL-2048-32",
+        "MIXED-PREVIOUS-2048-120",
+        "SUBRECT-NONE-1024-60",
+        "SUBRECT-PREVIOUS-1024-120"
+      ],
+      "referencePolicyTileSizeCaseCounts": {
+        "128": {
+          "feasibleCandidate": 0,
+          "noFeasibleCandidate": 28
+        },
+        "256": {
+          "feasibleCandidate": 0,
+          "noFeasibleCandidate": 28
+        },
+        "32": {
+          "feasibleCandidate": 2,
+          "noFeasibleCandidate": 26
+        },
+        "64": {
+          "feasibleCandidate": 2,
+          "noFeasibleCandidate": 26
+        }
+      }
+    }
+  },
+  "schemaVersion": 1,
+  "scope": {
+    "accessProfiles": [
+      "uniform",
+      "tail-hot"
+    ],
+    "candidateFamilies": [
+      "fixed intervals one through replay bound",
+      "bounded checkpoint-count access-optimal layouts"
+    ],
+    "matrixCaseCount": 2352,
+    "maximumReplayFrames": [
+      4,
+      8,
+      16
+    ],
+    "referencePolicyPoint": {
+      "maximumReplayFrames": 8,
+      "retainedBudgetBytes": 33554432
+    },
+    "retainedBudgetMiB": [
+      8,
+      16,
+      32,
+      64,
+      128,
+      256,
+      512
+    ],
+    "retentionStrategies": [
+      "raw-subrect-retained",
+      "encoded-source-retained"
+    ],
+    "rootAccounting": "flat eight-byte tile-reference table plus 64-byte header per retained root; unchanged tile versions shared",
+    "scenarioCount": 7,
+    "tileSizes": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "sourceIdentity": {
+    "governingFilesUnchangedDuringCapture": true,
+    "inputSourcesUnchangedDuringCapture": true,
+    "policySourcesUnchangedDuringCapture": true,
+    "sourceUnchangedDuringCapture": true,
+    "sources": {
+      "APNGKit": {
+        "dirty": false,
+        "headCommit": "341383f61000e8d2e55d45db0f0756b239d0a2f1",
+        "headTree": "02fb85b92d6200ef03c0f207b68ba652eb2a9b99",
+        "workingTree": "02fb85b92d6200ef03c0f207b68ba652eb2a9b99"
+      },
+      "Fovea": {
+        "dirty": true,
+        "headCommit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+        "headTree": "2909946901b525e108d147fca4eb14da1d722ba5",
+        "workingTree": "7a2d2aee5d693cc855bb702dd201638268369f45"
+      },
+      "ImageCraft": {
+        "dirty": true,
+        "headCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+        "headTree": "b8dfb362ce6eb3b07cd48f72247edd2b7401cabf",
+        "workingTree": "d30856f58e0b6485bd88c94881705209c48aa989"
+      }
+    }
+  },
+  "status": "completed-local-candidate-family-sparse-retained-envelope-only-general-default-and-peak-hard-cap-not-cleared",
+  "studyID": "FOVEA-W5-APNG-TILE-CHECKPOINT-CANDIDATE-SOURCE-BOUND-2026-08"
+}

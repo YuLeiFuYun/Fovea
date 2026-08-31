@@ -1,0 +1,507 @@
+{
+  "comparators": [
+    {
+      "comparableFormats": [
+        "GIF",
+        "APNG"
+      ],
+      "exactCommit": "2de3a496eaf6df9a1312862adcfd54acd73c39c0",
+      "id": "CMP-SDWEBIMAGE",
+      "name": "SDWebImage",
+      "roles": [
+        "codec",
+        "frame provider",
+        "player"
+      ],
+      "sourceEvidence": [
+        "SDWebImage/Core/SDAnimatedImage.h",
+        "SDWebImage/Core/SDImageIOAnimatedCoder.h",
+        "SDWebImage/Core/SDAnimatedImagePlayer.h"
+      ],
+      "version": "5.21.7"
+    },
+    {
+      "comparableFormats": [
+        "GIF",
+        "APNG"
+      ],
+      "exactCommit": "c0d5cfa1947f2456ddb321a85b347b3d60d83254",
+      "id": "CMP-PINREMOTEIMAGE",
+      "name": "PINRemoteImage",
+      "roles": [
+        "codec",
+        "frame provider",
+        "player",
+        "frame cache"
+      ],
+      "sourceEvidence": [
+        "Source/Classes/include/PINRemoteImage/PINAnimatedImage.h",
+        "Source/Classes/include/PINRemoteImage/PINGIFAnimatedImage.h",
+        "Source/Classes/include/PINRemoteImage/PINAPNGAnimatedImage.h",
+        "Source/Classes/include/PINRemoteImage/PINCachedAnimatedImage.h"
+      ],
+      "version": "releases/p14.31"
+    },
+    {
+      "comparableFormats": [
+        "GIF"
+      ],
+      "exactCommit": "410984bf301f4fa224fe56277b3f8672cc465c79",
+      "exclusion": "not ranked on APNG or JPEG-sequence endpoints without an equivalent native path",
+      "id": "CMP-KINGFISHER",
+      "name": "Kingfisher",
+      "roles": [
+        "GIF frame source",
+        "player",
+        "bounded preload buffer"
+      ],
+      "sourceEvidence": [
+        "Sources/Image/GIFAnimatedImage.swift",
+        "Sources/Views/AnimatedImageView.swift"
+      ],
+      "version": "8.11.0"
+    },
+    {
+      "exactCommit": "63a8fcbd6621340a2410bc3e9575ac97058615f4",
+      "exclusion": "Nuke Core does not expose an equivalent animated frame provider or playback scheduler; it is excluded from codec and player rankings and reported only on transport or retained-data endpoints",
+      "id": "CMP-NUKE",
+      "name": "Nuke",
+      "roles": [
+        "transport",
+        "static preview",
+        "GIF original-data retention"
+      ],
+      "sourceEvidence": [
+        "Sources/Nuke/ImageContainer.swift",
+        "Sources/Nuke/Decoding/ImageDecoders+Default.swift"
+      ],
+      "version": "13.0.6"
+    },
+    {
+      "exclusion": "not a complete loader or player and therefore never used as the sole product comparator",
+      "id": "CMP-APPLE-IMAGEIO",
+      "identity": "platform-build",
+      "name": "Apple ImageIO lower bound",
+      "roles": [
+        "mechanism lower bound"
+      ]
+    },
+    {
+      "comparableFormats": [
+        "GIF"
+      ],
+      "comparisonPriority": "P0-next-player",
+      "exactCommit": "672a8d4fea3faf234518be2db00815936e55f85f",
+      "exclusion": "role- and format-specific comparison only; unsupported formats and product surfaces are reported as unsupported rather than zero-cost wins",
+      "id": "CMP-GIFU",
+      "name": "Gifu",
+      "roles": [
+        "player",
+        "upcoming-frame cache",
+        "display-link driver"
+      ],
+      "sourceEvidence": [
+        "Sources/Gifu/Classes/FrameStore.swift",
+        "Sources/Gifu/Classes/Animator.swift",
+        "Sources/Gifu/Classes/GIFAnimatable.swift"
+      ]
+    },
+    {
+      "comparableFormats": [
+        "GIF"
+      ],
+      "comparisonPriority": "P0-next-player",
+      "exactCommit": "d4f07b6f164d53c1212c3e54d6460738b1981e9f",
+      "exclusion": "role- and format-specific comparison only; unsupported formats and product surfaces are reported as unsupported rather than zero-cost wins",
+      "id": "CMP-FLANIMATEDIMAGE",
+      "name": "FLAnimatedImage",
+      "roles": [
+        "player",
+        "dynamic frame cache",
+        "memory-pressure reference"
+      ],
+      "sourceEvidence": [
+        "FLAnimatedImage/FLAnimatedImage.m",
+        "FLAnimatedImage/FLAnimatedImageView.m",
+        "FLAnimatedImage/include/FLAnimatedImage.h"
+      ]
+    },
+    {
+      "comparableFormats": [
+        "APNG"
+      ],
+      "comparisonPriority": "P0-next-apng",
+      "exactCommit": "341383f61000e8d2e55d45db0f0756b239d0a2f1",
+      "exclusion": "role- and format-specific comparison only; unsupported formats and product surfaces are reported as unsupported rather than zero-cost wins",
+      "id": "CMP-APNGKIT",
+      "name": "APNGKit",
+      "roles": [
+        "codec",
+        "partial-frame compositor",
+        "streaming first pass",
+        "player"
+      ],
+      "sourceEvidence": [
+        "Source/APNGKit/APNGImageRenderer.swift",
+        "Source/APNGKit/APNGImage.swift",
+        "Source/APNGKit/APNGImageView.swift",
+        "Source/APNGKit/DisplayTimer.swift"
+      ]
+    },
+    {
+      "comparableFormats": [
+        "GIF",
+        "APNG"
+      ],
+      "comparisonPriority": "P1-player",
+      "exactCommit": "d64237a33ce91b0513dd850589fea32fa28f4f80",
+      "exclusion": "role- and format-specific comparison only; unsupported formats and product surfaces are reported as unsupported rather than zero-cost wins",
+      "id": "CMP-ANIMATEDIMAGE",
+      "name": "AnimatedImage",
+      "roles": [
+        "player",
+        "display refresh reference"
+      ],
+      "sourceEvidence": [
+        "Sources/_UIKit_AnimatedImage/BackportUpdateLink.swift",
+        "Sources/UpdateLink/DisplayLinkProxy.swift",
+        "Sources/AnimatedImageCore/Utilities/AnimatedImageState.swift"
+      ]
+    },
+    {
+      "comparableFormats": [
+        "GIF",
+        "APNG"
+      ],
+      "comparisonPriority": "P1-source-oracle",
+      "exactCommit": "42ba209608cb332887a33ebcae1bde50c52b151d",
+      "exclusion": "role- and format-specific comparison only; unsupported formats and product surfaces are reported as unsupported rather than zero-cost wins",
+      "id": "CMP-YYIMAGE",
+      "name": "YYImage",
+      "roles": [
+        "codec oracle",
+        "partial-frame compositor",
+        "dynamic frame cache",
+        "player"
+      ],
+      "sourceEvidence": [
+        "YYImage/YYImageCoder.h",
+        "YYImage/YYImageCoder.m",
+        "YYImage/YYAnimatedImageView.h",
+        "YYImage/YYAnimatedImageView.m"
+      ]
+    },
+    {
+      "comparableFormats": [
+        "GIF"
+      ],
+      "comparisonPriority": "P2-overlap",
+      "exactCommit": "c44e2b19f80baa9df496d6415c81d12bac852d46",
+      "exclusion": "role- and format-specific comparison only; unsupported formats and product surfaces are reported as unsupported rather than zero-cost wins",
+      "id": "CMP-SWIFTYGIF",
+      "name": "SwiftyGif",
+      "roles": [
+        "player",
+        "multi-view display-link manager",
+        "visibility reference"
+      ],
+      "sourceEvidence": [
+        "SwiftyGif/SwiftyGifManager.swift",
+        "SwiftyGif/UIImageView+SwiftyGif.swift"
+      ]
+    }
+  ],
+  "createdOn": "2026-08-05",
+  "exploratoryEvidence": {
+    "eligibleForFormalClaim": false,
+    "foveaComparatorAggregate": ".artifacts/performance/w5-animated-codec-identity-v2/aggregate.json",
+    "foveaComparatorManifest": ".artifacts/performance/w5-animated-codec-identity-v2/capture-manifest.json",
+    "foveaComparatorStudy": "docs/research/w5-animated-codec-study-2026-08.json",
+    "imageCraftMechanismAggregate": "ImageCraft/.artifacts/performance/animation-balanced-final-v3",
+    "legacySchema1Aggregate": ".artifacts/performance/w5-animated-codec-balanced/aggregate.json",
+    "role": "local mechanism optimization, comparator semantic qualification and counterexample discovery only",
+    "sourceIdentity": "schema-2-runner-injected-head-working-tree-dirty-state-with-source-before-after-equality-and-72-artifact-digest-inventory"
+  },
+  "formalExecutionRequirements": {
+    "devices": [
+      "stable current supported iPhone class",
+      "lower-performance supported iPhone class"
+    ],
+    "fixtures": [
+      "small low-motion GIF/APNG",
+      "large high-motion GIF/APNG",
+      "subrect-heavy APNG",
+      "disposal-previous GIF",
+      "transparent animation",
+      "short-delay stress animation",
+      "long finite-loop animation",
+      "24-frame complete JPEG sequence"
+    ],
+    "host": "quiescence, temperature, battery, and memory-pressure gates",
+    "minimumIndependentBlocksPerComparator": 20,
+    "ordering": "balanced Latin-square or randomized interleaving",
+    "source": "clean exact revisions and recorded source-tree hashes",
+    "statistics": [
+      "block-level resampling",
+      "multiplicity correction within codec and player endpoint families",
+      "confidence intervals for non-inferiority and superiority",
+      "no conclusion from one fixture, one size, or one machine"
+    ]
+  },
+  "formatScope": {
+    "adjacentImplemented": [
+      "progress-only multipart/x-mixed-replace MJPEG transport and latest-only playback"
+    ],
+    "deferred": [
+      "animated WebP",
+      "animated HEIF or AVIF",
+      "animation encoding and sprite-sheet authoring",
+      "video-backed or vector animation"
+    ],
+    "required": [
+      "GIF89a",
+      "APNG",
+      "pre-split complete JPEG frame sequence"
+    ],
+    "semanticNote": "Progressive JPEG is not an animated JPEG format. ImageCraft accepts independently complete JPEG frames. FoveaHTTP has a strict bounded multipart/x-mixed-replace JPEG transport and playback path, which is compared separately from encoded GIF/APNG containers."
+  },
+  "hardCorrectnessGates": [
+    "frame count and frame order match the reference timeline",
+    "finite and infinite loop semantics match the normalized contract",
+    "every sampled frame has the expected full-canvas normalized pixel digest",
+    "APNG subrect, blend, and disposal behavior matches the reference oracle",
+    "GIF disposal and transparency behavior matches the reference oracle",
+    "zero, very short, and large duration values follow a versioned normalization policy",
+    "malformed sequence numbers, reserved disposal values, truncated subblocks, and out-of-canvas rects fail closed",
+    "decoded frame bytes and frame-window count remain within configured limits",
+    "cancellation and disappearance stop future decode and publication work",
+    "background and memory-pressure transitions do not resurrect stale frame work"
+  ],
+  "planID": "FOVEA-W5-ANIMATED-MEDIA-V1",
+  "primaryEndpointFamilies": {
+    "codec": [
+      {
+        "direction": "lower",
+        "endpoint": "exact timeline preparation latency p50/p95/p99",
+        "note": "reported with validation coverage; a parser that skips timing or security checks is not semantically equivalent"
+      },
+      {
+        "direction": "lower",
+        "endpoint": "retained-source selected-frame latency p50/p95/p99"
+      },
+      {
+        "direction": "lower",
+        "endpoint": "bounded continuous-window latency p50/p95/p99"
+      },
+      {
+        "direction": "lower",
+        "endpoint": "peak physical footprint and decoded frame bytes"
+      },
+      {
+        "direction": "lower",
+        "endpoint": "cancellation reclaim latency"
+      }
+    ],
+    "player": [
+      {
+        "direction": "lower",
+        "endpoint": "startup-to-first-frame latency"
+      },
+      {
+        "direction": "lower",
+        "endpoint": "deadline-missed displayed-frame rate"
+      },
+      {
+        "direction": "lower",
+        "endpoint": "absolute frame-timing error p50/p95/p99"
+      },
+      {
+        "direction": "lower",
+        "endpoint": "peak frame-cache physical footprint"
+      },
+      {
+        "direction": "lower",
+        "endpoint": "decode CPU time and device energy per displayed second"
+      },
+      {
+        "criterion": "machine-checkable optimum of zero after the lifecycle fence",
+        "direction": "lower",
+        "endpoint": "offscreen/background decode count"
+      }
+    ]
+  },
+  "reportingPolicy": {
+    "aggregateWinnerScore": false,
+    "claimText": "No claim that Fovea or ImageCraft is better than all projects is permitted until every hard gate and each preregistered primary endpoint family passes on clean fixed revisions and physical devices.",
+    "dirtySourceFormalClaims": false,
+    "endpointRemovalAfterResults": false,
+    "paretoReporting": true,
+    "simulatorPerformanceClaims": false,
+    "unsupportedCapabilityIsNotZeroCost": true
+  },
+  "schemaVersion": 1,
+  "semanticSurfaces": {
+    "codec": {
+      "eligible": [
+        "ImageCraft",
+        "SDWebImage",
+        "PINRemoteImage",
+        "APNGKit",
+        "YYImage",
+        "Apple ImageIO lower bound"
+      ],
+      "requiredEquivalentPolicy": [
+        "same encoded bytes",
+        "same selected frame or continuous frame range",
+        "same target pixels",
+        "same color conversion",
+        "same preloading policy",
+        "same full-canvas composited output",
+        "same process and thermal block"
+      ]
+    },
+    "player": {
+      "eligibleAfterFoveaIntegration": [
+        "Fovea",
+        "SDWebImage",
+        "PINRemoteImage",
+        "Kingfisher",
+        "Gifu",
+        "FLAnimatedImage",
+        "APNGKit",
+        "AnimatedImage",
+        "YYImage",
+        "SwiftyGif"
+      ],
+      "requiredEquivalentPolicy": [
+        "same monotonic timeline",
+        "same display refresh rate",
+        "same frame-window byte budget",
+        "same visibility interval",
+        "same background transition",
+        "same Reduce Motion mode",
+        "same cache warm state"
+      ]
+    }
+  },
+  "specializedComparatorPolicy": {
+    "dependencyPolicy": "comparison adapters only; no specialized library enters the Fovea runtime graph",
+    "featurePolicy": "adopt only high-value bounded mechanisms; defer formats and authoring surfaces that multiply complexity",
+    "registry": "docs/research/animated-image-library-registry-2026-08.json",
+    "sequence": [
+      "Gifu player timing and bounded-window adapter",
+      "FLAnimatedImage player timing, waiting, and pressure adapter",
+      "APNGKit APNG codec/compositor and player adapter",
+      "AnimatedImage refresh-rate adapter",
+      "YYImage source-oracle vectors for partial composition and pressure",
+      "SwiftyGif lifecycle falsifier only if earlier adapters leave a gap"
+    ],
+    "sourceAudit": "docs/research/animated-image-source-audit-2026-08.md"
+  },
+  "status": "preregistered-authorized-fovea-player-and-live-mjpeg-implemented-imagecraft-public-owned-apng-decoder-exact-local-publication-adapter-pin-and-device-comparators-pending",
+  "systemUnderTest": {
+    "apngCompositionEvidence": {
+      "checkpointStudy": "docs/research/w5-apng-checkpoint-model-2026-08.json",
+      "fullCanvasCheckpointPolicy": "rejected-as-general-default-at-32-MiB-eight-frame-reference-point",
+      "oracleStudy": "docs/research/w5-apng-composition-oracle-2026-08.json",
+      "ownedCompositionModel": "apng-straight-alpha-exact-numerator-floor-v1",
+      "ownedReferenceExactAgainstAppleAndImageCraft": 21,
+      "ownedReferenceStudy": "docs/research/w5-apng-owned-reference-2026-08.json",
+      "ownedSwiftAppleExactFramesWhereAvailable": 21,
+      "ownedSwiftPlaybackStudy": "docs/research/w5-apng-owned-swift-playback-2026-08.json",
+      "ownedSwiftPythonExactFrames": 24,
+      "ownedSwiftRealFixtureCheckpointCount": 0,
+      "ownedSwiftSeparateDefaultExactFrames": 3,
+      "ownedSwiftSyntheticCheckpointTest": "IMG_ANIM_PT_044",
+      "publicDecoderAllBackingsOwnedAPNG": true,
+      "publicDecoderAllOwnedRetainedWithin32MiB": true,
+      "publicDecoderAllRealFixtureCheckpointCountsZero": true,
+      "publicDecoderAppleExactFramesWhereAvailable": 21,
+      "publicDecoderBackingDiagnosticsTest": "IMG_ANIM_PT_050",
+      "publicDecoderCancellationFenced": true,
+      "publicDecoderCodecFingerprint": "dev.fovea.imageio.animation#impl=2#contract=2",
+      "publicDecoderMaximumObservedModeledPeakBytesUpperBound": 981940,
+      "publicDecoderMaximumObservedRetainedBytes": 23796,
+      "publicDecoderPythonExactFrames": 24,
+      "publicDecoderReverseRandomAccessExact": true,
+      "publicDecoderSeparateDefaultExactFrames": 3,
+      "publicDecoderStudy": "docs/research/w5-apng-public-decoder-playback-2026-08.json",
+      "separateDefaultMultiFramePolicy": "public-owned-route-for-rgba8-noninterlaced-1024-unsupported-unaligned-fail-closed",
+      "supportedFramesExactAgainstAppleImageIO": 21
+    },
+    "directionalCodecEvidence": {
+      "artifactInventoryCount": 72,
+      "captureManifestSHA256": "447406b9a8ff1eaa442d4a850ac94f1e7b5655e896bd82441c85b1434d15a08d",
+      "claimBoundary": "codec-only one-host six-block directional evidence; no product, player or device winner claim",
+      "inputsUnchangedDuringCapture": true,
+      "sourceUnchangedDuringCapture": true,
+      "status": "completed-local-source-bound-no-formal-claim"
+    },
+    "foveaHTTPFoundation": {
+      "capabilities": [
+        "strict multipart/x-mixed-replace content type and boundary parsing",
+        "incremental Content-Length delimited JPEG parts",
+        "bounded total, part, header and part-count resources",
+        "SOI and EOI validation and hostile truncation rejection"
+      ],
+      "status": "implemented-local-integrated-package-internal"
+    },
+    "foveaIdentity": "head-commit-plus-complete-working-tree-tree-dirty-state-source-unchanged-during-capture",
+    "foveaPlayerFoundation": {
+      "capabilities": [
+        "authorized encoded identity across network/cache, decoder preparation, and runtime registration",
+        "exact monotonic timeline and deadline-aware frame dropping",
+        "actual-byte bounded frame memory and wrap-aware windows",
+        "namespace generation floors across static and live registration",
+        "visibility, background, memory pressure, Reduce Motion, and platform presenters"
+      ],
+      "status": "implemented-package-internal-no-real-imagecraft-container-adapter"
+    },
+    "imageCraftFoundation": {
+      "capabilities": [
+        "exact rational frame timing",
+        "loop semantics",
+        "frame rect",
+        "disposal and blend metadata",
+        "bounded timeline bytes",
+        "bounded frame decode window",
+        "on-demand supported-frame decode",
+        "session cancellation",
+        "validated retained ImageIO sources",
+        "fail-closed multi-frame separate-default ImageIO index boundary",
+        "package-internal RGBA8 non-interlaced APNG raw-subrect parser",
+        "exact straight-alpha source/over composition and none/background/previous disposal",
+        "RFC 1950 compressed pre-frame checkpoint store with bounded replay",
+        "package-internal random-access owned playback including separate-default animation timeline",
+        "public ImageIOAnimatedImageDecoder owned APNG backing for RGBA8 non-interlaced canvases up to 1024",
+        "aligned unsupported APNG ImageIO fallback and unaligned unsupported fail-closed admission",
+        "public reverse-random-access and cancellation-fenced owned APNG provider",
+        "package-only animation preparation diagnostics for ownedAPNG, imageIOEncoded fallback and jpegSequence",
+        "owned retained/checkpoint/replay/working/output/modeled-peak accounting bound to actual selected backing"
+      ],
+      "identity": {
+        "dirty": true,
+        "headCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+        "identityAlgorithm": "git-temporary-index-add-all-write-tree-v1",
+        "status": "local-dirty-unpublished-public-owned-apng-decoder-and-backing-diagnostics-candidate-not-a-pinned-dependency-revision",
+        "workingTree": "0d81d878ea804d4c316898274c229f194d427528"
+      }
+    },
+    "missingBeforeFormalFoveaRun": [
+      "publish and pin the exact ImageCraft implementationVersion 2 animation revision",
+      "implement the concrete ImageCraft EncodedAnimationPlaybackPreparing adapter in Fovea",
+      "approve the RGBA8 non-interlaced <=1024 owned admission, aligned ImageIO fallback, and 2048 output-surface policy",
+      "run P0 specialized player and APNG comparator adapters with equivalent policies",
+      "run clean physical-device deadline, memory, energy, thermal, lifecycle, and reclamation gates",
+      "decide broader public/default API only after evidence and complexity review"
+    ]
+  },
+  "workload": {
+    "canonicalID": "W5-ANIMATED-MEDIA-V1",
+    "challengeIDs": [
+      "CH-ANIMATED-021"
+    ],
+    "claimActivation": "inactive-until-real-imagecraft-adapter-specialized-comparators-and-device-gates-pass",
+    "id": "W5"
+  }
+}

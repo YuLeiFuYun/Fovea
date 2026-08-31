@@ -1,0 +1,147 @@
+{
+  "blockMedianRatios": {
+    "APNG": {
+      "ImageCraftOverPINRemoteImage": {
+        "prepare": 2.161072684608828,
+        "selectedFrameMaterialized": 0.3724284630327695,
+        "sequential24FramesMaterialized": 1.2446237790640602
+      }
+    },
+    "GIF": {
+      "ImageCraftOverPINRemoteImage": {
+        "prepare": 0.7093754074116732,
+        "selectedFrameMaterialized": 0.12565764788510778,
+        "sequential24FramesMaterialized": 0.9784268930507252
+      }
+    }
+  },
+  "claimBoundary": {
+    "formalClaimEligible": false,
+    "reasons": [
+      "Fovea and ImageCraft source trees are dirty, and the ImageCraft animation candidate is unpublished and not the production dependency revision.",
+      "Only one local fixture class, size, host and codec-only surface were measured with six blocks.",
+      "Fovea player and live MJPEG foundations exist, but no concrete production ImageCraft encoded-animation preparer is wired to the exact public pin.",
+      "No physical-device deadline, memory, energy, thermal, lifecycle or reclamation evidence exists for the integrated product path.",
+      "Kingfisher and Nuke do not expose equivalent codec surfaces for both formats and require separate player or transport reporting."
+    ]
+  },
+  "correctness": {
+    "durationToleranceNanoseconds": 1000,
+    "exactPixelEligibility": {
+      "ImageCraft": true,
+      "PINRemoteImage": true,
+      "SDWebImage": false
+    },
+    "normalizedAdditionalRepeatCount": 2,
+    "sdWebImageDifference": {
+      "interpretation": "Small visual differences do not satisfy the preregistered exact-pixel digest gate. SDWebImage is reported separately and excluded from the exact-pixel timing pair.",
+      "maximumChannelDifference": 2,
+      "maximumDifferentPixelFraction": 0.3592681884765625,
+      "maximumMeanAbsoluteChannelDifference": 0.10132598876953125
+    },
+    "timelineEligibilityWithinTolerance": {
+      "ImageCraft": true,
+      "PINRemoteImage": true,
+      "SDWebImage": true
+    }
+  },
+  "date": "2026-08-06",
+  "evidence": {
+    "aggregate": ".artifacts/performance/w5-animated-codec-identity-v2/aggregate.json",
+    "artifactInventoryCount": 72,
+    "captureManifest": ".artifacts/performance/w5-animated-codec-identity-v2/capture-manifest.json",
+    "captureRunner": "Tools/Performance/capture_w5_animated_codec.py",
+    "identityAndTamperTests": "Tools/Performance/test_w5_animated_codec_identity.py",
+    "lab": "Benchmarks/ComparativeLab/AnimatedCodecLabPackage",
+    "legacySchema1Aggregate": ".artifacts/performance/w5-animated-codec-balanced/aggregate.json",
+    "manifestByteCount": 63896,
+    "manifestSHA256": "447406b9a8ff1eaa442d4a850ac94f1e7b5655e896bd82441c85b1434d15a08d",
+    "preregisteredPlan": "Benchmarks/ComparativeLab/animated-image-plan.json",
+    "validator": "Tools/Performance/validate_w5_animated_codec.py"
+  },
+  "interpretation": [
+    "ImageCraft and PINRemoteImage produce identical selected-frame bytes on both fixtures, and all three comparators remain within the 1 microsecond per-frame timeline tolerance.",
+    "On this run ImageCraft is directionally faster for GIF preparation and selected-frame materialization; the 24-frame GIF window is near parity with PINRemoteImage.",
+    "On this run ImageCraft is directionally faster for APNG selected-frame materialization but slower for APNG preparation and the 24-frame APNG window.",
+    "The APNG sequence ratio differs materially from the earlier schema-1 local capture, so the old timing values are superseded rather than retroactively identity-bound.",
+    "SDWebImage cannot enter the exact-pixel pair because its output differs by up to two channel levels.",
+    "No player deadline, network, cache-footprint, lifecycle, energy, thermal or physical-device endpoint is established by this codec-only study."
+  ],
+  "schemaVersion": 2,
+  "scope": {
+    "blockCount": 6,
+    "fixtureClass": "24-frame 256x256 public-domain-photo-derived local animation",
+    "formats": [
+      "GIF89a",
+      "APNG"
+    ],
+    "frameCachePolicy": "no explicit decoded frame cache",
+    "ordering": "comparator order rotates across three positions; format order alternates by block",
+    "pixelEndpoint": "full-canvas sRGB premultiplied RGBA materialization",
+    "samplesPerReport": 5,
+    "selectedFrameIndex": 12,
+    "sourceReusePolicy": "one retained provider per report",
+    "warmupsPerReport": 2
+  },
+  "sourceIdentity": {
+    "Fovea": {
+      "dirty": true,
+      "headCommit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+      "headTree": "2909946901b525e108d147fca4eb14da1d722ba5",
+      "workingTree": "3692eb6cf7b601b230c5ef047f7ae0a7bf9d5499"
+    },
+    "algorithm": "git-temporary-index-add-all-write-tree-v1",
+    "comparators": {
+      "ImageCraft": {
+        "dirty": true,
+        "headCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+        "headTree": "b8dfb362ce6eb3b07cd48f72247edd2b7401cabf",
+        "version": "local-animation-contract-v1",
+        "workingTree": "58f513143581e3f1547c99d4e143b2868460b578"
+      },
+      "PINRemoteImage": {
+        "dirty": false,
+        "headCommit": "c0d5cfa1947f2456ddb321a85b347b3d60d83254",
+        "headTree": "dd2f1c1add40a3e6ffac14839cbb8df5149cefc9",
+        "version": "releases/p14.31",
+        "workingTree": "dd2f1c1add40a3e6ffac14839cbb8df5149cefc9"
+      },
+      "SDWebImage": {
+        "dirty": false,
+        "headCommit": "2de3a496eaf6df9a1312862adcfd54acd73c39c0",
+        "headTree": "88daf2c6bcbf9252b895c9e35a21deb5065890d4",
+        "version": "5.21.7",
+        "workingTree": "88daf2c6bcbf9252b895c9e35a21deb5065890d4"
+      }
+    },
+    "inputsUnchangedDuringCapture": true,
+    "sourceUnchangedDuringCapture": true
+  },
+  "status": "completed-dirty-local-source-bound-codec-only-directional-no-product-claim",
+  "studyID": "FOVEA-W5-ANIMATED-CODEC-DIRECTIONAL-SOURCE-BOUND-2026-08",
+  "validationContract": {
+    "aggregateSchemaVersion": 2,
+    "captureRejects": [
+      "source tree changes during capture",
+      "input bytes change during capture",
+      "nonempty output directory",
+      "output outside Fovea .artifacts/performance",
+      "dirty or wrong-revision fixed comparator checkouts"
+    ],
+    "reportIdentityFields": [
+      "name",
+      "version",
+      "headCommit",
+      "workingTree",
+      "dirty"
+    ],
+    "reportSchemaVersion": 2,
+    "validatorRejects": [
+      "report identity differs from the capture manifest",
+      "report or RGBA artifact escapes the capture directory",
+      "RGBA bytes differ from the report digest",
+      "source-before and source-after identities differ",
+      "unexpected or missing block artifacts"
+    ]
+  }
+}

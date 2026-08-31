@@ -37,18 +37,58 @@
     },
     {
       "evidence": [
+        "Tests/FoveaTests/AnimationFrameMemoryTests.swift",
+        "Tests/FoveaTests/AnimationPlaybackCoordinatorTests.swift",
+        "Tests/FoveaTests/AnimationPlaybackSessionTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/AnimationFrameMemory.swift",
+      "reason": "AnimationFrameMemory is the synchronous decoded-frame hot path shared by independent playback sessions. Its only mutable state is the private FoveaCompactSieveCache, whose slot graph, index, cost and SIEVE metadata are already linearized by one audited NSLock; this wrapper stores an immutable cost limit and delegates every read, insert and removal to that cache. Actor isolation would add a hop to each display tick and would not strengthen the underlying synchronization boundary.",
+      "requiredTokens": [
+        "package final class AnimationFrameMemory: @unchecked Sendable",
+        "private let storage: FoveaCompactSieveCache<AnimationFrameMemoryKey, DecodedImage>",
+        "storage.value(for: key)",
+        "storage.insertReportingEvictions(",
+        "storage.removeAllAndReport {"
+      ],
+      "type": "AnimationFrameMemory"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/DerivedRasterCreationCoordinatorTests.swift",
+        "Tests/FoveaTests/DerivedRasterPersistenceTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaCore/DerivedRasterCreationCoordinator.swift",
+      "reason": "DerivedRasterPublicationLease is the synchronous publication fence shared by cancellation or namespace revocation and an asynchronous persistence adapter. One private NSLock protects the single Boolean permission bit; close is monotone, every read is serialized, and the lease stores no task, request, container, record or store reference. Synchronous close is required so publication permission is revoked before task cancellation or awaiting background work.",
+      "requiredTokens": [
+        "package final class DerivedRasterPublicationLease:",
+        "DerivedRasterPublicationPermission, @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var isOpenStorage = true",
+        "lock.withLock { isOpenStorage }",
+        "lock.withLock { isOpenStorage = false }"
+      ],
+      "type": "DerivedRasterPublicationLease"
+    },
+    {
+      "evidence": [
         "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
-        "Tests/FoveaTests/SharedTaskTests.swift"
+        "Tests/FoveaTests/SharedTaskTests.swift",
+        "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift"
       ],
       "expectedCount": 1,
       "path": "Sources/FoveaCore/FetchStage.swift",
-      "reason": "FetchCancellationHandoffLease carries one monotone UInt64 grace value between a task-local operation and a cancellation handler that may run concurrently. Every read and max-update is serialized by one private NSLock; the type stores no request, transport, task or continuation reference and cannot reduce an activated grace period.",
+      "reason": "FetchCancellationHandoffLease carries an activated cancellation grace plus attempt-local progress metadata between a task-local operation, transport progress callback and cancellation handler that may run concurrently. One private NSLock serializes activation, response-attempt reset, cumulative-byte updates and eligibility reads. The lease stores only scalar counts and capability flags, never a request, transport, task or continuation reference; unknown or incomparable progress fails closed, and activation remains monotone.",
       "requiredTokens": [
         "package final class FetchCancellationHandoffLease: @unchecked Sendable",
         "private let lock = NSLock()",
         "private var graceNanosecondsStorage: UInt64 = 0",
+        "private var expectedByteCount: Int?",
+        "private var receivedByteCount = 0",
+        "private var progressObservationSupported = false",
         "graceNanosecondsStorage = max(graceNanosecondsStorage, graceNanoseconds)",
-        "package func graceNanoseconds() -> UInt64"
+        "package func eligibleGraceNanoseconds(maximumRemainingBytes: Int) -> UInt64"
       ],
       "type": "FetchCancellationHandoffLease"
     },
@@ -94,15 +134,15 @@
         "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
         "Tests/FoveaTests/URLSessionTransportTests.swift"
       ],
-      "expectedCount": 1,
+      "expectedCount": 2,
       "path": "Sources/FoveaCore/PipelineProgressivePreview.swift",
-      "reason": "TransportProgressRelay bridges synchronous URLSession progress callbacks into one asynchronous progressive consumer without dropping admitted bytes. One private NSLock serializes the bounded pending response, coalesced data, completion identity, waiter and terminal state; the only continuation is resumed after unlocking, and the relay enforces a single consumer.",
+      "reason": "TransportProgressRelay and PipelineProgressiveObservationState bridge synchronous transport callbacks into asynchronous progressive processing. Each type owns only lock-protected scalar or bounded buffer state; continuations are resumed after unlocking, the relay enforces one consumer, and the observation state records only whether this exact subscriber received any progress before response completion.",
       "requiredTokens": [
         "final class TransportProgressRelay: @unchecked Sendable",
+        "final class PipelineProgressiveObservationState: @unchecked Sendable",
         "private let lock = NSLock()",
-        "private let maximumBufferedBytes: Int",
         "precondition(waiter == nil, \"TransportProgressRelay supports one consumer\")",
-        "private func popPendingLocked() -> TransportProgressEvent?"
+        "func hasObservedProgress() -> Bool"
       ],
       "type": "TransportProgressRelay"
     },
@@ -125,6 +165,44 @@
     },
     {
       "evidence": [
+        "Tests/FoveaTests/MultipartJPEGProgressStreamTests.swift",
+        "Tests/FoveaTests/MultipartJPEGTransportSessionTests.swift",
+        "Tests/FoveaTests/MultipartJPEGStreamParserTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaHTTP/MultipartJPEGProgressStream.swift",
+      "reason": "MultipartJPEGProgressRelay is the synchronous linearization boundary between URLSession progress callbacks and one bounded AsyncThrowingStream consumer. One private NSLock protects the parser, continuation and terminal bit; decoder transitions happen while locked, continuations are yielded or finished only after unlocking, and a full buffer fails closed instead of silently dropping an animation frame.",
+      "requiredTokens": [
+        "private final class MultipartJPEGProgressRelay: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var decoder: MultipartJPEGProgressDecoder",
+        "private var isTerminal = false",
+        "case .dropped:",
+        "continuation.finish(throwing: MultipartJPEGProgressError.backpressureExceeded)"
+      ],
+      "type": "MultipartJPEGProgressRelay"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/MultipartJPEGTransportSessionTests.swift",
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaHTTP/MultipartJPEGTransportSession.swift",
+      "reason": "MultipartJPEGTransportOwner synchronizes explicit session cancellation, AsyncThrowingStream termination, transport task installation and normal task completion. One private NSLock protects the only mutable task, subscription and monotone cancellation fields; task and stream cancellation occur after unlocking, so callbacks cannot re-enter the ownership critical section or double-cancel resources.",
+      "requiredTokens": [
+        "private final class MultipartJPEGTransportOwner: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var task: Task<Void, Never>?",
+        "private var subscription: MultipartJPEGProgressSubscription?",
+        "private var isCancelled = false",
+        "task?.cancel()",
+        "subscription?.cancel()"
+      ],
+      "type": "MultipartJPEGTransportOwner"
+    },
+    {
+      "evidence": [
         "Tests/FoveaTests/ValidatedEncodedHandoffTests.swift",
         "Tests/FoveaTests/StagingAndStorageTests.swift"
       ],
@@ -139,7 +217,25 @@
         "package func cloneContents(to destination: URL) throws"
       ],
       "type": "TransportStagedFileLease"
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/AnimationSystemIntegrationTests.swift",
+        "Tests/FoveaTests/FoveaSystemPipelineTests.swift"
+      ],
+      "expectedCount": 1,
+      "path": "Sources/FoveaSystem/FoveaMemoryPressureMonitor.swift",
+      "reason": "FoveaLifecycleNotificationMonitor performs synchronous NotificationCenter registration before the system composition root returns, preventing an immediate background notification from being missed. Its opaque Objective-C token array is immutable after initialization, callbacks capture only the Sendable animation runtime weakly, and deinit is the sole token consumer; there is no concurrently mutable state to isolate with an actor or lock.",
+      "requiredTokens": [
+        "package final class FoveaLifecycleNotificationMonitor: @unchecked Sendable",
+        "private let tokens: [NSObjectProtocol]",
+        "deinit {",
+        "NotificationCenter.default.removeObserver(token)",
+        "[weak animationRuntime]"
+      ],
+      "type": "FoveaLifecycleNotificationMonitor"
     }
   ],
+  "reviewedOn": "2026-08-05",
   "schemaVersion": 1
 }

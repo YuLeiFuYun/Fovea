@@ -18,6 +18,7 @@ CANCELLATION = (0, 1)
 class Capability:
     formats: frozenset[str]
     delivery: frozenset[str]
+    progressive_formats: frozenset[str]
     tracks: frozenset[str]
     metadata: frozenset[str]
     ranges: frozenset[str]
@@ -48,6 +49,7 @@ def supports(cap: Capability, req: Request) -> bool:
     return (
         req.format in cap.formats
         and req.delivery in cap.delivery
+        and (req.delivery != "progressive" or req.format in cap.progressive_formats)
         and req.track in cap.tracks
         and req.metadata <= cap.metadata
         and req.dynamic_range in cap.ranges
@@ -73,6 +75,7 @@ def assert_capability_monotonicity() -> int:
     subset = Capability(
         frozenset({"png"}),
         frozenset({"complete"}),
+        frozenset(),
         frozenset({"primary"}),
         frozenset({"orientation"}),
         frozenset({"sdr"}),
@@ -82,6 +85,7 @@ def assert_capability_monotonicity() -> int:
     superset = Capability(
         frozenset(FORMATS),
         frozenset(DELIVERY),
+        frozenset(FORMATS),
         frozenset(TRACKS),
         frozenset(METADATA),
         frozenset(RANGES),
@@ -95,6 +99,32 @@ def assert_capability_monotonicity() -> int:
         checked += 1
     return checked
 
+
+def assert_progressive_format_coupling() -> int:
+    cap = Capability(
+        frozenset({"png", "jpeg"}),
+        frozenset({"complete", "progressive"}),
+        frozenset({"jpeg"}),
+        frozenset({"primary"}),
+        frozenset({"orientation", "color"}),
+        frozenset({"sdr"}),
+        frozenset({"cgimage"}),
+        0,
+    )
+    checked = 0
+    for image_format in ("png", "jpeg"):
+        req = Request(
+            image_format,
+            "progressive",
+            "primary",
+            frozenset({"orientation"}),
+            "sdr",
+            "cgimage",
+            0,
+        )
+        assert supports(cap, req) == (image_format == "jpeg")
+        checked += 1
+    return checked
 
 def assert_generation_order(bound: int = 64) -> int:
     checked = 0
@@ -121,6 +151,62 @@ def assert_resource_join() -> int:
     return checked
 
 
+
+def assert_complete_output_contract() -> int:
+    limits = (8, 64)  # maximum dimension, maximum pixel count
+    target = (10, 10)
+    dimensions = ((1, 1), (8, 8), (9, 8), (10, 10), (11, 10))
+    resident_bytes = (1, 1_200, 40_960)
+    admitted_bytes = (1_200, 16_384)
+    profile_matches = (False, True)
+    checked = 0
+    for (width, height), resident, admitted, profile_match in product(
+        dimensions, resident_bytes, admitted_bytes, profile_matches
+    ):
+        conditions = (
+            width <= limits[0],
+            height <= limits[0],
+            width * height <= limits[1],
+            width <= target[0],
+            height <= target[1],
+            resident <= admitted,
+            profile_match,
+        )
+        accepted = all(conditions)
+        if accepted:
+            assert all(conditions)
+        else:
+            assert any(not condition for condition in conditions)
+        checked += 1
+    return checked
+
+
+def assert_progressive_output_contract() -> int:
+    limits = (8, 64)
+    target = (10, 10)
+    dimensions = ((1, 1), (8, 8), (9, 8), (10, 10), (11, 10))
+    resident_bytes = (1, 4_096, 40_960)
+    maximum_resident_bytes = (4_096, 16_384)
+    checked = 0
+    for (width, height), resident, maximum_resident in product(
+        dimensions, resident_bytes, maximum_resident_bytes
+    ):
+        conditions = (
+            width <= limits[0],
+            height <= limits[0],
+            width * height <= limits[1],
+            width <= target[0],
+            height <= target[1],
+            resident <= maximum_resident,
+        )
+        accepted = all(conditions)
+        if accepted:
+            assert all(conditions)
+        else:
+            assert any(not condition for condition in conditions)
+        checked += 1
+    return checked
+
 def assert_timing_domain() -> int:
     max_u64 = 2**64 - 1
     samples = (0, 1, 2, max_u64 - 1, max_u64)
@@ -137,13 +223,18 @@ def assert_timing_domain() -> int:
 
 def main() -> int:
     capability_cases = assert_capability_monotonicity()
+    progressive_format_cases = assert_progressive_format_coupling()
     generation_cases = assert_generation_order()
     resource_cases = assert_resource_join()
+    complete_output_cases = assert_complete_output_contract()
+    progressive_output_cases = assert_progressive_output_contract()
     timing_cases = assert_timing_domain()
     print(
         "Image codec contract model: "
-        f"capability={capability_cases} generation={generation_cases} "
-        f"resource={resource_cases} timing={timing_cases} errors=0"
+        f"capability={capability_cases} progressive_format={progressive_format_cases} "
+        f"generation={generation_cases} "
+        f"resource={resource_cases} complete_output={complete_output_cases} "
+        f"progressive_output={progressive_output_cases} timing={timing_cases} errors=0"
     )
     return 0
 

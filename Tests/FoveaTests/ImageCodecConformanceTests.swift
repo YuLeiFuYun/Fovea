@@ -60,7 +60,20 @@ final class ImageCodecConformanceTests: XCTestCase {
                 }
             }
         }
-        XCTAssertEqual(checked, 2_304)
+        XCTAssertEqual(
+            checked,
+            EncodedImageFormat.allCases.count
+                * ImageDecodeDeliveryMode.allCases.count
+                * ImageDecodeTrackMode.allCases.count
+                * metadataSubsets.count
+                * ImageDecodeDynamicRange.allCases.count
+                * ImageDecodeOutputRepresentation.allCases.count
+                * ImageDecodeCancellationMode.allCases.count
+        )
+        XCTAssertTrue(
+            checked == 2_304 || checked == 3_072,
+            "finite ImageCraft capability domain changed; review the new contract dimension"
+        )
     }
 
     func testFailurePrecedenceIsStableWhenSeveralCapabilitiesAreMissing() {

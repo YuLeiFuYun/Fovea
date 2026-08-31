@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "planID": "FOVEA-W5-APNG-COMPRESSED-CHECKPOINT-MODEL-V1",
+  "status": "preregistered-local-analytical-sensitivity-and-native-roundtrip-no-product-claim",
+  "objective": "Determine the checkpoint compression ratios required for owned straight-alpha APNG composition to satisfy retained-state, replay-depth, and modeled-peak bounds after full-canvas and persistent-tile defaults failed the reference policy.",
+  "basePlan": "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+  "compressionModel": {
+    "id": "straight-alpha-zlib-level-9-checksummed-v1",
+    "level": 9,
+    "headerBytes": 28,
+    "minimumBlobBytes": 36,
+    "decompressorWorkspaceBytes": 262144,
+    "nativeAnchor": "Deterministically encode and decode every nonzero pre-frame straight-alpha state from the retained APNG fixtures. Native ratios are content anchors only and are not scaled into synthetic claims."
+  },
+  "checkpointBlobRatioPPM": [
+    2500,
+    5000,
+    10000,
+    20000,
+    50000,
+    100000,
+    250000,
+    500000,
+    750000,
+    1000000
+  ],
+  "referencePolicyPoint": {
+    "retainedBudgetMiB": 32,
+    "maximumReplayFrames": 8,
+    "modeledPeakHardCapMiB": 32
+  },
+  "reportingPolicy": {
+    "separateRetainedAndPeakFeasibility": true,
+    "reportLargestFeasibleRatioByScenario": true,
+    "reportLargestPeakClearingRatioByScenario": true,
+    "globalOptimalityClaim": false
+  },
+  "modelBoundary": [
+    "Synthetic checkpoint blob ratios are explicit sensitivity inputs from 0.25 percent through 100 percent; they are not inferred from native fixture compression.",
+    "The checkpoint blob stores the complete straight-alpha pre-frame canvas with a deterministic header, zlib payload, dimensions, raw byte count, and CRC32.",
+    "Frame zero uses an implicit transparent pre-frame state and retains no compressed blob.",
+    "Modeled peak counts retained source or raw subrect state, retained compressed checkpoints, one straight-alpha compositor canvas, the largest current raw subrect, the largest previous-disposal save region, one premultiplied output canvas, and 256 KiB decompressor workspace.",
+    "The model excludes allocator fragmentation, ImageIO private state, compression latency, CPU, energy, thermal effects, and physical-device pressure.",
+    "A feasible analytical ratio is a threshold requirement, not evidence that production animation content achieves that ratio or latency."
+  ]
+}

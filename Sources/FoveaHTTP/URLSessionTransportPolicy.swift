@@ -80,8 +80,6 @@ public struct URLSessionTransportPolicy: Hashable, Sendable {
             "proxy:\(proxyPolicy.rawValue)",
             "destination:\(destinationPolicy.executionFingerprint)",
         ].joined(separator: "\u{0}")
-        return SHA256.hash(data: Data(material.utf8))
-            .map { String(format: "%02x", $0) }
-            .joined()
+        return httpLowercaseHexString(SHA256.hash(data: Data(material.utf8)))
     }
 }

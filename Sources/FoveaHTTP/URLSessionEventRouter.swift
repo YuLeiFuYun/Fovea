@@ -149,8 +149,9 @@ final class StreamingURLSessionDelegate: NSObject, URLSessionDataDelegate, Senda
     }
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        // URLSession 委托回调不提供异步背压钩子，因此在入队前暂停任务，
-        // 保证每个请求在事件管线中至多存在一个尚未消费的响应体分块。
+        // URLSession 委托回调不提供异步背压钩子。这里在转发当前回调前暂停任务，
+        // 只用于降低后续读取速率；已排队回调和 URLSession 的数据合并不受此边界控制，
+        // 因而它不是“一次仅一个分块”或驻留内存上限。
         dataTask.suspend()
         router.emit(.data(data), for: dataTask.taskIdentifier)
     }

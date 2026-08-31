@@ -23,6 +23,13 @@ struct NetworkLabOptions {
     private static let maximumAdditionalOriginCount = 64
 
     var live = false
+    var mjpegMechanism = false
+    var sharedTaskRelayMechanism = false
+    var progressiveResourceMechanism = false
+    var progressiveHeldOut12MP = false
+    var progressiveTargetPixels = 512
+    var progressiveConcurrency = 1
+    var progressiveTransportThreshold = 1024 * 1024
     var keepCache = false
     var cacheRoot: URL?
     var inputs: [NetworkLabInput] = []
@@ -36,6 +43,40 @@ struct NetworkLabOptions {
             switch arguments[index] {
             case "--live":
                 options.live = true
+            case "--mjpeg-mechanism":
+                options.mjpegMechanism = true
+            case "--shared-task-relay-mechanism":
+                options.sharedTaskRelayMechanism = true
+            case "--progressive-resource-mechanism":
+                options.progressiveResourceMechanism = true
+            case "--progressive-heldout-12mp":
+                options.progressiveHeldOut12MP = true
+            case "--progressive-target-pixels":
+                index += 1
+                guard index < arguments.count,
+                    let value = Int(arguments[index]), value > 0
+                else {
+                    throw NetworkLabError.invalidPositiveInteger("--progressive-target-pixels")
+                }
+                options.progressiveTargetPixels = value
+            case "--progressive-concurrency":
+                index += 1
+                guard index < arguments.count,
+                    let value = Int(arguments[index]), value > 0
+                else {
+                    throw NetworkLabError.invalidPositiveInteger("--progressive-concurrency")
+                }
+                options.progressiveConcurrency = value
+            case "--progressive-transport-threshold":
+                index += 1
+                guard index < arguments.count,
+                    let value = Int(arguments[index]), value > 0
+                else {
+                    throw NetworkLabError.invalidPositiveInteger(
+                        "--progressive-transport-threshold"
+                    )
+                }
+                options.progressiveTransportThreshold = value
             case "--keep-cache":
                 options.keepCache = true
             case "--cache-root":
@@ -133,6 +174,7 @@ struct NetworkLabOptions {
 enum NetworkLabError: Error, CustomStringConvertible {
     case helpRequested
     case liveModeRequired
+    case conflictingModes
     case missingValue(String)
     case invalidPositiveInteger(String)
     case invalidReasonCode
@@ -148,6 +190,8 @@ enum NetworkLabError: Error, CustomStringConvertible {
             return Self.usage
         case .liveModeRequired:
             return "真实网络实验必须显式传入 --live。\n\(Self.usage)"
+        case .conflictingModes:
+            return "--live 与各离线 mechanism 模式只能选择一种。\n\(Self.usage)"
         case .missingValue(let option):
             return "参数 \(option) 缺少值。\n\(Self.usage)"
         case .invalidPositiveInteger(let option):
@@ -168,7 +212,14 @@ enum NetworkLabError: Error, CustomStringConvertible {
     }
 
     static let usage = """
-        用法：FoveaNetworkLab --live [选项]
+        用法：FoveaNetworkLab (--live [选项] | --mjpeg-mechanism | --shared-task-relay-mechanism | --progressive-resource-mechanism)
+          --mjpeg-mechanism                    运行离线 MJPEG latest-only 机制实验
+          --shared-task-relay-mechanism        运行离线 shared-task result relay 控制面实验
+          --progressive-resource-mechanism     运行 H013 progressive 联合资源机制实验
+          --progressive-heldout-12mp            H013 使用冻结的 12MP held-out progressive fixture
+          --progressive-target-pixels <n>      H013 正方形目标像素边长
+          --progressive-concurrency <n>        H013 并发 progressive 请求数
+          --progressive-transport-threshold <bytes> H013 transport 内存暂存阈值
           --url <https-url>                    增加预期成功的测试图片；可重复
           --expect-failure <reason> <url>      增加预期结构化失败；可重复
           --allow-origin <https-url>           显式允许跨 origin 重定向目的地；可重复

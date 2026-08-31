@@ -1,6 +1,7 @@
 import ComparativeLabCore
 import CryptoKit
 import Foundation
+import PINCache
 import PINRemoteImage
 
 #if canImport(UIKit)
@@ -147,10 +148,49 @@ private final class PINResultRelay: @unchecked Sendable {
     }
 }
 
+private let pinResumeCacheKeyPrefix = "R-"
+
+private func makeIsolatedPINRemoteImageCache(root: URL) -> PINCache {
+    let serializer: PINDiskCacheSerializerBlock = { object, key in
+        if key.hasPrefix(pinResumeCacheKeyPrefix) {
+            return
+                (try? NSKeyedArchiver.archivedData(
+                    withRootObject: object,
+                    requiringSecureCoding: false
+                )) ?? Data()
+        }
+        return (object as? NSData).map { $0 as Data } ?? Data()
+    }
+    let deserializer: PINDiskCacheDeserializerBlock = { data, key in
+        if key.hasPrefix(pinResumeCacheKeyPrefix),
+            let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: data as Data)
+        {
+            unarchiver.requiresSecureCoding = false
+            defer { unarchiver.finishDecoding() }
+            if let object = try? unarchiver.decodeTopLevelObject(
+                forKey: NSKeyedArchiveRootObjectKey
+            ) as? NSCoding {
+                return object
+            }
+        }
+        return data as NSData
+    }
+    return PINCache(
+        name: "PINRemoteImageManagerCache",
+        rootPath: root.path,
+        serializer: serializer,
+        deserializer: deserializer,
+        keyEncoder: nil,
+        keyDecoder: nil,
+        ttlCache: true
+    )
+}
+
 public final class PINRemoteImageComparatorAdapter: ComparatorProgressiveAdapter,
     @unchecked Sendable
 {
     public let identity: ComparatorIdentity
+    public let runtimeConfiguration: ComparatorRuntimeConfiguration?
 
     private let manager: PINRemoteImageManager
     private let headerRegistry = PINHeaderRegistry()
@@ -175,13 +215,49 @@ public final class PINRemoteImageComparatorAdapter: ComparatorProgressiveAdapter
         session.httpCookieStorage = nil
         session.urlCredentialStorage = nil
         session.httpShouldSetCookies = false
+        let boundedDownloads = max(1, maximumConcurrentDownloads)
         let configuration = PINRemoteImageManagerConfiguration()
-        configuration.maxConcurrentDownloads = UInt(max(1, maximumConcurrentDownloads))
-        configuration.maxConcurrentOperations = UInt(max(1, maximumConcurrentDownloads))
+        configuration.maxConcurrentDownloads = UInt(boundedDownloads)
+        configuration.maxConcurrentOperations = UInt(boundedDownloads)
         configuration.estimatedRemainingTimeThreshold = 0
         configuration.shouldBlurProgressive = false
         configuration.maxProgressiveRenderSize = CGSize(width: 8192, height: 8192)
-        let imageCache = PINRemoteImageManager.defaultImageTtlCache()
+        let imageCache = makeIsolatedPINRemoteImageCache(root: cacheDirectory)
+        let rootPath = cacheDirectory.standardizedFileURL.path
+        let diskPath = imageCache.diskCache.cacheURL.standardizedFileURL.path
+        guard diskPath == rootPath || diskPath.hasPrefix(rootPath + "/") else {
+            throw ComparativeLabError.invalidIdentifier
+        }
+        runtimeConfiguration = try ComparatorRuntimeConfiguration(
+            parameters: [
+                "adapter.profile": "pinremoteimage-isolated-ttl-cache",
+                "cache.kind": "PINCache-TTL",
+                "cache.rootPolicy": "evaluator-owned",
+                "cache.memoryCostLimit": String(imageCache.memoryCache.costLimit),
+                "cache.memoryAgeLimitSeconds": String(imageCache.memoryCache.ageLimit),
+                "cache.memoryTTL": String(imageCache.memoryCache.isTTLCache),
+                "cache.diskByteLimit": String(imageCache.diskCache.byteLimit),
+                "cache.diskAgeLimitSeconds": String(imageCache.diskCache.ageLimit),
+                "cache.diskTTL": String(imageCache.diskCache.isTTLCache),
+                "cache.evictionStrategy": "least-recently-used",
+                "cache.serialization": "PINRemoteImage-resume-aware-v1",
+                "dependency.PINCache": "3.0.4@2fb85948463292c2e824148cf17dc62a4c217a94",
+                "dependency.PINOperation": "1.2.3@a74f978733bdaf982758bfa23d70a189f4b4c1b6",
+                "progressive.estimatedRemainingTimeThresholdSeconds": "0",
+                "progressive.maxRenderHeightPixels": "8192",
+                "progressive.maxRenderWidthPixels": "8192",
+                "progressive.shouldBlur": "false",
+                "scheduler.maximumConcurrentDownloads": String(boundedDownloads),
+                "scheduler.maximumConcurrentOperations": String(boundedDownloads),
+                "session.base": "ephemeral",
+                "session.cookies": "disabled",
+                "session.credentials": "disabled",
+                "session.httpMaximumConnectionsPerHost": String(
+                    session.httpMaximumConnectionsPerHost
+                ),
+                "session.urlCache": "nil",
+            ]
+        )
         manager = PINRemoteImageManager(
             sessionConfiguration: session,
             alternativeRepresentationProvider: nil,
@@ -594,3 +670,260 @@ public final class PINRemoteImageComparatorAdapter: ComparatorProgressiveAdapter
         return bytesOverflow ? Int.max : bytes
     }
 }
+
+#if canImport(UIKit)
+    private enum PINAnimatedAdapterError: Error {
+        case unsupportedFormat
+        case decodeFailed
+        case invalidFrameCount(Int)
+        case invalidFrameDuration(index: Int, seconds: Double)
+        case invalidFrameIdentity
+    }
+
+    private final class PINAnimatedEventState: @unchecked Sendable {
+        private let lock = NSLock()
+        private var sequence = 0
+
+        func next(frameIndex: Int, timestamp: UInt64) -> ComparatorAnimatedPlayerFrameEvent? {
+            lock.withLock {
+                defer { sequence += 1 }
+                return try? ComparatorAnimatedPlayerFrameEvent(
+                    sequence: sequence,
+                    monotonicNanoseconds: timestamp,
+                    sourceFrameIndex: frameIndex
+                )
+            }
+        }
+    }
+
+    @MainActor
+    private final class PINAnimatedBenchmarkView: PINAnimatedImageView {
+        var eventSink: ((Int, UInt64) -> Void)?
+        private var isRecordingFrames = false
+        private var lastRecordedFrameIndex: Int?
+        private let frameCountForIdentity: Int
+
+        init(animatedImage: PINCachedAnimatedImage, frameCount: Int) {
+            frameCountForIdentity = frameCount
+            super.init(animatedImage: animatedImage)
+        }
+
+        required init?(coder: NSCoder) {
+            fatalError("PIN animated comparator does not support NSCoder")
+        }
+
+        override func display(_ layer: CALayer) {
+            super.display(layer)
+            guard isRecordingFrames else { return }
+            let timestamp = DispatchTime.now().uptimeNanoseconds
+            guard let image = image,
+                let frameIndex = Self.sourceFrameIndex(
+                    image: image,
+                    frameCount: frameCountForIdentity
+                ),
+                frameIndex != lastRecordedFrameIndex
+            else { return }
+            lastRecordedFrameIndex = frameIndex
+            eventSink?(frameIndex, timestamp)
+        }
+
+        func beginRecordingFrames() {
+            isRecordingFrames = true
+            lastRecordedFrameIndex = nil
+            setNeedsDisplay()
+            layer.setNeedsDisplay()
+        }
+
+        func endRecordingFrames() {
+            isRecordingFrames = false
+            lastRecordedFrameIndex = nil
+        }
+
+        private static func sourceFrameIndex(image: UIImage, frameCount: Int) -> Int? {
+            guard let cgImage = image.cgImage else { return nil }
+            var pixel = [UInt8](repeating: 0, count: 4)
+            guard
+                let context = CGContext(
+                    data: &pixel,
+                    width: 1,
+                    height: 1,
+                    bitsPerComponent: 8,
+                    bytesPerRow: 4,
+                    space: CGColorSpaceCreateDeviceRGB(),
+                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                        | CGBitmapInfo.byteOrder32Big.rawValue
+                )
+            else { return nil }
+            context.interpolationQuality = .none
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+            let red = Int(pixel[0])
+            let green = Int(pixel[1])
+            let blue = Int(pixel[2])
+            let index = ((red - 17 + 256) * 173) % 256
+            guard index < frameCount,
+                green == (index * 73 + 29) % 256,
+                blue == (index * 109 + 43) % 256
+            else { return nil }
+            return index
+        }
+    }
+
+    @MainActor
+    private final class PINAnimatedPlayerController {
+        private let window: UIWindow
+        private let imageView: PINAnimatedBenchmarkView
+        private let continuation: AsyncStream<ComparatorAnimatedPlayerFrameEvent>.Continuation
+        private var stopped = false
+
+        init(
+            animatedImage: PINCachedAnimatedImage,
+            frameCount: Int,
+            continuation: AsyncStream<ComparatorAnimatedPlayerFrameEvent>.Continuation,
+            state: PINAnimatedEventState
+        ) {
+            let imageView = PINAnimatedBenchmarkView(
+                animatedImage: animatedImage,
+                frameCount: frameCount
+            )
+            imageView.frame = CGRect(
+                x: 0,
+                y: 0,
+                width: max(1, animatedImage.size.width),
+                height: max(1, animatedImage.size.height)
+            )
+            imageView.animatedImageRunLoopMode = RunLoop.Mode.common.rawValue
+            imageView.isPlaybackPaused = true
+            imageView.eventSink = { frameIndex, timestamp in
+                guard let event = state.next(frameIndex: frameIndex, timestamp: timestamp) else {
+                    return
+                }
+                continuation.yield(event)
+            }
+
+            let controller = UIViewController()
+            controller.view.backgroundColor = .clear
+            controller.view.addSubview(imageView)
+            let window: UIWindow
+            if let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+                .first
+            {
+                window = UIWindow(windowScene: scene)
+                window.frame = imageView.frame
+            } else {
+                window = UIWindow(frame: imageView.frame)
+            }
+            window.rootViewController = controller
+            window.isHidden = true
+
+            self.window = window
+            self.imageView = imageView
+            self.continuation = continuation
+        }
+
+        func start() {
+            guard !stopped else { return }
+            imageView.beginRecordingFrames()
+            window.makeKeyAndVisible()
+            imageView.isPlaybackPaused = false
+        }
+
+        func pause() {
+            guard !stopped else { return }
+            imageView.isPlaybackPaused = true
+        }
+
+        func stop() {
+            guard !stopped else { return }
+            stopped = true
+            imageView.isPlaybackPaused = true
+            imageView.endRecordingFrames()
+            imageView.eventSink = nil
+            imageView.animatedImage = nil
+            window.isHidden = true
+            window.rootViewController = nil
+            continuation.finish()
+        }
+
+        isolated deinit {
+            imageView.isPlaybackPaused = true
+            imageView.endRecordingFrames()
+            imageView.eventSink = nil
+            imageView.animatedImage = nil
+            window.isHidden = true
+            window.rootViewController = nil
+            continuation.finish()
+        }
+    }
+
+    extension PINRemoteImageComparatorAdapter: ComparatorAnimatedPlayerAdapter {
+        @MainActor
+        public func makeAnimatedPlayer(
+            _ request: ComparatorAnimatedPlayerRequest
+        ) throws -> ComparatorAnimatedPlayerSession {
+            guard
+                let animatedImage = PINCachedAnimatedImage(
+                    animatedImageData: request.encodedData
+                )
+            else {
+                throw PINAnimatedAdapterError.decodeFailed
+            }
+            let frameCount = Int(animatedImage.frameCount)
+            guard frameCount > 1 else {
+                throw PINAnimatedAdapterError.invalidFrameCount(frameCount)
+            }
+            var durations: [UInt64] = []
+            durations.reserveCapacity(frameCount)
+            for index in 0..<frameCount {
+                let duration = animatedImage.duration(at: UInt(index))
+                guard duration.isFinite, duration > 0 else {
+                    throw PINAnimatedAdapterError.invalidFrameDuration(
+                        index: index,
+                        seconds: duration
+                    )
+                }
+                do {
+                    let normalized: UInt64
+                    switch request.format {
+                    case .gif:
+                        normalized =
+                            try ComparatorAnimatedDurationNormalization
+                            .gifCentisecondNanoseconds(seconds: duration)
+                    case .apng:
+                        normalized =
+                            try ComparatorAnimatedDurationNormalization
+                            .nearestMicrosecondNanoseconds(seconds: duration)
+                    }
+                    durations.append(normalized)
+                } catch {
+                    throw PINAnimatedAdapterError.invalidFrameDuration(
+                        index: index,
+                        seconds: duration
+                    )
+                }
+            }
+
+            let pair = AsyncStream<ComparatorAnimatedPlayerFrameEvent>.makeStream(
+                bufferingPolicy: .bufferingNewest(4_096)
+            )
+            let state = PINAnimatedEventState()
+            let controller = PINAnimatedPlayerController(
+                animatedImage: animatedImage,
+                frameCount: frameCount,
+                continuation: pair.continuation,
+                state: state
+            )
+            pair.continuation.onTermination = { @Sendable _ in
+                Task { @MainActor in controller.stop() }
+            }
+            return try ComparatorAnimatedPlayerSession(
+                sourceFrameDurationsNanoseconds: durations,
+                sourceLoopCount: UInt(animatedImage.loopCount),
+                inputPath: .encodedNative,
+                events: pair.stream,
+                start: { controller.start() },
+                pause: { controller.pause() },
+                stop: { controller.stop() }
+            )
+        }
+    }
+#endif

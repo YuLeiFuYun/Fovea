@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 2,
+  "studyID": "W2-DERIVED-PROVIDER-EXPERIMENTS-2026-08",
+  "workload": "W2-HERO-V1",
+  "environment": "iOS Simulator 26.4.1 diagnostic mode",
+  "claimEligible": false,
+  "reasonNotClaimEligible": "ComparativeLab --diagnostic skips the quiescent-host gate; the study is directional A/B evidence only. Repeated non-diagnostic attempts were rejected by the host preflight because competing build/simulator work, CPU-idle, and disk-throughput limits were not satisfied.",
+  "fixedConditions": {
+    "cacheState": "warm-disk",
+    "cachePreparationRepetitions": 8,
+    "derivedRasterProfile": "observed-v1",
+    "historicalProviderExperimentFormat": "schema4 independent framed-LZ4 RGBX 1MiB decoded chunks",
+    "currentCandidateFormat": "schema5 independent LZFSE RGBX 1MiB decoded chunks with canonical outer-frame validation",
+    "observationsPerRun": 9
+  },
+  "experiments": [
+    {
+      "variant": "row-provider-baseline-sandwich-low",
+      "callbackMedianNanoseconds": 305791,
+      "pixelMaterializationMedianNanoseconds": 860292,
+      "displayReadyMedianNanoseconds": 1164250,
+      "notes": "Historical schema4 same-window Fovea diagnostic after same-boundary admission correction; retained as the low side of observed row-provider variance."
+    },
+    {
+      "variant": "row-provider-baseline-sandwich-high",
+      "callbackMedianNanoseconds": 365250,
+      "pixelMaterializationMedianNanoseconds": 993875,
+      "displayReadyMedianNanoseconds": 1404500,
+      "notes": "Historical schema4 same-window Fovea sandwich sample around PINRemoteImage."
+    },
+    {
+      "variant": "transient-getBytePointer-whole-surface",
+      "callbackMedianNanoseconds": 576292,
+      "pixelMaterializationMedianNanoseconds": 1088125,
+      "displayReadyMedianNanoseconds": 1918792,
+      "physicalFootprintDeltaBytes": 425984,
+      "notes": "Historical schema4 experiment. CGDataProvider construction triggered zero getBytePointer calls in DEBUG; materialization triggered exactly one getBytePointer/release pair. Despite excellent transient memory lifetime, Release W2 latency regressed materially. Rejected and removed."
+    },
+    {
+      "variant": "short-lock-plus-single-pass-parser",
+      "callbackMedianNanoseconds": 518666,
+      "pixelMaterializationMedianNanoseconds": 953000,
+      "displayReadyMedianNanoseconds": 1422667,
+      "physicalFootprintDeltaBytes": 3751936,
+      "notes": "Historical schema4 experiment. Single-pass table-to-range parser did not show a repeatable latency benefit and produced an unfavorable footprint sample. That parser rewrite was reverted."
+    },
+    {
+      "variant": "short-lock-plus-two-pass-parser-run-1",
+      "callbackMedianNanoseconds": 354375,
+      "pixelMaterializationMedianNanoseconds": 901709,
+      "displayReadyMedianNanoseconds": 1407041,
+      "physicalFootprintDeltaBytes": 458752,
+      "notes": "Historical schema4 candidate. Provider lock protects only immutable chunk-cache reference publication/lookup/clear; decompression and copies are outside the source-wide lock."
+    },
+    {
+      "variant": "short-lock-plus-two-pass-parser-run-2",
+      "callbackMedianNanoseconds": 443250,
+      "pixelMaterializationMedianNanoseconds": 1042209,
+      "displayReadyMedianNanoseconds": 1516875,
+      "physicalFootprintDeltaBytes": 409600,
+      "notes": "Second historical schema4 sandwich sample."
+    },
+    {
+      "variant": "whole-callback-lock-plus-two-pass-parser",
+      "callbackMedianNanoseconds": 435833,
+      "pixelMaterializationMedianNanoseconds": 1070208,
+      "displayReadyMedianNanoseconds": 1737250,
+      "physicalFootprintDeltaBytes": 884736,
+      "notes": "Historical schema4 experiment. Restoring the original source-wide callback lock removed concurrent scaling and regressed the immediate W2 A/B. Rejected; short-lock provider restored."
+    },
+    {
+      "variant": "pinremoteimage-middle-reference",
+      "callbackMedianNanoseconds": 367750,
+      "pixelMaterializationMedianNanoseconds": 1357708,
+      "displayReadyMedianNanoseconds": 1730125,
+      "physicalFootprintDeltaBytes": 3309568,
+      "notes": "Historical schema4 same-window directional PINRemoteImage reference used around the short-lock candidate."
+    }
+  ],
+  "providerReadShape": {
+    "346x259": {"getBytesAtPositionCalls": 259, "decodedChunkMisses": 1},
+    "693x520": {"getBytesAtPositionCalls": 520, "decodedChunkMisses": 2},
+    "1040x780": {"getBytesAtPositionCalls": 780, "decodedChunkMisses": 4},
+    "finding": "CoreGraphics requested exactly one row per getBytesAtPosition callback. The 1MiB decoded-chunk memo limits decompression to one decode per touched chunk, so changing chunk size alone does not remove row-callback or row-copy overhead."
+  },
+  "currentCandidate": {
+    "variant": "schema5-lzfse-short-lock-raw-buffer-frame-parser",
+    "aggregation": "For each of the 9 W2 resources and each metric, take the median across repeated runs first, then average those 9 resource medians. This reduces the influence of host spikes without treating diagnostic data as release-quality evidence.",
+    "foveaRuns": 2,
+    "pinRemoteImageRuns": 2,
+    "foveaResourceMedianMeanNanoseconds": {
+      "callback": 350493,
+      "pixelMaterialization": 1015512,
+      "displayReady": 1454069
+    },
+    "pinRemoteImageResourceMedianMeanNanoseconds": {
+      "callback": 383535,
+      "pixelMaterialization": 1596549,
+      "displayReady": 2010637
+    },
+    "pinOverFoveaMeanSpeedup": {
+      "callback": 1.0942717697618767,
+      "pixelMaterialization": 1.5721620433445476,
+      "displayReady": 1.3827652806879267
+    },
+    "foveaWinsOutOfNine": {
+      "callback": 6,
+      "pixelMaterialization": 9,
+      "displayReady": 9
+    },
+    "admissionDiagnosticsPerFoveaRun": {
+      "derived-raster-no-read-savings": 0,
+      "derived-raster-insufficient-observed-reuse": 9,
+      "derived-raster-scheduled-count": 18,
+      "derived-raster-terminal-count": 18
+    },
+    "artifactBasenames": {
+      "fovea": [
+        "fovea-w2-hero-v1-warm-disk-prep8-derived-observed-v1-schema5-rawbuf-pass1.json",
+        "fovea-w2-hero-v1-warm-disk-prep8-derived-observed-v1-schema5-rawbuf-pass2.json"
+      ],
+      "pinRemoteImage": [
+        "pinremoteimage-w2-hero-v1-warm-disk-prep8-rawbuf-pass1.json",
+        "pinremoteimage-w2-hero-v1-warm-disk-prep8-rawbuf-pass2.json"
+      ]
+    },
+    "notes": "The schema5 LZFSE candidate preserved the independent random-access chunk provider and one-chunk memo. Replacing repeated Data indexing in the canonical LZFSE outer-frame parser with one raw-buffer view reduced the directional callback resource-median mean from 378838 ns to 350493 ns and the display-ready resource-median mean from 1491965 ns to 1454069 ns."
+  },
+  "decisions": [
+    "Keep schema5 independent LZFSE chunks, the random-access row provider, and the short-duration decoded-chunk cache lock.",
+    "Keep canonical LZFSE outer-frame validation; optimize its mechanics with one raw-buffer view rather than weakening the trusted-load validation boundary.",
+    "Keep 1MiB decoded chunks; 256KiB, 1MiB, and 4MiB LZ4 mechanism probes did not show a useful decode advantage for changing chunk size.",
+    "Do not expose getBytePointer for transient whole-surface reconstruction on the W2 path.",
+    "Do not retain Compression scratch pools; same-process decode and encode probes showed no repeatable benefit over nil scratch.",
+    "Treat every simulator number in this file as directional until the ComparativeLab quiescent-host gate passes."
+  ]
+}

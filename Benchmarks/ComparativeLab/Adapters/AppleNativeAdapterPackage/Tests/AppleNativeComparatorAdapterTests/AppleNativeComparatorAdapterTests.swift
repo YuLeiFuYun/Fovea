@@ -5,6 +5,37 @@ import Network
 import XCTest
 
 final class AppleNativeComparatorAdapterTests: XCTestCase {
+    func testRuntimeConfigurationFreezesURLCacheAndDecodedMemoryBudget() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "apple-native-config-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let session = URLSessionConfiguration.ephemeral
+        session.httpMaximumConnectionsPerHost = 6
+        let adapter = try AppleNativeComparatorAdapter(
+            identity: ComparatorIdentity(
+                name: "Apple URLSession + URLCache + ImageIO",
+                version: "test",
+                platformBuild: ComparatorPlatformBuildIdentity(
+                    xcodeBuild: "test-xcode",
+                    osBuild: "test-os",
+                    deviceProfileID: "test-device"
+                )
+            ),
+            cacheDirectory: directory,
+            sessionConfiguration: session
+        )
+        let parameters = try XCTUnwrap(adapter.runtimeConfiguration?.parameters)
+        XCTAssertEqual(parameters["cache.decodedMemoryCostLimitBytes"], "134217728")
+        XCTAssertEqual(parameters["cache.protocol"], "URLCache")
+        XCTAssertEqual(parameters["cache.protocol.memoryCapacityBytes"], "0")
+        XCTAssertEqual(parameters["cache.protocol.diskCapacityBytes"], "268435456")
+        XCTAssertEqual(parameters["session.requestCachePolicy"], "useProtocolCachePolicy")
+        XCTAssertEqual(parameters["session.httpMaximumConnectionsPerHost"], "6")
+        XCTAssertEqual(parameters["session.urlCache"], "custom")
+    }
+
     func testProtocolCachePolicyUsesURLCacheWithoutSecondOriginRequest() async throws {
         let origin = CacheableImageOrigin()
         let url = try await origin.start()

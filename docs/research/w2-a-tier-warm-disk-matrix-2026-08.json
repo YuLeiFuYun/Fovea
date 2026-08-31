@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "studyID": "W2-A-TIER-WARM-DISK-MATRIX-2026-08",
+  "workload": "W2-HERO-V1",
+  "environment": {
+    "executionEnvironment": "iOS Simulator",
+    "osVersion": "26.4.1",
+    "osBuild": "23E254a",
+    "deviceProfileID": "ios26-4-simulator-calibration-v1",
+    "cacheState": "warm-disk",
+    "cachePreparationRepetitions": 8
+  },
+  "claimEligible": false,
+  "claimBoundary": "All rows were captured with ComparativeLab --diagnostic, which skips the quiescent-host gate. These values are directional same-harness evidence and must not be presented as release-claim evidence.",
+  "fovea": {
+    "sourceTreeDigest": "23c1c68cac46e7f44d939f4bf879671e3bd2ad340c688676e96b0e56b607f299",
+    "derivedRasterProfile": "observed-v1",
+    "formatAtMeasurement": "schema4 independent LZ4 RGBX, 1MiB decoded chunks, random-access row provider with short-duration cache lock",
+    "callbackMedianNanoseconds": 364417,
+    "pixelMaterializationMedianNanoseconds": 1001459,
+    "displayReadyMedianNanoseconds": 1445250,
+    "physicalFootprintDeltaBytes": 1523712,
+    "artifactPath": ".artifacts/comparative-simulator-lab/runs/Fovea/W2-HERO-V1/warm-disk/fovea-w2-hero-v1-warm-disk-prep8-derived-observed-v1-000.json",
+    "cachePreparationDiagnostics": {
+      "derived-raster-insufficient-observed-reuse": 9,
+      "derived-raster-scheduled-count": 18,
+      "derived-raster-terminal-count": 18,
+      "derived-raster-active-count": 0,
+      "fovea-original-encoded-hit": 18,
+      "derived-raster-no-read-savings": 0
+    }
+  },
+  "comparators": [
+    {
+      "name": "Apple URLSession + URLCache + ImageIO",
+      "callbackMedianNanoseconds": 27064000,
+      "pixelMaterializationMedianNanoseconds": 382042,
+      "displayReadyMedianNanoseconds": 28146959,
+      "physicalFootprintDeltaBytes": 30375960,
+      "displayReadyRatioVsFovea": 19.4754948971,
+      "foveaDisplayReadyLatencyReductionPercent": 94.8653422915,
+      "artifactPath": ".artifacts/comparative-simulator-lab/runs/Apple URLSession + URLCache + ImageIO/W2-HERO-V1/warm-disk/apple urlsession + urlcache + imageio-w2-hero-v1-warm-disk-prep8-000.json"
+    },
+    {
+      "name": "Nuke",
+      "callbackMedianNanoseconds": 26434334,
+      "pixelMaterializationMedianNanoseconds": 941125,
+      "displayReadyMedianNanoseconds": 27620167,
+      "physicalFootprintDeltaBytes": 19595264,
+      "displayReadyRatioVsFovea": 19.1109960214,
+      "foveaDisplayReadyLatencyReductionPercent": 94.7674103491,
+      "artifactPath": ".artifacts/comparative-simulator-lab/runs/Nuke/W2-HERO-V1/warm-disk/nuke-w2-hero-v1-warm-disk-prep8-000.json"
+    },
+    {
+      "name": "Kingfisher",
+      "callbackMedianNanoseconds": 4216458,
+      "pixelMaterializationMedianNanoseconds": 1122417,
+      "displayReadyMedianNanoseconds": 5159625,
+      "physicalFootprintDeltaBytes": 31031320,
+      "displayReadyRatioVsFovea": 3.5700570836,
+      "foveaDisplayReadyLatencyReductionPercent": 71.9892434043,
+      "artifactPath": ".artifacts/comparative-simulator-lab/runs/Kingfisher/W2-HERO-V1/warm-disk/kingfisher-w2-hero-v1-warm-disk-prep8-000.json"
+    },
+    {
+      "name": "SDWebImage",
+      "callbackMedianNanoseconds": 3548125,
+      "pixelMaterializationMedianNanoseconds": 875750,
+      "displayReadyMedianNanoseconds": 4473208,
+      "physicalFootprintDeltaBytes": 29540376,
+      "displayReadyRatioVsFovea": 3.0951101885,
+      "foveaDisplayReadyLatencyReductionPercent": 67.6909725638,
+      "artifactPath": ".artifacts/comparative-simulator-lab/runs/SDWebImage/W2-HERO-V1/warm-disk/sdwebimage-w2-hero-v1-warm-disk-prep8-000.json"
+    },
+    {
+      "name": "PINRemoteImage",
+      "callbackMedianNanoseconds": 367750,
+      "pixelMaterializationMedianNanoseconds": 1357708,
+      "displayReadyMedianNanoseconds": 1730125,
+      "physicalFootprintDeltaBytes": 3309568,
+      "displayReadyRatioVsFovea": 1.1971112264,
+      "foveaDisplayReadyLatencyReductionPercent": 16.4655732967,
+      "artifactPath": ".artifacts/comparative-simulator-lab/runs/PINRemoteImage/W2-HERO-V1/warm-disk/pinremoteimage-w2-hero-v1-warm-disk-prep8-000.json"
+    }
+  ],
+  "finding": "During the stable schema4 measurement window Fovea directionally led every A-tier headless comparator on warm-disk W2 display-ready latency. The only close peer was PINRemoteImage; all other peers were approximately 3.1x to 19.5x slower at the median endpoint.",
+  "nextGate": "Do not convert this matrix into a release claim until the same source state is rebuilt after any concurrent worktree changes and the ComparativeLab quiescent-host gate passes. The optimization frontier remains the PINRemoteImage gap."
+}

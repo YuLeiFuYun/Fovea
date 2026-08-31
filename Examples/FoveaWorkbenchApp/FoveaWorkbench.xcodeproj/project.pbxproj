@@ -79,6 +79,7 @@
 		C12A755F618F102F2F2B6AF7 /* local-011-cat-in-quebec-city-jpg-167723d6cf.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 60538A0B099F383B0860A323 /* local-011-cat-in-quebec-city-jpg-167723d6cf.jpg */; };
 		C1DB8A634A197D755D2C2F96 /* local-015-flaming-star-nebula-ic-405-png-11c3c5b390.png in Resources */ = {isa = PBXBuildFile; fileRef = 7E19E139A550AC20B842C70C /* local-015-flaming-star-nebula-ic-405-png-11c3c5b390.png */; };
 		C5FECD011769666C0624DF76 /* EcologicalStoryMediaSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3480CB060D9736E2750E072 /* EcologicalStoryMediaSurface.swift */; };
+		C75F989D00B0666B09B442F8 /* AnimationPhysicalPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3349D09BFA6E7183F5FE1CA4 /* AnimationPhysicalPresentationTests.swift */; };
 		C83BC6DF38F2A5AB11F1F0FD /* WorkbenchPerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4110073F0FD5B63A508F333C /* WorkbenchPerformanceMonitor.swift */; };
 		C9A5B78BA31F8D372C0C51BC /* WorkbenchScenarioCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CCD26B6986218377FEC3926 /* WorkbenchScenarioCatalog.swift */; };
 		CB05369EA9885CB08530D23E /* WorkbenchNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6851097AF47EB1FF2995D2F4 /* WorkbenchNetworkMonitor.swift */; };
@@ -159,6 +160,7 @@
 		2DB8F0D1A6FB9180C7F16E48 /* Fovea */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fovea; path = ../..; sourceTree = SOURCE_ROOT; };
 		32502A8826DC3AC688DE679D /* local-003-apple-flower-dissected-jpg-08da56450c.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-003-apple-flower-dissected-jpg-08da56450c.jpg"; sourceTree = "<group>"; };
 		32E03621650720B8B6B386A8 /* FoveaWorkbenchTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FoveaWorkbenchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3349D09BFA6E7183F5FE1CA4 /* AnimationPhysicalPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationPhysicalPresentationTests.swift; sourceTree = "<group>"; };
 		35C73A8409935BF9856B2AF0 /* local-013-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-013-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d.jpg"; sourceTree = "<group>"; };
 		387B23450FCE50F57F7294A7 /* WorkbenchDesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchDesignSystem.swift; sourceTree = "<group>"; };
 		3B3FFBE1A33FA3424E45FDE2 /* local-028-vegan-food-in-madrid-2016-jpg-1631accbda.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-028-vegan-food-in-madrid-2016-jpg-1631accbda.jpg"; sourceTree = "<group>"; };
@@ -374,6 +376,7 @@
 		B4A1EF856C98492A716D91FF /* FoveaWorkbenchTests */ = {
 			isa = PBXGroup;
 			children = (
+				3349D09BFA6E7183F5FE1CA4 /* AnimationPhysicalPresentationTests.swift */,
 				CDD32032CCA1DBD3DCA1A591 /* FoveaWorkbenchIntegrationTests.swift */,
 				0223879CA55ADD837F71F41E /* FoveaWorkbenchTests.swift */,
 				4ADA845FD9CF49EA38291291 /* WorkbenchTestSupport.swift */,
@@ -633,6 +636,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C75F989D00B0666B09B442F8 /* AnimationPhysicalPresentationTests.swift in Sources */,
 				B85D48733A97A5D912F838A5 /* FoveaWorkbenchIntegrationTests.swift in Sources */,
 				522C8CAD407BA6C88626C64A /* FoveaWorkbenchTests.swift in Sources */,
 				DE075DB829D133BD102138BE /* WorkbenchTestSupport.swift in Sources */,

@@ -1167,6 +1167,36 @@
     {
       "evidence": [
         {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-100",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-101",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "AIQA-MUT-102",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Tests/FoveaTests/IdentityTests.swift",
           "kind": "swiftTest",
           "method": "testCredentialRefreshChangesExecutionButNotBaseOrVariant_AUTH_PT_001"
@@ -2116,6 +2146,72 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/ImageDecoderTests.swift",
+          "kind": "swiftTest",
+          "method": "testDecodeStageRejectsCodecOutputThatExceedsRequestedTargetCodecPt012"
+        }
+      ],
+      "id": "CODEC-PT-012",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageDecoderTests.swift",
+          "kind": "swiftTest",
+          "method": "testDecodeStageRejectsCodecOutputThatExceedsDecodeLimitsCodecPt013"
+        }
+      ],
+      "id": "CODEC-PT-013",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageDecoderTests.swift",
+          "kind": "swiftTest",
+          "method": "testDecodeStageRejectsCodecOutputThatExceedsAdmittedWorkingSetCodecPt014"
+        }
+      ],
+      "id": "CODEC-PT-014",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageDecoderTests.swift",
+          "kind": "swiftTest",
+          "method": "testDecodeStageRejectsCodecOutputWithMismatchedSourceProfileCodecPt015"
+        }
+      ],
+      "id": "CODEC-PT-015",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageDecoderTests.swift",
+          "kind": "swiftTest",
+          "method": "testProgressiveDecodeRejectsPreviewThatExceedsRequestedTargetCodecPt016"
+        }
+      ],
+      "id": "CODEC-PT-016",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ImageDecoderTests.swift",
+          "kind": "swiftTest",
+          "method": "testProgressiveDecodeRejectsPreviewThatExceedsWorkingSetLimitCodecPt017"
+        }
+      ],
+      "id": "CODEC-PT-017",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
           "kind": "swiftTest",
           "method": "comparatorIdentityRequiresExactCommit_COMP_PT_001"
@@ -2434,6 +2530,21 @@
         }
       ],
       "id": "COMP-PT-025",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Benchmarks/ComparativeLab/Adapters/FoveaAdapterPackage/Tests/FoveaComparatorAdapterTests/FoveaComparatorAdapterTests.swift",
+          "kind": "swiftTest",
+          "method": "testSameURLWithDifferentObservationIDsSharesOneTransport_COMP_PT_027"
+        },
+        {
+          "file": "scripts/run-critical-mutants.py",
+          "kind": "script"
+        }
+      ],
+      "id": "COMP-PT-027",
       "status": "implemented"
     },
     {
@@ -3090,6 +3201,127 @@
         }
       ],
       "id": "ERR-PT-014",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testDescriptorIsStableCurrentAndNonEmpty_ICT_001"
+        }
+      ],
+      "id": "FOVEA-ICT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testFiniteCapabilityDomainMatchesIndependentOracle_ICT_002"
+        }
+      ],
+      "id": "FOVEA-ICT-002",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testAdvertisedFormatsProbeDeterministically_ICT_003"
+        }
+      ],
+      "id": "FOVEA-ICT-003",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testAdvertisedFormatsDecodeReferenceStillImage_ICT_004"
+        }
+      ],
+      "id": "FOVEA-ICT-004",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testResourceEstimatesArePositiveDeterministicAndComposable_ICT_005"
+        }
+      ],
+      "id": "FOVEA-ICT-005",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testProbeHardLimitsFailClosed_ICT_006"
+        }
+      ],
+      "id": "FOVEA-ICT-006",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testProviderDescriptorAndFingerprintAreStable_PSP_CT_001"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-001",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testFirstLoadAndNetworkFreeReopen_PSP_CT_002_003"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-002",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testFirstLoadAndNetworkFreeReopen_PSP_CT_002_003"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-003",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testRevocationPersistsAcrossReopen_PSP_CT_004"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-004",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "kind": "swiftTest",
+          "method": "testProviderReceivesBoundedOpenRequest_PSP_CT_005"
+        }
+      ],
+      "id": "FOVEA-PSP-CT-005",
       "status": "implemented"
     },
     {
@@ -5299,6 +5531,28 @@
     {
       "evidence": [
         {
+          "file": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
+          "kind": "swiftTest",
+          "method": "testChunkedURLSessionPreviewReachesDisplayLinkBeforeFinal_UI_PT_029"
+        }
+      ],
+      "id": "UI-PT-029",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
+          "file": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
+          "kind": "swiftTest",
+          "method": "testIdentityReplacementClosesPublicationFenceBeforeOldPreview_UI_PT_030"
+        }
+      ],
+      "id": "UI-PT-030",
+      "status": "implemented"
+    },
+    {
+      "evidence": [
+        {
           "file": "Examples/FoveaWorkbenchApp/FoveaWorkbenchUITests/FoveaWorkbenchVisualTests.swift",
           "kind": "swiftTest",
           "method": "testCaptureProductVisualMatrix_VISUAL_PT_001"
@@ -5347,144 +5601,12 @@
     {
       "evidence": [
         {
-          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
+          "file": "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
           "kind": "swiftTest",
-          "method": "testProviderDescriptorAndFingerprintAreStable_PSP_CT_001"
+          "method": "testCancellationRaceCannotSpawnAutomaticPredecodeAfterInvalidation_W5_PT_205"
         }
       ],
-      "id": "FOVEA-PSP-CT-001",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testFirstLoadAndNetworkFreeReopen_PSP_CT_002_003"
-        }
-      ],
-      "id": "FOVEA-PSP-CT-002",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testFirstLoadAndNetworkFreeReopen_PSP_CT_002_003"
-        }
-      ],
-      "id": "FOVEA-PSP-CT-003",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testRevocationPersistsAcrossReopen_PSP_CT_004"
-        }
-      ],
-      "id": "FOVEA-PSP-CT-004",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/PersistentStoreProvider/v1/Harness/PersistentStoreProviderConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testProviderReceivesBoundedOpenRequest_PSP_CT_005"
-        }
-      ],
-      "id": "FOVEA-PSP-CT-005",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testDescriptorIsStableCurrentAndNonEmpty_ICT_001"
-        }
-      ],
-      "id": "FOVEA-ICT-001",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testFiniteCapabilityDomainMatchesIndependentOracle_ICT_002"
-        }
-      ],
-      "id": "FOVEA-ICT-002",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testAdvertisedFormatsProbeDeterministically_ICT_003"
-        }
-      ],
-      "id": "FOVEA-ICT-003",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testAdvertisedFormatsDecodeReferenceStillImage_ICT_004"
-        }
-      ],
-      "id": "FOVEA-ICT-004",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testResourceEstimatesArePositiveDeterministicAndComposable_ICT_005"
-        }
-      ],
-      "id": "FOVEA-ICT-005",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "ConformanceKits/ImageCodec/v1/Harness/ImageCodecConformanceTests.swift",
-          "kind": "swiftTest",
-          "method": "testProbeHardLimitsFailClosed_ICT_006"
-        }
-      ],
-      "id": "FOVEA-ICT-006",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
-          "kind": "swiftTest",
-          "method": "testChunkedURLSessionPreviewReachesDisplayLinkBeforeFinal_UI_PT_029"
-        }
-      ],
-      "id": "UI-PT-029",
-      "status": "implemented"
-    },
-    {
-      "evidence": [
-        {
-          "file": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
-          "kind": "swiftTest",
-          "method": "testIdentityReplacementClosesPublicationFenceBeforeOldPreview_UI_PT_030"
-        }
-      ],
-      "id": "UI-PT-030",
+      "id": "W5-PT-205",
       "status": "implemented"
     }
   ],

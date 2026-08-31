@@ -51,6 +51,8 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     private var requestCount = 0
     private var deliveredBytes = 0
     private var postCancellationBytes = 0
+    private var postCancellationBytesByRequestID: [String: Int] = [:]
+    private var completedRequestIDs: Set<String> = []
     private var cancellationMarkedAtNanoseconds: [String: UInt64] = [:]
     private var cancellationAcknowledgementNanoseconds: [UInt64] = []
     private var completedRequestCount = 0
@@ -160,6 +162,8 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         requestCount = 0
         deliveredBytes = 0
         postCancellationBytes = 0
+        postCancellationBytesByRequestID.removeAll(keepingCapacity: true)
+        completedRequestIDs.removeAll(keepingCapacity: true)
         cancellationMarkedAtNanoseconds.removeAll(keepingCapacity: true)
         cancellationAcknowledgementNanoseconds.removeAll(keepingCapacity: true)
         completedRequestCount = 0
@@ -213,13 +217,19 @@ private final class BenchmarkOriginState: @unchecked Sendable {
             deliveryStartedAtNanoseconds >= marked
         {
             postCancellationBytes += bytes
+            postCancellationBytesByRequestID[requestID, default: 0] += bytes
         }
         lock.unlock()
     }
 
-    func complete(startedAtNanoseconds: UInt64, completedAtNanoseconds: UInt64) {
+    func complete(
+        startedAtNanoseconds: UInt64,
+        completedAtNanoseconds: UInt64,
+        requestID: String?
+    ) {
         lock.lock()
         completedRequestCount += 1
+        if let requestID { completedRequestIDs.insert(requestID) }
         latestCompletedAtNanoseconds = max(
             latestCompletedAtNanoseconds,
             completedAtNanoseconds
@@ -414,12 +424,38 @@ private final class BenchmarkOriginState: @unchecked Sendable {
             acknowledgementP95 = acknowledgement[min(acknowledgement.count - 1, rank - 1)]
         }
         let completedDurations = completedRequestDurationNanoseconds.sorted()
+        let completedPostCancellationValues = postCancellationBytesByRequestID.compactMap {
+            completedRequestIDs.contains($0.key) ? $0.value : nil
+        }.sorted()
+        let abandonedPostCancellationValues = postCancellationBytesByRequestID.compactMap {
+            completedRequestIDs.contains($0.key) ? nil : $0.value
+        }.sorted()
+        let completedPostCancellationBytes = completedPostCancellationValues.reduce(0, +)
+        let abandonedPostCancellationBytes = abandonedPostCancellationValues.reduce(0, +)
         let completedP50 = Self.percentile(completedDurations, fraction: 0.50)
         let completedP95 = Self.percentile(completedDurations, fraction: 0.95)
         let value = BenchmarkOriginMetrics(
             requestCount: requestCount,
             deliveredBytes: deliveredBytes,
             postCancellationBytes: postCancellationBytes,
+            postCancellationCompletedBytes: completedPostCancellationBytes,
+            postCancellationCompletedRequestCount: completedPostCancellationValues.count,
+            postCancellationCompletedBytesP50: Self.percentileInt(
+                completedPostCancellationValues, fraction: 0.50
+            ),
+            postCancellationCompletedBytesP95: Self.percentileInt(
+                completedPostCancellationValues, fraction: 0.95
+            ),
+            postCancellationCompletedBytesMaximum: completedPostCancellationValues.last ?? 0,
+            postCancellationAbandonedBytes: abandonedPostCancellationBytes,
+            postCancellationAbandonedRequestCount: abandonedPostCancellationValues.count,
+            postCancellationAbandonedBytesP50: Self.percentileInt(
+                abandonedPostCancellationValues, fraction: 0.50
+            ),
+            postCancellationAbandonedBytesP95: Self.percentileInt(
+                abandonedPostCancellationValues, fraction: 0.95
+            ),
+            postCancellationAbandonedBytesMaximum: abandonedPostCancellationValues.last ?? 0,
             cancellationAcknowledgementCount: acknowledgement.count,
             cancellationAcknowledgementP95Nanoseconds: acknowledgementP95,
             cancellationAcknowledgementMaximumNanoseconds: acknowledgement.last ?? 0,
@@ -440,6 +476,12 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     }
 
     private static func percentile(_ sorted: [UInt64], fraction: Double) -> UInt64 {
+        guard !sorted.isEmpty else { return 0 }
+        let rank = max(1, Int(ceil(Double(sorted.count) * fraction)))
+        return sorted[min(sorted.count - 1, rank - 1)]
+    }
+
+    private static func percentileInt(_ sorted: [Int], fraction: Double) -> Int {
         guard !sorted.isEmpty else { return 0 }
         let rank = max(1, Int(ceil(Double(sorted.count) * fraction)))
         return sorted[min(sorted.count - 1, rank - 1)]
@@ -695,6 +737,7 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
         requestStartedAtNanoseconds: UInt64,
         w7ServiceIdentifier: UUID?
     ) {
+        let requestID = request.value(forHTTPHeaderField: "X-Benchmark-Request-ID")
         if route == "/w7/shared" {
             state.waitForW7SharedPreparationGate()
         }
@@ -727,7 +770,8 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
             let completedAt = DispatchTime.now().uptimeNanoseconds
             state.complete(
                 startedAtNanoseconds: requestStartedAtNanoseconds,
-                completedAtNanoseconds: completedAt
+                completedAtNanoseconds: completedAt,
+                requestID: requestID
             )
             finishW7Service(w7ServiceIdentifier)
             return
@@ -750,7 +794,6 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
             }
             let timing = state.timing()
             let initialDelay = timing.initialDelay + resource.delayNanoseconds
-            let requestID = request.value(forHTTPHeaderField: "X-Benchmark-Request-ID")
             let chunkSize = 32 * 1024
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
             for offset in stride(from: 0, to: resource.data.count, by: chunkSize) {
@@ -776,7 +819,8 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
                         let completedAt = DispatchTime.now().uptimeNanoseconds
                         self.state.complete(
                             startedAtNanoseconds: requestStartedAtNanoseconds,
-                            completedAtNanoseconds: completedAt
+                            completedAtNanoseconds: completedAt,
+                            requestID: requestID
                         )
                         self.finishW7Service(w7ServiceIdentifier)
                     }

@@ -21,6 +21,13 @@ public protocol DiagnosticsSink: Sendable {
     func record(_ event: DiagnosticEvent) async
 }
 
+/// Benchmark-only escape hatch for a recorder whose `record` implementation is itself bounded,
+/// nonblocking, and safe to execute inline. Ordinary external sinks must not adopt this SPI: the
+/// production pipeline otherwise inserts `BufferedDiagnosticsRelay` to prevent observability from
+/// delaying image delivery.
+@_spi(FoveaBenchmarking)
+public protocol InlineBenchmarkDiagnosticsSink: DiagnosticsSink {}
+
 /// 有意丢弃所有事件的诊断接收器。
 
 public struct NullDiagnosticsSink: DiagnosticsSink {
@@ -149,7 +156,11 @@ package actor BufferedDiagnosticsRelay: DiagnosticsSink {
 package func nonBlockingDiagnosticsSink(
     _ sink: any DiagnosticsSink
 ) -> any DiagnosticsSink {
-    if sink is NullDiagnosticsSink || sink is BoundedDiagnosticsSink { return sink }
+    if sink is NullDiagnosticsSink || sink is BoundedDiagnosticsSink
+        || sink is any InlineBenchmarkDiagnosticsSink
+    {
+        return sink
+    }
     return BufferedDiagnosticsRelay(downstream: sink)
 }
 
@@ -174,9 +185,7 @@ package struct RedactingDiagnosticsSink: DiagnosticsSink, Sendable {
         material.append(salt)
         material.append(0)
         material.append(contentsOf: stableDigest.utf8)
-        let correlation = SHA256.hash(data: material)
-            .map { String(format: "%02x", $0) }
-            .joined()
+        let correlation = lowercaseHexString(SHA256.hash(data: material))
         await downstream.record(event.replacingKeyDigest(correlation))
     }
 }
@@ -185,6 +194,11 @@ package func pipelineDiagnosticsSink(
     _ sink: any DiagnosticsSink
 ) -> any DiagnosticsSink {
     if sink is NullDiagnosticsSink { return sink }
+    // Explicit benchmark lifecycle tracing needs emit-site timestamps. DiagnosticEvent already
+    // validates every dynamic field (including requiring keyDigest to be lowercase SHA-256); the
+    // benchmark adapter re-correlates that digest after workload timing before exporting a sidecar.
+    // All ordinary external sinks retain the production redaction + buffered-relay boundary.
+    if sink is any InlineBenchmarkDiagnosticsSink { return sink }
     return RedactingDiagnosticsSink(downstream: nonBlockingDiagnosticsSink(sink))
 }
 

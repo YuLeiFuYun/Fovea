@@ -16,6 +16,10 @@ let package = Package(
             name: "PINRemoteImage",
             path: "../../../../.artifacts/comparators/sources/PINRemoteImage"
         ),
+        .package(
+            url: "https://github.com/pinterest/PINCache.git",
+            exact: "3.0.4"
+        ),
     ],
     targets: [
         .target(
@@ -23,8 +27,13 @@ let package = Package(
             dependencies: [
                 .product(name: "ComparativeLabCore", package: "FoveaComparativeLab"),
                 .product(name: "PINRemoteImage", package: "PINRemoteImage"),
+                .product(name: "PINCache", package: "PINCache"),
             ]
-        )
+        ),
+        .testTarget(
+            name: "PINRemoteImageComparatorAdapterTests",
+            dependencies: ["PINRemoteImageComparatorAdapter"]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

@@ -1,0 +1,106 @@
+{
+  "evidenceClass": "local-directional-mechanism-and-simulator-negative-results-no-release-claim",
+  "evidencePaths": [
+    "Sources/FoveaCore/SharedTaskRegistry.swift",
+    "Sources/FoveaHTTP/URLSessionEventRouter.swift",
+    "Sources/FoveaHTTP/URLSessionTransport.swift",
+    "Tests/FoveaTests/URLSessionTransportTests.swift",
+    "Tools/FoveaNetworkLab/SharedTaskRelayMechanismLab.swift",
+    "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkOrigin.swift",
+    "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkModels.swift",
+    "Benchmarks/ComparativeLab/Apps/Shared/FeedBenchmark.swift",
+    ".artifacts/performance/h006-direct-producer-ab/report.json"
+  ],
+  "h006CancellationBoundary": {
+    "baseline": {
+      "abandonedP95MedianBytes": 32768,
+      "acknowledgementP95MedianNanoseconds": 6940750,
+      "notableTail": "Three of four runs had abandoned p95/max 32768 bytes; one run reached 262144 bytes.",
+      "runCount": 4,
+      "sourceTreeDigest": "93513dadc052b1d9f714aae12ec36148b892d4ef9df13c2e32ae68d5b8070bb9",
+      "weightedAbandonedBytesPerAbandonedRequest": 43194.181818181816,
+      "weightedAbandonedBytesPerCancelledLoad": 2654.391061452514
+    },
+    "environment": "iOS 26.4.1 Simulator build 23E254a, diagnostic/provisional only",
+    "hypothesis": "The remaining W1 post-cancellation network waste is dominated by removable Fovea cancellation-control-plane hops.",
+    "networkProfile": {
+      "bytesPerSecond": 6250000,
+      "nominalChunkIntervalNanoseconds": 5242880,
+      "protocolChunkBytes": 32768
+    },
+    "originSemantics": "postCancellationBytes counts origin deliveries whose delivery callback starts after the benchmark marks cancellation and before URLProtocol.stopLoading acknowledges the cancelled URLSession request.",
+    "pathAttribution": {
+      "foveaComparatorTransportReusePolicy": "taskLocal",
+      "implication": "SharedTaskRegistry actor contention cannot explain task-local W1 cancellation tail.",
+      "productionTransportCancellation": "withTaskCancellationHandler directly calls URLSessionTask.cancel then unregisters the event route; no suspend-before-cancel is retained",
+      "sharedFetchRegistryOnW1Path": false
+    },
+    "productionDecision": "Retain the existing task-local cancellation path. The current W1 evidence rejects shared-registry, relay/executor, suspend-before-cancel and direct-producer shortening as production changes. A common 32 KiB already-queued callback remains a fixture-level observation, not a universal hard bound. Reopen only when physical-device or new deterministic network tracing attributes material time before URLSessionTask.cancel to app-owned work.",
+    "registryContentionProbe": {
+      "distinctKeysPerBurst": 64,
+      "interpretation": "The SharedTaskRegistry cancellation-control-plane tail is sub-millisecond, but more importantly the W1 comparator uses taskLocal transport and does not traverse this registry. Keep the probe as a general shared-task mechanism guard, not W1 causal evidence.",
+      "maximumObservedRunP95Nanoseconds": 495917,
+      "medianOfMedianCancellationLatencyNanoseconds": 338125,
+      "medianOfP95CancellationLatencyNanoseconds": 434292,
+      "runCount": 5
+    },
+    "rejectedCandidates": [
+      {
+        "decision": "reverted",
+        "mechanismMedianOfMediansNanosecondsPerValue": {
+          "actorBaselineConcurrent8": 1646,
+          "actorBaselineSerial": 18116,
+          "lockCandidateConcurrent8": 1735,
+          "lockCandidateSerial": 25566
+        },
+        "name": "lock-based SubscriptionResultRelay",
+        "result": "W1 occasionally removed the multi-chunk abandoned tail, but a five-run Release mechanism lab regressed normal completed-value delivery."
+      },
+      {
+        "decision": "reverted",
+        "name": "@concurrent Fovea comparator load task",
+        "result": "Four W1 runs did not improve cancellation. Acknowledgement p95 median moved from 6.94 ms to 38.84 ms and abandoned bytes per cancelled load slightly increased."
+      },
+      {
+        "decision": "reverted",
+        "name": "URLSessionTask.suspend immediately before cancel",
+        "result": "Four W1 runs reduced weighted abandoned bytes per cancelled load by about 17.7 percent but worsened median abandoned p95 from 32 KiB to 48 KiB and acknowledgement p95 median from 6.94 ms to 10.22 ms. The change was not a stable Pareto improvement."
+      },
+      {
+        "artifact": ".artifacts/performance/h006-direct-producer-ab/report.json",
+        "artifactSHA256": "55a63614e85b743a793d4ef4e511689480cbbd93ea60adee84e0999589debfc1",
+        "decision": "reverted",
+        "name": "direct progressive-producer cancellation handle",
+        "result": "H006_PT_001/002 proved synchronous propagation to the real task-local transport cancellation handler, but three interleaved simulator runs per arm from one installed binary were worse: median acknowledgement p95 22.778 ms direct vs 9.306 ms legacy; median post-cancel bytes 1,159,445 vs 864,756; completed-after-cancel 999,436 vs 831,988; abandoned 131,072 vs 98,304."
+      }
+    ],
+    "workload": "W1-SCROLL-V1"
+  },
+  "h009BodyCredit": {
+    "configuredOutstandingByteThreshold": 262144,
+    "hypothesis": "Allowing two or four outstanding URLSession body callbacks will materially reduce transport latency without increasing cancellation or memory risk.",
+    "medianOfMediansNanoseconds": {
+      "credit1": 3759792,
+      "credit2": 3792750,
+      "credit4": 3786291
+    },
+    "payloadByteCount": 4194304,
+    "productionDecision": "Keep production at direct one-callback suspend/resume. Remove the package-scoped runtime body-credit seam after follow-up full-suite evidence showed its callback-window integration oracle is scheduler/load-sensitive; retain this negative-result record and measurements only.",
+    "reportSHA256": [
+      "d56ce546ee9ce635804afca827250b21ccd8fef505a38a50ba0524ba92b223c3",
+      "e19f0408491a43936dba87c6037cdc029a5efddb2ee52201da9c4100d92889d1",
+      "035b4321207763d8e7ba612e5176828437426d17f9d8b31fea57d61c64de21fa"
+    ],
+    "resourceCounterexample": {
+      "interpretation": "URLSession may coalesce delivery into a callback larger than the application-side threshold, so the threshold is not a hard resident-memory bound.",
+      "observedPeakOutstandingBytes": 4194304
+    },
+    "runtimeSeamFollowUp": {
+      "date": "2026-08-12",
+      "reason": "URLSession callback boundaries/coalescing vary with flow control, and task.suspend occurs after didReceive is already delivered. A strict window=1 full-suite run observed peak outstanding callbacks=2 while 32 isolated fresh processes passed, so the retained experiment oracle is context-sensitive and does not justify runtime complexity.",
+      "t100Evidence": "h009-runtime-seam-reconsideration-preregistration.json + h009-pt005-fresh-32-result.json"
+    }
+  },
+  "reviewedOn": "2026-08-12",
+  "schemaVersion": 1
+}

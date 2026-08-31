@@ -1330,7 +1330,7 @@ private actor CountingSlowImageTransformer: ImageTransforming {
 
     func transform(_ image: DecodedImage) async throws -> DecodedImage {
         transformCount += 1
-        try await Task.sleep(for: .milliseconds(50))
+        try await testSleep(.milliseconds(50))
         return image
     }
 }

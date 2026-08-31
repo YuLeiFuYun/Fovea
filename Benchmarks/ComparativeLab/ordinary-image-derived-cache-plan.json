@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "planID": "FOVEA-ORDINARY-IMAGE-DERIVED-CACHE-V1",
+  "status": "preregistered-for-future-clean-runs-after-exploratory-prototype",
+  "createdOn": "2026-08-05",
+  "scope": {
+    "workloads": [
+      "W2-HERO-V1",
+      "W11-MULTI-TARGET-SAME-SOURCE-V1"
+    ],
+    "foveaCandidate": "versioned target-specific derived-raster persistence with exact-pixel fallback to original decode",
+    "eligibleComparators": [
+      "Apple URLSession + URLCache + ImageIO",
+      "Nuke",
+      "Kingfisher",
+      "SDWebImage",
+      "PINRemoteImage"
+    ],
+    "excludedClaims": [
+      "global best image loader",
+      "cross-platform dominance",
+      "performance conclusions from Simulator",
+      "performance conclusions from dirty source",
+      "performance conclusions from the exploratory 2026-08 prototype"
+    ]
+  },
+  "measurementBoundary": {
+    "start": "immediately before constructing the comparator load",
+    "adapterReturn": "library callback or async result returns a target-sized image",
+    "displayReady": "the returned CGImage has completed a full normalized sRGB pixel draw into a bounded target-sized surface",
+    "requiredReportedLatencies": [
+      "adapter-return p50/p95/p99",
+      "pixel-materialization p50/p95/p99",
+      "display-ready p50/p95/p99"
+    ],
+    "reason": "Adapters differ in eager versus lazy rasterization. Adapter-return latency alone is not a semantically sufficient display-readiness boundary."
+  },
+  "hardGates": [
+    "all loads complete with exact target bounds",
+    "orientation and color reference probes pass",
+    "cold, warm-disk, and warm-memory outputs for the same RenderKey have identical normalized pixel digests",
+    "one eligible origin fetch per source identity class across W11 targets",
+    "no-store and credentialed responses never create unauthorized derived persistence",
+    "namespace revocation removes or renders unreachable every derived artifact",
+    "generation changes cannot resurrect stale derived artifacts",
+    "corrupt or unknown derived formats fail closed to original decode",
+    "derived creation never delays first display",
+    "cancellation closes publication before any late derived artifact becomes reachable",
+    "derived persistent bytes remain within the configured Fovea soft budget after alias-aware physical deduplication and eviction",
+    "eviction cannot leave a Fovea alias pointing at a deliberately removed derived physical blob",
+    "write-rate and write-amplification remain within the preregistered budget",
+    "logical derived write-window reservations survive reopen and reject before blob staging when exhausted",
+    "measured total physical write bytes include budget metadata, Fovea manifest, Akashic metadata, filesystem effects, eviction and recovery rather than treating the logical gate as a device-byte oracle",
+    "fixed-window boundary bursts remain within the preregistered physical write and latency envelope"
+  ],
+  "primaryEndpointFamilies": {
+    "coldPath": [
+      {
+        "endpoint": "display-ready latency",
+        "direction": "lower",
+        "criterion": "non-inferior to the best eligible comparator with a preregistered device-specific margin"
+      },
+      {
+        "endpoint": "origin request count",
+        "direction": "lower",
+        "criterion": "machine-checkable optimum of one request per eligible source identity class"
+      },
+      {
+        "endpoint": "peak physical footprint",
+        "direction": "lower",
+        "criterion": "non-inferior to the best eligible comparator"
+      }
+    ],
+    "warmDisk": [
+      {
+        "endpoint": "display-ready latency",
+        "direction": "lower",
+        "criterion": "endpoint-by-endpoint dominance target; no aggregate-score substitution"
+      },
+      {
+        "endpoint": "persistent logical bytes",
+        "direction": "lower",
+        "criterion": "measured after identical source and target preparation"
+      },
+      {
+        "endpoint": "persistent allocated bytes",
+        "direction": "lower",
+        "criterion": "measured after identical source and target preparation"
+      },
+      {
+        "endpoint": "persistent regular-file count",
+        "direction": "lower",
+        "criterion": "reported with bytes; not a standalone winner metric"
+      },
+      {
+        "endpoint": "derived creation CPU time and written bytes",
+        "direction": "lower",
+        "criterion": "amortized only over observed later hits; speculative future hits are forbidden"
+      }
+    ],
+    "warmMemory": [
+      {
+        "endpoint": "display-ready latency",
+        "direction": "lower",
+        "criterion": "derived persistence must not materially regress the existing memory-hit path"
+      },
+      {
+        "endpoint": "peak physical footprint",
+        "direction": "lower",
+        "criterion": "non-inferior after normalized pixel materialization"
+      }
+    ],
+    "lifecycle": [
+      {
+        "endpoint": "reclaim latency after cancellation or revoke",
+        "direction": "lower",
+        "criterion": "bounded and reported separately from foreground latency"
+      },
+      {
+        "endpoint": "background energy and thermal cost",
+        "direction": "lower",
+        "criterion": "physical-device evidence required"
+      }
+    ]
+  },
+  "admissionPolicyToTest": {
+    "firstDisplayBlocking": false,
+    "minimumObservedReuseCohort": "at least the conservative ceiling of creation cost divided by measured per-hit decode savings, with an additional safety margin",
+    "formatSelection": "choose among versioned exact-pixel formats per artifact using bounded creation work, resulting bytes, expected hits, and measured read cost; no globally fixed format",
+    "budgets": [
+      "separate maximum derived bytes",
+      "maximum concurrent creators",
+      "maximum in-flight source and output bytes",
+      "maximum creation CPU time per admission window",
+      "maximum write bytes per source generation"
+    ],
+    "fallback": "original encoded representation remains authoritative and immediately usable"
+  },
+  "formalExecutionRequirements": {
+    "source": "clean exact revisions with source-tree identity",
+    "devices": [
+      "stable current iPhone class",
+      "lower-performance supported iPhone class"
+    ],
+    "minimumIndependentBlocksPerComparator": 20,
+    "ordering": "balanced interleaving with randomized or Latin-square comparator order",
+    "host": "quiescence and thermal gates must pass",
+    "statistics": [
+      "block-level resampling",
+      "multiplicity correction within each preregistered endpoint family",
+      "TOST or confidence-interval non-inferiority where applicable",
+      "no post-result endpoint removal"
+    ]
+  },
+  "exploratoryEvidence": {
+    "path": "docs/research/ordinary-image-derived-raster-study-2026-08.json",
+    "role": "mechanism discovery and counterexample source only",
+    "eligibleForFormalClaim": false
+  },
+  "policyMechanismEvidence": {
+    "path": "docs/research/derived-raster-cache-policy-2026-08-08.md",
+    "implemented": "alias-aware physical-byte budget with shared-container deduplication and in-memory second chance",
+    "claimBoundary": "mechanism and regression evidence only; no comparator performance claim",
+    "durableLogicalWriteBudget": {
+      "status": "implemented-package-internal-fixed-window",
+      "chargedBeforeStaging": [
+        "candidate container bytes",
+        "projected full Fovea alias-manifest bytes"
+      ],
+      "notEquivalentToPhysicalBytes": true,
+      "tests": [
+        "W11_PT_043",
+        "W11_PT_044",
+        "W11_PT_045",
+        "W11_PT_046",
+        "W11_PT_047",
+        "W11_PT_048"
+      ]
+    }
+  }
+}

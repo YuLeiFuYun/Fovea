@@ -2,6 +2,20 @@ import AkashicCore
 import CryptoKit
 import Foundation
 
+private let storageLowercaseHexDigits = Array("0123456789abcdef".utf8)
+
+@inline(__always)
+private func storageLowercaseHexString<Bytes: Sequence>(_ bytes: Bytes) -> String
+where Bytes.Element == UInt8 {
+    var output = [UInt8]()
+    output.reserveCapacity(bytes.underestimatedCount * 2)
+    for byte in bytes {
+        output.append(storageLowercaseHexDigits[Int(byte >> 4)])
+        output.append(storageLowercaseHexDigits[Int(byte & 0x0f)])
+    }
+    return String(decoding: output, as: UTF8.self)
+}
+
 /// Fovea 当前持久层使用的 package 内部物理文件名表示。
 extension PhysicalBlobID {
     package var foveaStorageFileName: String { rawValue.uuidString.lowercased() }
@@ -20,9 +34,7 @@ public struct StorageNamespaceFingerprint: Hashable, Sendable, Codable {
     /// 为逻辑命名空间派生确定性非明文指纹。
     public init(namespace: String) {
         let domainSeparated = Data("fovea-storage-namespace-v1\u{0}\(namespace)".utf8)
-        self.value = SHA256.hash(data: domainSeparated)
-            .map { String(format: "%02x", $0) }
-            .joined()
+        self.value = storageLowercaseHexString(SHA256.hash(data: domainSeparated))
     }
 
     package init(validatedValue: String) {

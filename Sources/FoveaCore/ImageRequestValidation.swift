@@ -22,13 +22,13 @@ package enum ImageRequestValidation {
             throw ImageRequestError.missingURLHost
         }
         let normalizedHost = host.lowercased()
+        guard components.user == nil, components.password == nil else {
+            throw ImageRequestError.embeddedURLCredentials
+        }
         guard let candidateURL = components.url,
             HTTPURLSecurityPolicy.permits(candidateURL)
         else {
             throw ImageRequestError.insecureRemoteHTTP
-        }
-        guard components.user == nil, components.password == nil else {
-            throw ImageRequestError.embeddedURLCredentials
         }
 
         components.scheme = scheme

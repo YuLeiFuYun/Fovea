@@ -29,6 +29,8 @@ public final class FoveaPipeline: ProgressiveImageLoading, EncodedDataLoading, N
     let imageLoadAdmission: AdaptiveImageLoadAdmission
     let encodedWarmups: AdaptiveEncodedWarmupCoordinator
     let progressivePreviewHub: PipelineProgressivePreviewHub
+    let derivedRasterRuntime: DerivedRasterRuntime?
+    let namespaceRevocationObserver: (any NamespaceRevocationObserving)?
     let lifetimeAnchors = PipelineLifetimeAnchorStore()
 
     /// 使用完整 codec descriptor、能力与资源契约构造管线。
@@ -75,9 +77,17 @@ public final class FoveaPipeline: ProgressiveImageLoading, EncodedDataLoading, N
         profileAccessPolicy: ProfileAccessPolicy = .unrestricted,
         codec: any ImageCodec,
         transformer: any ImageTransforming = IdentityImageTransformer(),
+        derivedRasterStore: (any DerivedRasterStoring)? = nil,
+        derivedRasterConfiguration: DerivedRasterRuntimeConfiguration? = nil,
+        derivedRasterCostEstimator: any DerivedRasterCostEstimating =
+            LiveDerivedRasterCostEstimator(),
+        namespaceRevocationObserver: (any NamespaceRevocationObserving)? = nil,
+        progressiveResourceRecorder: FoveaProgressiveResourceRecorder? = nil,
         clock: any WallClock = SystemWallClock(),
         retrySleeper: any RetrySleeping = SystemRetrySleeper(),
-        retryJitter: any RetryJittering = SystemRetryJitter()
+        retryJitter: any RetryJittering = SystemRetryJitter(),
+        globalDecodePermits: AsyncPermitPool? = nil,
+        globalDecodeWorkingSetPermits: AsyncPermitPool? = nil
     ) {
         let adaptiveStateLimit = Self.saturatedSum([
             configuration.maximumConcurrentFetches,
@@ -93,29 +103,39 @@ public final class FoveaPipeline: ProgressiveImageLoading, EncodedDataLoading, N
             diagnostics: diagnostics,
             codec: codec,
             transformer: transformer,
+            derivedRasterStore: derivedRasterStore,
+            derivedRasterConfiguration: derivedRasterConfiguration,
+            derivedRasterCostEstimator: derivedRasterCostEstimator,
             clock: clock,
             retrySleeper: retrySleeper,
-            retryJitter: retryJitter
+            retryJitter: retryJitter,
+            globalDecodePermits: globalDecodePermits,
+            globalDecodeWorkingSetPermits: globalDecodeWorkingSetPermits
         )
         self.id = id
         self.configuration = configuration
         self.profileAccessPolicy = profileAccessPolicy
-        self.imageLoadAdmission = AdaptiveImageLoadAdmission(maximumStateCount: adaptiveStateLimit)
-        self.encodedWarmups = AdaptiveEncodedWarmupCoordinator(
-            maximumEntryCount: adaptiveStateLimit)
-        self.progressivePreviewHub = PipelineProgressivePreviewHub(
+        imageLoadAdmission = AdaptiveImageLoadAdmission(maximumStateCount: adaptiveStateLimit)
+        encodedWarmups = AdaptiveEncodedWarmupCoordinator(
+            maximumEntryCount: adaptiveStateLimit
+        )
+        progressivePreviewHub = PipelineProgressivePreviewHub(
             decodeStage: assembly.decodeStage,
             sharesAcrossSubscribers: transport.reusePolicy.allowsCrossRequestReuse,
             supportsProgressObservation:
-                transport is any TransportProgressObservationSupporting
+                transport is any TransportProgressObservationSupporting,
+            transportMemoryThreshold: configuration.transportMemoryThreshold,
+            resourceRecorder: progressiveResourceRecorder
         )
-        self.cache = assembly.cache
-        self.fetchStage = assembly.fetchStage
-        self.decodeStage = assembly.decodeStage
-        self.codecDescriptor = assembly.decodeStage.codecDescriptor
-        self.deliveryCoordinator = assembly.deliveryCoordinator
-        self.imageCoordinator = assembly.imageCoordinator
-        self.encodedCoordinator = assembly.encodedCoordinator
+        cache = assembly.cache
+        fetchStage = assembly.fetchStage
+        decodeStage = assembly.decodeStage
+        codecDescriptor = assembly.decodeStage.codecDescriptor
+        deliveryCoordinator = assembly.deliveryCoordinator
+        imageCoordinator = assembly.imageCoordinator
+        encodedCoordinator = assembly.encodedCoordinator
+        derivedRasterRuntime = assembly.derivedRasterRuntime
+        self.namespaceRevocationObserver = namespaceRevocationObserver
         self.namespaceRegistry = namespaceRegistry
         self.diagnostics = assembly.diagnostics
     }

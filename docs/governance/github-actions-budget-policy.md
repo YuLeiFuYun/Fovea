@@ -17,7 +17,7 @@ Fovea treats hosted runner minutes as a scarce release-evidence resource, not as
 A full hosted run may be requested only after the exact candidate passes locally:
 
 1. project memory, workload, privacy, supply-chain, formatting, and Actions-budget governance gates;
-2. all 101 mutation applications;
+2. all 102 mutation applications;
 3. component exact-pin resolution and clean-copy checks;
 4. Workbench static and locally available Simulator verification;
 5. a clean sanitized source-tree comparison with no generated or ignored artifacts;

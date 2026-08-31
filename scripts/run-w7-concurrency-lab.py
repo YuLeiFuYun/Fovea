@@ -414,8 +414,17 @@ def validate(
     claims_digest: str,
     simulator_identity: dict[str, str],
 ) -> dict[str, Any]:
-    if data.get("schemaVersion") != 3:
+    if data.get("schemaVersion") != 5:
         raise RuntimeError("unexpected W7 result schema")
+    runtime_configuration = data.get("comparatorRuntimeConfiguration")
+    if not isinstance(runtime_configuration, dict) or runtime_configuration.get("schemaVersion") != 1:
+        raise RuntimeError("W7 comparator runtime configuration attestation is missing or invalid")
+    runtime_parameters = runtime_configuration.get("parameters")
+    if not isinstance(runtime_parameters, dict) or not runtime_parameters or not all(
+        isinstance(key, str) and isinstance(value, str)
+        for key, value in runtime_parameters.items()
+    ):
+        raise RuntimeError("W7 comparator runtime configuration parameters are invalid")
     if data.get("planID") != "FOVEA-W7-CONCURRENCY-V10":
         raise RuntimeError("unexpected W7 plan identity")
     if data.get("harnessIdentity") != identity:
@@ -444,6 +453,8 @@ def validate(
         raise RuntimeError("W7 workload identity mismatch")
     if data.get("cacheState") != "cold":
         raise RuntimeError("W7 cache-state mismatch")
+    if data.get("cachePreparationRepetitions") != 1:
+        raise RuntimeError("W7 cache-preparation repetition mismatch")
     if data.get("networkProfile") != "NET-CONSTRAINED-V1":
         raise RuntimeError("W7 network profile mismatch")
     if data.get("comparator", {}).get("name") != comparator:
@@ -572,6 +583,8 @@ def run_one(
             "W7-THOUSAND-CONCURRENT-V1",
             "--cache-state",
             "cold",
+            "--cache-preparation-repetitions",
+            "1",
             "--network-profile",
             "NET-CONSTRAINED-V1",
             "--run-index",

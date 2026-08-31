@@ -92,7 +92,7 @@ else:
     for marker in (
         "manually dispatched only",
         "budget_approved: false",
-        "all 101 mutation applications",
+        "all 102 mutation applications",
         "Do not push a sequence of speculative root commits",
     ):
         if marker not in policy:

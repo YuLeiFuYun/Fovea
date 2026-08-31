@@ -1,0 +1,552 @@
+{
+  "claimBoundary": "Source inspection and comparator registration are not performance or product superiority evidence. Formal claims require clean exact revisions, equivalent semantics, independent blocks, and physical devices.",
+  "featureCandidates": [
+    {
+      "acceptance": "no animation decode while detached, hidden, or fully transparent; deterministic resume; duplicate visibility updates do not restart the driver",
+      "benefit": 4,
+      "boundary": "UIKit tracks window, superview, own hidden and alpha. AppKit additionally uses ancestor hide/unhide. Screen-intersection caching is excluded until a reliable scroll/reentry observer exists.",
+      "complexity": 1,
+      "decision": "adopted-core-extend-by-evidence",
+      "evidence": 5,
+      "id": "ANIM-FEATURE-EFFECTIVE-VISIBILITY",
+      "implementation": [
+        "Sources/FoveaCore/AnimationPresentationVisibility.swift",
+        "Sources/FoveaUIKit/FoveaImageView.swift",
+        "Sources/FoveaAppKit/FoveaImageView.swift"
+      ],
+      "name": "cached structural presentation visibility",
+      "sources": [
+        "FLAnimatedImage",
+        "SwiftyGif",
+        "Kingfisher"
+      ],
+      "tests": [
+        "W5_PT_125",
+        "W5_PT_126"
+      ]
+    },
+    {
+      "acceptance": "lower physical-device timing error or missed-frame rate without extra offscreen work; benchmark capture must include presentation-target accepted/consumed/superseded/rejected/lifecycle-cleared counters so refresh coalescing is not conflated with timeline dropped frames",
+      "benefit": 5,
+      "complexity": 3,
+      "decision": "adopted-core-extend-by-evidence",
+      "evidence": 5,
+      "id": "ANIM-FEATURE-DISPLAY-TARGET-DEADLINE",
+      "name": "display-refresh targetTimestamp adapter",
+      "sources": [
+        "Apple CADisplayLink",
+        "FLAnimatedImage",
+        "AnimatedImage"
+      ],
+      "implementation": [
+        "Sources/FoveaCore/AnimationPresentationTargetBuffer.swift",
+        "Sources/FoveaCore/AnimationPlaybackDriver.swift",
+        "Sources/FoveaCore/AnimationPlaybackRuntime.swift",
+        "Sources/FoveaUIKit/FoveaAnimationDisplayLinkDriver.swift",
+        "Sources/FoveaUIKit/FoveaAnimatedImageViewPresenter.swift",
+        "Sources/FoveaAppKit/FoveaAnimationDisplayLinkDriver.swift",
+        "Sources/FoveaAppKit/FoveaAnimatedImageViewPresenter.swift",
+        "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift",
+        "Tools/Performance/capture_w5_appkit_display_link.py",
+        "Tools/Performance/capture_w5_appkit_callback_timing.py",
+        "Tools/Performance/capture_w5_appkit_refresh_timing.py"
+      ],
+      "tests": [
+        "W5_PT_127",
+        "W5_PT_128",
+        "W5_PT_129",
+        "W5_PT_130",
+        "W5_PT_131",
+        "W5_PT_132",
+        "W5_PT_137",
+        "W5_PT_142",
+        "W5_PT_143",
+        "W5_PT_144",
+        "W5_PT_145",
+        "W5_PT_146",
+        "W5_PT_147",
+        "W5_PT_148"
+      ],
+      "boundary": "UIKit uses targetTimestamp through a monotonic newest-only single-slot buffer and BenchmarkDiagnostics SPI. AppKit macOS 14+ uses NSView.displayLink with the same external-tick core while macOS 12-13 retain automatic deadlines. Package-scoped AppKit controls permit an internal automatic-deadline A/B and common refresh observer without changing ordinary public API. A fixed-six-pair physical-Mac Release study samples both modes on displayLink.timestamp and anchors scoring to the exact driver start; all six pairs favor or tie external scheduling on anchored p95 timing error and skipped source frames, with 14.102375 ms versus 75.461355 ms median p95 and 0 versus 82 total skips. The host actually samples near 60 Hz although maximumFramesPerSecond is 120, so max-FPS missed/early counts are supplemental. No hardware-scanout, energy, thermal, memory, startup, cross-player, physical-iOS or global superiority claim follows.",
+      "physicalMacEvidence": [
+        ".artifacts/performance/w5-appkit-display-link-physical-v1/manifest.json",
+        "docs/research/w5-appkit-display-link-physical-2026-08.json",
+        ".artifacts/performance/w5-appkit-display-link-preclamp-counterexample-v1/summary.json",
+        ".artifacts/performance/w5-appkit-refresh-timing-physical-v1/manifest.json",
+        "docs/research/w5-appkit-refresh-timing-physical-2026-08.json",
+        ".artifacts/performance/w5-appkit-callback-timing-physical-v1/manifest.json"
+      ]
+    },
+    {
+      "acceptance": "actual-byte cache cap, deterministic pressure shrink, invalid provider output fails before publication, warning fences pre-warning in-flight publication, no stale publication, measured recovery tail",
+      "benefit": 5,
+      "complexity": 2,
+      "decision": "adopted-core-extend-by-evidence",
+      "evidence": 5,
+      "id": "ANIM-FEATURE-ADAPTIVE-WINDOW",
+      "name": "actual-byte learned and pressure-adaptive upcoming window",
+      "sources": [
+        "Fovea actual-byte SIEVE",
+        "Gifu",
+        "FLAnimatedImage",
+        "YYImage"
+      ],
+      "implementationEvidence": [
+        "W5_PT_133",
+        "W5_PT_134",
+        "W5_PT_135",
+        "W5_PT_136"
+      ],
+      "boundary": "The first uncached batch remains bounded by the configured frame-count policy; after exact DecodedImage.estimatedByteCost is observed, later windows are capped by the number of equal-or-smaller observed frames that fit the animation cache. This is not a predictive allocator model."
+    },
+    {
+      "acceptance": "exact full-canvas pixels with lower peak decoded bytes on subrect-heavy fixtures",
+      "benefit": 5,
+      "complexity": 4,
+      "decision": "experiment-after-imagecraft-adapter",
+      "evidence": 4,
+      "id": "ANIM-FEATURE-PARTIAL-COMPOSITION",
+      "name": "subrect-aware composition and checkpoint strategy",
+      "sources": [
+        "APNGKit",
+        "YYImage",
+        "ImageCraft metadata"
+      ]
+    },
+    {
+      "acceptance": "material startup benefit on large APNG without weakening CRC/order/security validation",
+      "benefit": 3,
+      "complexity": 4,
+      "decision": "defer-until-large-fixture-benefit",
+      "evidence": 3,
+      "id": "ANIM-FEATURE-STREAMING-FIRST-PASS",
+      "name": "partial metadata and duration during first pass",
+      "sources": [
+        "APNGKit"
+      ]
+    },
+    {
+      "acceptance": "non-inferior common-oracle timing with lower physical-device energy and no policy conflict with Low Power Mode or Reduce Motion",
+      "benefit": 3,
+      "complexity": 3,
+      "decision": "experiment-with-device-energy-gate",
+      "evidence": 4,
+      "id": "ANIM-FEATURE-PREFERRED-FRAME-RATE",
+      "name": "preferred frame-rate range negotiation",
+      "sources": [
+        "Apple CADisplayLink",
+        "AnimatedImage"
+      ],
+      "localCandidate": {
+        "status": "implemented-default-off-benchmark-only",
+        "mechanism": "gcd(all normalized frame durations, one second) exact-boundary integer-FPS recommendation",
+        "evidence": [
+          "W5_PT_138",
+          "W5_PT_139",
+          "W5_PT_140",
+          "W5_PT_141"
+        ],
+        "deviceConfigurationTest": "W5_DEVICE_PT_002",
+        "boundary": "no product default change and no energy/timing claim before physical A/B"
+      }
+    },
+    {
+      "acceptance": "only after GIF/APNG adapter, lifecycle, device, and public API gates are complete",
+      "benefit": 3,
+      "complexity": 4,
+      "decision": "defer",
+      "evidence": 2,
+      "id": "ANIM-FEATURE-WEBP-AVIF",
+      "name": "additional animated raster formats",
+      "sources": [
+        "YYImage",
+        "AnimatedImage",
+        "SDWebImage"
+      ]
+    },
+    {
+      "acceptance": "requires a separate product objective and architecture",
+      "benefit": 2,
+      "complexity": 5,
+      "decision": "reject-current-scope",
+      "evidence": 2,
+      "id": "ANIM-FEATURE-ENCODING-SPRITES",
+      "name": "animation encoding and sprite-sheet support",
+      "sources": [
+        "YYImage"
+      ]
+    },
+    {
+      "acceptance": "never enter the raster animation path without a separate product and workload",
+      "benefit": 2,
+      "complexity": 5,
+      "decision": "reject-as-different-product",
+      "evidence": 3,
+      "id": "ANIM-FEATURE-VIDEO-VECTOR",
+      "name": "video or vector animation runtime",
+      "sources": []
+    }
+  ],
+  "libraries": [
+    {
+      "comparisonPriority": "P0-existing",
+      "dependencyDecision": "comparator-only",
+      "exactCommit": "2de3a496eaf6df9a1312862adcfd54acd73c39c0",
+      "formats": [
+        "GIF",
+        "APNG"
+      ],
+      "id": "CMP-SDWEBIMAGE",
+      "mechanisms": [
+        "pluggable animated coder",
+        "player/frame buffer separation",
+        "memory warning handling"
+      ],
+      "name": "SDWebImage",
+      "roles": [
+        "codec",
+        "frame provider",
+        "player",
+        "frame cache"
+      ],
+      "sourceEvidence": [
+        "SDWebImage/Core/SDAnimatedImage.h",
+        "SDWebImage/Core/SDImageIOAnimatedCoder.h",
+        "SDWebImage/Core/SDAnimatedImagePlayer.h"
+      ],
+      "w5AdapterStatus": "gif-and-apng-variable-delay-structural-calibrated-ios15-plus-current-digest-bound",
+      "w5ObservationBoundary": "Encoded-native public SDAnimatedImagePlayer path; source timeline metadata is normalized only for storage-format floating-point representation noise.",
+      "w5Evidence": [
+        ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+        ".artifacts/w5-player-timing/simulator/20260807T084837Z/manifest.json",
+        "Benchmarks/ComparativeLab/Adapters/SDWebImageAdapterPackage/Sources/SDWebImageComparatorAdapter/SDWebImageComparatorAdapter.swift"
+      ]
+    },
+    {
+      "comparisonPriority": "P0-existing",
+      "dependencyDecision": "comparator-only",
+      "exactCommit": "c0d5cfa1947f2456ddb321a85b347b3d60d83254",
+      "formats": [
+        "GIF",
+        "APNG"
+      ],
+      "id": "CMP-PINREMOTEIMAGE",
+      "mechanisms": [
+        "format-specific providers",
+        "cached animated image wrapper",
+        "full-canvas frame oracle"
+      ],
+      "name": "PINRemoteImage",
+      "roles": [
+        "codec",
+        "frame provider",
+        "player",
+        "frame cache"
+      ],
+      "sourceEvidence": [
+        "Source/Classes/include/PINRemoteImage/PINAnimatedImage.h",
+        "Source/Classes/include/PINRemoteImage/PINGIFAnimatedImage.h",
+        "Source/Classes/include/PINRemoteImage/PINAPNGAnimatedImage.h",
+        "Source/Classes/include/PINRemoteImage/PINCachedAnimatedImage.h"
+      ],
+      "w5AdapterStatus": "gif-and-apng-variable-delay-structural-calibrated-ios15-plus-current-digest-bound",
+      "w5ObservationBoundary": "Encoded-native public PIN animated-image/view path; source frame identity is recovered from the actually displayed unique fixture pixel because no public frame index exists. Pixel instrumentation is structural-only and never used for energy evidence.",
+      "w5Evidence": [
+        ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+        ".artifacts/w5-player-timing/simulator/20260807T084837Z/manifest.json",
+        "Benchmarks/ComparativeLab/Adapters/PINRemoteImageAdapterPackage/Sources/PINRemoteImageComparatorAdapter/PINRemoteImageComparatorAdapter.swift"
+      ]
+    },
+    {
+      "comparisonPriority": "P0-existing-player",
+      "dependencyDecision": "comparator-only",
+      "exactCommit": "410984bf301f4fa224fe56277b3f8672cc465c79",
+      "formats": [
+        "GIF"
+      ],
+      "id": "CMP-KINGFISHER",
+      "mechanisms": [
+        "bounded preload",
+        "view lifecycle",
+        "display-link scheduling"
+      ],
+      "name": "Kingfisher",
+      "roles": [
+        "frame source",
+        "player",
+        "bounded preload buffer"
+      ],
+      "sourceEvidence": [
+        "Sources/Image/GIFAnimatedImage.swift",
+        "Sources/Views/AnimatedImageView.swift"
+      ],
+      "w5AdapterStatus": "gif-variable-delay-structural-calibrated-current-digest-bound",
+      "w5ObservationBoundary": "Encoded-native public AnimatedImageView/frameSource/animator path with display(_:) observation; no independent display link is added.",
+      "w5Evidence": [
+        ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+        "Benchmarks/ComparativeLab/Adapters/KingfisherAdapterPackage/Sources/KingfisherComparatorAdapter/KingfisherComparatorAdapter.swift"
+      ]
+    },
+    {
+      "comparisonPriority": "P0-integrated-player",
+      "dependencyDecision": "source-audit-and-comparator-adapter-only",
+      "exactCommit": "672a8d4fea3faf234518be2db00815936e55f85f",
+      "formats": [
+        "GIF"
+      ],
+      "id": "CMP-GIFU",
+      "mechanisms": [
+        "cacheUpcoming finite window",
+        "maximum timestep clamp",
+        "display-link pause and loop lifecycle"
+      ],
+      "name": "Gifu",
+      "roles": [
+        "player",
+        "upcoming-frame cache",
+        "display-link driver"
+      ],
+      "sourceEvidence": [
+        "Sources/Gifu/Classes/FrameStore.swift",
+        "Sources/Gifu/Classes/Animator.swift",
+        "Sources/Gifu/Classes/GIFAnimatable.swift"
+      ],
+      "w5AdapterStatus": "primary-variable-delay-and-uniform-50ms-structural-calibrated-swift6-manifest-ios16-plus",
+      "w5ObservationBoundary": "GIFImageView is public but not open. Comparator uses the documented public extension point: a custom UIImageView conforming to GIFAnimatable, holding public Animator(withDelegate:), calling public updateImageIfNeeded() in its own display callback, then decoding source identity from the displayed pixel.",
+      "w5Evidence": [
+        ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+        ".artifacts/w5-player-timing/simulator/20260807T054821Z/manifest.json",
+        "Benchmarks/ComparativeLab/Adapters/GifuAdapterPackage/Sources/GifuComparatorAdapter/GifuComparatorAdapter.swift"
+      ]
+    },
+    {
+      "comparisonPriority": "P0-integrated-player-fresh-simulator-gap",
+      "dependencyDecision": "source-audit-and-comparator-adapter-only",
+      "exactCommit": "d4f07b6f164d53c1212c3e54d6460738b1981e9f",
+      "formats": [
+        "GIF"
+      ],
+      "id": "CMP-FLANIMATEDIMAGE",
+      "mechanisms": [
+        "dynamic optimal cache size",
+        "memory-warning cache reduction",
+        "target-timestamp accumulator",
+        "waiting-for-frame diagnostics"
+      ],
+      "name": "FLAnimatedImage",
+      "roles": [
+        "player",
+        "dynamic frame cache",
+        "memory-pressure reference"
+      ],
+      "sourceEvidence": [
+        "FLAnimatedImage/FLAnimatedImage.m",
+        "FLAnimatedImage/FLAnimatedImageView.m",
+        "FLAnimatedImage/include/FLAnimatedImage.h"
+      ],
+      "w5AdapterStatus": "historical-warm-variable-and-uniform-calibrated-current-fresh-isolated-variable-not-comparable-instability-ios15-plus",
+      "w5ObservationBoundary": "Comparator-only Objective-C subclass overrides public/standard displayLayer:, calls super, then reads public currentFrame; no private ivar/setter and no independent display link are used.",
+      "w5Evidence": [
+        ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+        ".artifacts/w5-player-timing/simulator/20260807T075127Z/manifest.json",
+        ".artifacts/w5-player-timing/simulator/20260807T053409Z/manifest.json",
+        "scripts/run-w5-animated-simulator-lab.py",
+        "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageBenchmarkShim/FoveaFLAnimatedImageBenchmarkView.m"
+      ],
+      "w5FreshSimulatorBoundary": "The exact same public-API adapter/app can complete 61/60 on a warm Simulator but repeatedly produces count=0 or count=1/progression=0 on fresh dedicated Simulator launches. Public full-cache prewarming and public visibility re-trigger experiments did not make fresh-state playback reproducible and were reverted. Current isolated manifests must preserve this as not-comparable-fresh-simulator-instability rather than retrying until success."
+    },
+    {
+      "comparisonPriority": "P0-integrated-apng-player",
+      "dependencyDecision": "source-audit-and-comparator-adapter-only",
+      "exactCommit": "341383f61000e8d2e55d45db0f0756b239d0a2f1",
+      "formats": [
+        "APNG"
+      ],
+      "id": "CMP-APNGKIT",
+      "mechanisms": [
+        "loadedPartial versus full duration",
+        "subrect dispose/blend composition",
+        "display timer abstraction",
+        "timing regression tests"
+      ],
+      "name": "APNGKit",
+      "roles": [
+        "codec",
+        "partial-frame compositor",
+        "streaming first pass",
+        "player"
+      ],
+      "sourceEvidence": [
+        "Source/APNGKit/APNGImageRenderer.swift",
+        "Source/APNGKit/APNGImage.swift",
+        "Source/APNGKit/APNGImageView.swift",
+        "Source/APNGKit/DisplayTimer.swift"
+      ],
+      "w5AdapterStatus": "apng-variable-delay-structural-calibrated-ios15-plus-current-digest-bound",
+      "w5ObservationBoundary": "Comparator replaces APNGKit public DrivingTimerType with one behavior-equivalent CADisplayLink timer, calls the original APNGKit action first, then observes the actual layer contents; no second display link or private state is used.",
+      "w5Evidence": [
+        ".artifacts/w5-player-timing/simulator/20260807T084837Z/manifest.json",
+        "Benchmarks/ComparativeLab/Adapters/APNGKitAdapterPackage/Sources/APNGKitComparatorAdapter/APNGKitComparatorAdapter.swift",
+        "Benchmarks/ComparativeLab/Fixtures/apng-variable-delay-60-indexed.png.fixture"
+      ]
+    },
+    {
+      "comparisonPriority": "P1-integrated-uniform-mechanism",
+      "dependencyDecision": "source-audit-and-comparator-adapter-only",
+      "exactCommit": "d64237a33ce91b0513dd850589fea32fa28f4f80",
+      "formats": [
+        "GIF",
+        "APNG"
+      ],
+      "id": "CMP-ANIMATEDIMAGE",
+      "mechanisms": [
+        "targetTimestamp update",
+        "preferred frame-rate range",
+        "timeline-to-frame mapping"
+      ],
+      "name": "AnimatedImage",
+      "roles": [
+        "player",
+        "display refresh reference"
+      ],
+      "sourceEvidence": [
+        "Sources/_UIKit_AnimatedImage/BackportUpdateLink.swift",
+        "Sources/UpdateLink/DisplayLinkProxy.swift",
+        "Sources/AnimatedImageCore/Utilities/AnimatedImageState.swift"
+      ],
+      "w5AdapterStatus": "primary-variable-delay-not-comparable-uniform-50ms-structural-calibrated-ios16-plus",
+      "w5SemanticBoundary": "0.2.4 FrameDecimator at maxLevelOfIntegrity=1 retains all indices but returns delays.first as the single AnimatedImageState delay; source variable frame durations are therefore not preserved by the prepared player timeline.",
+      "w5Evidence": [
+        ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+        ".artifacts/w5-player-timing/simulator/20260807T050901Z/manifest.json",
+        "Benchmarks/ComparativeLab/Adapters/AnimatedImageAdapterPackage/Sources/AnimatedImageComparatorAdapter/AnimatedImageComparatorAdapter.swift"
+      ]
+    },
+    {
+      "comparisonPriority": "P1-source-oracle-completed",
+      "dependencyDecision": "source-oracle-only",
+      "exactCommit": "42ba209608cb332887a33ebcae1bde50c52b151d",
+      "formats": [
+        "GIF",
+        "APNG"
+      ],
+      "id": "CMP-YYIMAGE",
+      "mechanisms": [
+        "blend-from-index partial composition",
+        "byte-derived dynamic buffer",
+        "background/memory-warning release",
+        "short-delay normalization"
+      ],
+      "name": "YYImage",
+      "roles": [
+        "codec oracle",
+        "partial-frame compositor",
+        "dynamic frame cache",
+        "player"
+      ],
+      "sourceEvidence": [
+        "YYImage/YYImageCoder.h",
+        "YYImage/YYImageCoder.m",
+        "YYImage/YYAnimatedImageView.h",
+        "YYImage/YYAnimatedImageView.m"
+      ],
+      "w5SourceOracleStatus": "semantic-replay-source-oracle-completed-runtime-candidate-derived-no-player-ranking",
+      "w5SemanticReplayBoundary": "YYImage blendFromIndex/lastBlendIndex is used only to derive candidate replay-start semantics. Fovea/ImageCraft adopt a narrower persistent rule; no YYImage runtime dependency or player timing rank follows.",
+      "w5Evidence": [
+        "docs/research/w5-apng-semantic-replay-2026-08.json",
+        ".artifacts/performance/w5-yyimage-semantic-replay-v1/report.json",
+        "Tools/Performance/w5_yyimage_semantic_replay_oracle.py"
+      ]
+    },
+    {
+      "comparisonPriority": "P2-overlap",
+      "dependencyDecision": "source-audit-only-unless-it-falsifies-current-lifecycle",
+      "exactCommit": "c44e2b19f80baa9df496d6415c81d12bac852d46",
+      "formats": [
+        "GIF"
+      ],
+      "id": "CMP-SWIFTYGIF",
+      "mechanisms": [
+        "shared display-link manager",
+        "onscreen check",
+        "loop-aware cache heuristic"
+      ],
+      "name": "SwiftyGif",
+      "roles": [
+        "player",
+        "multi-view display-link manager",
+        "visibility reference"
+      ],
+      "sourceEvidence": [
+        "SwiftyGif/SwiftyGifManager.swift",
+        "SwiftyGif/UIImageView+SwiftyGif.swift"
+      ]
+    },
+    {
+      "comparisonPriority": "P2-nonplayer",
+      "dependencyDecision": "transport-only-comparator",
+      "exactCommit": "63a8fcbd6621340a2410bc3e9575ac97058615f4",
+      "formats": [
+        "GIF original data"
+      ],
+      "id": "CMP-NUKE",
+      "mechanisms": [
+        "original-data retention",
+        "non-equivalent animation capability handling"
+      ],
+      "name": "Nuke",
+      "roles": [
+        "transport",
+        "static preview",
+        "retained-data reference"
+      ],
+      "sourceEvidence": [
+        "Sources/Nuke/ImageContainer.swift",
+        "Sources/Nuke/Decoding/ImageDecoders+Default.swift"
+      ]
+    },
+    {
+      "comparisonPriority": "P0-existing",
+      "dependencyDecision": "platform-oracle",
+      "formats": [
+        "GIF",
+        "APNG"
+      ],
+      "id": "CMP-APPLE-IMAGEIO",
+      "identity": "platform-build",
+      "mechanisms": [
+        "platform decode primitive"
+      ],
+      "name": "Apple ImageIO lower bound",
+      "roles": [
+        "codec mechanism lower bound"
+      ],
+      "sourceEvidence": []
+    }
+  ],
+  "nextComparatorSequence": [
+    "Do not expand comparator count until production ImageCraft pin or stable-device evidence exposes a specific uncovered lifecycle/format mechanism; SwiftyGif remains a conditional falsifier only."
+  ],
+  "reviewedOn": "2026-08-07",
+  "schemaVersion": 1,
+  "selectionPolicy": {
+    "adoptionRequires": [
+      "benefit score at least 4 of 5",
+      "independent correctness oracle",
+      "bounded state and cancellation contract",
+      "no public API expansion before a concrete adapter and device evidence",
+      "complexity score at most 3 unless the mechanism closes a correctness gap"
+    ],
+    "aggregateWinnerScore": false,
+    "formalRanking": "role-and-format-specific-pareto-only",
+    "goal": "Adopt or test only mechanisms with material correctness, memory, deadline, lifecycle, or energy value.",
+    "scopeExclusions": [
+      "animation encoding",
+      "sprite-sheet authoring",
+      "video playback",
+      "vector animation runtimes",
+      "animated WebP, AVIF, or HEIF before GIF/APNG product integration is complete"
+    ]
+  },
+  "status": "specialized-w5-structural-coverage-current-digest-bound-explicit-fl-fresh-instability-and-animatedimage-semantic-gap-physical-ranking-pending"
+}

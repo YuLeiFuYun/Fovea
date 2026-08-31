@@ -139,8 +139,24 @@ private final class DownloadTaskBox: @unchecked Sendable {
     }
 }
 
+private func kingfisherExpirationIdentity(_ expiration: StorageExpiration) -> String {
+    switch expiration {
+    case .never:
+        return "never"
+    case .seconds(let seconds):
+        return "seconds:\(seconds)"
+    case .days(let days):
+        return "days:\(days)"
+    case .date(let date):
+        return "date:\(date.timeIntervalSince1970)"
+    case .expired:
+        return "expired"
+    }
+}
+
 public final class KingfisherComparatorAdapter: ComparatorProgressiveAdapter, @unchecked Sendable {
     public let identity: ComparatorIdentity
+    public let runtimeConfiguration: ComparatorRuntimeConfiguration?
 
     private let cache: ImageCache
     private let downloader: ImageDownloader
@@ -148,7 +164,9 @@ public final class KingfisherComparatorAdapter: ComparatorProgressiveAdapter, @u
 
     public init(
         cacheDirectory: URL,
-        sessionConfiguration: URLSessionConfiguration = .ephemeral
+        sessionConfiguration: URLSessionConfiguration = .ephemeral,
+        memoryCostLimit: Int = 128 * 1_024 * 1_024,
+        diskSizeLimit: UInt = 256 * 1_024 * 1_024
     ) throws {
         identity = try ComparatorIdentity(
             name: "Kingfisher",
@@ -159,6 +177,17 @@ public final class KingfisherComparatorAdapter: ComparatorProgressiveAdapter, @u
             name: "fovea-comparative-kingfisher",
             cacheDirectoryURL: cacheDirectory
         )
+        let boundedMemoryCost = max(1, memoryCostLimit)
+        let boundedDiskSize = max(1, diskSizeLimit)
+        cache.memoryStorage.config.totalCostLimit = boundedMemoryCost
+        cache.memoryStorage.config.countLimit = .max
+        cache.memoryStorage.config.expiration = .seconds(300)
+        cache.memoryStorage.config.cleanInterval = 120
+        cache.memoryStorage.config.keepWhenEnteringBackground = false
+        cache.diskStorage.config.sizeLimit = boundedDiskSize
+        cache.diskStorage.config.expiration = .days(7)
+        cache.diskStorage.config.usesHashedFileName = true
+        cache.diskStorage.config.autoExtAfterHashedFileName = false
         downloader = ImageDownloader(name: "fovea-comparative-kingfisher")
         let session = sessionConfiguration.copy() as! URLSessionConfiguration
         session.urlCache = nil
@@ -166,6 +195,48 @@ public final class KingfisherComparatorAdapter: ComparatorProgressiveAdapter, @u
         session.urlCredentialStorage = nil
         session.httpShouldSetCookies = false
         downloader.sessionConfiguration = session
+        runtimeConfiguration = try ComparatorRuntimeConfiguration(
+            parameters: [
+                "adapter.profile": "kingfisher-imagecache-downloader",
+                "cache.kind": "isolated-ImageCache",
+                "cache.rootPolicy": "evaluator-owned",
+                "cache.memoryTotalCostLimitBytes": String(
+                    cache.memoryStorage.config.totalCostLimit
+                ),
+                "cache.memoryCountLimit": String(cache.memoryStorage.config.countLimit),
+                "cache.memoryExpiration": kingfisherExpirationIdentity(
+                    cache.memoryStorage.config.expiration
+                ),
+                "cache.memoryCleanIntervalSeconds": String(
+                    cache.memoryStorage.config.cleanInterval
+                ),
+                "cache.memoryKeepWhenEnteringBackground": String(
+                    cache.memoryStorage.config.keepWhenEnteringBackground
+                ),
+                "cache.diskSizeLimitBytes": String(cache.diskStorage.config.sizeLimit),
+                "cache.diskExpiration": kingfisherExpirationIdentity(
+                    cache.diskStorage.config.expiration
+                ),
+                "cache.diskUsesHashedFileName": String(
+                    cache.diskStorage.config.usesHashedFileName
+                ),
+                "cache.diskAutoExtAfterHashedFileName": String(
+                    cache.diskStorage.config.autoExtAfterHashedFileName
+                ),
+                "download.kind": "isolated-ImageDownloader",
+                "options.backgroundDecode": "true",
+                "options.cacheOriginalImage": "true",
+                "processor": "downsampling-plus-exact-target-fit-fill",
+                "scaleFactor": "1",
+                "session.base": "ephemeral",
+                "session.cookies": "disabled",
+                "session.credentials": "disabled",
+                "session.httpMaximumConnectionsPerHost": String(
+                    session.httpMaximumConnectionsPerHost
+                ),
+                "session.urlCache": "nil",
+            ]
+        )
         manager = KingfisherManager(downloader: downloader, cache: cache)
     }
 
@@ -498,3 +569,236 @@ public final class KingfisherComparatorAdapter: ComparatorProgressiveAdapter, @u
         #endif
     }
 }
+
+#if canImport(UIKit)
+    private enum KingfisherAnimatedAdapterError: Error {
+        case unsupportedFormat
+        case decodeFailed
+        case missingFrameSource
+        case invalidFrameCount(Int)
+        case invalidFrameDuration(index: Int, seconds: Double)
+        case invalidFrameDurationNanoseconds(index: Int, seconds: Double)
+    }
+
+    @MainActor
+    private final class KingfisherAnimatedBenchmarkView: AnimatedImageView {
+        var eventSink: ((Int, UInt64) -> Void)?
+        private var isRecordingFrames = false
+        private var lastRecordedFrameIndex: Int?
+
+        func beginRecordingFrames() {
+            isRecordingFrames = true
+            lastRecordedFrameIndex = nil
+            setNeedsDisplay()
+            layer.setNeedsDisplay()
+        }
+
+        func endRecordingFrames() {
+            isRecordingFrames = false
+            lastRecordedFrameIndex = nil
+        }
+
+        override func display(_ layer: CALayer) {
+            super.display(layer)
+            guard isRecordingFrames,
+                let frameIndex = animator?.currentFrameIndex,
+                lastRecordedFrameIndex != frameIndex
+            else { return }
+            lastRecordedFrameIndex = frameIndex
+            eventSink?(frameIndex, DispatchTime.now().uptimeNanoseconds)
+        }
+    }
+
+    private final class KingfisherAnimatedEventState: @unchecked Sendable {
+        private let lock = NSLock()
+        private var sequence = 0
+
+        func next(frameIndex: Int, timestamp: UInt64) -> ComparatorAnimatedPlayerFrameEvent? {
+            lock.withLock {
+                defer { sequence += 1 }
+                return try? ComparatorAnimatedPlayerFrameEvent(
+                    sequence: sequence,
+                    monotonicNanoseconds: timestamp,
+                    sourceFrameIndex: frameIndex
+                )
+            }
+        }
+    }
+
+    @MainActor
+    private final class KingfisherAnimatedPlayerController {
+        private let window: UIWindow
+        private let imageView: KingfisherAnimatedBenchmarkView
+        private let continuation: AsyncStream<ComparatorAnimatedPlayerFrameEvent>.Continuation
+        private var stopped = false
+
+        init(
+            image: UIImage,
+            frameCount: Int,
+            maximumFrameBufferBytes: Int,
+            continuation: AsyncStream<ComparatorAnimatedPlayerFrameEvent>.Continuation,
+            state: KingfisherAnimatedEventState
+        ) {
+            let imageView = KingfisherAnimatedBenchmarkView(
+                frame: CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
+            )
+            imageView.autoPlayAnimatedImage = false
+            imageView.needsPrescaling = false
+            imageView.repeatCount = .infinite
+            imageView.runLoopMode = .common
+            let pixelWidth = max(1, Int((image.size.width * image.scale).rounded(.up)))
+            let pixelHeight = max(1, Int((image.size.height * image.scale).rounded(.up)))
+            let frameBytes = max(1, pixelWidth * pixelHeight * 4)
+            let budgetedFrameCount = max(1, maximumFrameBufferBytes / frameBytes)
+            imageView.framePreloadCount = min(max(1, frameCount - 1), budgetedFrameCount)
+            imageView.image = image
+            imageView.eventSink = { frameIndex, timestamp in
+                guard let event = state.next(frameIndex: frameIndex, timestamp: timestamp) else {
+                    return
+                }
+                continuation.yield(event)
+            }
+
+            let controller = UIViewController()
+            controller.view.backgroundColor = .clear
+            controller.view.addSubview(imageView)
+            let window: UIWindow
+            if let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+                .first
+            {
+                window = UIWindow(windowScene: scene)
+                window.frame = CGRect(
+                    x: 0,
+                    y: 0,
+                    width: max(1, image.size.width),
+                    height: max(1, image.size.height)
+                )
+            } else {
+                window = UIWindow(
+                    frame: CGRect(
+                        x: 0,
+                        y: 0,
+                        width: max(1, image.size.width),
+                        height: max(1, image.size.height)
+                    )
+                )
+            }
+            window.rootViewController = controller
+            window.isHidden = true
+
+            self.window = window
+            self.imageView = imageView
+            self.continuation = continuation
+        }
+
+        func start() {
+            guard !stopped else { return }
+            imageView.beginRecordingFrames()
+            window.makeKeyAndVisible()
+            imageView.startAnimating()
+        }
+
+        func pause() {
+            guard !stopped else { return }
+            imageView.stopAnimating()
+        }
+
+        func stop() {
+            guard !stopped else { return }
+            stopped = true
+            imageView.stopAnimating()
+            imageView.endRecordingFrames()
+            imageView.eventSink = nil
+            window.isHidden = true
+            window.rootViewController = nil
+            continuation.finish()
+        }
+
+        isolated deinit {
+            imageView.stopAnimating()
+            imageView.endRecordingFrames()
+            imageView.eventSink = nil
+            window.isHidden = true
+            window.rootViewController = nil
+            continuation.finish()
+        }
+    }
+
+    extension KingfisherComparatorAdapter: ComparatorAnimatedPlayerAdapter {
+        @MainActor
+        public func makeAnimatedPlayer(
+            _ request: ComparatorAnimatedPlayerRequest
+        ) throws -> ComparatorAnimatedPlayerSession {
+            guard request.format == .gif else {
+                throw KingfisherAnimatedAdapterError.unsupportedFormat
+            }
+            guard
+                let image = KingfisherWrapper<KFCrossPlatformImage>.image(
+                    data: request.encodedData,
+                    options: ImageCreatingOptions(
+                        scale: 1,
+                        duration: 0,
+                        preloadAll: false,
+                        onlyFirstFrame: false
+                    )
+                )
+            else {
+                throw KingfisherAnimatedAdapterError.decodeFailed
+            }
+            guard let frameSource = image.kf.frameSource else {
+                throw KingfisherAnimatedAdapterError.missingFrameSource
+            }
+            guard frameSource.frameCount > 1 else {
+                throw KingfisherAnimatedAdapterError.invalidFrameCount(frameSource.frameCount)
+            }
+
+            var durations: [UInt64] = []
+            durations.reserveCapacity(frameSource.frameCount)
+            for index in 0..<frameSource.frameCount {
+                let duration = frameSource.duration(at: index)
+                guard duration.isFinite, duration > 0 else {
+                    throw KingfisherAnimatedAdapterError.invalidFrameDuration(
+                        index: index,
+                        seconds: duration
+                    )
+                }
+                let nanoseconds = duration * 1_000_000_000
+                guard nanoseconds.isFinite,
+                    nanoseconds > 0,
+                    nanoseconds <= Double(UInt64.max)
+                else {
+                    throw KingfisherAnimatedAdapterError.invalidFrameDurationNanoseconds(
+                        index: index,
+                        seconds: duration
+                    )
+                }
+                durations.append(UInt64(nanoseconds.rounded(.toNearestOrEven)))
+            }
+
+            let pair = AsyncStream<ComparatorAnimatedPlayerFrameEvent>.makeStream(
+                bufferingPolicy: .bufferingNewest(4_096)
+            )
+            let state = KingfisherAnimatedEventState()
+            let controller = KingfisherAnimatedPlayerController(
+                image: image,
+                frameCount: frameSource.frameCount,
+                maximumFrameBufferBytes: request.maximumFrameBufferBytes,
+                continuation: pair.continuation,
+                state: state
+            )
+            pair.continuation.onTermination = { @Sendable _ in
+                Task { @MainActor in controller.stop() }
+            }
+
+            return try ComparatorAnimatedPlayerSession(
+                sourceFrameDurationsNanoseconds: durations,
+                sourceLoopCount: 0,
+                inputPath: .encodedNative,
+                events: pair.stream,
+                start: { controller.start() },
+                pause: { controller.pause() },
+                stop: { controller.stop() }
+            )
+        }
+    }
+#endif

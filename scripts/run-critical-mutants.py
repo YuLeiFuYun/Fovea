@@ -41,6 +41,8 @@ class Mutant:
     test_filter: str
     apply: Callable[[Path], None]
     test_package: str | None = None
+    prepare_test: Callable[[Path], None] | None = None
+    test_root: str | None = None
 
 
 def sha256(path: Path) -> str:
@@ -366,12 +368,10 @@ def mutant_005(root: Path) -> None:
 
 
 def mutant_006(root: Path) -> None:
-    replace_in_section(
+    replace_literal(
         root / "Sources/FoveaHTTP/HTTPCachePolicy.swift",
-        "package static func selectRecord(",
-        "  }\n}",
-        "      return current == record.vary\n",
-        "      return current.fieldNames == record.vary.fieldNames\n",
+        "        return current == record.vary\n",
+        "        return current.fieldNames == record.vary.fieldNames\n",
     )
 
 
@@ -384,12 +384,10 @@ def mutant_007(root: Path) -> None:
 
 
 def mutant_008(root: Path) -> None:
-    regex_in_section(
+    replace_literal(
         root / "Sources/FoveaCore/PipelineCache.swift",
-        "private func requireActive(",
-        "  }\n}",
-        r"guard await namespaceRegistry\.isActive\(generation, for: namespace\) else \{",
-        "guard true else {",
+        "        guard await namespaceRegistry.isActive(generation, for: namespace) else {\n",
+        "        guard true else {\n",
     )
 
 
@@ -466,12 +464,10 @@ def mutant_015(root: Path) -> None:
 
 
 def mutant_016(root: Path) -> None:
-    replace_in_section(
-        root / "Sources/FoveaCore/PipelineCache.swift",
-        "  private func rollback(",
-        "  private func recordCacheCleanupFailure(",
-        "    if createdBlob {\n",
-        "    if false && createdBlob {\n",
+    replace_literal(
+        root / "Sources/FoveaCore/PipelineCache+Persistence.swift",
+        "        if createdBlob {\n",
+        "        if false && createdBlob {\n",
     )
 
 
@@ -488,20 +484,20 @@ def mutant_017(root: Path) -> None:
 def mutant_018(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/PipelineCache.swift",
-        "  func refresh(",
-        "  func renderedImage(",
-        "      try await requireActive(generation, for: namespace)\n",
-        "      // AIQA-MUT-018：故意让延迟刷新忽略命名空间撤销。\n",
+        "    func refresh(",
+        "    private func rollbackRefresh(",
+        "            try await requireActive(generation, for: namespace)\n",
+        "            // AIQA-MUT-018: deliberately ignore namespace revocation after refresh publication.\n",
     )
 
 
 def mutant_019(root: Path) -> None:
     replace_in_section(
-        root / "Sources/FoveaCore/PipelineCache.swift",
-        "  private func rollback(",
-        "  private func recordCacheCleanupFailure(",
-        "    if recordMutationAttempted {\n",
-        "    if false && recordMutationAttempted {\n",
+        root / "Sources/FoveaCore/PipelineCache+Persistence.swift",
+        "    private func rollback(",
+        "}\n",
+        "        if recordMutationAttempted {\n",
+        "        if false && recordMutationAttempted {\n",
     )
 
 
@@ -534,10 +530,10 @@ def mutant_022(root: Path) -> None:
 def mutant_023(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/PipelineCache.swift",
-        "  private func rollbackRefresh(",
-        "  func renderedImage(",
-        "      if restoreOverwrittenRecord,\n",
-        "      if false,\n",
+        "    private func rollbackRefresh(",
+        "    func cleanup(",
+        "            if restoreOverwrittenRecord,\n",
+        "            if false,\n",
     )
 
 
@@ -610,13 +606,87 @@ def mutant_030(root: Path) -> None:
     )
 
 
+def write_component_contract_test(
+    root: Path, component: str, filename: str, source: str
+) -> None:
+    checkout = (root / ".build/checkouts" / component).resolve()
+    target = (checkout / "Tests/AkashicCoreTests" / filename).resolve()
+    target.relative_to(checkout)
+    if target.exists():
+        raise RuntimeError(f"component contract test collision: {target}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(source)
+
+
+def prepare_mutant_031_test(root: Path) -> None:
+    write_component_contract_test(
+        root,
+        "Akashic",
+        "FoveaMutationDirectoryContractTests.swift",
+        """import Foundation
+import XCTest
+@testable import AkashicCore
+
+final class FoveaMutationDirectoryContractTests: XCTestCase {
+    func testManagedDirectoryValidationRejectsSymbolicLink() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fovea-mutant-directory-\\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let target = root.appendingPathComponent("target", isDirectory: true)
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: false)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: NSNumber(value: Int16(0o700))],
+            ofItemAtPath: target.path
+        )
+        let link = root.appendingPathComponent("managed", isDirectory: true)
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
+
+        XCTAssertThrowsError(try StorageDirectorySecurity.validateDirectory(link))
+    }
+}
+""",
+    )
+
+
 def mutant_031(root: Path) -> None:
     replace_in_section(
         mutation_source(root, "component://Akashic/Sources/AkashicCore/StorageDirectorySecurity.swift"),
-        "    package static func validateDirectory(",
-        "    private static func createPrivateDirectoryHierarchyIfNeeded(",
-        "        guard fileType == S_IFDIR,\n",
-        "        guard fileType == S_IFDIR || fileType == S_IFLNK,\n",
+        "    private static func fileStatusWithoutFollowingLinks(at url: URL) throws -> stat {",
+        "    private static func excludeFromBackup(",
+        "        let result = url.path.withCString { Darwin.lstat($0, &status) }\n",
+        "        let result = url.path.withCString { Darwin.fstatat(AT_FDCWD, $0, &status, 0) }\n",
+    )
+
+
+def prepare_mutant_032_test(root: Path) -> None:
+    write_component_contract_test(
+        root,
+        "Akashic",
+        "FoveaMutationBoundedReaderContractTests.swift",
+        """import Foundation
+import XCTest
+@testable import AkashicCore
+
+final class FoveaMutationBoundedReaderContractTests: XCTestCase {
+    func testBoundedFileReaderRejectsOversizeBeforeAllocation() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fovea-mutant-bounded-reader-\\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let file = root.appendingPathComponent("metadata.bin")
+        try Data([0x41, 0x42]).write(to: file)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: NSNumber(value: Int16(0o600))],
+            ofItemAtPath: file.path
+        )
+
+        XCTAssertThrowsError(try BoundedFileReader.read(from: file, maximumBytes: 1))
+    }
+}
+""",
     )
 
 
@@ -652,8 +722,8 @@ def mutant_034(root: Path) -> None:
 def mutant_035(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/FoveaPipeline+Operations.swift",
-        "    private func validateAccess(",
-        "    private func validateAuthorization(",
+        "    package func validateAccess(",
+        "    package func validateAuthorization(",
         "        guard profileAccessPolicy.permits(request) else {\n",
         "        guard true else {\n",
     )
@@ -670,11 +740,11 @@ def mutant_036(root: Path) -> None:
 
 def mutant_037(root: Path) -> None:
     replace_in_section(
-        root / "Sources/FoveaCore/DecodeStage.swift",
-        "  private func reserveWorkingSet(",
-        "  private func decode(",
-        "        units: bytes,\n",
-        "        units: 1,\n",
+        root / "Sources/FoveaCore/FoveaDecodePermitController.swift",
+        "    private func acquireWorkingSetPermit(",
+        "    private func withDecodePermits<Result>(",
+        "                units: bytes,\n",
+        "                units: 1,\n",
     )
 
 
@@ -730,10 +800,12 @@ def mutant_042(root: Path) -> None:
 
 
 def mutant_043(root: Path) -> None:
-    replace_literal(
+    replace_in_section(
         root / "Sources/FoveaSystem/FoveaSystemPipeline.swift",
-        "    profileAccessPolicy: ProfileAccessPolicy = .publicOnly,\n",
-        "    profileAccessPolicy: ProfileAccessPolicy = .unrestricted,\n",
+        "    public static func open(",
+        "    package static func openQualified(",
+        "        profileAccessPolicy: ProfileAccessPolicy = .publicOnly,\n",
+        "        profileAccessPolicy: ProfileAccessPolicy = .unrestricted,\n",
     )
 
 
@@ -895,10 +967,12 @@ def mutant_059(root: Path) -> None:
 
 
 def mutant_060(root: Path) -> None:
-    replace_literal(
+    replace_in_section(
         root / "Sources/FoveaCore/FetchStageDiagnostics.swift",
-        "        redirectCount: network?.redirectCount,\n",
-        "        redirectCount: nil,\n",
+        "    func recordCompleted(",
+        "/// Owns the subscriber-side lifecycle for a shared fetch",
+        "                redirectCount: network?.redirectCount,\n",
+        "                redirectCount: nil,\n",
     )
 
 
@@ -941,8 +1015,8 @@ def mutant_064(root: Path) -> None:
 def mutant_065(root: Path) -> None:
     replace_literal(
         root / "Sources/FoveaSystem/FoveaSystemPipeline.swift",
-        "      await pipeline.retainLifetimeAnchor(monitor)\n",
-        "      // AIQA-MUT-065: drop the monitor when the wrapper is released.\n",
+        "        if let monitor { await pipeline.retainLifetimeAnchor(monitor) }\n",
+        "        // AIQA-MUT-065: drop the monitor when the wrapper is released.\n",
     )
 
 
@@ -955,8 +1029,10 @@ def mutant_066(root: Path) -> None:
 
 
 def mutant_067(root: Path) -> None:
-    replace_literal(
+    replace_in_section(
         root / "Sources/FoveaCore/FoveaPipeline+Operations.swift",
+        "    public func purgeMemoryCache() async -> Int {",
+        "    /// Comparative-Lab-only full in-memory cache reset.",
         "                byteCount: removed.costBytes,\n",
         "                byteCount: removed.itemCount,\n",
     )
@@ -1279,6 +1355,17 @@ def mutant_101(root: Path) -> None:
     )
 
 
+def mutant_102(root: Path) -> None:
+    replace_literal(
+        root
+        / "Benchmarks/ComparativeLab/Adapters/FoveaAdapterPackage/Sources/"
+        "FoveaComparatorAdapter/FoveaComparatorAdapter.swift",
+        "        let benchmarkRequestID = semanticHeaders.removeValue(forKey: benchmarkRequestIDHeader)\n",
+        "        // AIQA-MUT-102: keep telemetry in semantic headers so it perturbs cache/single-flight identity.\n"
+        "        let benchmarkRequestID: String? = nil\n",
+    )
+
+
 MUTANTS = [
     Mutant("AIQA-MUT-001", "Omit namespace from persistent base identity.", "Sources/FoveaCore/Identity.swift", "IdentityTests/testNamespaceChangesBaseAndVariantIdentity_CACHE_PT_003", mutant_001),
     Mutant("AIQA-MUT-002", "Collapse exact fetch execution identity to base-only dimensions.", "Sources/FoveaCore/ImageRequest.swift", "IdentityTests/testImageRequestExecutionKeyIncludesCredentialAndRevalidation", mutant_002),
@@ -1295,10 +1382,10 @@ MUTANTS = [
     Mutant("AIQA-MUT-013", "Use Swift hashValue as a persistent key digest.", "Sources/FoveaCore/Identity.swift", "IdentityTests/testFetchBaseKeyDigestUsesStableSHA256AiqaMut013", mutant_013),
     Mutant("AIQA-MUT-014", "Strip signed query parameters during URL normalization.", "Sources/FoveaCore/ImageRequestValidation.swift", "IdentityTests/testURLNormalizationIsConservativeAndFragmentFree_CACHE_PT_027", mutant_014),
     Mutant("AIQA-MUT-015", "Publish RenderedMemory before transform succeeds.", "Sources/FoveaCore/ImageDeliveryCoordinator.swift", "PipelineTests/testTransformFailureRetainsOriginalAndPublishesNoRendered_CACHE_PT_030", mutant_015),
-    Mutant("AIQA-MUT-016", "Leave a newly created blob behind when record publication fails.", "Sources/FoveaCore/PipelineCache.swift", "AuthGalleryTests/testRevokeDuringBlobCommitRemovesLateBlobAndRecord", mutant_016),
+    Mutant("AIQA-MUT-016", "Leave a newly created blob behind when record publication fails.", "Sources/FoveaCore/PipelineCache+Persistence.swift", "AuthGalleryTests/testRevokeDuringBlobCommitRemovesLateBlobAndRecord", mutant_016),
     Mutant("AIQA-MUT-017", "Write a post-revoke 200 record with generation zero.", "Sources/FoveaCore/HTTPImageResponseProcessor.swift", "PipelineTests/testRevokeThenNewResponsePersistsCurrentGenerationAndHitsDisk_CACHE_PT_038", mutant_017),
     Mutant("AIQA-MUT-018", "Allow a late 304 refresh to survive namespace revocation.", "Sources/FoveaCore/PipelineCache.swift", "AuthGalleryTests/testRevokeDuring304RefreshRemovesLateMetadata_AUTH_PT_011", mutant_018),
-    Mutant("AIQA-MUT-019", "Leave a published record behind after generation revocation.", "Sources/FoveaCore/PipelineCache.swift", "AuthGalleryTests/testRevocationAfterRecordPublicationRollsBackRecordAndBlob_AUTH_PT_005", mutant_019),
+    Mutant("AIQA-MUT-019", "Leave a published record behind after generation revocation.", "Sources/FoveaCore/PipelineCache+Persistence.swift", "AuthGalleryTests/testRevocationAfterRecordPublicationRollsBackRecordAndBlob_AUTH_PT_005", mutant_019),
     Mutant("AIQA-MUT-020", "Admit transient geometry into RenderedMemory.", "Sources/FoveaCore/ImageDeliveryCoordinator.swift", "TargetGeometryTests/testTransientTargetDoesNotEnterRenderedMemoryUntilStableGeoPt009", mutant_020),
     Mutant("AIQA-MUT-021", "Disable the encoded metadata byte limit.", "component://ImageCraft/Sources/ImageCraftCore/ImageTypes.swift", "PipelineFailureTests/testMetadataSecurityFailurePublishesNoReusableStateSecCase004", mutant_021),
     Mutant("AIQA-MUT-022", "Create a separate DecodeKey registry for every subscriber.", "Sources/FoveaCore/DecodeStage.swift", "DecodeSharingTests/testSameDecodeKeyExecutesProbeAndDecodeOnce_SCHED_PT_002", mutant_022),
@@ -1310,13 +1397,29 @@ MUTANTS = [
     Mutant("AIQA-MUT-028", "Ignore malformed or conflicting Content-Length values.", "Sources/FoveaHTTP/URLSessionTransport.swift", "URLSessionTransportTests/testMalformedOrConflictingContentLengthFailsClosed_HTTP_CONF_CONTENT_LENGTH_001", mutant_028),
     Mutant("AIQA-MUT-029", "Accept a noncanonical runtime content identifier.", "Sources/FoveaPersistence/AkashicOriginalEncodedStore.swift", "ManifestSemanticValidationTests/testOriginalStoreRejectsNoncanonicalRuntimeContentIDWithoutMutation_SEC_CASE_030", mutant_029),
     Mutant("AIQA-MUT-030", "Accept hard-linked managed files and lock inodes.", "component://Akashic/Sources/AkashicCore/StorageDirectorySecurity.swift", "FilesystemLinkDefenseTests/testLockAndManifestHardLinksAreRejected_SEC_CASE_031", mutant_030),
-    Mutant("AIQA-MUT-031", "Accept symbolic links as managed directories.", "component://Akashic/Sources/AkashicCore/StorageDirectorySecurity.swift", "FilesystemLinkDefenseTests/testManagedDirectoryRejectsSymbolicLink_SEC_CASE_031", mutant_031),
-    Mutant("AIQA-MUT-032", "Allocate metadata files without enforcing the pre-read size bound.", "component://Akashic/Sources/AkashicCore/BoundedFileReader.swift", "BoundedMetadataReadTests/testOversizedStoreManifestsFailBeforeUnboundedRead_SEC_CASE_032", mutant_032),
+    Mutant(
+        "AIQA-MUT-031",
+        "Follow symbolic links while validating managed directory paths.",
+        "component://Akashic/Sources/AkashicCore/StorageDirectorySecurity.swift",
+        "FoveaMutationDirectoryContractTests/testManagedDirectoryValidationRejectsSymbolicLink",
+        mutant_031,
+        "Akashic",
+        prepare_mutant_031_test,
+    ),
+    Mutant(
+        "AIQA-MUT-032",
+        "Allocate metadata files without enforcing the pre-read size bound.",
+        "component://Akashic/Sources/AkashicCore/BoundedFileReader.swift",
+        "FoveaMutationBoundedReaderContractTests/testBoundedFileReaderRejectsOversizeBeforeAllocation",
+        mutant_032,
+        "Akashic",
+        prepare_mutant_032_test,
+    ),
     Mutant("AIQA-MUT-033", "Reject finite records when the wall clock moves backward during a request.", "Sources/FoveaHTTP/RepresentationRecord.swift", "ManifestSemanticValidationTests/testRecordStoreAcceptsFiniteWallClockRollback_HTTP_CONF_AGE_005", mutant_033),
     Mutant("AIQA-MUT-034", "Ignore request network permissions in exact fetch execution identity.", "Sources/FoveaCore/ImageRequest.swift", "IdentityTests/testNetworkPolicyChangesExecutionButNotPersistentIdentity_RES_PT_008", mutant_034),
     Mutant("AIQA-MUT-035", "Bypass the profile access allowlist before cache and network access.", "Sources/FoveaCore/FoveaPipeline+Operations.swift", "ProfileAccessPolicyTests/testDeniedProfileFailsBeforeCacheOrNetwork_AUTH_PT_014", mutant_035),
     Mutant("AIQA-MUT-036", "Reset request network policy while replacing credentials.", "Sources/FoveaCore/ImageRequest+Credentials.swift", "AuthenticationRefreshTests/testCredentialReplacementPreservesRequestSemantics_AUTH_PT_013", mutant_036),
-    Mutant("AIQA-MUT-037", "Reserve one byte instead of the estimated decode working set.", "Sources/FoveaCore/DecodeStage.swift", "ResourceLimitTests/testDecodeWorkingSetIsRejectedBeforePixelAllocation_RES_PT_013", mutant_037),
+    Mutant("AIQA-MUT-037", "Reserve one byte instead of the estimated decode working set.", "Sources/FoveaCore/FoveaDecodePermitController.swift", "ResourceLimitTests/testDecodeWorkingSetIsRejectedBeforePixelAllocation_RES_PT_013", mutant_037),
     Mutant("AIQA-MUT-038", "Drop URLSession transaction metrics before transport completion.", "Sources/FoveaHTTP/URLSessionTransport.swift", "URLSessionTransportTests/testDelegateTransportCollectsSanitizedTaskMetrics_DIAG_PT_011", mutant_038),
     Mutant("AIQA-MUT-039", "Leak an asynchronous permit when the scoped operation throws or is cancelled.", "Sources/FoveaCore/AsyncPermitPool.swift", "PrioritySchedulingTests/testPermitScopeReleasesCapacityAfterSuccessFailureAndCancellation", mutant_039),
     Mutant("AIQA-MUT-040", "Accept remote cleartext HTTP image URLs.", "Sources/FoveaHTTP/HTTPURLSecurityPolicy.swift", "IdentityTests/testImageRequestRejectsRemoteCleartextButAllowsLoopback_SEC_CASE_033", mutant_040),
@@ -1381,6 +1484,14 @@ MUTANTS = [
     Mutant("AIQA-MUT-099", "Accept a noncanonical live-content reference into garbage collection.", "Sources/FoveaStorage/StorageTypes.swift", "CacheGarbageCollectionTests/testStoredContentReferenceRejectsNoncanonicalIdentity", mutant_099),
     Mutant("AIQA-MUT-100", "Advance namespace revocation without durably publishing the generation.", "Sources/FoveaCore/NamespaceRegistry.swift", "NamespaceGenerationPersistenceTests/testDurableAdvancePreventsStaleGenerationAfterRegistryRecreation_AUTH_PT_020", mutant_100),
     Mutant("AIQA-MUT-101", "Treat auth-like custom header names as ordinary public metadata.", "Sources/FoveaHTTP/CredentialHeaderPolicy.swift", "VaryCacheTests/testAuthLikeCustomVaryHeaderFailsClosedWithoutDeclaration_AUTH_PT_012", mutant_101),
+    Mutant(
+        "AIQA-MUT-102",
+        "Let benchmark request IDs re-enter Fovea cache and single-flight identity.",
+        "Benchmarks/ComparativeLab/Adapters/FoveaAdapterPackage/Sources/FoveaComparatorAdapter/FoveaComparatorAdapter.swift",
+        "FoveaComparatorAdapterTests/testSameURLWithDifferentObservationIDsSharesOneTransport_COMP_PT_027",
+        mutant_102,
+        test_root="Benchmarks/ComparativeLab/Adapters/FoveaAdapterPackage",
+    ),
 ]
 
 
@@ -1466,8 +1577,17 @@ def run_mutation_test(
     env: dict[str, str],
     mutant: Mutant,
 ) -> subprocess.CompletedProcess[str]:
+    if mutant.prepare_test is not None:
+        mutant.prepare_test(worktree)
     test_root = worktree
+    if mutant.test_root is not None:
+        test_root = (worktree / mutant.test_root).resolve()
+        test_root.relative_to(worktree.resolve())
+        if not test_root.is_dir():
+            raise RuntimeError(f"mutation test root is missing: {mutant.test_root}")
     if mutant.test_package is not None:
+        if mutant.test_root is not None:
+            raise RuntimeError("mutation cannot define both test_root and test_package")
         test_root = worktree / ".build/checkouts" / mutant.test_package
         if not test_root.is_dir():
             raise RuntimeError(f"mutation test package checkout is missing: {mutant.test_package}")
@@ -1551,7 +1671,14 @@ def create_workspace_snapshot(worktree: Path, head: str) -> tuple[str, str, bool
         if not raw_relative:
             continue
         relative = Path(os.fsdecode(raw_relative))
-        source = (ROOT / relative).resolve()
+        if relative.parts and relative.parts[0] == "Packages":
+            continue
+        lexical_source = ROOT / relative
+        if lexical_source.is_symlink():
+            raise RuntimeError(
+                f"mutation snapshot rejects untracked symbolic link: {relative.as_posix()}"
+            )
+        source = lexical_source.resolve()
         source.relative_to(ROOT.resolve())
         destination = worktree / relative
         destination.parent.mkdir(parents=True, exist_ok=True)

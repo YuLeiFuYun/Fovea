@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "studyID": "FOVEA-W5-MJPEG-LATEST-ONLY-MECHANISM-2026-08",
+  "status": "completed-dirty-local-synthetic-mechanism-directional-no-product-claim",
+  "date": "2026-08-05",
+  "scope": {
+    "mechanisms": [
+      "Fovea live MJPEG latest-only single encoded slot",
+      "decode-every-frame full burst queue baseline"
+    ],
+    "frameCount": 120,
+    "encodedBytesPerFrame": 4096,
+    "syntheticSHA256IterationsPerDecode": 160,
+    "independentProcessBlocks": 6,
+    "trialsPerBlock": 8,
+    "totalTrials": 48,
+    "ordering": "four latest-first and four decode-every-first trials inside each independent process block",
+    "correctnessOracle": "exact final source index 119 and exact final pixel digest equality",
+    "ingestionFence": "inputFinished, pendingPartIndex 119 and droppedEncodedFrameCount 118 before first decode release"
+  },
+  "correctness": {
+    "allCorrect": true,
+    "orderBalanced": true,
+    "latestDecodeCountPerTrial": 2,
+    "decodeEveryCountPerTrial": 120,
+    "latestDroppedFrameCountPerTrial": 118,
+    "latestDecodeFraction": 0.016666666666666666,
+    "latestPeakEncodedQueueByteFraction": 0.008333333333333333,
+    "finalSourceIndex": 119,
+    "finalPixelDigestEqual": true
+  },
+  "directionalTiming": {
+    "medianPairedElapsedRatio": 0.04042280307950889,
+    "p95PairedElapsedRatio": 0.09244417693278988,
+    "maximumPairedElapsedRatio": 0.1348339522916982,
+    "pairedRatiosAboveOneCount": 0,
+    "interpretation": "In this synthetic overload mechanism, bounded latest-only work completed with roughly four percent of the decode-every elapsed time at the median while decoding 2/120 frames. This is not a codec, network, player or product comparison."
+  },
+  "methodologyCorrection": {
+    "negativeResultID": "NEG-W5-MJPEG-MECHANISM-UNFENCED-INGESTION-001",
+    "rejectedObservation": "The unfenced first run decoded two to four frames across eight trials because ingestion had not converged before the first decode was released.",
+    "acceptedCorrection": "Fence exact ingestion state before release and fail validation unless all 48 trials decode exactly two frames."
+  },
+  "evidence": {
+    "aggregate": ".artifacts/performance/w5-mjpeg-mechanism-final-v2/aggregate.json",
+    "captureManifest": ".artifacts/performance/w5-mjpeg-mechanism-final-v2/capture-manifest.json",
+    "binarySHA256": "2670441049ff906d132963fd27b4d77d3ff9dce8b92bb069e5c0890355baceb9",
+    "sourceHead": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+    "dirtyStatusEntryCount": 107,
+    "runner": "Tools/FoveaNetworkLab/MJPEGMechanismLab.swift",
+    "capture": "Tools/Performance/capture_mjpeg_mechanism.py",
+    "validator": "Tools/Performance/validate_mjpeg_mechanism.py"
+  },
+  "claimBoundary": {
+    "formalClaimEligible": false,
+    "reasons": [
+      "The Fovea source tree is dirty and the evidence binds an uncommitted local binary.",
+      "The decode body is synthetic SHA-256 CPU work rather than ImageIO JPEG decode throughput.",
+      "The decode-every baseline intentionally queues the full burst and is not memory-equivalent to the single-slot policy.",
+      "No URLSession, display deadline, energy, thermal, memory-pressure tail or physical-device endpoint was measured.",
+      "No performance threshold or overall product ranking was preregistered."
+    ]
+  }
+}

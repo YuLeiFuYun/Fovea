@@ -1,0 +1,78 @@
+{
+  "claimBoundary": [
+    "process CPU time, cycles, instructions, context switches and RSS are resource proxies, not energy",
+    "no third-party, UIKit, cross-platform, hardware scanout or global Pareto claim",
+    "confirmation may justify an AppKit product-default mechanism change without establishing energy non-inferiority"
+  ],
+  "configuration": "Release",
+  "controls": {
+    "baseline": "external-every-refresh",
+    "candidate": "platform-default"
+  },
+  "correctnessGate": {
+    "animatedImageRegistryMustPass": true,
+    "fullSwiftRootSuiteMustPass": true,
+    "requiredFocusedTest": "W5_PT_149"
+  },
+  "pairCount": 6,
+  "pairOrder": [
+    [
+      "baseline",
+      "candidate"
+    ],
+    [
+      "candidate",
+      "baseline"
+    ],
+    [
+      "baseline",
+      "candidate"
+    ],
+    [
+      "candidate",
+      "baseline"
+    ],
+    [
+      "baseline",
+      "candidate"
+    ],
+    [
+      "candidate",
+      "baseline"
+    ]
+  ],
+  "resourceDurationSeconds": 10,
+  "resourceGate": {
+    "everyPairCatastrophicMaximumRatios": {
+      "cyclesElapsed": 1.1,
+      "instructionsRetired": 1.1,
+      "maximumResidentSetBytes": 1.1,
+      "totalCPUSeconds": 1.25,
+      "totalContextSwitches": 1.1
+    },
+    "medianPairedMaximumRatios": {
+      "cyclesElapsed": 0.7,
+      "instructionsRetired": 0.85,
+      "maximumResidentSetBytes": 1.05,
+      "totalCPUSeconds": 0.75,
+      "totalContextSwitches": 0.8
+    },
+    "thermalGate": "no serious or critical ProcessInfo thermal state before or after any run"
+  },
+  "retryPolicy": "no retry; every launched pair/run is retained",
+  "schemaVersion": 1,
+  "scope": [
+    "physical Mac AppKit macOS 14+ external-presentation-tick path only",
+    "candidate keeps every NSView.displayLink target in the newest-only target buffer but defers Core/output work until the known source-frame boundary",
+    "baseline is the same binary using package-only externalEveryRefreshControl",
+    "UIKit keeps the existing every-tick AnimationPlaybackDriver.tick path and is outside this physical-Mac ranking"
+  ],
+  "status": "preregistered-before-confirmatory-capture",
+  "studyID": "FOVEA-W5-APPKIT-BUFFERED-BOUNDARY-CONFIRMATION-2026-08",
+  "timingGate": {
+    "allPairsNoAdditionalSourceSkips": true,
+    "allPairsP95WithinBaselinePlusOneObservedRefresh": true,
+    "candidateAcceptedTargetCountEqualsRefreshSampleCount": true,
+    "candidateConsumedToBaselineConsumedMaximumRatioEveryPair": 0.5
+  }
+}

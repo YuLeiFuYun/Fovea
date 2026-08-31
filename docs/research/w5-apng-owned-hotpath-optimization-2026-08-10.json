@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "studyID": "FOVEA-W5-APNG-OWNED-HOTPATH-OPTIMIZATION-DIRECTIONAL-2026-08-10",
+  "date": "2026-08-10",
+  "status": "completed-physical-mac-directional-current-tree-supercedes-historical-owned-slow-path-result",
+  "formalClaimEligible": false,
+  "objective": "Reduce the owned non-interlaced RGBA8 APNG path without changing pixels, replay policy, retained-state budget, checkpoint policy, cancellation semantics, or the admitted format envelope, then determine whether the historical PIA-6 latency deficit remains true for the current source tree.",
+  "mechanisms": [
+    "RFC1950 inflate reads the raw-deflate payload directly from the encoded buffer instead of materializing a second Data slice.",
+    "Adler-32 keeps wide accumulators and reduces modulo 65521 once per 5552-byte block instead of performing two integer modulo operations for every decoded byte.",
+    "PNG unfilter writes directly into the final Data allocation, dispatches the filter once per row, and specializes the RGBA8 four-byte filter distance; filter-0 rows use memcpy.",
+    "Full-canvas straight-alpha to premultiplied-RGBA conversion uses Accelerate vImagePremultiplyData_RGBA8888 with exact-byte regression coverage instead of the scalar per-pixel loop.",
+    "PNG CRC is computed directly over the original encoded type-plus-payload byte range; parser fields read from the encoded buffer and compressed payloads append slices without constructing per-chunk payload and CRC-input copies."
+  ],
+  "nonChanges": [
+    "maximumReplayFrames remains 8",
+    "PIA-6 retains zero checkpoints",
+    "owned retained bytes remain 23796",
+    "modeled peak upper bound remains 981940 bytes",
+    "canvas and materialized-output accounting remain separate full RGBA surfaces",
+    "no public API or format-admission expansion is introduced"
+  ],
+  "correctness": {
+    "targetedTestCommand": "xcrun swift test --filter APNGRawSubrectDecoderTests",
+    "targetedTests": 15,
+    "targetedFailures": 0,
+    "fullTestCommand": "xcrun swift test",
+    "fullImageIOTests": 126,
+    "fullCoreTests": 16,
+    "fullFailures": 0,
+    "releaseWarningsAsErrorsBuild": true,
+    "selectedFramePixelsExact": true,
+    "allReverseRandomAccessExact": true,
+    "cancellationFenced": true
+  },
+  "finalDirectionalCapture": {
+    "report": ".artifacts/performance/w5-apng-owned-optimized-directional-20260810/report.json",
+    "reportSHA256": "edcc1ec29925229d7e2bb9a68c406abefff55c2a33d53a9a349637af0f74bddd",
+    "sourceIdentity": ".artifacts/performance/w5-apng-owned-optimized-directional-20260810/source-identity.json",
+    "sourceIdentitySHA256": "8931ad6b1012e1683e43a259e953ae39c1e1805dd9fcc8d38717959cbfe8cccd",
+    "binarySHA256": "fc0df03081f538a716424ced06b61a0c00b18e6c0a0eb05882c5f91c1ddb86a7",
+    "iterations": 200,
+    "warmups": 8,
+    "scenario": "OWNED-PIA-6",
+    "inputSHA256": "f85d2bbb345f432ee78acb12d549d92afacbc0e1405957cfe659f3c79d7b97eb",
+    "metricsNanoseconds": {
+      "imageCraftPrepareMedian": 166958,
+      "directImageIOPrepareLowerBoundMedian": 166416,
+      "imageCraftSelectedFrameMedian": 552833,
+      "directImageIORetainedSourceSelectedFrameMedian": 650083,
+      "imageCraftSequentialAllFramesMedian": 753000,
+      "directImageIORetainedSourceAllFramesMedian": 1925500,
+      "imageCraftSelectedFrameP95": 837958,
+      "directImageIORetainedSourceSelectedFrameP95": 1202833,
+      "imageCraftSequentialAllFramesP95": 909209,
+      "directImageIORetainedSourceAllFramesP95": 2970209
+    },
+    "medianRatios": {
+      "imageCraftPrepareOverDirectLowerBound": 1.0032568983751562,
+      "imageCraftSelectedFrameOverDirectRetained": 0.8504037176791271,
+      "imageCraftSequentialAllFramesOverDirectRetained": 0.39106725525837444
+    }
+  },
+  "historicalSupersession": {
+    "historicalEvidence": "docs/research/w5-apng-public-decoder-mac-performance-2026-08.json",
+    "historicalOwnedPIA6Ratios": {
+      "imageCraftSelectedFrameOverDirectRetained": 6.49,
+      "imageCraftSequentialAllFramesOverDirectRetained": 2.37
+    },
+    "interpretation": "The historical slow-path result remains valid for its bound earlier working tree but is no longer a current-tree performance fact. The current source-bound directional capture reverses both median comparisons on the same retained PIA-6 workload without changing replay or retained-state policy."
+  },
+  "sameTreeMechanismAttribution": {
+    "evidenceClass": "directional-transient-A-B-not-formal",
+    "baselineConstruction": "A temporary sibling package copied the then-current ImageCraft tree and restored APNGRawSubrectDecoder.swift and RFC1950Zlib.swift to the exact pre-optimization SHA-256 values observed before editing; it was built Release with warnings-as-errors and removed after measurement.",
+    "preOptimizationFileSHA256": {
+      "APNGRawSubrectDecoder.swift": "bc8d44b197c5600f708c3c9f8ab74187996f77a70a2a431112cf5bf462a483bd",
+      "RFC1950Zlib.swift": "ed05d966028d645f857c3f9a7cf791d323123a07bc6ca13c9893b20fb6c78ffa"
+    },
+    "baselineMedianNanoseconds": {
+      "imageCraftPrepare": 183417,
+      "imageCraftSelectedFrame": 3896917,
+      "imageCraftSequentialAllFrames": 4324500
+    },
+    "firstOptimizedMedianNanoseconds": {
+      "imageCraftPrepare": 180375,
+      "imageCraftSelectedFrame": 541750,
+      "imageCraftSequentialAllFrames": 948250
+    },
+    "approximateSpeedup": {
+      "selectedFrame": 7.19,
+      "sequentialAllFrames": 4.56
+    },
+    "boundary": "This transient A/B is mechanism attribution only; it is not retained as a formal benchmark artifact and does not replace the 200-iteration source-bound final capture."
+  },
+  "claimBoundary": [
+    "The final capture is a physical-Mac directional mechanism endpoint and is explicitly not formal-claim eligible.",
+    "No online physical iOS device was available; physicalIOSDeviceOnlineCount was zero.",
+    "The study covers one owned APNG scenario and does not establish all-content, all-format, third-party-library, product, energy, thermal, allocator, or reclamation superiority.",
+    "Direct ImageIO prepare is a lower bound and its unbounded cached-all-frames mode is not a bounded comparator.",
+    "Host-load variation remains visible in repeated short A/B blocks; medians and direct controls are used only directionally."
+  ],
+  "next": [
+    "Keep the optimized hot path and remove transient baseline copies.",
+    "Run the existing comparative physical-device replay when the benchmark iPhone is online; do not promote this host result into a device claim.",
+    "Use the common animated-image comparator matrix and equal animation-memory budgets before any global Pareto statement.",
+    "Continue investigating output-buffer alias/destructive finalization only if physical-device peak-memory or bandwidth evidence shows the separate straight/premultiplied surfaces remain a material bottleneck."
+  ]
+}

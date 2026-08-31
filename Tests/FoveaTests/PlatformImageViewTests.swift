@@ -31,7 +31,7 @@ import XCTest
             try await waitUntilOnMainActor("平台图片视图状态收敛") { view.image?.cgImage?.width == 24 }
 
             await firstLoader.release()
-            try await Task.sleep(for: .milliseconds(10))
+            try await testSleep(.milliseconds(10))
             XCTAssertEqual(view.image?.cgImage?.width, 24)
         }
 
@@ -53,7 +53,7 @@ import XCTest
                 accessibility: .decorative,
                 placeholderDelayNanoseconds: 0
             )
-            try await Task.sleep(for: .milliseconds(10))
+            try await testSleep(.milliseconds(10))
             let countAfterNoOp = await loader.requestCount
             XCTAssertEqual(countAfterNoOp, 1)
 
@@ -184,7 +184,7 @@ import XCTest
             try await waitUntilOnMainActor("平台图片视图状态收敛") { appKitPixelWidth(view.image) == 24 }
 
             await firstLoader.release()
-            try await Task.sleep(for: .milliseconds(10))
+            try await testSleep(.milliseconds(10))
             XCTAssertEqual(appKitPixelWidth(view.image), 24)
         }
 
@@ -206,7 +206,7 @@ import XCTest
                 accessibility: .decorative,
                 placeholderDelayNanoseconds: 0
             )
-            try await Task.sleep(for: .milliseconds(10))
+            try await testSleep(.milliseconds(10))
             let countAfterNoOp = await loader.requestCount
             XCTAssertEqual(countAfterNoOp, 1)
 
@@ -308,6 +308,129 @@ import XCTest
 
             XCTAssertNil(view.image)
         }
+
+        func testCompletedAppKitImageDoesNotReloadOnWindowReattach_H005_PT_001() async throws {
+            let loader = PlatformCountingImageLoader(image: try platformDecodedImage(width: 22))
+            let completion = PlatformCompletionRecorder()
+            let window = makePlatformTestWindow()
+            let view = FoveaAppKit.FoveaImageView(frame: NSRect(x: 0, y: 0, width: 80, height: 80))
+            window.contentView?.addSubview(view)
+            XCTAssertNotNil(view.window)
+
+            view.setImage(
+                request: try platformRequest(path: "appkit-reattach-success.png", width: 22),
+                loader: loader,
+                accessibility: .decorative,
+                placeholderDelayNanoseconds: 0,
+                completion: { result in completion.record(result) }
+            )
+            try await waitUntilOnMainActor("初次成功图片") {
+                appKitPixelWidth(view.image) == 22 && completion.count == 1
+            }
+            let initialRequestCount = await loader.requestCount
+            XCTAssertEqual(initialRequestCount, 1)
+
+            view.removeFromSuperview()
+            XCTAssertNil(view.window)
+            XCTAssertEqual(appKitPixelWidth(view.image), 22)
+
+            window.contentView?.addSubview(view)
+            try await testSleep(.milliseconds(20))
+            let reattachedRequestCount = await loader.requestCount
+            XCTAssertEqual(reattachedRequestCount, 1, "已完成图片窗口切换不应隐藏重下载")
+            XCTAssertEqual(appKitPixelWidth(view.image), 22)
+            XCTAssertEqual(completion.count, 1, "窗口恢复不能重复调用原 setImage completion")
+
+            view.cancelImageRequest(clearImage: true)
+        }
+
+        func testInFlightAppKitDetachRestartsWithoutDuplicateCompletion_H005_PT_002() async throws {
+            let loader = PlatformDetachRecoveryLoader(image: try platformDecodedImage(width: 26))
+            let completion = PlatformCompletionRecorder()
+            let window = makePlatformTestWindow()
+            let view = FoveaAppKit.FoveaImageView(frame: NSRect(x: 0, y: 0, width: 80, height: 80))
+            window.contentView?.addSubview(view)
+
+            view.setImage(
+                request: try platformRequest(path: "appkit-reattach-inflight.png", width: 26),
+                loader: loader,
+                accessibility: .decorative,
+                placeholderDelayNanoseconds: 0,
+                completion: { result in completion.record(result) }
+            )
+            await loader.waitUntilFirstRequestStarted()
+
+            view.removeFromSuperview()
+            try await waitUntilOnMainActor("detach 取消首个订阅") {
+                await loader.cancellationCount == 1
+            }
+            XCTAssertEqual(completion.count, 0)
+
+            window.contentView?.addSubview(view)
+            try await waitUntilOnMainActor("reattach 恢复进行中静态图") {
+                await loader.requestCount == 2 && appKitPixelWidth(view.image) == 26
+            }
+            XCTAssertEqual(completion.count, 1)
+
+            view.cancelImageRequest(clearImage: true)
+        }
+
+        func testExplicitAppKitCancelDoesNotRestartOnReattach_H005_PT_003() async throws {
+            let loader = PlatformDetachRecoveryLoader(image: try platformDecodedImage(width: 28))
+            let window = makePlatformTestWindow()
+            let view = FoveaAppKit.FoveaImageView(frame: NSRect(x: 0, y: 0, width: 80, height: 80))
+            window.contentView?.addSubview(view)
+
+            view.setImage(
+                request: try platformRequest(path: "appkit-explicit-cancel.png", width: 28),
+                loader: loader,
+                accessibility: .decorative,
+                placeholderDelayNanoseconds: 0
+            )
+            await loader.waitUntilFirstRequestStarted()
+            view.cancelImageRequest(clearImage: true)
+            try await waitUntilOnMainActor("显式取消首个订阅") {
+                await loader.cancellationCount == 1
+            }
+
+            view.removeFromSuperview()
+            window.contentView?.addSubview(view)
+            try await testSleep(.milliseconds(20))
+            let requestCount = await loader.requestCount
+            XCTAssertEqual(requestCount, 1, "显式取消不能被窗口 reattach 复活")
+            XCTAssertNil(view.image)
+        }
+
+        func testLoaderCancellationAllowsExplicitSameIdentityRetry_H005_PT_004() async throws {
+            let loader = PlatformTransientCancellationLoader(
+                image: try platformDecodedImage(width: 30)
+            )
+            let request = try platformRequest(path: "appkit-loader-cancel-retry.png", width: 30)
+            let view = FoveaAppKit.FoveaImageView()
+
+            view.setImage(
+                request: request,
+                loader: loader,
+                accessibility: .decorative,
+                placeholderDelayNanoseconds: 0
+            )
+            try await waitUntilOnMainActor("loader 首次取消") {
+                let requestCount = await loader.requestCount
+                let firstCancellationReturned = await loader.firstCancellationReturned
+                return requestCount == 1 && firstCancellationReturned
+            }
+            try await testSleep(.milliseconds(10))
+
+            view.setImage(
+                request: request,
+                loader: loader,
+                accessibility: .decorative,
+                placeholderDelayNanoseconds: 0
+            )
+            try await waitUntilOnMainActor("同 identity 显式重试") {
+                await loader.requestCount == 2 && appKitPixelWidth(view.image) == 30
+            }
+        }
     }
 #endif
 
@@ -341,7 +464,7 @@ private actor PlatformCancellationLoader: ImageLoading {
         for waiter in startedWaiters { waiter.resume() }
         startedWaiters.removeAll()
         do {
-            try await Task.sleep(for: .seconds(60))
+            try await testSleep(.seconds(60))
             throw CancellationError()
         } catch is CancellationError {
             wasCancelled = true
@@ -352,6 +475,58 @@ private actor PlatformCancellationLoader: ImageLoading {
     func waitUntilStarted() async {
         if started { return }
         await withCheckedContinuation { startedWaiters.append($0) }
+    }
+}
+
+private actor PlatformTransientCancellationLoader: ImageLoading {
+    private let image: DecodedImage
+    private(set) var requestCount = 0
+    private(set) var firstCancellationReturned = false
+
+    init(image: DecodedImage) {
+        self.image = image
+    }
+
+    func image(for request: ImageRequest) async throws -> DecodedImage {
+        requestCount += 1
+        if requestCount == 1 {
+            firstCancellationReturned = true
+            throw CancellationError()
+        }
+        return image
+    }
+}
+
+private actor PlatformDetachRecoveryLoader: ImageLoading {
+    private let image: DecodedImage
+    private(set) var requestCount = 0
+    private(set) var cancellationCount = 0
+    private var firstRequestStarted = false
+    private var firstRequestWaiters: [CheckedContinuation<Void, Never>] = []
+
+    init(image: DecodedImage) {
+        self.image = image
+    }
+
+    func image(for request: ImageRequest) async throws -> DecodedImage {
+        requestCount += 1
+        if requestCount == 1 {
+            firstRequestStarted = true
+            for waiter in firstRequestWaiters { waiter.resume() }
+            firstRequestWaiters.removeAll()
+            do {
+                try await testSleep(.seconds(60))
+            } catch is CancellationError {
+                cancellationCount += 1
+                throw CancellationError()
+            }
+        }
+        return image
+    }
+
+    func waitUntilFirstRequestStarted() async {
+        if firstRequestStarted { return }
+        await withCheckedContinuation { firstRequestWaiters.append($0) }
     }
 }
 
@@ -390,6 +565,25 @@ private actor PlatformGateImageLoader: ImageLoading {
 }
 
 #if canImport(AppKit)
+    @MainActor
+    private final class PlatformCompletionRecorder {
+        private(set) var count = 0
+
+        func record(_ result: Result<DecodedImage, PipelineFailure>) {
+            count += 1
+        }
+    }
+
+    @MainActor
+    private func makePlatformTestWindow() -> NSWindow {
+        NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 100, height: 100),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+    }
+
     private func appKitPixelWidth(_ image: NSImage?) -> Int? {
         image?.representations.compactMap { representation in
             representation.pixelsWide > 0 ? representation.pixelsWide : nil

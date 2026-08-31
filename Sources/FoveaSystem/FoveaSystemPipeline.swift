@@ -19,6 +19,7 @@ public struct FoveaSystemPipeline: Sendable {
     /// 实际持久化 bundle provider 与 generation compatibility 的稳定组合指纹。
     public let persistentStoreProviderFingerprint: String
     package let memoryPressureMonitor: FoveaMemoryPressureMonitor?
+    package let animationRuntime: AnimationPlaybackRuntime
     private let transport: URLSessionTransport
 
     /// 打开已验证持久化存储，并以完整 `ImageCodec` 契约组合安全默认管线。
@@ -56,7 +57,7 @@ public struct FoveaSystemPipeline: Sendable {
         )
     }
 
-    private static func openConfigured(
+    package static func openConfigured(
         cacheRoot: URL,
         configuration: PipelineConfiguration,
         diagnostics: any DiagnosticsSink,
@@ -70,7 +71,10 @@ public struct FoveaSystemPipeline: Sendable {
         transportReusePolicy: TransportReusePolicy?,
         codec: any ImageCodec,
         transformer: any ImageTransforming,
-        renderedImageCache: (any RenderedImageCaching)?
+        renderedImageCache: (any RenderedImageCaching)?,
+        derivedRasterStoreLimits: DerivedRasterStoreLimits? = nil,
+        derivedRasterConfiguration: DerivedRasterRuntimeConfiguration? = nil,
+        progressiveResourceRecorder: FoveaProgressiveResourceRecorder? = nil
     ) async throws -> FoveaSystemPipeline {
         let stores: FoveaPersistentStores
         do {
@@ -82,6 +86,18 @@ public struct FoveaSystemPipeline: Sendable {
             )
         } catch is NamespaceGenerationStoreError {
             throw PipelineFailure.namespaceGenerationPersistenceFailed
+        }
+        let derivedRasterStore: AkashicDerivedRasterStore?
+        if let derivedRasterStoreLimits, derivedRasterConfiguration != nil {
+            derivedRasterStore = try await AkashicDerivedRasterStore.open(
+                root: stores.generation.root.appendingPathComponent(
+                    "derived-raster-v1",
+                    isDirectory: true
+                ),
+                limits: derivedRasterStoreLimits
+            )
+        } else {
+            derivedRasterStore = nil
         }
         return try await compose(
             stores: stores.qualifiedBundle(),
@@ -95,7 +111,11 @@ public struct FoveaSystemPipeline: Sendable {
             transportReusePolicy: transportReusePolicy,
             codec: codec,
             transformer: transformer,
-            renderedImageCache: renderedImageCache
+            renderedImageCache: renderedImageCache,
+            derivedRasterStore: derivedRasterStore,
+            derivedRasterConfiguration: derivedRasterStore == nil
+                ? nil : derivedRasterConfiguration,
+            progressiveResourceRecorder: progressiveResourceRecorder
         )
     }
 
@@ -130,7 +150,7 @@ public struct FoveaSystemPipeline: Sendable {
         )
     }
 
-    private static func compose(
+    package static func compose(
         stores: FoveaPersistentStoreBundle,
         configuration: PipelineConfiguration,
         diagnostics: any DiagnosticsSink,
@@ -142,7 +162,10 @@ public struct FoveaSystemPipeline: Sendable {
         transportReusePolicy: TransportReusePolicy?,
         codec: any ImageCodec,
         transformer: any ImageTransforming,
-        renderedImageCache: (any RenderedImageCaching)?
+        renderedImageCache: (any RenderedImageCaching)?,
+        derivedRasterStore: AkashicDerivedRasterStore? = nil,
+        derivedRasterConfiguration: DerivedRasterRuntimeConfiguration? = nil,
+        progressiveResourceRecorder: FoveaProgressiveResourceRecorder? = nil
     ) async throws -> FoveaSystemPipeline {
         let namespaceRegistry = try await NamespaceRegistry.open(
             maximumTrackedNamespaces: configuration.maximumTrackedNamespaces,
@@ -153,6 +176,26 @@ public struct FoveaSystemPipeline: Sendable {
             stagingDirectory: stagingDirectory,
             policy: transportPolicy,
             reusePolicy: transportReusePolicy
+        )
+        let sharedDecodeQueueLimit = sharedDecodeAdmissionQueueLimit(
+            maximumQueuedDecodes: configuration.maximumQueuedDecodes
+        )
+        let globalDecodePermits = AsyncPermitPool(
+            limit: configuration.maximumConcurrentDecodes,
+            queueLimit: sharedDecodeQueueLimit
+        )
+        let globalDecodeWorkingSetPermits = AsyncPermitPool(
+            limit: configuration.maximumDecodeWorkingSetBytes,
+            queueLimit: sharedDecodeQueueLimit
+        )
+        let animationRuntime = AnimationPlaybackRuntime(
+            frameMemoryCostLimit: animationFrameMemoryCostLimit(
+                renderedMemoryCostLimit: configuration.memoryCostLimit
+            ),
+            automaticWholeTrackPredecodePeakCostLimit:
+                configuration.maximumDecodeWorkingSetBytes,
+            automaticWholeTrackPredecodePeakPermits: globalDecodeWorkingSetPermits,
+            automaticWholeTrackDecodePermits: globalDecodePermits
         )
         let pipeline = FoveaPipeline(
             configuration: configuration,
@@ -166,22 +209,47 @@ public struct FoveaSystemPipeline: Sendable {
                 transportPolicy.destinationPolicy
             ),
             codec: codec,
-            transformer: transformer
+            transformer: transformer,
+            derivedRasterStore: derivedRasterStore,
+            derivedRasterConfiguration: derivedRasterConfiguration,
+            namespaceRevocationObserver: animationRuntime,
+            progressiveResourceRecorder: progressiveResourceRecorder,
+            globalDecodePermits: globalDecodePermits,
+            globalDecodeWorkingSetPermits: globalDecodeWorkingSetPermits
         )
+        return await finishComposition(
+            pipeline: pipeline,
+            stores: stores,
+            animationRuntime: animationRuntime,
+            transport: transport,
+            automaticallyPurgesMemoryOnPressure: automaticallyPurgesMemoryOnPressure
+        )
+    }
+
+    private static func finishComposition(
+        pipeline: FoveaPipeline,
+        stores: FoveaPersistentStoreBundle,
+        animationRuntime: AnimationPlaybackRuntime,
+        transport: URLSessionTransport,
+        automaticallyPurgesMemoryOnPressure: Bool
+    ) async -> FoveaSystemPipeline {
         await pipeline.retainLifetimeAnchor(stores)
-        let monitor =
-            automaticallyPurgesMemoryOnPressure
-            ? FoveaMemoryPressureMonitor(pipeline: pipeline)
+        let lifecycleMonitor = FoveaLifecycleNotificationMonitor(animationRuntime: animationRuntime)
+        await animationRuntime.retainLifetimeAnchor(lifecycleMonitor)
+        let monitor = automaticallyPurgesMemoryOnPressure
+            ? FoveaMemoryPressureMonitor(
+                pipeline: pipeline,
+                animationRuntime: animationRuntime,
+                automaticallyPurgesMemoryOnPressure: true
+            )
             : nil
-        if let monitor {
-            await pipeline.retainLifetimeAnchor(monitor)
-        }
+        if let monitor { await pipeline.retainLifetimeAnchor(monitor) }
         return FoveaSystemPipeline(
             pipeline: pipeline,
-            storageGenerationIdentifier: stores.generation.identifier.rawValue.uuidString
-                .lowercased(),
+            storageGenerationIdentifier: stores.generation.identifier.rawValue.uuidString.lowercased(),
             persistentStoreProviderFingerprint: stores.providerIdentity.cacheFingerprint,
             memoryPressureMonitor: monitor,
+            animationRuntime: animationRuntime,
             transport: transport
         )
     }
@@ -189,6 +257,7 @@ public struct FoveaSystemPipeline: Sendable {
     /// 确定性取消网络工作并释放传输暂存资源。
     /// 不可变管线仍可读取，但后续网络执行会以取消失败。
     public func invalidateAndCancel() async {
+        await animationRuntime.cancelAll()
         await pipeline.cancelAdaptiveWork()
         await transport.invalidateAndCancel()
     }
@@ -196,5 +265,36 @@ public struct FoveaSystemPipeline: Sendable {
     package func simulateMemoryPressureForTesting() async -> Int {
         guard let memoryPressureMonitor else { return 0 }
         return await memoryPressureMonitor.simulatePressureForTesting()
+    }
+
+    package func simulateAnimationPressureForTesting(
+        _ level: AnimationMemoryPressureLevel
+    ) async -> FoveaSystemPressureReport {
+        guard let memoryPressureMonitor else {
+            return FoveaSystemPressureReport(
+                renderedRemovalCount: 0,
+                animation: await animationRuntime.applyMemoryPressure(level)
+            )
+        }
+        return await memoryPressureMonitor.simulatePressureForTesting(level)
+    }
+
+    package func simulateApplicationActiveForTesting(_ active: Bool) async {
+        _ = await animationRuntime.setApplicationActive(active)
+    }
+
+    private static func sharedDecodeAdmissionQueueLimit(
+        maximumQueuedDecodes: Int
+    ) -> Int {
+        let sum = maximumQueuedDecodes.addingReportingOverflow(
+            AnimationPlaybackRuntime.defaultMaximumDriverCount
+        )
+        return sum.overflow ? Int.max : max(1, sum.partialValue)
+    }
+
+    private static func animationFrameMemoryCostLimit(
+        renderedMemoryCostLimit: Int
+    ) -> Int {
+        min(32 * 1024 * 1024, max(1, renderedMemoryCostLimit / 4))
     }
 }

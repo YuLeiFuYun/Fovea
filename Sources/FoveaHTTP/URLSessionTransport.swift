@@ -1,10 +1,60 @@
 import AkashicCore
+import CryptoKit
 import Foundation
 import FoveaStorage
 
+private final class URLSessionTaskLifetime: @unchecked Sendable {
+    private let lock = NSLock()
+    private let priorityTask: Task<Void, Never>?
+    private let task: URLSessionTask
+    private let eventRouter: URLSessionEventRouter
+    private var isFinished = false
+    private var isRegistered = false
+    private var didUnregister = false
+
+    init(
+        priorityTask: Task<Void, Never>?,
+        task: URLSessionTask,
+        eventRouter: URLSessionEventRouter
+    ) {
+        self.priorityTask = priorityTask
+        self.task = task
+        self.eventRouter = eventRouter
+    }
+
+    func didRegister() {
+        lock.lock()
+        isRegistered = true
+        let shouldUnregister = isFinished && !didUnregister
+        if shouldUnregister { didUnregister = true }
+        lock.unlock()
+
+        if shouldUnregister {
+            eventRouter.unregister(taskID: task.taskIdentifier)
+        }
+    }
+
+    func finishOnce() {
+        lock.lock()
+        let shouldCancelTask = !isFinished
+        if shouldCancelTask { isFinished = true }
+        let shouldUnregister = isRegistered && !didUnregister
+        if shouldUnregister { didUnregister = true }
+        lock.unlock()
+
+        if shouldCancelTask {
+            priorityTask?.cancel()
+            task.cancel()
+        }
+        if shouldUnregister {
+            eventRouter.unregister(taskID: task.taskIdentifier)
+        }
+    }
+}
+
 /// 具备硬上限、重定向防护、环境状态净化与网络指标的 URLSession transport。
 
-public actor URLSessionTransport: HTTPTransporting, TransportProgressObservationSupporting {
+public actor URLSessionTransport: HTTPTransporting, TransportProgressOnlyExecuting {
     public nonisolated let reusePolicy: TransportReusePolicy
 
     private nonisolated let ioExecutor = FoveaBlockingIOExecutor(label: "dev.fovea.http.transport")
@@ -111,6 +161,11 @@ public actor URLSessionTransport: HTTPTransporting, TransportProgressObservation
             updates: priorityUpdates,
             task: task
         )
+        let lifetime = URLSessionTaskLifetime(
+            priorityTask: priorityTask,
+            task: task,
+            eventRouter: eventRouter
+        )
 
         return try await withTaskCancellationHandler {
             let events = await eventRouter.events(
@@ -118,22 +173,34 @@ public actor URLSessionTransport: HTTPTransporting, TransportProgressObservation
                 credentialHeaderNames: request.credentialHeaderNames,
                 destinationPolicy: destinationPolicy
             )
-            defer { finish(task: task, priorityTask: priorityTask) }
+            lifetime.didRegister()
+            defer { lifetime.finishOnce() }
             // 取消回调可能先于 register 命令到达；注册确认后必须再次检查并注销。
             try Task.checkCancellation()
             task.resume()
-            let received = try await consume(
-                events: events,
-                task: task,
-                accumulator: accumulator,
-                progressObserver: request.progressObserver
+            let received: (
+                response: HTTPURLResponse,
+                networkMetrics: TransportNetworkMetrics?
             )
+            do {
+                received = try await consume(
+                    events: events,
+                    task: task,
+                    accumulator: accumulator,
+                    progressObserver: request.progressObserver
+                )
+            } catch {
+                try Task.checkCancellation()
+                throw error
+            }
+            try Task.checkCancellation()
             let response = try makeResponse(
                 response: received.response,
                 networkMetrics: received.networkMetrics,
                 accumulator: accumulator,
                 bodyDelivery: request.bodyDelivery
             )
+            try Task.checkCancellation()
             request.progressObserver?(
                 .complete(
                     digestHex: response.digestHex,
@@ -142,10 +209,137 @@ public actor URLSessionTransport: HTTPTransporting, TransportProgressObservation
             )
             return response
         } onCancel: {
-            priorityTask?.cancel()
-            task.cancel()
-            eventRouter.unregister(taskID: task.taskIdentifier)
+            lifetime.finishOnce()
         }
+    }
+
+    /// 执行不保留完整正文的 progress-only 长流。该路径仍使用相同 URLSession、
+    /// destination/redirect/proxy/credential 约束和响应字节硬上限。
+    package func executeProgressOnly(
+        _ request: TransportRequest
+    ) async throws -> TransportProgressCompletion {
+        try Task.checkCancellation()
+        guard !isInvalidated else { throw CancellationError() }
+        guard let url = request.request.url, destinationPolicy.permits(url) else {
+            throw TransportError.destinationDisallowed
+        }
+        let priorityUpdates = await request.priorityController?.updates()
+        try Task.checkCancellation()
+
+        var urlRequest = request.request
+        urlRequest.cachePolicy = .reloadIgnoringLocalCacheData
+        let task = session.dataTask(with: urlRequest)
+        task.priority = request.priority.urlSessionTaskValue
+        let priorityTask = makePriorityPropagation(updates: priorityUpdates, task: task)
+        let lifetime = URLSessionTaskLifetime(
+            priorityTask: priorityTask,
+            task: task,
+            eventRouter: eventRouter
+        )
+
+        return try await withTaskCancellationHandler {
+            let events = await eventRouter.events(
+                for: task.taskIdentifier,
+                credentialHeaderNames: request.credentialHeaderNames,
+                destinationPolicy: destinationPolicy
+            )
+            lifetime.didRegister()
+            defer { lifetime.finishOnce() }
+            try Task.checkCancellation()
+            task.resume()
+            let received: (
+                response: HTTPURLResponse,
+                networkMetrics: TransportNetworkMetrics?,
+                digest: SHA256,
+                byteCount: Int
+            )
+            do {
+                received = try await consumeProgressOnly(
+                    events: events,
+                    task: task,
+                    maximumBytes: request.maximumBytes,
+                    progressObserver: request.progressObserver
+                )
+            } catch {
+                try Task.checkCancellation()
+                throw error
+            }
+            try Task.checkCancellation()
+            try proxyPolicy.validate(received.networkMetrics)
+            if let expected = try Self.expectedIdentityContentLength(from: received.response),
+                expected != received.byteCount
+            {
+                throw TransportError.incompleteBody
+            }
+            let digestHex = httpLowercaseHexString(received.digest.finalize())
+            let completion = TransportProgressCompletion(
+                head: try Self.responseHead(from: received.response),
+                digestHex: digestHex,
+                byteCount: received.byteCount,
+                metrics: TransportMetrics(
+                    receivedBytes: received.byteCount,
+                    spilledToDisk: false,
+                    network: received.networkMetrics
+                )
+            )
+            try Task.checkCancellation()
+            request.progressObserver?(
+                .complete(
+                    digestHex: completion.digestHex,
+                    byteCount: completion.byteCount
+                )
+            )
+            return completion
+        } onCancel: {
+            lifetime.finishOnce()
+        }
+    }
+
+    private func consumeProgressOnly(
+        events: AsyncThrowingStream<URLSessionStreamEvent, any Error>,
+        task: URLSessionDataTask,
+        maximumBytes: Int,
+        progressObserver: TransportProgressObserver?
+    ) async throws -> (
+        response: HTTPURLResponse,
+        networkMetrics: TransportNetworkMetrics?,
+        digest: SHA256,
+        byteCount: Int
+    ) {
+        var response: HTTPURLResponse?
+        var networkMetrics: TransportNetworkMetrics?
+        var digest = SHA256()
+        var byteCount = 0
+        for try await event in events {
+            try Task.checkCancellation()
+            switch event {
+            case .response(let receivedResponse):
+                guard let http = receivedResponse as? HTTPURLResponse else {
+                    throw TransportError.nonHTTPResponse
+                }
+                if let expected = try Self.expectedIdentityContentLength(from: http),
+                    expected > maximumBytes
+                {
+                    throw TransportError.bodyTooLarge
+                }
+                response = http
+                progressObserver?(.response(try Self.responseHead(from: http)))
+            case .data(let data):
+                let next = byteCount.addingReportingOverflow(data.count)
+                guard !next.overflow, next.partialValue <= maximumBytes else {
+                    throw TransportError.bodyTooLarge
+                }
+                byteCount = next.partialValue
+                digest.update(data: data)
+                progressObserver?(.data(data, cumulativeByteCount: byteCount))
+                try Task.checkCancellation()
+                task.resume()
+            case .metrics(let metrics):
+                networkMetrics = metrics
+            }
+        }
+        guard let response else { throw TransportError.nonHTTPResponse }
+        return (response, networkMetrics, digest, byteCount)
     }
 
     private func makePriorityPropagation(
@@ -223,15 +417,6 @@ public actor URLSessionTransport: HTTPTransporting, TransportProgressObservation
                 network: networkMetrics
             )
         )
-    }
-
-    private func finish(
-        task: URLSessionTask,
-        priorityTask: Task<Void, Never>?
-    ) {
-        priorityTask?.cancel()
-        task.cancel()
-        eventRouter.unregister(taskID: task.taskIdentifier)
     }
 
     private func activeStagingLease() async throws -> StagingDirectoryLease {

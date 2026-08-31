@@ -44,7 +44,8 @@ Transport body 默认是单消费者异步序列。若需要同时 hash、stagin
 - memory cache 热路径可使用稳定地址锁；
 - 锁内只做 O(1) 元数据更新，不做 I/O、解码、hash 大块数据或回调；
 - 锁顺序必须文档化，禁止跨模块隐式嵌套锁；
-- continuation 只能完成一次，所有完成路径使用统一状态机。
+- continuation 只能完成一次，所有完成路径使用统一状态机；
+- actor isolation 不等于跨 `await` 的事务隔离：如果后续 side effect 依赖 await 前捕获的 cancellation、generation、authorization、revocation 或 publication 状态，必须在 suspension 返回后、side effect 前重新验证，或把状态转移收敛到同一个同步 actor critical section；不得假设 serial executor 提供 non-reentrant actor 语义。
 
 ## 5. Resource permit 与 observer
 
@@ -69,5 +70,6 @@ Swift task cancellation、URLSession cancellation 和 Fovea Subscriber cancellat
 - MainActor 断言覆盖全部 UI 状态变更；
 - `@unchecked Sendable` 类型维护显式 allowlist，新增项需要 review；
 - permit wait/cancel/pressure transition 随机化测试；
+- actor reentrancy 的 schedule-search：在关键 cross-actor await 前后随机/枚举 yield，证明 cancel/revoke 先完成后旧 invocation 不会后生新 provider、permit、decode 或 publication work；动画基线见 `W5-PT-205` 与 `docs/research/animation-cancellation-reentrancy-audit-2026-08-08.md`；
 - diagnostics sink 阻塞或抛错不影响请求；
 - pipeline configuration generation 切换不改变旧任务。

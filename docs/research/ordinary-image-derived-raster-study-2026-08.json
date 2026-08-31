@@ -1,0 +1,1079 @@
+{
+  "coreQuestion": "Can Fovea close ordinary-image warm-disk latency without surrendering exact pixels, cold-path behavior, storage efficiency, security, or cancellation semantics?",
+  "decision": {
+    "nextStep": "Run preregistered clean-source W2/W11 with the package-only opt-in path, display-ready latency, logical and allocated cache bytes, creation CPU, total physical written bytes and observed reuse. Alias-aware persistent-byte eviction and a restart-durable logical write-window gate are now implemented; calibrate that logical gate against physical write amplification, fixed-window burst behavior, large-store reopen cost and device evidence before considering public or default admission.",
+    "rejectedAlternatives": [
+      "direct image(for:) benchmark surface fork",
+      "unconditional first-hit derived persistence",
+      "single globally fixed PNG or LZFSE format"
+    ],
+    "status": "bounded-package-opt-in-integrated-default-disabled"
+  },
+  "derivedRasterPrototype": {
+    "finding": "Adaptive filtered LZFSE is usually non-dominated: exact pixels, substantially faster reads than PNG, and median real-photo size slightly below PNG. One landscape counterexample is about 1.5 percent larger than PNG, so the format must be selected per artifact rather than fixed globally.",
+    "formatCandidates": [
+      "PNG",
+      "raw RGB plus LZFSE",
+      "adaptive per-row None/Sub/Up filtered RGB plus LZFSE"
+    ],
+    "inputs": [
+      {
+        "adaptiveLZFSEDerivedBytes": 1408024,
+        "allFormatsPixelEqual": true,
+        "category": "real-photo",
+        "inputByteCount": 355061,
+        "inputPixelHeight": 1277,
+        "inputPixelWidth": 1920,
+        "inputSHA256": "d1aa2d8c7d3db332a04c642c9d4de0a9c9cb618b295da614b8ff974f3df980ee",
+        "lzfseDerivedBytes": 1870281,
+        "name": "animal",
+        "pngDerivedBytes": 1459293,
+        "reportSHA256": "03c72d230b87d4e7c0bcf31450d09bdc98622ec69aeffe72fd368ca6fcdd89f4",
+        "targets": [
+          {
+            "adaptiveBreakEvenFutureHits": 3.0733999453777137,
+            "adaptiveCreationMedianNanoseconds": 16002167,
+            "adaptiveLZFSEBytes": 117372,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 639125,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 5845791,
+            "lzfseBytes": 152304,
+            "lzfseDecodeMedianNanoseconds": 333833,
+            "outputHeight": 259,
+            "outputWidth": 390,
+            "pixelRGBSHA256": "70696a3e3e03f9053dd8cc2932c81b0f9abcaa9989d84b86ce05cc9673ed16f5",
+            "pngBytes": 123377,
+            "pngDecodeMedianNanoseconds": 2168125,
+            "requestedHeight": 260,
+            "requestedWidth": 390
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 5.536191512612165,
+            "adaptiveCreationMedianNanoseconds": 51340791,
+            "adaptiveLZFSEBytes": 416634,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 2400375,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 11674041,
+            "lzfseBytes": 548146,
+            "lzfseDecodeMedianNanoseconds": 1187500,
+            "outputHeight": 518,
+            "outputWidth": 780,
+            "pixelRGBSHA256": "6e4a1492373bbd68fad091b607e70397e1750ae2b8518e7a7507a3147ffc4cd1",
+            "pngBytes": 432628,
+            "pngDecodeMedianNanoseconds": 6280709,
+            "requestedHeight": 520,
+            "requestedWidth": 780
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 4.845315213288033,
+            "adaptiveCreationMedianNanoseconds": 120330375,
+            "adaptiveLZFSEBytes": 874018,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 5430500,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 30264875,
+            "lzfseBytes": 1169831,
+            "lzfseDecodeMedianNanoseconds": 2663250,
+            "outputHeight": 778,
+            "outputWidth": 1170,
+            "pixelRGBSHA256": "065418107e1d993d8240f7fce1bacf533e981b2f7d1e650322201ace1e8dc5a8",
+            "pngBytes": 903288,
+            "pngDecodeMedianNanoseconds": 13400667,
+            "requestedHeight": 780,
+            "requestedWidth": 1170
+          }
+        ]
+      },
+      {
+        "adaptiveLZFSEDerivedBytes": 2001571,
+        "allFormatsPixelEqual": true,
+        "category": "real-photo",
+        "inputByteCount": 495429,
+        "inputPixelHeight": 1275,
+        "inputPixelWidth": 1920,
+        "inputSHA256": "448885a9605953919382d4b3a9cb99580a54ddc9c139e2a3b433b113851a6662",
+        "lzfseDerivedBytes": 2688398,
+        "name": "architecture",
+        "pngDerivedBytes": 2053759,
+        "reportSHA256": "ee775a74bc8a36ab35fe49cf638494ab36535f9c300db11295fbfd072e1aa4fa",
+        "targets": [
+          {
+            "adaptiveBreakEvenFutureHits": 2.9643961151578218,
+            "adaptiveCreationMedianNanoseconds": 17092708,
+            "adaptiveLZFSEBytes": 162596,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 730708,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 6496708,
+            "lzfseBytes": 219000,
+            "lzfseDecodeMedianNanoseconds": 418333,
+            "outputHeight": 258,
+            "outputWidth": 390,
+            "pixelRGBSHA256": "0c51014258b65f114fc9193fa3e358fcf68abda467662f970ff6ff200bdfe8cd",
+            "pngBytes": 163781,
+            "pngDecodeMedianNanoseconds": 2598083,
+            "requestedHeight": 260,
+            "requestedWidth": 390
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 5.527283716889107,
+            "adaptiveCreationMedianNanoseconds": 56440708,
+            "adaptiveLZFSEBytes": 591487,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 2948791,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 13160083,
+            "lzfseBytes": 790063,
+            "lzfseDecodeMedianNanoseconds": 1516708,
+            "outputHeight": 518,
+            "outputWidth": 780,
+            "pixelRGBSHA256": "e18ce34b1c4eba145f32d9543c93e4af1427d20bcae75c99493911d9a293ce42",
+            "pngBytes": 605196,
+            "pngDecodeMedianNanoseconds": 8066083,
+            "requestedHeight": 520,
+            "requestedWidth": 780
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 5.262130344402545,
+            "adaptiveCreationMedianNanoseconds": 125937250,
+            "adaptiveLZFSEBytes": 1247488,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 6731042,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 30663792,
+            "lzfseBytes": 1679335,
+            "lzfseDecodeMedianNanoseconds": 3609417,
+            "outputHeight": 777,
+            "outputWidth": 1170,
+            "pixelRGBSHA256": "2db9f993ade58cf7721ecbe1dee494afd79ae51beb209f7c25247251cf2f66a0",
+            "pngBytes": 1284782,
+            "pngDecodeMedianNanoseconds": 16715458,
+            "requestedHeight": 780,
+            "requestedWidth": 1170
+          }
+        ]
+      },
+      {
+        "adaptiveLZFSEDerivedBytes": 71455,
+        "allFormatsPixelEqual": true,
+        "category": "w2-generated-hero",
+        "inputByteCount": 296273,
+        "inputPixelHeight": 3000,
+        "inputPixelWidth": 4000,
+        "inputSHA256": "9e1692b2b0590cfb25eb1b87e6400155da9c2ec2d887215811e6a3ec987be9bd",
+        "lzfseDerivedBytes": 90276,
+        "name": "hero-12mp",
+        "pngDerivedBytes": 115935,
+        "reportSHA256": "5978ce29f73c99743076165db8bcd0e8acb2c0a89596744b14c2a7930b019f8f",
+        "targets": [
+          {
+            "adaptiveBreakEvenFutureHits": 2.5215833428576544,
+            "adaptiveCreationMedianNanoseconds": 13656792,
+            "adaptiveLZFSEBytes": 14924,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 357291,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 5773250,
+            "lzfseBytes": 17992,
+            "lzfseDecodeMedianNanoseconds": 56583,
+            "outputHeight": 259,
+            "outputWidth": 346,
+            "pixelRGBSHA256": "90150579397bed9eb1bc586c97c60f28fdc10f253c45cb0fbd61968a05b14c7c",
+            "pngBytes": 22059,
+            "pngDecodeMedianNanoseconds": 1159292,
+            "requestedHeight": 260,
+            "requestedWidth": 390
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 4.724445923353802,
+            "adaptiveCreationMedianNanoseconds": 39342625,
+            "adaptiveLZFSEBytes": 22136,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 1292708,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 9620166,
+            "lzfseBytes": 29399,
+            "lzfseDecodeMedianNanoseconds": 222666,
+            "outputHeight": 520,
+            "outputWidth": 693,
+            "pixelRGBSHA256": "e5086698a5c30e8310e2cbbb739e2a436410ac3442f0c8253c6e6dc2746f0dfa",
+            "pngBytes": 36465,
+            "pngDecodeMedianNanoseconds": 2708916,
+            "requestedHeight": 520,
+            "requestedWidth": 780
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 3.757279269260859,
+            "adaptiveCreationMedianNanoseconds": 94799917,
+            "adaptiveLZFSEBytes": 34395,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 3010583,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 28241584,
+            "lzfseBytes": 42885,
+            "lzfseDecodeMedianNanoseconds": 477541,
+            "outputHeight": 780,
+            "outputWidth": 1040,
+            "pixelRGBSHA256": "f95faf076da841c84e8d5c1a2be0553e483bcd08b1f3c25db8b0ec296e98affc",
+            "pngBytes": 57411,
+            "pngDecodeMedianNanoseconds": 4952750,
+            "requestedHeight": 780,
+            "requestedWidth": 1170
+          }
+        ]
+      },
+      {
+        "adaptiveLZFSEDerivedBytes": 71705,
+        "allFormatsPixelEqual": true,
+        "category": "w2-generated-hero",
+        "inputByteCount": 459658,
+        "inputPixelHeight": 4000,
+        "inputPixelWidth": 6000,
+        "inputSHA256": "7c7010764c819c0798dcc05ca6cf33c9a5644d54e9dd68e889043f823ab21c06",
+        "lzfseDerivedBytes": 89804,
+        "name": "hero-24mp",
+        "pngDerivedBytes": 111872,
+        "reportSHA256": "47716c1b81371880bfe25764c9bb37b2e25940bfeb88217338f025a0880fc731",
+        "targets": [
+          {
+            "adaptiveBreakEvenFutureHits": 1.9600327248829816,
+            "adaptiveCreationMedianNanoseconds": 18267750,
+            "adaptiveLZFSEBytes": 15099,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 426959,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 9747084,
+            "lzfseBytes": 19209,
+            "lzfseDecodeMedianNanoseconds": 66875,
+            "outputHeight": 260,
+            "outputWidth": 390,
+            "pixelRGBSHA256": "1846cdac5b181ed11acfeb81199280cc5772f0390ffef8d47a9f958a0e50db28",
+            "pngBytes": 22890,
+            "pngDecodeMedianNanoseconds": 1213583,
+            "requestedHeight": 260,
+            "requestedWidth": 390
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 2.476558215844848,
+            "adaptiveCreationMedianNanoseconds": 57861583,
+            "adaptiveLZFSEBytes": 23465,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 1454958,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 24818666,
+            "lzfseBytes": 30351,
+            "lzfseDecodeMedianNanoseconds": 124000,
+            "outputHeight": 520,
+            "outputWidth": 780,
+            "pixelRGBSHA256": "081720598ca69e50498d095f7898237359678442624ebadde2c9f70861edd43e",
+            "pngBytes": 35693,
+            "pngDecodeMedianNanoseconds": 2954833,
+            "requestedHeight": 520,
+            "requestedWidth": 780
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 4.339300392399964,
+            "adaptiveCreationMedianNanoseconds": 104494875,
+            "adaptiveLZFSEBytes": 33141,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 3510958,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 27592000,
+            "lzfseBytes": 40244,
+            "lzfseDecodeMedianNanoseconds": 483875,
+            "outputHeight": 780,
+            "outputWidth": 1170,
+            "pixelRGBSHA256": "444d1600a236bcd9979f78b66b2d291bc04ed528f9948cac7c32309905d9cb69",
+            "pngBytes": 53289,
+            "pngDecodeMedianNanoseconds": 5936417,
+            "requestedHeight": 780,
+            "requestedWidth": 1170
+          }
+        ]
+      },
+      {
+        "adaptiveLZFSEDerivedBytes": 53838,
+        "allFormatsPixelEqual": true,
+        "category": "w2-generated-hero",
+        "inputByteCount": 695689,
+        "inputPixelHeight": 6000,
+        "inputPixelWidth": 8000,
+        "inputSHA256": "40ffa4a5860aae9264eaba5191dd5c2c1d40defc568541ef441d5929221d27ed",
+        "lzfseDerivedBytes": 67281,
+        "name": "hero-48mp",
+        "pngDerivedBytes": 95938,
+        "reportSHA256": "2792f4898af5d868a3cd927eafe771646c5fb39a218467b3223f8ca03d3f9a39",
+        "targets": [
+          {
+            "adaptiveBreakEvenFutureHits": 1.4747606978116208,
+            "adaptiveCreationMedianNanoseconds": 24917250,
+            "adaptiveLZFSEBytes": 11070,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 345333,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 17241125,
+            "lzfseBytes": 12933,
+            "lzfseDecodeMedianNanoseconds": 58959,
+            "outputHeight": 259,
+            "outputWidth": 346,
+            "pixelRGBSHA256": "435f84436141e2f8d6120afba5d0d373b15b447545f6d381bc421db89355dde3",
+            "pngBytes": 21916,
+            "pngDecodeMedianNanoseconds": 1150875,
+            "requestedHeight": 260,
+            "requestedWidth": 390
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 2.737129189412102,
+            "adaptiveCreationMedianNanoseconds": 48949792,
+            "adaptiveLZFSEBytes": 18253,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 1332791,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 19216416,
+            "lzfseBytes": 23660,
+            "lzfseDecodeMedianNanoseconds": 204084,
+            "outputHeight": 520,
+            "outputWidth": 693,
+            "pixelRGBSHA256": "750e923477f5dd98c61438ec265715c5b213fdf1bf06b359cfc9dfb0e96763f9",
+            "pngBytes": 30790,
+            "pngDecodeMedianNanoseconds": 2681750,
+            "requestedHeight": 520,
+            "requestedWidth": 780
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 2.684774447150746,
+            "adaptiveCreationMedianNanoseconds": 111329542,
+            "adaptiveLZFSEBytes": 24515,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 3180250,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 44647250,
+            "lzfseBytes": 30688,
+            "lzfseDecodeMedianNanoseconds": 435875,
+            "outputHeight": 780,
+            "outputWidth": 1040,
+            "pixelRGBSHA256": "06f20e15d204133de51f1cee84fac0ce914c02d3861a31944e99e1419c270fb5",
+            "pngBytes": 43232,
+            "pngDecodeMedianNanoseconds": 4944542,
+            "requestedHeight": 780,
+            "requestedWidth": 1170
+          }
+        ]
+      },
+      {
+        "adaptiveLZFSEDerivedBytes": 3179485,
+        "allFormatsPixelEqual": true,
+        "category": "real-photo",
+        "inputByteCount": 984074,
+        "inputPixelHeight": 1285,
+        "inputPixelWidth": 1920,
+        "inputSHA256": "432837759008a26d94377d5ade143d41c4252e5b8e20b26edafd6395e02a3d83",
+        "lzfseDerivedBytes": 3822907,
+        "name": "landscape",
+        "pngDerivedBytes": 3132014,
+        "reportSHA256": "00c3f82e6bd4bb937d1a30a40b0637093aa9a8b39aed04fcd34e02c0f4ffb902",
+        "targets": [
+          {
+            "adaptiveBreakEvenFutureHits": 2.1929287855957873,
+            "adaptiveCreationMedianNanoseconds": 18010250,
+            "adaptiveLZFSEBytes": 235086,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 783542,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 8996417,
+            "lzfseBytes": 273643,
+            "lzfseDecodeMedianNanoseconds": 480708,
+            "outputHeight": 259,
+            "outputWidth": 388,
+            "pixelRGBSHA256": "948a51e3ba1a0ca87fcc1c4106466b4a7d66e9556ddb83c36dc2698ffc34468d",
+            "pngBytes": 229384,
+            "pngDecodeMedianNanoseconds": 2553541,
+            "requestedHeight": 260,
+            "requestedWidth": 390
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 4.380882017859138,
+            "adaptiveCreationMedianNanoseconds": 54161208,
+            "adaptiveLZFSEBytes": 919834,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 3168167,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 15531250,
+            "lzfseBytes": 1090244,
+            "lzfseDecodeMedianNanoseconds": 1763833,
+            "outputHeight": 519,
+            "outputWidth": 776,
+            "pixelRGBSHA256": "1e26cbbaaef1969dad4b8663654c9333c99f7d6fd6d3ed11049597a23cc9eab5",
+            "pngBytes": 904146,
+            "pngDecodeMedianNanoseconds": 7966167,
+            "requestedHeight": 520,
+            "requestedWidth": 780
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 5.363413776166792,
+            "adaptiveCreationMedianNanoseconds": 118895041,
+            "adaptiveLZFSEBytes": 2024565,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 7511167,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 29678959,
+            "lzfseBytes": 2459020,
+            "lzfseDecodeMedianNanoseconds": 4354542,
+            "outputHeight": 780,
+            "outputWidth": 1165,
+            "pixelRGBSHA256": "ba7264a679ab2e9bc38dbc7ed84f2aa08da31b1d184c22924315b7dbcb81841e",
+            "pngBytes": 1998484,
+            "pngDecodeMedianNanoseconds": 17031625,
+            "requestedHeight": 780,
+            "requestedWidth": 1170
+          }
+        ]
+      },
+      {
+        "adaptiveLZFSEDerivedBytes": 2154937,
+        "allFormatsPixelEqual": true,
+        "category": "real-photo",
+        "inputByteCount": 490902,
+        "inputPixelHeight": 1280,
+        "inputPixelWidth": 1920,
+        "inputSHA256": "df0e5784ee997e37df423eeec39bb0c914845b805c0cea383821cdb62ca6a561",
+        "lzfseDerivedBytes": 2920109,
+        "name": "people",
+        "pngDerivedBytes": 2250789,
+        "reportSHA256": "7f7e2d076e0d615520df269af9cf148f1dce0b5ae15ae835c2c7e7ca58c0c71f",
+        "targets": [
+          {
+            "adaptiveBreakEvenFutureHits": 2.897729079981507,
+            "adaptiveCreationMedianNanoseconds": 17236417,
+            "adaptiveLZFSEBytes": 169730,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 720625,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 6668875,
+            "lzfseBytes": 227602,
+            "lzfseDecodeMedianNanoseconds": 448416,
+            "outputHeight": 260,
+            "outputWidth": 390,
+            "pixelRGBSHA256": "08fa937ca53a27eee18d765252b2a6cf3c433c6daf2a891ea9247967bd1604a6",
+            "pngBytes": 175110,
+            "pngDecodeMedianNanoseconds": 2728041,
+            "requestedHeight": 260,
+            "requestedWidth": 390
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 5.420248461340373,
+            "adaptiveCreationMedianNanoseconds": 56493667,
+            "adaptiveLZFSEBytes": 622544,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 2989750,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 13412458,
+            "lzfseBytes": 847778,
+            "lzfseDecodeMedianNanoseconds": 1676333,
+            "outputHeight": 520,
+            "outputWidth": 780,
+            "pixelRGBSHA256": "2e2d146c787d278d8d06be22f6070c4e2cd02aac9396f9374c1cbbdc795318f8",
+            "pngBytes": 651784,
+            "pngDecodeMedianNanoseconds": 8553792,
+            "requestedHeight": 520,
+            "requestedWidth": 780
+          },
+          {
+            "adaptiveBreakEvenFutureHits": 5.3542985313977045,
+            "adaptiveCreationMedianNanoseconds": 126875458,
+            "adaptiveLZFSEBytes": 1362663,
+            "adaptiveLZFSEDecodeMedianNanoseconds": 6735500,
+            "allFormatsPixelEqual": true,
+            "directOriginalDecodeMedianNanoseconds": 30431500,
+            "lzfseBytes": 1844729,
+            "lzfseDecodeMedianNanoseconds": 3763500,
+            "outputHeight": 780,
+            "outputWidth": 1170,
+            "pixelRGBSHA256": "6eeeeee6567d10db3b3c5bc5d77c96c37327b4bdfc09237aa9e289c9c9197a1f",
+            "pngBytes": 1423895,
+            "pngDecodeMedianNanoseconds": 17175542,
+            "requestedHeight": 780,
+            "requestedWidth": 1170
+          }
+        ]
+      }
+    ],
+    "realPhotoAggregate": {
+      "adaptiveCreationMaximumNanoseconds": 126875458,
+      "adaptiveCreationMedianNanoseconds": 55300958,
+      "adaptiveToPNGByteRatioMedian": 0.9701244810989912,
+      "adaptiveToPNGDecodeRatioMedian": 0.37388061287439867,
+      "breakEvenFutureHitsMaximum": 5.536191512612165,
+      "breakEvenFutureHitsMedian": 5.053722778845289,
+      "directOriginalToAdaptiveSpeedupMedian": 4.882853226641852,
+      "targetCount": 12
+    },
+    "w2HeroAdaptiveDerivedBytes": 196998,
+    "w2HeroAggregate": {
+      "adaptiveCreationMaximumNanoseconds": 111329542,
+      "adaptiveCreationMedianNanoseconds": 48949792,
+      "adaptiveToPNGByteRatioMedian": 0.6070478541066776,
+      "adaptiveToPNGDecodeRatioMedian": 0.4923994012521181,
+      "breakEvenFutureHitsMaximum": 4.724445923353802,
+      "breakEvenFutureHitsMedian": 2.684774447150746,
+      "directOriginalToAdaptiveSpeedupMedian": 14.418176593329337,
+      "targetCount": 9
+    },
+    "w2HeroAppleObservedCacheBytes": 1743956,
+    "w2HeroFoveaOriginalPlusAdaptiveBytes": 1652576
+  },
+  "evidenceID": "FOVEA-ORDINARY-IMAGE-DERIVED-RASTER-STUDY-2026-08-05",
+  "foveaIntegration": {
+    "boundedCreation": true,
+    "coveredFailures": [
+      "corrupt-container",
+      "namespace-revoke",
+      "no-store",
+      "post-alias-fence-closure",
+      "post-blob-publication-fence-closure",
+      "record-publication-failure",
+      "task-cancellation",
+      "transient-store-unavailable"
+    ],
+    "creationTrigger": "successful reusable-original warm-disk decode only; network first display excluded",
+    "durableLogicalWriteBudget": {
+      "chargeFloor": "candidate container bytes plus exact projected full Fovea alias-manifest rewrite bytes",
+      "clockBoundary": "persistence-owned wall clock; backward movement cannot refresh the current window",
+      "evidence": [
+        "W11_PT_043",
+        "W11_PT_044",
+        "W11_PT_045",
+        "W11_PT_046",
+        "W11_PT_047",
+        "W11_PT_048"
+      ],
+      "excludesFromPhysicalClaim": [
+        "write-budget control file bytes",
+        "Akashic metadata writes",
+        "filesystem allocated bytes",
+        "fsync and directory metadata",
+        "eviction and recovery writes"
+      ],
+      "failureAccounting": "later failure remains conservatively charged for the window",
+      "failureSemantics": "post-reservation failure remains charged; corrupt/future budget metadata fails closed; artifact timestamps cannot advance the persistence-owned window",
+      "reservationOrdering": "durably reserve before any physical blob staging",
+      "status": "implemented-package-internal-fixed-window"
+    },
+    "persistentByteBudget": {
+      "accounting": "deduplicated physical container bytes per namespace plus content identity",
+      "evictionOrdering": "remove all victim aliases before removing physical container",
+      "evidence": [
+        "W11_PT_040",
+        "W11_PT_041",
+        "W11_PT_042"
+      ],
+      "recency": "one in-memory second chance after successful derived read; no Fovea alias-manifest write on hit",
+      "reopen": "reconcile missing physical targets, collect unreachable crash leftovers, then enforce soft budget",
+      "status": "implemented-package-internal"
+    },
+    "publicationFences": 4,
+    "remaining": [
+      "clean W2/W11",
+      "calibrate logical write window against total physical write amplification",
+      "fixed-window boundary-burst qualification or replacement",
+      "large-store reopen/reconciliation cost",
+      "physical-device energy, thermal and reclaim-tail evidence",
+      "default admission qualification",
+      "trace comparison of second-chance versus LRU/SIEVE-style eviction"
+    ],
+    "reuseOrder": [
+      "rendered-memory",
+      "authorized-derived-raster",
+      "authoritative-original-encoded",
+      "conditional-or-network-fetch"
+    ],
+    "status": "local-package-opt-in-passed-default-disabled"
+  },
+  "generatedAt": "2026-08-05T02:59:48.229670+00:00",
+  "limitations": [
+    "dirty worktrees",
+    "macOS local codec microbenchmarks",
+    "iOS Simulator end-to-end measurements",
+    "generated W2 images are highly compressible",
+    "no file-read or fsync cost in codec prototype",
+    "no physical-device energy evidence",
+    "package-internal storage integration remains default-disabled"
+  ],
+  "productionAdmissionContract": {
+    "minimumPredictedFutureHits": "derived creation cost divided by conservative per-hit decode savings, rounded up, with a safety margin",
+    "mustNotBlockFirstDisplay": true,
+    "requiredEvidenceBeforeProduction": [
+      "file-read-inclusive latency",
+      "host end-to-end W2 and W11",
+      "real-photo and hostile corpus",
+      "crash/reopen/revoke tests",
+      "disk write amplification",
+      "energy and thermal evidence",
+      "format-selection counterexamples",
+      "immediate fallback to original decode"
+    ],
+    "requiredIdentity": [
+      "ContentID",
+      "target pixels",
+      "content mode",
+      "color policy",
+      "orientation policy",
+      "transform identity and version",
+      "codec implementation and semantic version",
+      "pixel format",
+      "derived format and version",
+      "security namespace",
+      "namespace generation"
+    ],
+    "requiredPermissions": [
+      "response is reusable and not no-store",
+      "authorization and credential policy permits persistence",
+      "namespace remains active before and after publication"
+    ],
+    "requiredResourceControls": [
+      "separate derived byte budget",
+      "bounded concurrent creation",
+      "single-flight per exact derived identity",
+      "cancellation and reclaim tail accounting",
+      "admission based on observed reuse cohort",
+      "eviction does not remove the original representation record",
+      "restart-durable logical write-window admission before blob staging",
+      "physical write-amplification calibration including control metadata and filesystem effects"
+    ]
+  },
+  "schemaVersion": 1,
+  "sourceIdentities": {
+    "cachePolicyStudy": "docs/research/derived-raster-cache-policy-2026-08-08.md",
+    "fovea": {
+      "commit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+      "dirty": true,
+      "workingTreeDigest": "2b24ddfe9c1e14729e359db9304709ac3e7d57a8"
+    },
+    "imageCraft": {
+      "commit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+      "dirty": true,
+      "workingTreeDigest": "ab7bb77e78901873f665e8a22aa1088ac679806b"
+    }
+  },
+  "status": "dirty-source-directional-prototype-no-release-claim",
+  "w2DirectionalEvidence": {
+    "cacheFootprintAfterWarmMemoryPreparation": {
+      "Apple URLSession + URLCache + ImageIO": {
+        "allocatedBytes": 1761280,
+        "logicalBytes": 1743956,
+        "regularFileCount": 6
+      },
+      "Fovea": {
+        "allocatedBytes": 1486848,
+        "logicalBytes": 1455578,
+        "regularFileCount": 13
+      },
+      "Kingfisher": {
+        "allocatedBytes": 6569984,
+        "logicalBytes": 6530813,
+        "regularFileCount": 18
+      },
+      "Nuke": {
+        "allocatedBytes": 3678208,
+        "logicalBytes": 3659171,
+        "regularFileCount": 8
+      },
+      "PINRemoteImage": {
+        "allocatedBytes": 4960256,
+        "logicalBytes": 4923844,
+        "regularFileCount": 18
+      },
+      "SDWebImage": {
+        "allocatedBytes": 6598656,
+        "logicalBytes": 6561871,
+        "regularFileCount": 18
+      }
+    },
+    "interpretation": [
+      "Fovea and Apple issue three origin requests for three source images across nine targets; the other four headless comparators issue nine.",
+      "At the adapter-return boundary Fovea is directionally tied with Apple on cold W2 and more than twice as fast as the four nine-request comparators.",
+      "Forcing a complete normalized pixel draw proves that PINRemoteImage warm-disk latency was partly a lazy-decode boundary artifact, but its processed-image cache remains materially faster than original-only caches.",
+      "Fovea has the smallest observed persistent cache footprint, so warm-disk latency alone is not a Pareto-complete comparison."
+    ],
+    "pixelMaterializedSingleBlock": {
+      "cold": {
+        "Apple URLSession + URLCache + ImageIO": {
+          "medianAdapterLatencyNanoseconds": 38437166,
+          "medianDisplayReadyLatencyNanoseconds": 38831666,
+          "medianPixelMaterializationNanoseconds": 419208,
+          "originRequestCount": 3,
+          "p95DisplayReadyLatencyNanoseconds": 187902666,
+          "physicalFootprintDeltaBytes": 17121352,
+          "totalDurationNanoseconds": 647183167
+        },
+        "Fovea": {
+          "medianAdapterLatencyNanoseconds": 35719541,
+          "medianDisplayReadyLatencyNanoseconds": 36840458,
+          "medianPixelMaterializationNanoseconds": 947333,
+          "originRequestCount": 3,
+          "p95DisplayReadyLatencyNanoseconds": 184390542,
+          "physicalFootprintDeltaBytes": 21823488,
+          "totalDurationNanoseconds": 625914000
+        },
+        "Kingfisher": {
+          "medianAdapterLatencyNanoseconds": 143641125,
+          "medianDisplayReadyLatencyNanoseconds": 144556416,
+          "medianPixelMaterializationNanoseconds": 810917,
+          "originRequestCount": 9,
+          "p95DisplayReadyLatencyNanoseconds": 213472083,
+          "physicalFootprintDeltaBytes": 25526296,
+          "totalDurationNanoseconds": 1379004167
+        },
+        "Nuke": {
+          "medianAdapterLatencyNanoseconds": 132619459,
+          "medianDisplayReadyLatencyNanoseconds": 133437958,
+          "medianPixelMaterializationNanoseconds": 720542,
+          "originRequestCount": 9,
+          "p95DisplayReadyLatencyNanoseconds": 208349875,
+          "physicalFootprintDeltaBytes": 21200920,
+          "totalDurationNanoseconds": 1277908417
+        },
+        "PINRemoteImage": {
+          "medianAdapterLatencyNanoseconds": 132267292,
+          "medianDisplayReadyLatencyNanoseconds": 133017583,
+          "medianPixelMaterializationNanoseconds": 686667,
+          "originRequestCount": 9,
+          "p95DisplayReadyLatencyNanoseconds": 192998666,
+          "physicalFootprintDeltaBytes": 31899672,
+          "totalDurationNanoseconds": 1261739583
+        },
+        "SDWebImage": {
+          "medianAdapterLatencyNanoseconds": 135223167,
+          "medianDisplayReadyLatencyNanoseconds": 135958959,
+          "medianPixelMaterializationNanoseconds": 818375,
+          "originRequestCount": 9,
+          "p95DisplayReadyLatencyNanoseconds": 211929625,
+          "physicalFootprintDeltaBytes": 19709976,
+          "totalDurationNanoseconds": 1348885875
+        }
+      },
+      "warm-disk": {
+        "Apple URLSession + URLCache + ImageIO": {
+          "medianAdapterLatencyNanoseconds": 27748916,
+          "medianDisplayReadyLatencyNanoseconds": 28872500,
+          "medianPixelMaterializationNanoseconds": 433459,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 47427916,
+          "physicalFootprintDeltaBytes": 30359576,
+          "totalDurationNanoseconds": 254813833
+        },
+        "Fovea": {
+          "medianAdapterLatencyNanoseconds": 27313208,
+          "medianDisplayReadyLatencyNanoseconds": 28635166,
+          "medianPixelMaterializationNanoseconds": 787708,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 49252750,
+          "physicalFootprintDeltaBytes": 30490624,
+          "totalDurationNanoseconds": 257234791
+        },
+        "Kingfisher": {
+          "medianAdapterLatencyNanoseconds": 3780917,
+          "medianDisplayReadyLatencyNanoseconds": 4542959,
+          "medianPixelMaterializationNanoseconds": 705209,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 8885708,
+          "physicalFootprintDeltaBytes": 29966336,
+          "totalDurationNanoseconds": 52687417
+        },
+        "Nuke": {
+          "medianAdapterLatencyNanoseconds": 26824000,
+          "medianDisplayReadyLatencyNanoseconds": 28098667,
+          "medianPixelMaterializationNanoseconds": 690292,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 46737291,
+          "physicalFootprintDeltaBytes": 19628032,
+          "totalDurationNanoseconds": 247270042
+        },
+        "PINRemoteImage": {
+          "medianAdapterLatencyNanoseconds": 473833,
+          "medianDisplayReadyLatencyNanoseconds": 1744625,
+          "medianPixelMaterializationNanoseconds": 1324666,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 3196542,
+          "physicalFootprintDeltaBytes": 5521408,
+          "totalDurationNanoseconds": 20944541
+        },
+        "SDWebImage": {
+          "medianAdapterLatencyNanoseconds": 3728958,
+          "medianDisplayReadyLatencyNanoseconds": 4816209,
+          "medianPixelMaterializationNanoseconds": 959833,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 8246041,
+          "physicalFootprintDeltaBytes": 25919488,
+          "totalDurationNanoseconds": 48744500
+        }
+      },
+      "warm-memory": {
+        "Apple URLSession + URLCache + ImageIO": {
+          "medianAdapterLatencyNanoseconds": 2209,
+          "medianDisplayReadyLatencyNanoseconds": 455500,
+          "medianPixelMaterializationNanoseconds": 417625,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 1382500,
+          "physicalFootprintDeltaBytes": 15613952,
+          "totalDurationNanoseconds": 7768083
+        },
+        "Fovea": {
+          "medianAdapterLatencyNanoseconds": 349667,
+          "medianDisplayReadyLatencyNanoseconds": 1414458,
+          "medianPixelMaterializationNanoseconds": 749750,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 2220417,
+          "physicalFootprintDeltaBytes": 15646720,
+          "totalDurationNanoseconds": 15431416
+        },
+        "Kingfisher": {
+          "medianAdapterLatencyNanoseconds": 38125,
+          "medianDisplayReadyLatencyNanoseconds": 774209,
+          "medianPixelMaterializationNanoseconds": 667208,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 1378875,
+          "physicalFootprintDeltaBytes": 3096576,
+          "totalDurationNanoseconds": 8007417
+        },
+        "Nuke": {
+          "medianAdapterLatencyNanoseconds": 7791,
+          "medianDisplayReadyLatencyNanoseconds": 716250,
+          "medianPixelMaterializationNanoseconds": 685292,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 1396792,
+          "physicalFootprintDeltaBytes": 15679488,
+          "totalDurationNanoseconds": 8468500
+        },
+        "PINRemoteImage": {
+          "medianAdapterLatencyNanoseconds": 75333,
+          "medianDisplayReadyLatencyNanoseconds": 922375,
+          "medianPixelMaterializationNanoseconds": 793584,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 1258958,
+          "physicalFootprintDeltaBytes": 3178496,
+          "totalDurationNanoseconds": 8924458
+        },
+        "SDWebImage": {
+          "medianAdapterLatencyNanoseconds": 62583,
+          "medianDisplayReadyLatencyNanoseconds": 911167,
+          "medianPixelMaterializationNanoseconds": 852291,
+          "originRequestCount": 0,
+          "p95DisplayReadyLatencyNanoseconds": 1362625,
+          "physicalFootprintDeltaBytes": 278528,
+          "totalDurationNanoseconds": 9666708
+        }
+      }
+    },
+    "rawArtifactDigests": {
+      "cacheFootprintsSHA256": "495f8faff6377812f7c73c4a00be77fae50bb6ed2fb3131b54d03dc064f5607a",
+      "pixelMaterializedReportSHA256": "515bc5271331de385d9c3e9b8ccd986fdbf3dac3697940e9b979e608f33d336c"
+    },
+    "threeBlockAdapterBoundary": {
+      "cold": {
+        "Apple URLSession + URLCache + ImageIO": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 37377959,
+          "medianOfPerRunP95LatencyNanoseconds": 194782583,
+          "medianPhysicalFootprintDeltaBytes": 18317384,
+          "medianTotalDurationNanoseconds": 621634708,
+          "originRequestCounts": [
+            3,
+            3,
+            3
+          ]
+        },
+        "Fovea": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 35043875,
+          "medianOfPerRunP95LatencyNanoseconds": 194747875,
+          "medianPhysicalFootprintDeltaBytes": 9830424,
+          "medianTotalDurationNanoseconds": 624096917,
+          "originRequestCounts": [
+            3,
+            3,
+            3
+          ]
+        },
+        "Kingfisher": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 140870916,
+          "medianOfPerRunP95LatencyNanoseconds": 216299125,
+          "medianPhysicalFootprintDeltaBytes": 32161816,
+          "medianTotalDurationNanoseconds": 1366637083,
+          "originRequestCounts": [
+            9,
+            9,
+            9
+          ]
+        },
+        "Nuke": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 141303875,
+          "medianOfPerRunP95LatencyNanoseconds": 203134041,
+          "medianPhysicalFootprintDeltaBytes": 18677784,
+          "medianTotalDurationNanoseconds": 1312400250,
+          "originRequestCounts": [
+            9,
+            9,
+            9
+          ]
+        },
+        "PINRemoteImage": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 136392208,
+          "medianOfPerRunP95LatencyNanoseconds": 207706417,
+          "medianPhysicalFootprintDeltaBytes": 24395800,
+          "medianTotalDurationNanoseconds": 1325902750,
+          "originRequestCounts": [
+            9,
+            9,
+            9
+          ]
+        },
+        "SDWebImage": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 144743292,
+          "medianOfPerRunP95LatencyNanoseconds": 210801834,
+          "medianPhysicalFootprintDeltaBytes": 31424536,
+          "medianTotalDurationNanoseconds": 1360923291,
+          "originRequestCounts": [
+            9,
+            9,
+            9
+          ]
+        }
+      },
+      "warm-disk": {
+        "Apple URLSession + URLCache + ImageIO": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 26162667,
+          "medianOfPerRunP95LatencyNanoseconds": 45407167,
+          "medianPhysicalFootprintDeltaBytes": 17825816,
+          "medianTotalDurationNanoseconds": 240480958,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Fovea": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 26828292,
+          "medianOfPerRunP95LatencyNanoseconds": 46271125,
+          "medianPhysicalFootprintDeltaBytes": 17825816,
+          "medianTotalDurationNanoseconds": 243557334,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Kingfisher": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 3750125,
+          "medianOfPerRunP95LatencyNanoseconds": 7625791,
+          "medianPhysicalFootprintDeltaBytes": 29818880,
+          "medianTotalDurationNanoseconds": 42678666,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Nuke": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 25494042,
+          "medianOfPerRunP95LatencyNanoseconds": 44925667,
+          "medianPhysicalFootprintDeltaBytes": 9093120,
+          "medianTotalDurationNanoseconds": 229339542,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "PINRemoteImage": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 401459,
+          "medianOfPerRunP95LatencyNanoseconds": 1070083,
+          "medianPhysicalFootprintDeltaBytes": 2555904,
+          "medianTotalDurationNanoseconds": 6052333,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "SDWebImage": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 3691667,
+          "medianOfPerRunP95LatencyNanoseconds": 6879167,
+          "medianPhysicalFootprintDeltaBytes": 25821184,
+          "medianTotalDurationNanoseconds": 39726000,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "warm-memory": {
+        "Apple URLSession + URLCache + ImageIO": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 2542,
+          "medianOfPerRunP95LatencyNanoseconds": 7875,
+          "medianPhysicalFootprintDeltaBytes": 49152,
+          "medianTotalDurationNanoseconds": 1395000,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Fovea": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 261042,
+          "medianOfPerRunP95LatencyNanoseconds": 295792,
+          "medianPhysicalFootprintDeltaBytes": 49152,
+          "medianTotalDurationNanoseconds": 4573792,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Kingfisher": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 40125,
+          "medianOfPerRunP95LatencyNanoseconds": 84959,
+          "medianPhysicalFootprintDeltaBytes": 1507328,
+          "medianTotalDurationNanoseconds": 1883625,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Nuke": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 7417,
+          "medianOfPerRunP95LatencyNanoseconds": 17417,
+          "medianPhysicalFootprintDeltaBytes": 32768,
+          "medianTotalDurationNanoseconds": 1551709,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "PINRemoteImage": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 70167,
+          "medianOfPerRunP95LatencyNanoseconds": 4768500,
+          "medianPhysicalFootprintDeltaBytes": 3178496,
+          "medianTotalDurationNanoseconds": 6872458,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        },
+        "SDWebImage": {
+          "blocks": 3,
+          "medianOfPerRunMedianLatencyNanoseconds": 58709,
+          "medianOfPerRunP95LatencyNanoseconds": 103375,
+          "medianPhysicalFootprintDeltaBytes": 1622016,
+          "medianTotalDurationNanoseconds": 1916958,
+          "originRequestCounts": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

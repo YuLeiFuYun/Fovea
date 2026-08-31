@@ -154,7 +154,7 @@
     }
   ],
   "registryID": "FOVEA-CANONICAL-WORKLOAD-CATALOG-V3",
-  "reviewedOn": "2026-08-02",
+  "reviewedOn": "2026-08-05",
   "schemaVersion": 2,
   "sourceAuthority": {
     "acceptedMatrix": "docs/project-memory/accepted-workload-matrix.md",
@@ -283,7 +283,10 @@
         "Benchmarks/ComparativeLab/experiment-plan.json",
         "Benchmarks/ComparativeLab/Fixtures/correctness-probes.json",
         "Benchmarks/AsyncImageLab/experiment-plan.json",
-        "Benchmarks/AsyncImageLab/applicability.json"
+        "Benchmarks/AsyncImageLab/applicability.json",
+        "docs/research/ordinary-image-derived-raster-study-2026-08.json",
+        "Benchmarks/ComparativeLab/ordinary-image-derived-cache-plan.json",
+        "docs/specifications/derived-raster-persistence-contract.md"
       ],
       "hardInvariants": [
         "target-pixel-invariant",
@@ -483,7 +486,8 @@
       ],
       "evidencePaths": [
         "docs/project-memory/accepted-workload-matrix.md",
-        "Benchmarks/ComparativeLab/challenge-suite.json"
+        "Benchmarks/ComparativeLab/challenge-suite.json",
+        "Benchmarks/ComparativeLab/animated-image-plan.json"
       ],
       "hardInvariants": [
         "frame-order-correct",
@@ -914,7 +918,10 @@
       ],
       "evidencePaths": [
         "Tests/FoveaTests/DecodeSharingTests.swift",
-        "Tests/FoveaTests/EncodedDataCoordinatorTests.swift"
+        "Tests/FoveaTests/EncodedDataCoordinatorTests.swift",
+        "docs/research/ordinary-image-derived-raster-study-2026-08.json",
+        "Benchmarks/ComparativeLab/ordinary-image-derived-cache-plan.json",
+        "docs/specifications/derived-raster-persistence-contract.md"
       ],
       "hardInvariants": [
         "original-identity-shared-safely",

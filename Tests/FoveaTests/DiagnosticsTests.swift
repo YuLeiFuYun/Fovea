@@ -139,7 +139,7 @@ final class DiagnosticsTests: XCTestCase {
 
     func testDecodedDiagnosticEventRejectsExcessiveProtocolCandidates() throws {
         let object: [String: Any] = [
-            "schemaVersion": 17,
+            "schemaVersion": DiagnosticEvent.currentSchemaVersion,
             "kind": "fetchCompleted",
             "networkProtocolNames": Array(repeating: "h2", count: 65),
         ]
@@ -150,7 +150,7 @@ final class DiagnosticsTests: XCTestCase {
     func testDecodedDiagnosticEventReappliesSanitizationAndRejectsUnknownSchema() throws {
         let json = """
             {
-              "schemaVersion": 17,
+              "schemaVersion": \(DiagnosticEvent.currentSchemaVersion),
               "kind": "pipelineFailed",
               "keyDigest": "https://secret.example/path?token=abc",
               "statusCode": 99,
@@ -170,7 +170,9 @@ final class DiagnosticsTests: XCTestCase {
         XCTAssertEqual(decoded.networkProtocolNames, ["h2"])
 
         let unknown = json.replacingOccurrences(
-            of: "\"schemaVersion\": 17", with: "\"schemaVersion\": 1799")
+            of: "\"schemaVersion\": \(DiagnosticEvent.currentSchemaVersion)",
+            with: "\"schemaVersion\": \(DiagnosticEvent.currentSchemaVersion + 1)"
+        )
         XCTAssertThrowsError(
             try JSONDecoder().decode(DiagnosticEvent.self, from: Data(unknown.utf8))
         )
@@ -412,11 +414,10 @@ final class DiagnosticsTests: XCTestCase {
             appID: "tests"
         )
 
-        let clock = ContinuousClock()
-        let started = clock.now
+        let started = testUptimeNanoseconds()
         _ = try await pipeline.image(for: request)
-        let elapsed = started.duration(to: clock.now)
-        XCTAssertLessThan(elapsed, .milliseconds(350))
+        let elapsed = testUptimeNanoseconds() &- started
+        XCTAssertLessThan(elapsed, TestDuration.milliseconds(350).nanoseconds)
     }
 
     func testExternalRelayReportsBoundedDrops_DIAG_PT_004() async throws {
@@ -428,14 +429,13 @@ final class DiagnosticsTests: XCTestCase {
         let dropped = await relay.droppedEventCount
         XCTAssertGreaterThan(dropped, 0)
 
-        let clock = ContinuousClock()
-        let deadline = clock.now.advanced(by: .seconds(2))
+        let deadline = testDeadline(after: .seconds(2))
         var summary: DiagnosticEvent?
-        while summary == nil, clock.now < deadline {
+        while summary == nil, testUptimeNanoseconds() < deadline {
             // 每次 record 都先尝试发布尚未发送的 drop summary；循环等待的是
             // “缓冲槽可用并观察到 summary”这一语义条件，而不是固定调度时长。
             await relay.record(DiagnosticEvent(kind: .fetchCompleted))
-            try await Task.sleep(for: .milliseconds(25))
+            try await testSleep(.milliseconds(25))
             summary = await downstream.events.first { $0.kind == .diagnosticsDropped }
         }
 
@@ -484,20 +484,20 @@ final class DiagnosticsTests: XCTestCase {
 
 private actor SlowDiagnosticsSink: DiagnosticsSink {
     func record(_ event: DiagnosticEvent) async {
-        try? await Task.sleep(for: .milliseconds(500))
+        try? await testSleep(.milliseconds(500))
     }
 }
 
 private actor CapturingSlowDiagnosticsSink: DiagnosticsSink {
-    private let delay: Duration
+    private let delay: TestDuration
     private(set) var events: [DiagnosticEvent] = []
 
-    init(delay: Duration) {
+    init(delay: TestDuration) {
         self.delay = delay
     }
 
     func record(_ event: DiagnosticEvent) async {
-        try? await Task.sleep(for: delay)
+        try? await testSleep(delay)
         events.append(event)
     }
 }

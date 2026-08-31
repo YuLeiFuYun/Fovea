@@ -1,0 +1,76 @@
+{
+  "claimBoundary": [
+    "historical retained-binary counterexample only",
+    "not a current product failure",
+    "no performance conclusion"
+  ],
+  "counterexample": {
+    "backingKind": "imageIOEncoded",
+    "cancellationFenced": true,
+    "frameCount": 24,
+    "imageIOSourceIndicesMatchTimeline": true,
+    "reverseRandomAccessMismatchCount": 23,
+    "reverseRandomAccessMismatchIndices": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ]
+  },
+  "currentFix": {
+    "currentFallbackReverseRandomAccessMismatchCount": 0,
+    "currentPerformanceStudy": "docs/research/w5-apng-public-decoder-mac-performance-2026-08.json",
+    "policy": "single-frame and window ImageIO fallback both use bounded no-cache materialization",
+    "regressionTest": "IMG_ANIM_PT_052"
+  },
+  "date": "2026-08-07",
+  "evidence": {
+    "artifactInventoryCount": 31,
+    "captureManifest": ".artifacts/performance/w5-apng-imageio-cache-divergence-v1/capture-manifest.json",
+    "captureManifestSHA256": "01f4b4a505e99d5fcb73440a2b5cf92f4bab6fe6df5a9495612754bb4aad7ec9",
+    "captureRunner": "Tools/Performance/capture_w5_apng_imageio_cache_divergence.py",
+    "report": ".artifacts/performance/w5-apng-imageio-cache-divergence-v1/report.json",
+    "reportSHA256": "bc0e7af3b51ad9e13d929762de3e908b841c099be96f91fddcbe16454946c3c5",
+    "retainedReleaseBinary": ".artifacts/performance/w5-apng-imageio-cache-divergence-v1/bin/ImageCraftEvidence",
+    "retainedReleaseBinarySHA256": "6615214634b9b2e86a04618dffd7f5d25dc685f8de3254aa07f6c069e0102afc",
+    "sourceIdentity": ".artifacts/performance/w5-apng-imageio-cache-divergence-v1/source-identity.json",
+    "sourceIdentitySHA256": "8b8ed0f07252b0aa1122bf4c5861707b7ebc1f9ccd84e80a1f2c4b76bba5839e",
+    "tamperContract": "Tools/Performance/test_w5_apng_imageio_cache_divergence.py",
+    "validator": "Tools/Performance/validate_w5_apng_imageio_cache_divergence.py"
+  },
+  "interpretation": [
+    "A retained ImageIO source is not a sufficient semantic identity when frame materialization options differ.",
+    "The historical retained binary remains independently replayable after the current fix."
+  ],
+  "objective": "Retain the pre-fix ImageIO fallback counterexample where single-frame and window paths used different cache policies, then bind the current zero-mismatch regression.",
+  "schemaVersion": 1,
+  "sourceIdentity": {
+    "foveaWorkingTree": "769812966b7e12a683e12805e176e370631a06d3",
+    "governanceReboundAtUTC": "2026-08-06T23:27:00.547004+00:00",
+    "governingFilesUnchangedDuringCapture": true,
+    "imageCraftHeadCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+    "imageCraftWorkingTree": "c6d761d40ad2be641e302895f2f1f1d388cebdd3",
+    "sourceUnchangedDuringCapture": true
+  },
+  "status": "retained-historical-counterexample-fixed-current-tree",
+  "studyID": "FOVEA-W5-APNG-IMAGEIO-FALLBACK-CACHE-DIVERGENCE-2026-08"
+}

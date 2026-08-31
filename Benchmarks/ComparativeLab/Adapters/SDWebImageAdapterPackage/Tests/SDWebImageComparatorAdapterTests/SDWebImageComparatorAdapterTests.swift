@@ -4,6 +4,35 @@ import Foundation
 import XCTest
 
 final class SDWebImageComparatorAdapterTests: XCTestCase {
+    func testRuntimeConfigurationFreezesCacheLifetimeAndDownloaderPolicy() throws {
+        let cacheRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent("sdwebimage-comparator-config-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: cacheRoot) }
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.httpMaximumConnectionsPerHost = 6
+        let adapter = try SDWebImageComparatorAdapter(
+            cacheDirectory: cacheRoot,
+            sessionConfiguration: configuration,
+            maximumConcurrentDownloads: 6
+        )
+        let parameters = try XCTUnwrap(adapter.runtimeConfiguration?.parameters)
+        XCTAssertEqual(parameters["cache.rootPolicy"], "evaluator-owned")
+        XCTAssertEqual(parameters["cache.diskSizeBytes"], "268435456")
+        XCTAssertEqual(parameters["cache.diskExpirationSeconds"], "604800.0")
+        XCTAssertEqual(parameters["cache.diskExpireTypeRaw"], "0")
+        XCTAssertEqual(parameters["cache.diskReadingOptionsRaw"], "0")
+        XCTAssertEqual(parameters["cache.diskWritingOptionsRaw"], "1")
+        XCTAssertEqual(parameters["cache.memoryCostLimitBytes"], "134217728")
+        XCTAssertEqual(parameters["cache.memoryCountLimit"], "0")
+        XCTAssertEqual(parameters["cache.memoryEnabled"], "true")
+        XCTAssertEqual(parameters["cache.weakMemoryEnabled"], "false")
+        XCTAssertEqual(parameters["downloader.timeoutSeconds"], "15.0")
+        XCTAssertEqual(parameters["downloader.executionOrderRaw"], "0")
+        XCTAssertEqual(parameters["downloader.minimumProgressInterval"], "0.0")
+        XCTAssertEqual(parameters["scheduler.maximumConcurrentDownloads"], "6")
+        XCTAssertEqual(parameters["session.httpMaximumConnectionsPerHost"], "6")
+    }
+
     func testManagerCancellationUsesSDWebImageErrorDomain() async throws {
         let cacheRoot = FileManager.default.temporaryDirectory
             .appendingPathComponent("sdwebimage-comparator-cancel-\(UUID().uuidString)")

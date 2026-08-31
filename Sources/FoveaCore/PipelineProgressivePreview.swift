@@ -5,6 +5,9 @@ import ImageCraftCore
 final class TransportProgressRelay: @unchecked Sendable {
     private let lock = NSLock()
     private let maximumBufferedBytes: Int
+    private let transportMemoryThreshold: Int
+    private let resourceRecorder: FoveaProgressiveResourceRecorder?
+    private let resourceOwnerID: UUID?
     private var pendingResponse: TransportResponseHead?
     private var pendingData = Data()
     private var pendingCumulativeByteCount = 0
@@ -12,12 +15,27 @@ final class TransportProgressRelay: @unchecked Sendable {
     private var waiter: CheckedContinuation<TransportProgressEvent?, Never>?
     private var isFinished = false
 
-    init(maximumBufferedBytes: Int) {
+    init(
+        maximumBufferedBytes: Int,
+        transportMemoryThreshold: Int = 1,
+        resourceRecorder: FoveaProgressiveResourceRecorder? = nil,
+        resourceOwnerID: UUID? = nil
+    ) {
         self.maximumBufferedBytes = max(1, maximumBufferedBytes)
+        self.transportMemoryThreshold = max(1, transportMemoryThreshold)
+        self.resourceRecorder = resourceRecorder
+        self.resourceOwnerID = resourceOwnerID
     }
 
     func observe(_ event: TransportProgressEvent) {
         var resume: (CheckedContinuation<TransportProgressEvent?, Never>, TransportProgressEvent?)?
+        var beginTransport = false
+        var transportBeforeCallbackBytes: Int?
+        var transportAfterCallbackBytes: Int?
+        var relayEnqueuedBytes: Int?
+        var shouldEndRelay = false
+        var shouldEndTransport = false
+
         lock.lock()
         guard !isFinished else {
             lock.unlock()
@@ -26,6 +44,7 @@ final class TransportProgressRelay: @unchecked Sendable {
         switch event {
         case .response(let head):
             pendingResponse = head
+            beginTransport = true
         case .data(let data, let cumulativeByteCount):
             guard cumulativeByteCount <= maximumBufferedBytes,
                 pendingData.count <= maximumBufferedBytes - data.count
@@ -34,24 +53,56 @@ final class TransportProgressRelay: @unchecked Sendable {
                 pendingResponse = nil
                 pendingData.removeAll(keepingCapacity: false)
                 pendingCompletion = nil
+                shouldEndRelay = true
+                shouldEndTransport = true
                 if let waiter {
                     self.waiter = nil
                     resume = (waiter, nil)
                 }
                 lock.unlock()
+                recordResourceTransitions(
+                    beginTransport: false,
+                    transportBeforeCallbackBytes: nil,
+                    relayEnqueuedBytes: nil,
+                    dequeuedEvent: nil,
+                    transportAfterCallbackBytes: nil,
+                    shouldEndRelay: shouldEndRelay,
+                    shouldEndTransport: shouldEndTransport
+                )
                 resume?.0.resume(returning: resume?.1)
                 return
             }
             pendingData.append(data)
             pendingCumulativeByteCount = cumulativeByteCount
+            relayEnqueuedBytes = pendingData.count
+            let accumulatorMemoryBytes =
+                cumulativeByteCount <= transportMemoryThreshold ? cumulativeByteCount : 0
+            transportBeforeCallbackBytes = saturatedAdd(accumulatorMemoryBytes, data.count)
+            transportAfterCallbackBytes = accumulatorMemoryBytes
         case .complete(let digestHex, let byteCount):
             pendingCompletion = (digestHex, byteCount)
+            // URLSessionTransport constructs/materializes TransportResponse before emitting
+            // `.complete`, so the full encoded response is a live host-visible owner here.
+            transportBeforeCallbackBytes = max(0, byteCount)
+            transportAfterCallbackBytes = max(0, byteCount)
         }
+        var dequeuedEvent: TransportProgressEvent?
         if let waiter, let next = popPendingLocked() {
             self.waiter = nil
+            dequeuedEvent = next
             resume = (waiter, next)
         }
         lock.unlock()
+
+        recordResourceTransitions(
+            beginTransport: beginTransport,
+            transportBeforeCallbackBytes: transportBeforeCallbackBytes,
+            relayEnqueuedBytes: relayEnqueuedBytes,
+            dequeuedEvent: dequeuedEvent,
+            transportAfterCallbackBytes: transportAfterCallbackBytes,
+            shouldEndRelay: shouldEndRelay,
+            shouldEndTransport: shouldEndTransport
+        )
         if let resume { resume.0.resume(returning: resume.1) }
     }
 
@@ -68,7 +119,12 @@ final class TransportProgressRelay: @unchecked Sendable {
                 waiter = continuation
             }
             lock.unlock()
-            if let immediate { continuation.resume(returning: immediate) }
+            if let immediate {
+                if let event = immediate {
+                    recordDequeuedEvent(event)
+                }
+                continuation.resume(returning: immediate)
+            }
         }
     }
 
@@ -77,6 +133,10 @@ final class TransportProgressRelay: @unchecked Sendable {
         lock.lock()
         guard !isFinished else {
             lock.unlock()
+            if let resourceRecorder, let resourceOwnerID {
+                resourceRecorder.endRelay(ownerID: resourceOwnerID)
+                resourceRecorder.endTransport(ownerID: resourceOwnerID)
+            }
             return
         }
         isFinished = true
@@ -86,7 +146,69 @@ final class TransportProgressRelay: @unchecked Sendable {
         continuation = waiter
         waiter = nil
         lock.unlock()
+        if let resourceRecorder, let resourceOwnerID {
+            resourceRecorder.endRelay(ownerID: resourceOwnerID)
+            resourceRecorder.endTransport(ownerID: resourceOwnerID)
+        }
         continuation?.resume(returning: nil)
+    }
+
+    private func recordResourceTransitions(
+        beginTransport: Bool,
+        transportBeforeCallbackBytes: Int?,
+        relayEnqueuedBytes: Int?,
+        dequeuedEvent: TransportProgressEvent?,
+        transportAfterCallbackBytes: Int?,
+        shouldEndRelay: Bool,
+        shouldEndTransport: Bool
+    ) {
+        guard let resourceRecorder, let resourceOwnerID else { return }
+        if beginTransport {
+            resourceRecorder.beginTransport(ownerID: resourceOwnerID)
+        }
+        if let transportBeforeCallbackBytes {
+            resourceRecorder.setTransportBytes(
+                transportBeforeCallbackBytes,
+                ownerID: resourceOwnerID,
+                transition: .transportBeforeProgressCallback
+            )
+        }
+        if let relayEnqueuedBytes {
+            resourceRecorder.setRelayPendingBytes(relayEnqueuedBytes, ownerID: resourceOwnerID)
+        }
+        if let dequeuedEvent {
+            recordDequeuedEvent(dequeuedEvent)
+        }
+        if let transportAfterCallbackBytes {
+            resourceRecorder.setTransportBytes(
+                transportAfterCallbackBytes,
+                ownerID: resourceOwnerID,
+                transition: .transportAfterProgressCallback
+            )
+        }
+        if shouldEndRelay {
+            resourceRecorder.endRelay(ownerID: resourceOwnerID)
+        }
+        if shouldEndTransport {
+            resourceRecorder.endTransport(ownerID: resourceOwnerID)
+        }
+    }
+
+    private func recordDequeuedEvent(_ event: TransportProgressEvent) {
+        guard let resourceRecorder, let resourceOwnerID else { return }
+        switch event {
+        case .data(let data, _):
+            resourceRecorder.transferRelayToHandoff(data.count, ownerID: resourceOwnerID)
+        case .complete:
+            resourceRecorder.endRelay(ownerID: resourceOwnerID)
+        case .response:
+            break
+        }
+    }
+
+    private func saturatedAdd(_ lhs: Int, _ rhs: Int) -> Int {
+        let result = lhs.addingReportingOverflow(max(0, rhs))
+        return result.overflow ? Int.max : result.partialValue
     }
 
     private func popPendingLocked() -> TransportProgressEvent? {
@@ -129,81 +251,11 @@ struct PipelineProgressivePreview: Sendable {
     let quality: UInt16
 }
 
-struct PipelineProgressivePreparedFinalization: Sendable {
-    let preparation: ImageDecodePreparation
-    let sourceByteCount: Int
-    let transportDigestHex: String
-    let transportByteCount: Int
-}
-
-actor PipelineProgressiveFinalization {
-    private var isCompleted = false
-    private var candidate: PipelineProgressivePreparedFinalization?
-    private var waiters: [CheckedContinuation<PipelineProgressivePreparedFinalization?, Never>] = []
-
-    init(
-        completedWith candidate: PipelineProgressivePreparedFinalization? = nil,
-        completed: Bool = false
-    ) {
-        self.candidate = candidate
-        self.isCompleted = completed
-    }
-
-    func value() async -> PipelineProgressivePreparedFinalization? {
-        if isCompleted { return candidate }
-        return await withCheckedContinuation { continuation in
-            waiters.append(continuation)
-        }
-    }
-
-    func complete(_ candidate: PipelineProgressivePreparedFinalization?) {
-        guard !isCompleted else { return }
-        isCompleted = true
-        self.candidate = candidate
-        let continuations = waiters
-        waiters.removeAll(keepingCapacity: false)
-        for continuation in continuations { continuation.resume(returning: candidate) }
-    }
-
-    func completedCandidate() -> PipelineProgressivePreparedFinalization? {
-        guard isCompleted else { return nil }
-        return candidate
-    }
-}
-
-struct PipelineProgressivePreviewSubscription: Sendable {
-    let stream: AsyncStream<PipelineProgressivePreview>
-    let progressObserver: TransportProgressObserver
-    let finalization: PipelineProgressiveFinalization
-
-    private let key: String
-    private let identifier: UUID
-    private let hub: PipelineProgressivePreviewHub
-
-    init(
-        stream: AsyncStream<PipelineProgressivePreview>,
-        progressObserver: @escaping TransportProgressObserver,
-        finalization: PipelineProgressiveFinalization,
-        key: String,
-        identifier: UUID,
-        hub: PipelineProgressivePreviewHub
-    ) {
-        self.stream = stream
-        self.progressObserver = progressObserver
-        self.finalization = finalization
-        self.key = key
-        self.identifier = identifier
-        self.hub = hub
-    }
-
-    func cancel() async {
-        await hub.unsubscribe(key: key, identifier: identifier)
-    }
-}
-
 actor PipelineProgressivePreviewHub {
     private struct Entry {
+        let resourceOwnerID: UUID
         let relay: TransportProgressRelay
+        let progressObservation: PipelineProgressiveObservationState
         let finalization: PipelineProgressiveFinalization
         var producer: Task<Void, Never>?
         var subscribers: [UUID: AsyncStream<PipelineProgressivePreview>.Continuation]
@@ -213,32 +265,29 @@ actor PipelineProgressivePreviewHub {
     private let decodeStage: DecodeStage
     private let sharesAcrossSubscribers: Bool
     private let supportsProgressObservation: Bool
+    private let transportMemoryThreshold: Int
+    private let resourceRecorder: FoveaProgressiveResourceRecorder?
     private var entries: [String: Entry] = [:]
     private var producerStartCount = 0
 
     init(
         decodeStage: DecodeStage,
         sharesAcrossSubscribers: Bool,
-        supportsProgressObservation: Bool
+        supportsProgressObservation: Bool,
+        transportMemoryThreshold: Int = 1,
+        resourceRecorder: FoveaProgressiveResourceRecorder? = nil
     ) {
         self.decodeStage = decodeStage
         self.sharesAcrossSubscribers = sharesAcrossSubscribers
         self.supportsProgressObservation = supportsProgressObservation
+        self.transportMemoryThreshold = max(1, transportMemoryThreshold)
+        self.resourceRecorder = resourceRecorder
     }
 
     func subscribe(request: ImageRequest) -> PipelineProgressivePreviewSubscription {
         let identifier = UUID()
         guard supportsProgressObservation else {
-            let pair = AsyncStream<PipelineProgressivePreview>.makeStream()
-            pair.continuation.finish()
-            return PipelineProgressivePreviewSubscription(
-                stream: pair.stream,
-                progressObserver: { _ in },
-                finalization: PipelineProgressiveFinalization(completed: true),
-                key: "unsupported|\(identifier.uuidString)",
-                identifier: identifier,
-                hub: self
-            )
+            return unsupportedSubscription(identifier: identifier)
         }
 
         let key =
@@ -261,23 +310,36 @@ actor PipelineProgressivePreviewHub {
             )
         }
 
+        let resourceOwnerID = UUID()
         let relay = TransportProgressRelay(
-            maximumBufferedBytes: decodeStage.progressiveEncodedByteLimit
+            maximumBufferedBytes: decodeStage.progressiveEncodedByteLimit,
+            transportMemoryThreshold: transportMemoryThreshold,
+            resourceRecorder: resourceRecorder,
+            resourceOwnerID: resourceOwnerID
         )
-        let finalization = PipelineProgressiveFinalization()
+        resourceRecorder?.beginRelay(ownerID: resourceOwnerID)
+        let progressObservation = PipelineProgressiveObservationState()
+        let finalization = PipelineProgressiveFinalization(
+            progressObservation: progressObservation
+        )
         producerStartCount += 1
         entries[key] = Entry(
+            resourceOwnerID: resourceOwnerID,
             relay: relay,
+            progressObservation: progressObservation,
             finalization: finalization,
             producer: nil,
             subscribers: [identifier: pair.continuation],
             latest: nil
         )
         let hub = self
-        let producer = Task { [hub, decodeStage, finalization] in
+        let resourceRecorder = self.resourceRecorder
+        let producer = Task { [hub, decodeStage, finalization, resourceRecorder, resourceOwnerID] in
             let consumer = PipelineProgressivePreviewConsumer(
                 decodeStage: decodeStage,
-                request: request
+                request: request,
+                resourceRecorder: resourceRecorder,
+                resourceOwnerID: resourceOwnerID
             ) { preview in
                 await hub.publish(preview, key: key)
             }
@@ -286,6 +348,7 @@ actor PipelineProgressivePreviewHub {
             if Task.isCancelled {
                 if let candidate {
                     await decodeStage.discardProgressivePreparation(candidate.preparation)
+                    candidate.resourceLease?.release()
                 }
                 await finalization.complete(nil)
             } else {
@@ -299,6 +362,22 @@ actor PipelineProgressivePreviewHub {
             identifier: identifier,
             stream: pair.stream,
             entry: entries[key]!
+        )
+    }
+
+    private func unsupportedSubscription(
+        identifier: UUID
+    ) -> PipelineProgressivePreviewSubscription {
+        let pair = AsyncStream<PipelineProgressivePreview>.makeStream()
+        pair.continuation.finish()
+        return PipelineProgressivePreviewSubscription(
+            stream: pair.stream,
+            progressObserver: { _ in },
+            progressObservationSupported: false,
+            finalization: PipelineProgressiveFinalization(completed: true),
+            key: "unsupported|\(identifier.uuidString)",
+            identifier: identifier,
+            hub: self
         )
     }
 
@@ -316,10 +395,12 @@ actor PipelineProgressivePreviewHub {
             return
         }
         entries.removeValue(forKey: key)
+        resourceRecorder?.clearPreview(ownerID: entry.resourceOwnerID)
         entry.relay.finish()
         entry.producer?.cancel()
         if let candidate = await entry.finalization.completedCandidate() {
             await decodeStage.discardProgressivePreparation(candidate.preparation)
+            candidate.resourceLease?.release()
         }
         await entry.finalization.complete(nil)
     }
@@ -332,7 +413,11 @@ actor PipelineProgressivePreviewHub {
     ) -> PipelineProgressivePreviewSubscription {
         PipelineProgressivePreviewSubscription(
             stream: stream,
-            progressObserver: { event in entry.relay.observe(event) },
+            progressObserver: { event in
+                entry.progressObservation.markObserved()
+                entry.relay.observe(event)
+            },
+            progressObservationSupported: true,
             finalization: entry.finalization,
             key: key,
             identifier: identifier,
@@ -343,6 +428,10 @@ actor PipelineProgressivePreviewHub {
     private func publish(_ preview: PipelineProgressivePreview, key: String) {
         guard var entry = entries[key] else { return }
         entry.latest = preview
+        resourceRecorder?.setPreviewBytes(
+            preview.image.estimatedByteCost,
+            ownerID: entry.resourceOwnerID
+        )
         let continuations = Array(entry.subscribers.values)
         entries[key] = entry
         for continuation in continuations { continuation.yield(preview) }
@@ -352,88 +441,5 @@ actor PipelineProgressivePreviewHub {
         guard var entry = entries[key] else { return }
         entry.producer = nil
         entries[key] = entry
-    }
-}
-
-struct PipelineProgressivePreviewConsumer: Sendable {
-    let decodeStage: DecodeStage
-    let request: ImageRequest
-    let publish: @Sendable (PipelineProgressivePreview) async -> Void
-
-    func consume(
-        _ events: TransportProgressRelay
-    ) async -> PipelineProgressivePreparedFinalization? {
-        var session: (any ImageProgressiveDecodeSession)?
-        var lastGeneration: UInt32 = 0
-        defer { session?.cancel() }
-        do {
-            eventLoop: while let event = await events.next() {
-                try Task.checkCancellation()
-                switch event {
-                case .response(let head):
-                    guard Self.accepts(head) else { continue }
-                    session = try decodeStage.makeProgressiveSession(
-                        for: request,
-                        format: .jpeg
-                    )
-                case .data(let data, _):
-                    guard let session,
-                        let generation = try await decodeStage.appendProgressive(
-                            data, to: session
-                        ),
-                        generation.generation > lastGeneration
-                    else { continue }
-                    lastGeneration = generation.generation
-                    await publish(
-                        PipelineProgressivePreview(
-                            image: generation.image,
-                            quality: UInt16(
-                                min(UInt32(UInt16.max - 1), generation.generation)
-                            )
-                        )
-                    )
-                case .complete(let digestHex, let byteCount):
-                    guard let session else { break eventLoop }
-                    if let preparing = session as? any ProgressiveImagePreparingSession {
-                        let finalization = try await decodeStage.finishProgressiveWithPreparation(
-                            preparing
-                        )
-                        guard finalization.sourceByteCount == byteCount else {
-                            await decodeStage.discardProgressivePreparation(
-                                finalization.preparation
-                            )
-                            break eventLoop
-                        }
-                        return PipelineProgressivePreparedFinalization(
-                            preparation: finalization.preparation,
-                            sourceByteCount: finalization.sourceByteCount,
-                            transportDigestHex: digestHex,
-                            transportByteCount: byteCount
-                        )
-                    }
-                    try await decodeStage.finishProgressive(session)
-                    break eventLoop
-                }
-            }
-        } catch {
-            // Progressive output is opportunistic. The complete response still passes through
-            // the normal probe, decode, namespace, integrity and persistence boundaries.
-        }
-        return nil
-    }
-
-    private static func accepts(_ head: TransportResponseHead) -> Bool {
-        guard head.statusCode == 200 else { return false }
-        let contentEncoding =
-            head.value(forHeader: "content-encoding")?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased() ?? "identity"
-        guard contentEncoding == "identity" else { return false }
-        let mime = head.value(forHeader: "content-type")?
-            .split(separator: ";", maxSplits: 1, omittingEmptySubsequences: true)
-            .first?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-        return mime == "image/jpeg"
     }
 }

@@ -1,0 +1,248 @@
+{
+  "claimBoundary": [
+    "V1 machine-governance fields below are retained unchanged as historical evidence identity",
+    "V2 isolated copied-source overlay extends qualification to automatic APNG, owned GIF, bounded subrect GIF replay and three-part whole-track cost accounting",
+    "production Fovea Package.swift and exact ImageCraft dependency pin are not changed",
+    "adapter timing normalization remains explicit and caller-versioned",
+    "no physical-device timing, RSS, energy, thermal, publication, or release-readiness claim"
+  ],
+  "evidence": {
+    "adapterFixtureSHA256": "841cd279684117cbd7de6a55ecc684879a5c33e15d5bd421f4b96c97f9c3b988",
+    "captureReport": ".artifacts/qualification/w5-imagecraft-animation-adapter-v1/report.json",
+    "captureReportSHA256": "2972c82f3e7ed8c95e1d5cbde7ff33445c84bbf6e23a0efdf1ffefe58035e31f",
+    "captureRunner": "Tools/AnimationAdapterQualification/qualify_imagecraft_animation_adapter.py",
+    "formatLog": ".artifacts/qualification/w5-imagecraft-animation-adapter-v1/format.log",
+    "formatLogSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qualificationFixtureSHA256": "8d6c729e6fc5a537f5e3c1067a8541437091c5253dfb3ca6e8b58f518f46f1ed",
+    "qualificationLog": ".artifacts/qualification/w5-imagecraft-animation-adapter-v1/qualification.log",
+    "qualificationLogSHA256": "cea4d21a6ea248f63dea6029d5ed0d81017b90770f06a728955e29efd9a1a985",
+    "tamperContract": "Tools/AnimationAdapterQualification/test_imagecraft_animation_adapter_qualification.py",
+    "validator": "Tools/AnimationAdapterQualification/validate_imagecraft_animation_adapter_qualification.py"
+  },
+  "formalClaimEligible": false,
+  "implementation": {
+    "candidateSource": "Tools/AnimationAdapterQualification/ImageCraftAnimationPlaybackPreparer.swift.fixture",
+    "imageCraftDecoder": "ImageIOAnimatedImageDecoder via public ImageAnimationDecoding",
+    "input": "AuthorizedEncodedData.data only after Fovea authorization/generation checks",
+    "preparerProtocol": "EncodedAnimationPlaybackPreparing",
+    "productionImageCraftPinChanged": false,
+    "providerContract": [
+      "range count exact",
+      "descriptor index exact",
+      "no frame reindexing",
+      "idempotent asset cancellation"
+    ],
+    "publicFoveaAPIAdded": false,
+    "requestMapping": [
+      "target",
+      "contentMode",
+      "colorPolicy"
+    ],
+    "timelineMapping": {
+      "frameDuration": "ImageAnimationFrameDuration.roundedUpNanoseconds",
+      "loopCount": "ImageAnimationLoopCount.additionalRepeatCount",
+      "timingPolicyVersion": "explicit caller input",
+      "zeroDurationReplacement": "explicit caller input"
+    }
+  },
+  "nextGates": [
+    "publish the current ImageCraft animation API/runtime as an immutable revision after release-readiness checks",
+    "update Fovea production dependency to that exact revision and move the qualified adapter into compiled FoveaSystem source",
+    "rerun adapter qualification from the exact clean production pin, then run full Fovea release verification",
+    "measure physical end-to-end startup plus steady-state presentation on the production pin; keep decoder startup and compositor steady-state costs separate",
+    "obtain supported physical-device energy/thermal evidence before energy claims"
+  ],
+  "pinUpgradeDiscovery": {
+    "issue": "Fovea PipelineFailure+ImageCraft previously exhausted the ImageCraftError cases present at the old exact pin. Current ImageCraft adds animation error cases, causing the overlay to fail compilation before the adapter could build.",
+    "oldPinRegression": "PipelineFailureTests 13/13 passed after the forward-compatible default was added.",
+    "productionPinStill": "736d0fb75e9e128642ce418ad984ce5151b1f324",
+    "resolution": "Replace the top-level exhaustive dependency-enum switch with explicit Equatable classification for adopted cases and a final unexpectedImageCraftFailure fallback. This avoids both the old-pin unreachable-default warning and the current-pin non-exhaustive-switch error under warnings-as-errors. Old production-pin PipelineFailureTests remain 13/13 and the iOS15 warnings-as-errors FoveaUIKit build passes; the current ImageCraft overlay also compiles warnings-as-errors."
+  },
+  "productionPinReadiness": {
+    "authorizationRule": "Production ImageCraft pin may not move to the animation candidate until the candidate bytes are published as an immutable Git revision and the adapter qualification is rerun against that exact clean revision.",
+    "currentProductionRevision": "736d0fb75e9e128642ce418ad984ce5151b1f324",
+    "pinUpgradeAuthorized": false,
+    "publishedImmutableCandidateRevision": null,
+    "qualificationSourceIsClean": false,
+    "qualifiedCandidateHeadCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+    "qualifiedCandidateIncludesWorkingTreeChanges": true,
+    "qualifiedCandidateWorkingTree": "5c07f313cf57495b6ffc7f578be8acbdd3e64c13",
+    "requiredBeforeAuthorization": [
+      "publish candidate animation API/runtime as immutable ImageCraft Git revision",
+      "rerun ImageCraft release readiness from the published revision",
+      "rerun Fovea adapter qualification against the exact published revision with no ImageCraft working-tree changes",
+      "update this record with the published revision and explicit authorization before changing Fovea Package.swift/component-pins"
+    ],
+    "status": "blocked-unpublished-working-tree-candidate"
+  },
+  "results": {
+    "allThreeTimelineFramesStandardSRGBPremultipliedRGBAExactVsDirectImageCraft": true,
+    "currentImageCraftOverlayWarningsAsErrorsBuildPassed": true,
+    "currentImageCraftWorkingTree": "5c07f313cf57495b6ffc7f578be8acbdd3e64c13",
+    "directImageCraftAdditionalRepeatCount": 0,
+    "directImageCraftContainer": "apng",
+    "directImageCraftFrameCount": 3,
+    "driverCountAfterCancellation": 0,
+    "driverCountAfterGIFCancellation": 0,
+    "driverCountAfterInvalidTimingFailure": 0,
+    "driverCountAfterTimelineCancellation": 0,
+    "firstFrameStandardSRGBPremultipliedRGBAExactVsDirectImageCraft": true,
+    "firstThreeVisibleFrameIndices": [
+      0,
+      1,
+      2
+    ],
+    "fixture": "APNGKit SpecTesting/016.png retained inline as 677-byte separate-default APNG",
+    "foveaAuthorizedPipelineUsed": true,
+    "fullTimelineFrameCount": 3,
+    "gifAllFramesStandardSRGBPremultipliedRGBAExactVsDirectImageCraft": true,
+    "gifContainer": "gif",
+    "gifFirstTwoVisibleFrameIndices": [
+      0,
+      1
+    ],
+    "gifFrameCount": 2,
+    "gifObservedSleepDeadlinesNanoseconds": [
+      10000000,
+      20000000
+    ],
+    "gifPlaybackMode": "playOnce",
+    "gifQualificationTest": "W5_ADAPTER_PT_003",
+    "gifSourceFrameDurationsAreZero": true,
+    "gifZeroDurationReplacementNanoseconds": 10000000,
+    "invalidTimingError": "invalidZeroDurationReplacement",
+    "invalidTimingQualificationTest": "W5_ADAPTER_PT_004",
+    "invalidZeroDurationReplacementRejected": true,
+    "normalPlaybackTimelineCompleted": true,
+    "oldProductionPinWarningsAsErrorsIOS15BuildPassed": true,
+    "passed": true,
+    "postPrepareTimelineFailureFailsClosed": true,
+    "productionImageCraftPinChanged": false,
+    "productionPackageModified": false,
+    "qualificationTest": "W5_ADAPTER_PT_001",
+    "semanticReplayCandidateBoundByOverlay": true,
+    "semanticReplayOverlayInterpretation": "overlay compatibility only; semantic reset correctness and checkpoint reduction are proven by ImageCraft tests and the separate source-bound semantic replay study",
+    "semanticReplayRuntimeTestsOutsideOverlay": [
+      "IMG_ANIM_PT_053",
+      "IMG_ANIM_PT_054",
+      "IMG_ANIM_PT_055",
+      "IMG_ANIM_PT_056"
+    ],
+    "strictSwiftFormatPassed": true,
+    "timelineQualificationTest": "W5_ADAPTER_PT_002",
+    "warningsAsErrorsOverlayExecutablePassed": true
+  },
+  "reviewedOn": "2026-08-08",
+  "schemaVersion": 1,
+  "sourceIdentity": {
+    "akashicHeadCommit": "688e9a262199e1a9225b35820f085b61b8c7e75b",
+    "akashicWorkingTree": "8745aa13a980a663d0654e26624ff222f0797c25",
+    "foveaHeadCommit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+    "foveaImplementationFileCount": 12,
+    "foveaImplementationUnchangedDuringRun": true,
+    "foveaWorkingTreeAtCapture": "8b32bbf206c0b66fcd56f17a835f111d204e067f",
+    "imageCraftHeadCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+    "imageCraftWorkingTree": "5c07f313cf57495b6ffc7f578be8acbdd3e64c13",
+    "sourcesUnchangedDuringRun": true
+  },
+  "status": "historical-v1-contract-retained-v2-overlay-qualified-production-pin-unchanged",
+  "studyID": "FOVEA-W5-IMAGECRAFT-ANIMATION-ADAPTER-OVERLAY-QUALIFICATION-2026-08",
+  "v2Qualification": {
+    "allQualificationTestsPassed": true,
+    "claimBoundary": [
+      "isolated local copied-source overlay only",
+      "production Fovea ImageCraft pin remains unchanged",
+      "no physical timing/RSS/energy/thermal/release-readiness claim",
+      "automatic whole-track upgrade requires decoded-resident, provider-retained and predecode-peak conservative bounds",
+      "known provider-retained state is charged for the full handle lifetime even when automatic selection falls back to bounded or a fixed strategy is used",
+      "decoded pixels plus provider-retained owned state share Fovea animation resident budget"
+    ],
+    "costContract": {
+      "predecodePeak": "ImageAnimationWholeTrackCostEstimate.predecodePeakByteCostUpperBound -> PreparedAnimationPlaybackAsset.wholeTrackPredecodePeakByteCostUpperBound",
+      "providerRetained": "ImageAnimationWholeTrackCostEstimate.providerRetainedByteCostUpperBound -> PreparedAnimationPlaybackAsset.wholeTrackProviderRetainedByteCostUpperBound",
+      "residentDecoded": "ImageAnimationWholeTrackCostEstimate.residentDecodedByteCostUpperBound -> PreparedAnimationPlaybackAsset.wholeTrackDecodedByteCostUpperBound"
+    },
+    "directionalOwnedGIFPerformance": {
+      "artifact": "../ImageCraft/.artifacts/performance/animation-owned-gif-optimization-progression-2026-08.json",
+      "artifactSHA256": "777f875bdf579d8ad24ebb62476a046a9dcde0bf8ac820f83fdeb27221583848",
+      "currentDirectImageIOMedianMilliseconds": 1.266291,
+      "currentOwnedPreparePlus24FramesMedianMilliseconds": 15.979938,
+      "currentOwnedToDirectRatio": 12.619483199359388,
+      "firstOwnedPreparePlus24FramesMedianMilliseconds": 77.95,
+      "firstToCurrentOwnedReductionApproxPercent": 79.5,
+      "fixture": "people-motion-24f.gif; 607000 encoded bytes; 24 x 256x256 frames",
+      "interpretation": "The owned path became roughly 4.9x faster than its first implementation but remains materially slower than direct ImageIO decode. It exists to provide auditable pixel/memory bounds for an amortizable whole-track presentation path, not as a decoder-throughput win."
+    },
+    "evidence": {
+      "adapterFixtureSHA256": "de13bbd7a91697b4c6494dd654f74c4b13c5bd73992b381419a75968b46b6c80",
+      "captureReport": ".artifacts/qualification/w5-imagecraft-animation-adapter-v2-final/report.json",
+      "captureReportSHA256": "fafc7a0e92ba95a5f6587ad5bbcfba8dc36128fcd7a517adf4014b7715c8b00f",
+      "formatLogSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "postQualificationRegression": {
+        "foveaFullTests": {
+          "executed": 731,
+          "failures": 0
+        },
+        "imageCraftConsumerSmokeIOSDevice15Release": true,
+        "imageCraftConsumerSmokeIOSSimulator15Release": true,
+        "imageCraftConsumerSmokeSwiftPMRelease": true,
+        "imageCraftCoreTests": {
+          "executed": 16,
+          "failures": 0
+        },
+        "imageCraftImageIOTests": {
+          "executed": 125,
+          "failures": 0
+        },
+        "imageCraftPublicAPIBaselineUpdatedAndVerified": true
+      },
+      "qualificationFixtureSHA256": "d6a9b07aaf92f2a31729d3ec9099cad987f6604d1180a1ada6f050823e631156",
+      "qualificationLog": ".artifacts/qualification/w5-imagecraft-animation-adapter-v2-final/qualification.log",
+      "qualificationLogSHA256": "5722d15cd2a9df227cd3f612192169d07c3ba3cd67e461e50f2a673b9272f053",
+      "sourceIdentityAtCapture": {
+        "akashicHeadCommit": "688e9a262199e1a9225b35820f085b61b8c7e75b",
+        "akashicWorkingTree": "8745aa13a980a663d0654e26624ff222f0797c25",
+        "foveaHeadCommit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+        "foveaWorkingTree": "a3cb509c6a423d8d1aacff958d1f5e9db577ebda",
+        "imageCraftHeadCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+        "imageCraftWorkingTree": "4dbcec99e08461edfe83106d5b4875c7bb06d169"
+      }
+    },
+    "formalClaimEligible": false,
+    "ownedAnimationState": {
+      "ownedAPNG": "existing bounded raw-subrect/checkpoint/semantic-replay path supplies retained and peak diagnostics",
+      "ownedGIFFailClosedOrFallback": [
+        "structurally incomplete LZW",
+        "subrect background disposal",
+        "subrect previous disposal",
+        "subrect replay dependency span exceeding maximumFrameDecodeWindow"
+      ],
+      "ownedGIFSupported": [
+        "full-canvas opaque",
+        "full-canvas actual transparency",
+        "full-canvas background disposal current-frame semantics",
+        "global/local palettes",
+        "interlace",
+        "strict explicit-end-code LZW through 12 bits",
+        "bounded .none-disposal subrect replay",
+        "transparent subrect source-over",
+        "opaque full-canvas semantic replay reset"
+      ],
+      "pixelEvidence": "permanent ImageCraft tests compare owned outputs against direct Apple ImageIO oracles, including random access and LZW code-size growth"
+    },
+    "reviewedOn": "2026-08-08",
+    "status": "passed-source-overlay-automatic-apng-owned-gif-subrect-provider-lifetime-accounting",
+    "tamperContractPassed": true,
+    "tests": {
+      "W5_ADAPTER_PT_001": "separate-default APNG authorization/adapter first-frame pixels equal direct ImageCraft",
+      "W5_ADAPTER_PT_002": "full three-frame separate-default APNG timeline and completion preserve direct ImageCraft pixels/order",
+      "W5_ADAPTER_PT_003": "two-frame zero-duration GIF preserves source timing facts and explicit zero-duration replacement deadlines",
+      "W5_ADAPTER_PT_004": "invalid timing normalization fails closed after preparation and releases provider",
+      "W5_ADAPTER_PT_005": "infinite owned APNG exposes all three cost bounds, automatic predecodes across decoder windows, reserves provider-retained bytes, produces pinned compositor snapshot, matches direct pixels, and releases pin/reservation/driver",
+      "W5_ADAPTER_PT_006": "spec-complete infinite owned GIF with actual transparency/background-disposal semantics exposes all three cost bounds, automatically predecodes with maximumFrameDecodeWindow=1, matches direct pixels, and releases ownership",
+      "W5_ADAPTER_PT_007": "restricted subrect GIF replay exposes bounded cost, automatically predecodes, produces resident compositor snapshot with direct pixel equality, and releases provider-retained reservation",
+      "W5_ADAPTER_PT_008": "real owned GIF is forced from automaticWholeTrack to boundedFrameCache by a decoded-byte cap; its provider-retained reservation remains charged, no compositor snapshot/pin is exposed, only the bounded first-frame window is decoded, and cancellation releases the reservation"
+    },
+    "validatorPassed": true
+  }
+}

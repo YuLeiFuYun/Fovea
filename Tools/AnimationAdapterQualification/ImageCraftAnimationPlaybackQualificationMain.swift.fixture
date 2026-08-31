@@ -1,0 +1,1039 @@
+import CoreGraphics
+import CryptoKit
+import Foundation
+import FoveaCore
+import FoveaSystem
+import ImageCraftCore
+import ImageCraftImageIO
+
+@main
+struct ImageCraftAnimationPlaybackQualificationMain {
+    static func main() async throws {
+        let data = try require(
+            Data(base64Encoded: separateDefaultAPNGBase64),
+            "invalid APNG fixture"
+        )
+        AdapterURLProtocol.body = data
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [AdapterURLProtocol.self]
+        let system = try await FoveaSystemPipeline.open(
+            cacheRoot: try temporaryDirectory(),
+            profileAccessPolicy: .publicOnly,
+            automaticallyPurgesMemoryOnPressure: false,
+            sessionConfiguration: configuration
+        )
+
+        do {
+            let target = try TargetPixels(width: 64, height: 32)
+            let request = try ImageRequest.publicImage(
+                url: try require(
+                    URL(string: "https://adapter.example.test/separate-default.png"),
+                    "invalid qualification URL"
+                ),
+                target: target,
+                colorPolicy: .convertToSRGB,
+                appID: "imagecraft-animation-adapter-qualification"
+            )
+            let preparer = ImageCraftAnimationPlaybackPreparer(
+                zeroDurationReplacementNanoseconds: 10_000_000,
+                timingPolicyVersion: 7
+            )
+            let handle = try await system.makeEncodedAnimationHandle(
+                for: request,
+                using: preparer,
+                animationPolicyVersion: 1,
+                frameStrategy: .boundedFrameCache,
+                playbackPolicy: AnimationPlaybackPolicy(requestedMode: .firstFrame),
+                reduceMotionEnabled: false,
+                windowPolicy: AnimationFrameWindowPolicy(
+                    normalFrameCount: 2,
+                    warningFrameCount: 1
+                )
+            )
+            let recorder = AdapterRecorder()
+            try await handle.start { output in
+                if let image = output.image { await recorder.record(image) }
+            }
+            try await waitUntil("authorized ImageCraft adapter first frame") {
+                await recorder.count == 1
+            }
+            let actual = try require(await recorder.first, "missing Fovea adapter frame")
+
+            let directDecoder = ImageIOAnimatedImageDecoder()
+            let directAsset = try await directDecoder.prepareAnimation(source: .encoded(data))
+            try require(directAsset.metadata.container == .apng, "container mismatch")
+            try require(directAsset.metadata.frameCount == 3, "separate-default timeline mismatch")
+            try require(
+                directAsset.metadata.loopCount.additionalRepeatCount == 0,
+                "separate-default loop count mismatch"
+            )
+            let directRequest = ImageDecodeRequest(
+                target: target,
+                contentMode: .fit,
+                colorPolicy: .convertToSRGB
+            )
+            let directFrames = try await directAsset.frames(
+                in: 0..<3,
+                request: directRequest
+            )
+            try require(directFrames.count == 3, "direct frame count mismatch")
+            let directDigests = try directFrames.map {
+                try rgbaSHA256($0.image.cgImage)
+            }
+            let direct = directFrames[0].image
+            try require(actual.pixelWidth == direct.pixelWidth, "pixel width mismatch")
+            try require(actual.pixelHeight == direct.pixelHeight, "pixel height mismatch")
+            try require(
+                rgbaSHA256(actual.cgImage) == directDigests[0],
+                "Fovea/ImageCraft pixel mismatch"
+            )
+            await handle.cancel()
+            let firstFrameDriverCount = await system.animationRuntime.registeredDriverCount()
+            try require(firstFrameDriverCount == 0, "first-frame animation driver leaked")
+            print("W5_ADAPTER_PT_001 passed")
+
+            let steppingClock = AdapterSteppingClock()
+            let timelineHandle = try await system.makeEncodedAnimationHandle(
+                for: request,
+                using: preparer,
+                animationPolicyVersion: 1,
+                frameStrategy: .boundedFrameCache,
+                playbackPolicy: AnimationPlaybackPolicy(requestedMode: .normal),
+                reduceMotionEnabled: false,
+                windowPolicy: AnimationFrameWindowPolicy(
+                    normalFrameCount: 2,
+                    warningFrameCount: 1
+                ),
+                clock: steppingClock
+            )
+            let timelineRecorder = AdapterTimelineRecorder()
+            try await timelineHandle.start { output in
+                await timelineRecorder.record(output)
+            }
+            try await waitUntil("authorized ImageCraft adapter complete timeline") {
+                await timelineRecorder.isFinished
+            }
+            let outputSequence = await timelineRecorder.sequence
+            try require(
+                Array(outputSequence.prefix(3)) == [0, 1, 2],
+                "Fovea adapter timeline order mismatch"
+            )
+            for index in 0..<3 {
+                let image = try require(
+                    await timelineRecorder.image(at: index),
+                    "missing Fovea adapter timeline frame \(index)"
+                )
+                try require(
+                    rgbaSHA256(image.cgImage) == directDigests[index],
+                    "Fovea/ImageCraft timeline pixel mismatch at frame \(index)"
+                )
+            }
+            await timelineHandle.cancel()
+            let finalDriverCount = await system.animationRuntime.registeredDriverCount()
+            try require(finalDriverCount == 0, "timeline animation driver leaked")
+            await directAsset.cancel()
+            print("W5_ADAPTER_PT_002 passed")
+
+            let gifData = try require(
+                Data(base64Encoded: zeroDurationTwoFrameGIFBase64),
+                "invalid GIF fixture"
+            )
+            AdapterURLProtocol.body = gifData
+            let gifTarget = try TargetPixels(width: 1, height: 1)
+            let gifRequest = try ImageRequest.publicImage(
+                url: try require(
+                    URL(string: "https://adapter.example.test/zero-duration-two-frame.gif"),
+                    "invalid GIF qualification URL"
+                ),
+                target: gifTarget,
+                colorPolicy: .convertToSRGB,
+                appID: "imagecraft-animation-adapter-qualification"
+            )
+            let directGIFAsset = try await directDecoder.prepareAnimation(
+                source: .encoded(gifData)
+            )
+            try require(directGIFAsset.metadata.container == .gif, "GIF container mismatch")
+            try require(directGIFAsset.metadata.frameCount == 2, "GIF frame count mismatch")
+            try require(
+                directGIFAsset.metadata.frames.allSatisfy {
+                    $0.duration.numerator == 0
+                },
+                "GIF zero-duration fixture changed"
+            )
+            let gifDirectRequest = ImageDecodeRequest(
+                target: gifTarget,
+                contentMode: .fit,
+                colorPolicy: .convertToSRGB
+            )
+            let directGIFFrames = try await directGIFAsset.frames(
+                in: 0..<2,
+                request: gifDirectRequest
+            )
+            let directGIFDigests = try directGIFFrames.map {
+                try rgbaSHA256($0.image.cgImage)
+            }
+
+            let gifClock = AdapterSteppingClock()
+            let gifHandle = try await system.makeEncodedAnimationHandle(
+                for: gifRequest,
+                using: preparer,
+                animationPolicyVersion: 1,
+                frameStrategy: .boundedFrameCache,
+                playbackPolicy: AnimationPlaybackPolicy(requestedMode: .playOnce),
+                reduceMotionEnabled: false,
+                windowPolicy: AnimationFrameWindowPolicy(
+                    normalFrameCount: 2,
+                    warningFrameCount: 1
+                ),
+                clock: gifClock
+            )
+            let gifRecorder = AdapterTimelineRecorder()
+            try await gifHandle.start { output in
+                await gifRecorder.record(output)
+            }
+            try await waitUntil("authorized GIF adapter complete timeline") {
+                await gifRecorder.isFinished
+            }
+            let gifSequence = await gifRecorder.sequence
+            try require(
+                Array(gifSequence.prefix(2)) == [0, 1],
+                "GIF adapter timeline order mismatch"
+            )
+            for index in 0..<2 {
+                let image = try require(
+                    await gifRecorder.image(at: index),
+                    "missing Fovea GIF timeline frame \(index)"
+                )
+                try require(
+                    rgbaSHA256(image.cgImage) == directGIFDigests[index],
+                    "Fovea/ImageCraft GIF pixel mismatch at frame \(index)"
+                )
+            }
+            let gifDeadlines = await gifClock.sleepDeadlines
+            try require(
+                Array(gifDeadlines.prefix(2)) == [10_000_000, 20_000_000],
+                "GIF zero-duration replacement deadlines mismatch"
+            )
+            await gifHandle.cancel()
+            await directGIFAsset.cancel()
+            let gifDriverCount = await system.animationRuntime.registeredDriverCount()
+            try require(gifDriverCount == 0, "GIF animation driver leaked")
+            print("W5_ADAPTER_PT_003 passed")
+
+            let invalidTimingPreparer = ImageCraftAnimationPlaybackPreparer(
+                zeroDurationReplacementNanoseconds: 0,
+                timingPolicyVersion: 8
+            )
+            do {
+                _ = try await system.makeEncodedAnimationHandle(
+                    for: gifRequest,
+                    using: invalidTimingPreparer,
+                    animationPolicyVersion: 1,
+                    frameStrategy: .boundedFrameCache,
+                    playbackPolicy: AnimationPlaybackPolicy(requestedMode: .playOnce),
+                    reduceMotionEnabled: false,
+                    windowPolicy: AnimationFrameWindowPolicy(
+                        normalFrameCount: 2,
+                        warningFrameCount: 1
+                    )
+                )
+                throw QualificationError.failed(
+                    "invalid timing policy unexpectedly created an animation handle"
+                )
+            } catch let error as AnimationPlaybackTimelineError {
+                try require(
+                    error == .invalidZeroDurationReplacement,
+                    "invalid timing policy returned the wrong error"
+                )
+            }
+            let invalidTimingDriverCount =
+                await system.animationRuntime.registeredDriverCount()
+            try require(
+                invalidTimingDriverCount == 0,
+                "invalid timing policy leaked an animation driver"
+            )
+            print("W5_ADAPTER_PT_004 passed")
+
+            let infiniteData = try apngWithInfiniteLoop(data)
+            AdapterURLProtocol.body = infiniteData
+            let automaticRequest = try ImageRequest.publicImage(
+                url: try require(
+                    URL(string: "https://adapter.example.test/automatic-infinite.png"),
+                    "invalid automatic qualification URL"
+                ),
+                target: target,
+                colorPolicy: .convertToSRGB,
+                appID: "imagecraft-animation-adapter-qualification"
+            )
+            let automaticDecodedByteLimit = 1024 * 1024
+            let automaticPreparer = ImageCraftAnimationPlaybackPreparer(
+                limits: ImageAnimationDecodeLimits(
+                    maximumTimelineDecodedBytes: automaticDecodedByteLimit,
+                    maximumFrameDecodeWindow: 2
+                ),
+                zeroDurationReplacementNanoseconds: 10_000_000,
+                timingPolicyVersion: 9
+            )
+            let directInfiniteAsset = try await directDecoder.prepareAnimation(
+                source: .encoded(infiniteData),
+                limits: ImageAnimationDecodeLimits(
+                    maximumTimelineDecodedBytes: automaticDecodedByteLimit,
+                    maximumFrameDecodeWindow: 2
+                )
+            )
+            try require(
+                directInfiniteAsset.metadata.frameCount == 3,
+                "automatic infinite fixture frame count mismatch"
+            )
+            try require(
+                directInfiniteAsset.metadata.loopCount.additionalRepeatCount == nil,
+                "automatic infinite fixture loop count mismatch"
+            )
+            let automaticDirectRequest = ImageDecodeRequest(
+                target: target,
+                contentMode: .fit,
+                colorPolicy: .convertToSRGB
+            )
+            let automaticCostEstimate = try require(
+                directInfiniteAsset.wholeTrackCostEstimate(for: automaticDirectRequest),
+                "owned APNG did not expose whole-track cost estimates"
+            )
+            try require(
+                automaticCostEstimate.residentDecodedByteCostUpperBound
+                    <= automaticDecodedByteLimit,
+                "owned APNG resident decoded-byte upper bound exceeded qualification cap"
+            )
+            try require(
+                automaticCostEstimate.providerRetainedByteCostUpperBound > 0,
+                "owned APNG provider-retained upper bound was not positive"
+            )
+            try require(
+                automaticCostEstimate.predecodePeakByteCostUpperBound
+                    >= automaticCostEstimate.residentDecodedByteCostUpperBound
+                    + automaticCostEstimate.providerRetainedByteCostUpperBound,
+                "owned APNG peak did not cover decoded plus provider-retained steady state"
+            )
+            try require(
+                automaticCostEstimate.predecodePeakByteCostUpperBound
+                    <= automaticDecodedByteLimit,
+                "owned APNG predecode peak upper bound exceeded qualification cap"
+            )
+
+            let automaticHandle = try await system.makeEncodedAnimationHandle(
+                for: automaticRequest,
+                using: automaticPreparer,
+                animationPolicyVersion: 1,
+                frameStrategySelection: .automaticWholeTrack(
+                    maximumFrameCount: 3,
+                    maximumPredecodePeakByteCost: automaticDecodedByteLimit,
+                    maximumDecodedByteCost: automaticDecodedByteLimit
+                ),
+                playbackPolicy: AnimationPlaybackPolicy(requestedMode: .normal),
+                reduceMotionEnabled: false,
+                windowPolicy: AnimationFrameWindowPolicy(
+                    normalFrameCount: 1,
+                    warningFrameCount: 1
+                )
+            )
+            try require(
+                await system.animationRuntime.currentProviderRetainedMemoryCostForTesting()
+                    == automaticCostEstimate.providerRetainedByteCostUpperBound,
+                "automatic APNG provider-retained reservation mismatch"
+            )
+            let automaticRecorder = AdapterTimelineRecorder()
+            try await automaticHandle.start(
+                output: { output in await automaticRecorder.record(output) },
+                schedulingMode: .externalPresentationTicks
+            )
+            var automaticSnapshot =
+                await automaticHandle.driver.fullyResidentFramesSnapshotForCompositor()
+            let automaticResidentDigests = try require(
+                automaticSnapshot?.frames,
+                "automatic whole-track did not produce a compositor-resident snapshot"
+            ).map {
+                try rgbaSHA256($0.cgImage)
+            }
+            try require(
+                automaticResidentDigests.count == 3,
+                "automatic resident frame count mismatch"
+            )
+            try require(
+                await system.animationRuntime.currentPinnedFrameCountForTesting() == 3,
+                "automatic compositor snapshot did not pin all resident frames"
+            )
+            var directInfiniteFrames: [DecodedAnimationFrame] = []
+            for range in [0..<2, 2..<3] {
+                directInfiniteFrames.append(
+                    contentsOf: try await directInfiniteAsset.frames(
+                        in: range,
+                        request: automaticDirectRequest
+                    )
+                )
+            }
+            for index in 0..<3 {
+                try require(
+                    automaticResidentDigests[index]
+                        == rgbaSHA256(directInfiniteFrames[index].image.cgImage),
+                    "automatic whole-track pixel mismatch at frame \(index)"
+                )
+            }
+            automaticSnapshot = nil
+            try require(
+                await system.animationRuntime.currentPinnedFrameCountForTesting() == 0,
+                "automatic compositor snapshot pin leaked after release"
+            )
+            await automaticHandle.cancel()
+            try require(
+                await system.animationRuntime.currentProviderRetainedMemoryCostForTesting() == 0,
+                "automatic APNG provider-retained reservation leaked after cancel"
+            )
+            await directInfiniteAsset.cancel()
+            let automaticDriverCount = await system.animationRuntime.registeredDriverCount()
+            try require(automaticDriverCount == 0, "automatic animation driver leaked")
+            print("W5_ADAPTER_PT_005 passed")
+
+            let ownedGIFData = try gifWithInfiniteLoopAndSpecCompleteLZW(gifData)
+            AdapterURLProtocol.body = ownedGIFData
+            let ownedGIFRequest = try ImageRequest.publicImage(
+                url: try require(
+                    URL(string: "https://adapter.example.test/automatic-owned.gif"),
+                    "invalid owned GIF qualification URL"
+                ),
+                target: gifTarget,
+                colorPolicy: .convertToSRGB,
+                appID: "imagecraft-animation-adapter-qualification"
+            )
+            let ownedGIFLimit = 1024 * 1024
+            let ownedGIFLimits = ImageAnimationDecodeLimits(
+                maximumTimelineDecodedBytes: ownedGIFLimit,
+                maximumFrameDecodeWindow: 1
+            )
+            let ownedGIFPreparer = ImageCraftAnimationPlaybackPreparer(
+                limits: ownedGIFLimits,
+                zeroDurationReplacementNanoseconds: 10_000_000,
+                timingPolicyVersion: 10
+            )
+            let directOwnedGIFAsset = try await directDecoder.prepareAnimation(
+                source: .encoded(ownedGIFData),
+                limits: ownedGIFLimits
+            )
+            try require(
+                directOwnedGIFAsset.metadata.container == .gif, "owned GIF container mismatch")
+            try require(
+                directOwnedGIFAsset.metadata.frameCount == 2, "owned GIF frame count mismatch")
+            try require(
+                directOwnedGIFAsset.metadata.loopCount.additionalRepeatCount == nil,
+                "owned GIF loop count mismatch"
+            )
+            let ownedGIFDirectRequest = ImageDecodeRequest(
+                target: gifTarget,
+                contentMode: .fit,
+                colorPolicy: .convertToSRGB
+            )
+            let ownedGIFCost = try require(
+                directOwnedGIFAsset.wholeTrackCostEstimate(for: ownedGIFDirectRequest),
+                "owned GIF did not expose whole-track cost estimates"
+            )
+            try require(
+                ownedGIFCost.residentDecodedByteCostUpperBound <= ownedGIFLimit,
+                "owned GIF resident decoded-byte upper bound exceeded qualification cap"
+            )
+            try require(
+                ownedGIFCost.providerRetainedByteCostUpperBound > 0,
+                "owned GIF provider-retained upper bound was not positive"
+            )
+            try require(
+                ownedGIFCost.predecodePeakByteCostUpperBound
+                    >= ownedGIFCost.residentDecodedByteCostUpperBound
+                    + ownedGIFCost.providerRetainedByteCostUpperBound,
+                "owned GIF peak did not cover decoded plus provider-retained steady state"
+            )
+            try require(
+                ownedGIFCost.predecodePeakByteCostUpperBound <= ownedGIFLimit,
+                "owned GIF predecode peak upper bound exceeded qualification cap"
+            )
+
+            let ownedGIFHandle = try await system.makeEncodedAnimationHandle(
+                for: ownedGIFRequest,
+                using: ownedGIFPreparer,
+                animationPolicyVersion: 1,
+                frameStrategySelection: .automaticWholeTrack(
+                    maximumFrameCount: 2,
+                    maximumPredecodePeakByteCost: ownedGIFLimit,
+                    maximumDecodedByteCost: ownedGIFLimit
+                ),
+                playbackPolicy: AnimationPlaybackPolicy(requestedMode: .normal),
+                reduceMotionEnabled: false,
+                windowPolicy: AnimationFrameWindowPolicy(
+                    normalFrameCount: 1,
+                    warningFrameCount: 1
+                )
+            )
+            try require(
+                await system.animationRuntime.currentProviderRetainedMemoryCostForTesting()
+                    == ownedGIFCost.providerRetainedByteCostUpperBound,
+                "owned GIF provider-retained reservation mismatch"
+            )
+            let ownedGIFRecorder = AdapterTimelineRecorder()
+            let ownedGIFFailureRecorder = AdapterFailureRecorder()
+            try await ownedGIFHandle.start(
+                output: { output in await ownedGIFRecorder.record(output) },
+                failure: { error in await ownedGIFFailureRecorder.record(error) },
+                schedulingMode: .externalPresentationTicks
+            )
+            var ownedGIFSnapshot =
+                await ownedGIFHandle.driver.fullyResidentFramesSnapshotForCompositor()
+            let ownedGIFResidentCount = await system.animationRuntime.currentFrameCount()
+            let ownedGIFPinnedCount = await system.animationRuntime
+                .currentPinnedFrameCountForTesting()
+            let ownedGIFDecodedFrameCount = await ownedGIFRecorder.lastDecodedFrameCount
+            let ownedGIFHandoffAvailable = await ownedGIFRecorder.lastHandoffAvailable
+            let ownedGIFFailure = await ownedGIFFailureRecorder.description
+            let ownedGIFResidentFrames = try require(
+                ownedGIFSnapshot?.frames,
+                "owned GIF automatic snapshot missing resident=\(ownedGIFResidentCount) pinned=\(ownedGIFPinnedCount) decoded=\(ownedGIFDecodedFrameCount) handoff=\(ownedGIFHandoffAvailable) failure=\(ownedGIFFailure)"
+            )
+            try require(
+                ownedGIFResidentFrames.count == 2, "owned GIF resident frame count mismatch")
+            try require(
+                await system.animationRuntime.currentPinnedFrameCountForTesting() == 2,
+                "owned GIF compositor snapshot did not pin both frames"
+            )
+            var directOwnedGIFFrames: [DecodedAnimationFrame] = []
+            for range in [0..<1, 1..<2] {
+                directOwnedGIFFrames.append(
+                    contentsOf: try await directOwnedGIFAsset.frames(
+                        in: range,
+                        request: ownedGIFDirectRequest
+                    )
+                )
+            }
+            for index in 0..<2 {
+                try require(
+                    rgbaSHA256(ownedGIFResidentFrames[index].cgImage)
+                        == rgbaSHA256(directOwnedGIFFrames[index].image.cgImage),
+                    "owned GIF automatic pixel mismatch at frame \(index)"
+                )
+            }
+            ownedGIFSnapshot = nil
+            try require(
+                await system.animationRuntime.currentPinnedFrameCountForTesting() == 0,
+                "owned GIF compositor snapshot pin leaked after release"
+            )
+            await ownedGIFHandle.cancel()
+            try require(
+                await system.animationRuntime.currentProviderRetainedMemoryCostForTesting() == 0,
+                "owned GIF provider-retained reservation leaked after cancel"
+            )
+            await directOwnedGIFAsset.cancel()
+            try require(
+                await system.animationRuntime.registeredDriverCount() == 0,
+                "owned GIF automatic animation driver leaked"
+            )
+            print("W5_ADAPTER_PT_006 passed")
+
+            let subrectGIFData = try require(
+                Data(
+                    base64Encoded:
+                        "R0lGODlhAgACAIAAAP8AAAAA/yH/C05FVFNDQVBFMi4wAwEAAAAh+QQAAQAAACwAAAAAAgACAAACBARBEAUAIfkEAAEAAAAsAQABAAEAAQAAAgJMAQA7"
+                ),
+                "invalid subrect GIF fixture"
+            )
+            AdapterURLProtocol.body = subrectGIFData
+            let subrectTarget = try TargetPixels(width: 2, height: 2)
+            let subrectRequest = try ImageRequest.publicImage(
+                url: try require(
+                    URL(string: "https://adapter.example.test/automatic-subrect.gif"),
+                    "invalid subrect GIF qualification URL"
+                ),
+                target: subrectTarget,
+                colorPolicy: .convertToSRGB,
+                appID: "imagecraft-animation-adapter-qualification"
+            )
+            let subrectLimits = ImageAnimationDecodeLimits(
+                maximumTimelineDecodedBytes: 1024 * 1024,
+                maximumFrameDecodeWindow: 2
+            )
+            let subrectPreparer = ImageCraftAnimationPlaybackPreparer(
+                limits: subrectLimits,
+                zeroDurationReplacementNanoseconds: 10_000_000,
+                timingPolicyVersion: 11
+            )
+            let directSubrectAsset = try await directDecoder.prepareAnimation(
+                source: .encoded(subrectGIFData),
+                limits: subrectLimits
+            )
+            try require(
+                directSubrectAsset.metadata.container == .gif, "subrect GIF container mismatch")
+            try require(
+                directSubrectAsset.metadata.frameCount == 2, "subrect GIF frame count mismatch")
+            try require(
+                directSubrectAsset.metadata.loopCount.additionalRepeatCount == nil,
+                "subrect GIF loop count mismatch"
+            )
+            try require(
+                directSubrectAsset.metadata.frames[1].rect.width == 1
+                    && directSubrectAsset.metadata.frames[1].rect.height == 1,
+                "subrect GIF did not preserve frame rect"
+            )
+            let subrectDecodeRequest = ImageDecodeRequest(
+                target: subrectTarget,
+                contentMode: .fit,
+                colorPolicy: .convertToSRGB
+            )
+            let subrectCost = try require(
+                directSubrectAsset.wholeTrackCostEstimate(for: subrectDecodeRequest),
+                "subrect GIF did not expose replay cost estimate"
+            )
+            try require(
+                subrectCost.providerRetainedByteCostUpperBound > 0,
+                "subrect GIF provider-retained upper bound was not positive"
+            )
+            try require(
+                subrectCost.predecodePeakByteCostUpperBound
+                    >= subrectCost.residentDecodedByteCostUpperBound
+                    + subrectCost.providerRetainedByteCostUpperBound,
+                "subrect GIF peak did not cover decoded plus provider-retained steady state"
+            )
+            try require(
+                subrectCost.predecodePeakByteCostUpperBound <= 1024 * 1024,
+                "subrect GIF peak exceeded qualification cap"
+            )
+
+            let subrectHandle = try await system.makeEncodedAnimationHandle(
+                for: subrectRequest,
+                using: subrectPreparer,
+                animationPolicyVersion: 1,
+                frameStrategySelection: .automaticWholeTrack(
+                    maximumFrameCount: 2,
+                    maximumPredecodePeakByteCost: 1024 * 1024,
+                    maximumDecodedByteCost: 1024 * 1024
+                ),
+                playbackPolicy: AnimationPlaybackPolicy(requestedMode: .normal),
+                reduceMotionEnabled: false,
+                windowPolicy: AnimationFrameWindowPolicy(normalFrameCount: 1, warningFrameCount: 1)
+            )
+            try require(
+                await system.animationRuntime.currentProviderRetainedMemoryCostForTesting()
+                    == subrectCost.providerRetainedByteCostUpperBound,
+                "subrect GIF provider-retained reservation mismatch"
+            )
+            try await subrectHandle.start(
+                output: { _ in },
+                schedulingMode: .externalPresentationTicks
+            )
+            var subrectSnapshot =
+                await subrectHandle.driver.fullyResidentFramesSnapshotForCompositor()
+            let subrectResident = try require(
+                subrectSnapshot?.frames,
+                "subrect GIF automatic whole-track did not produce compositor snapshot"
+            )
+            try require(subrectResident.count == 2, "subrect GIF resident frame count mismatch")
+            let directSubrectFrames = try await directSubrectAsset.frames(
+                in: 0..<2,
+                request: subrectDecodeRequest
+            )
+            for index in 0..<2 {
+                try require(
+                    rgbaSHA256(subrectResident[index].cgImage)
+                        == rgbaSHA256(directSubrectFrames[index].image.cgImage),
+                    "subrect GIF automatic pixel mismatch at frame \(index)"
+                )
+            }
+            subrectSnapshot = nil
+            try require(
+                await system.animationRuntime.currentPinnedFrameCountForTesting() == 0,
+                "subrect GIF compositor snapshot pin leaked"
+            )
+            await subrectHandle.cancel()
+            try require(
+                await system.animationRuntime.currentProviderRetainedMemoryCostForTesting() == 0,
+                "subrect GIF provider-retained reservation leaked after cancel"
+            )
+            await directSubrectAsset.cancel()
+            try require(
+                await system.animationRuntime.registeredDriverCount() == 0,
+                "subrect GIF automatic animation driver leaked"
+            )
+            print("W5_ADAPTER_PT_007 passed")
+
+            AdapterURLProtocol.body = ownedGIFData
+            let fallbackGIFRequest = try ImageRequest.publicImage(
+                url: try require(
+                    URL(string: "https://adapter.example.test/bounded-fallback-owned.gif"),
+                    "invalid owned GIF fallback qualification URL"
+                ),
+                target: gifTarget,
+                colorPolicy: .convertToSRGB,
+                appID: "imagecraft-animation-adapter-qualification"
+            )
+            let fallbackDecodedCap = ownedGIFCost.residentDecodedByteCostUpperBound - 1
+            try require(fallbackDecodedCap > 0, "owned GIF fallback cap was not positive")
+            let fallbackGIFHandle = try await system.makeEncodedAnimationHandle(
+                for: fallbackGIFRequest,
+                using: ownedGIFPreparer,
+                animationPolicyVersion: 1,
+                frameStrategySelection: .automaticWholeTrack(
+                    maximumFrameCount: 2,
+                    maximumPredecodePeakByteCost: ownedGIFLimit,
+                    maximumDecodedByteCost: fallbackDecodedCap
+                ),
+                playbackPolicy: AnimationPlaybackPolicy(requestedMode: .normal),
+                reduceMotionEnabled: false,
+                windowPolicy: AnimationFrameWindowPolicy(
+                    normalFrameCount: 1,
+                    warningFrameCount: 1
+                )
+            )
+            try require(
+                await system.animationRuntime.currentProviderRetainedMemoryCostForTesting()
+                    == ownedGIFCost.providerRetainedByteCostUpperBound,
+                "bounded fallback lost owned GIF provider-retained reservation"
+            )
+            let fallbackRecorder = AdapterTimelineRecorder()
+            try await fallbackGIFHandle.start(
+                output: { output in await fallbackRecorder.record(output) },
+                schedulingMode: .externalPresentationTicks
+            )
+            let fallbackSnapshot =
+                await fallbackGIFHandle.driver.fullyResidentFramesSnapshotForCompositor()
+            try require(
+                fallbackSnapshot == nil, "bounded fallback unexpectedly exposed whole track")
+            try require(
+                await system.animationRuntime.currentPinnedFrameCountForTesting() == 0,
+                "bounded fallback unexpectedly pinned compositor frames"
+            )
+            try require(
+                await fallbackRecorder.lastDecodedFrameCount == 1,
+                "bounded fallback did not decode exactly its one-frame window"
+            )
+            await fallbackGIFHandle.cancel()
+            try require(
+                await system.animationRuntime.currentProviderRetainedMemoryCostForTesting() == 0,
+                "bounded fallback provider-retained reservation leaked after cancel"
+            )
+            try require(
+                await system.animationRuntime.registeredDriverCount() == 0,
+                "bounded fallback animation driver leaked"
+            )
+            print("W5_ADAPTER_PT_008 passed")
+
+            await system.invalidateAndCancel()
+        } catch {
+            await system.invalidateAndCancel()
+            throw error
+        }
+    }
+}
+
+private final class AdapterURLProtocol: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var body = Data()
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        request.url?.host == "adapter.example.test"
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        guard let url = request.url else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
+        let body = Self.body
+        let response = HTTPURLResponse(
+            url: url,
+            statusCode: 200,
+            httpVersion: "HTTP/1.1",
+            headerFields: [
+                "Content-Type": url.pathExtension.lowercased() == "gif"
+                    ? "image/gif" : "image/png",
+                "Content-Length": String(body.count),
+                "Cache-Control": "no-store",
+            ]
+        )!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: body)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
+}
+
+private actor AdapterRecorder {
+    private var images: [DecodedImage] = []
+    func record(_ image: DecodedImage) { images.append(image) }
+    var count: Int { images.count }
+    var first: DecodedImage? { images.first }
+}
+
+private actor AdapterTimelineRecorder {
+    private var frames: [Int: DecodedImage] = [:]
+    private var observedSequence: [Int] = []
+    private var finished = false
+    private var decodedFrameCount = 0
+    private var handoffAvailable = false
+
+    func record(_ output: AnimationPlaybackOutput) {
+        let index = output.decision.frameIndex
+        observedSequence.append(index)
+        decodedFrameCount = output.decodedFrameCount
+        handoffAvailable = output.automaticWholeTrackHandoffAvailable
+        if frames[index] == nil, let image = output.image { frames[index] = image }
+        if output.decision.isFinished { finished = true }
+    }
+
+    var isFinished: Bool { finished }
+    var sequence: [Int] { observedSequence }
+    var lastDecodedFrameCount: Int { decodedFrameCount }
+    var lastHandoffAvailable: Bool { handoffAvailable }
+    func image(at index: Int) -> DecodedImage? { frames[index] }
+}
+
+private actor AdapterFailureRecorder {
+    private var failureDescription = "none"
+    func record(_ error: any Error) { failureDescription = String(describing: error) }
+    var description: String { failureDescription }
+}
+
+private actor AdapterSteppingClock: AnimationPlaybackClock {
+    private var now: UInt64 = 0
+    private var deadlines: [UInt64] = []
+
+    func nowNanoseconds() async -> UInt64 { now }
+
+    func sleep(untilNanoseconds deadline: UInt64) async throws {
+        try Task.checkCancellation()
+        deadlines.append(deadline)
+        if deadline > now { now = deadline }
+    }
+
+    var sleepDeadlines: [UInt64] { deadlines }
+}
+
+private func waitUntil(
+    _ label: String,
+    iterations: Int = 200,
+    condition: @escaping @Sendable () async -> Bool
+) async throws {
+    for _ in 0..<iterations {
+        if await condition() { return }
+        try await Task<Never, Never>.sleep(nanoseconds: 5_000_000)
+    }
+    throw QualificationError.failed("timed out waiting for \(label)")
+}
+
+private func temporaryDirectory() throws -> URL {
+    let url = FileManager.default.temporaryDirectory
+        .appendingPathComponent("fovea-imagecraft-animation-adapter-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    return url
+}
+
+private func rgbaSHA256(_ image: CGImage) throws -> String {
+    let width = image.width
+    let height = image.height
+    let bytesPerRow = width * 4
+    var data = Data(count: bytesPerRow * height)
+    let ok = data.withUnsafeMutableBytes { raw -> Bool in
+        guard let base = raw.baseAddress,
+            let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+            let context = CGContext(
+                data: base,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                    | CGBitmapInfo.byteOrder32Big.rawValue
+            )
+        else { return false }
+        context.setBlendMode(.copy)
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return true
+    }
+    try require(ok, "RGBA normalization failed")
+    return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+}
+
+private func gifWithInfiniteLoopAndSpecCompleteLZW(_ data: Data) throws -> Data {
+    var bytes = Array(data)
+    guard bytes.count >= 13, String(decoding: bytes[0..<6], as: UTF8.self).hasPrefix("GIF")
+    else { throw QualificationError.failed("owned GIF fixture is invalid") }
+    var firstBlockOffset = 13
+    if bytes[10] & 0x80 != 0 {
+        firstBlockOffset += 3 * (1 << (Int(bytes[10] & 0x07) + 1))
+    }
+    guard firstBlockOffset <= bytes.count else {
+        throw QualificationError.failed("owned GIF palette is truncated")
+    }
+    let loopExtension: [UInt8] = [
+        0x21, 0xFF, 0x0B,
+        0x4E, 0x45, 0x54, 0x53, 0x43, 0x41, 0x50, 0x45, 0x32, 0x2E, 0x30,
+        0x03, 0x01, 0x00, 0x00, 0x00,
+    ]
+    bytes.insert(contentsOf: loopExtension, at: firstBlockOffset)
+    var offset = firstBlockOffset + loopExtension.count
+    while offset < bytes.count {
+        let marker = bytes[offset]
+        offset += 1
+        switch marker {
+        case 0x3B:
+            guard offset == bytes.count else {
+                throw QualificationError.failed("owned GIF has bytes after trailer")
+            }
+            return Data(bytes)
+        case 0x21:
+            guard offset < bytes.count else {
+                throw QualificationError.failed("owned GIF extension is truncated")
+            }
+            let label = bytes[offset]
+            offset += 1
+            if label == 0xF9 {
+                guard offset + 6 <= bytes.count, bytes[offset] == 4, bytes[offset + 5] == 0 else {
+                    throw QualificationError.failed("owned GIF GCE is malformed")
+                }
+                // Keep the fixture's real transparency flag/index, but exercise background disposal.
+                bytes[offset + 1] = (bytes[offset + 1] & 0xE3) | 0x08
+                offset += 6
+            } else {
+                while true {
+                    guard offset < bytes.count else {
+                        throw QualificationError.failed("owned GIF extension blocks are truncated")
+                    }
+                    let count = Int(bytes[offset])
+                    offset += 1
+                    if count == 0 { break }
+                    guard offset + count <= bytes.count else {
+                        throw QualificationError.failed("owned GIF extension payload is truncated")
+                    }
+                    offset += count
+                }
+            }
+        case 0x2C:
+            guard offset + 9 <= bytes.count else {
+                throw QualificationError.failed("owned GIF image descriptor is truncated")
+            }
+            let packed = bytes[offset + 8]
+            offset += 9
+            if packed & 0x80 != 0 {
+                offset += 3 * (1 << (Int(packed & 0x07) + 1))
+            }
+            guard offset < bytes.count, bytes[offset] == 2 else {
+                throw QualificationError.failed("owned GIF LZW code size is missing or changed")
+            }
+            offset += 1
+            guard offset + 2 < bytes.count, bytes[offset] == 1, bytes[offset + 1] == 0x44,
+                bytes[offset + 2] == 0
+            else {
+                throw QualificationError.failed("owned GIF one-pixel LZW fixture changed")
+            }
+            bytes[offset] = 2
+            bytes.insert(0x01, at: offset + 2)
+            while true {
+                guard offset < bytes.count else {
+                    throw QualificationError.failed("owned GIF image blocks are truncated")
+                }
+                let count = Int(bytes[offset])
+                offset += 1
+                if count == 0 { break }
+                guard offset + count <= bytes.count else {
+                    throw QualificationError.failed("owned GIF image payload is truncated")
+                }
+                offset += count
+            }
+        default:
+            throw QualificationError.failed("owned GIF has an unexpected top-level block")
+        }
+    }
+    throw QualificationError.failed("owned GIF is missing trailer")
+}
+
+private func apngWithInfiniteLoop(_ data: Data) throws -> Data {
+    var bytes = Array(data)
+    let signature: [UInt8] = [137, 80, 78, 71, 13, 10, 26, 10]
+    guard Array(bytes.prefix(8)) == signature else {
+        throw QualificationError.failed("automatic fixture is not a PNG")
+    }
+    var offset = 8
+    while offset + 12 <= bytes.count {
+        let length = Int(readBE32(bytes, at: offset))
+        let typeStart = offset + 4
+        let payloadStart = typeStart + 4
+        let crcStart = payloadStart + length
+        guard length >= 0, crcStart + 4 <= bytes.count else {
+            throw QualificationError.failed("automatic fixture has an invalid PNG chunk")
+        }
+        let type = Array(bytes[typeStart..<(typeStart + 4)])
+        if type == Array("acTL".utf8) {
+            guard length == 8 else {
+                throw QualificationError.failed("automatic fixture acTL length mismatch")
+            }
+            bytes.replaceSubrange((payloadStart + 4)..<(payloadStart + 8), with: [0, 0, 0, 0])
+            let crc = pngCRC32(Array(bytes[typeStart..<crcStart]))
+            writeBE32(crc, to: &bytes, at: crcStart)
+            return Data(bytes)
+        }
+        offset = crcStart + 4
+    }
+    throw QualificationError.failed("automatic fixture is missing acTL")
+}
+
+private func readBE32(_ bytes: [UInt8], at offset: Int) -> UInt32 {
+    UInt32(bytes[offset]) << 24
+        | UInt32(bytes[offset + 1]) << 16
+        | UInt32(bytes[offset + 2]) << 8
+        | UInt32(bytes[offset + 3])
+}
+
+private func writeBE32(_ value: UInt32, to bytes: inout [UInt8], at offset: Int) {
+    bytes[offset] = UInt8((value >> 24) & 0xff)
+    bytes[offset + 1] = UInt8((value >> 16) & 0xff)
+    bytes[offset + 2] = UInt8((value >> 8) & 0xff)
+    bytes[offset + 3] = UInt8(value & 0xff)
+}
+
+private func pngCRC32(_ bytes: [UInt8]) -> UInt32 {
+    var crc: UInt32 = 0xffff_ffff
+    for byte in bytes {
+        crc ^= UInt32(byte)
+        for _ in 0..<8 {
+            if crc & 1 == 1 {
+                crc = (crc >> 1) ^ 0xedb8_8320
+            } else {
+                crc >>= 1
+            }
+        }
+    }
+    return crc ^ 0xffff_ffff
+}
+
+private func require<Value>(_ value: Value?, _ message: String) throws -> Value {
+    guard let value else { throw QualificationError.failed(message) }
+    return value
+}
+
+private func require(_ condition: Bool, _ message: String) throws {
+    guard condition else { throw QualificationError.failed(message) }
+}
+
+private enum QualificationError: Error { case failed(String) }
+
+private let zeroDurationTwoFrameGIFBase64 =
+    "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAAh+QQBAAAAACwAAAAAAQABAAACAUQAOw=="
+
+private let separateDefaultAPNGBase64 = [
+    "iVBORw0KGgoAAAANSUhEUgAAAIAAAABACAYAAADS1n9/AAAACGFjVEwAAAADAAAAAbnqilYAAACT",
+    "SURBVHic7dKhAQAwEISw23/p7xgVRMQj2G1H134HYAAMgAEwAAbAABgAA2AADIABMAAGwAAYAANg",
+    "AAyAATAABsAAGAADYAAMgAEwAAbAABgAA2AADIABMAAGwAAYAANgAAyAAeIMEGeAOAPEGSDOAHEG",
+    "iDNAnAHiDBBngDgDxBkgzgBxBogzQJwB4gwQZ4A4A8Q9FdjDsnSLbvYAAAAaZmNUTAAAAAAAAACA",
+    "AAAAQAAAAAAAAAAAAAoAZAABJhIv4AAAAMRmZEFUAAAAAXic7c4xEQAACAAh+5fWGAz+UYCZzWs8",
+    "EIsHYvFALB6IxQOxeCAWD8TigVg8EIsHYvFALB6IxQOxeCAWD8TigVg8EIsHYvFALB6IxQOxeCAW",
+    "D8TigVg8EIsHYvFALB6IxQOxeCAWD8TigVg8EIsHYvFALB6IxQOxeCAWD8TigVg8EIsHYvFALB6I",
+    "xQOxeCAWD8TigVg8EIsHYvFALB6IxQOxeCAWD8TigVg8EIsHYvFALB6IxQOxeCAWD4Q6M/jDshCK",
+    "NL0AAAAaZmNUTAAAAAIAAABAAAAAIAAAACAAAAAQAAoAZAIBjdf8CQAAAFxmZEFUAAAAA3ic7dAx",
+    "EQAwEMOw8Cf9haGhHrT7vNvuZ9MBWgN0gNYAHaA1QAdoDdABWgN0gNYAHaA1QAdoDdABWgN0gNYA",
+    "HaA1QAdoDdABWgN0gNYAHaA1QAdoDyDy8OLgo07AAAAAGmZjVEwAAAAEAAAAAQAAAAEAAAAAAAAA",
+    "AAAKAGQAARi9du4AAAAPZmRBVAAAAAV4nGNgAAIAAAUAAYhnjy8AAAAASUVORK5CYII=",
+].joined()

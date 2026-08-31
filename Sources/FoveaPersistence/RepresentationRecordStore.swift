@@ -4,14 +4,89 @@ import Foundation
 import FoveaHTTP
 import FoveaStorage
 
+/// Read-only exact-variant index used by the hot authorization path.
+/// Persistent mutations remain serialized by `RepresentationRecordStore`; while one is in
+/// progress this index returns a miss so callers fall back to the actor-isolated full Vary path.
+private final class RepresentationRecordExactLookupIndex: @unchecked Sendable {
+    private let lock = NSLock()
+    private var recordsByBaseKey: [String: [RepresentationRecord]] = [:]
+    private var mutationInProgress = false
+
+    func recordsSnapshot(
+        for baseKeyDigest: String,
+        namespaceFingerprint: StorageNamespaceFingerprint,
+        namespaceGeneration: UInt64
+    ) -> [RepresentationRecord]? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !mutationInProgress else { return nil }
+        return (recordsByBaseKey[baseKeyDigest] ?? []).filter { record in
+            record.securityNamespaceFingerprint == namespaceFingerprint
+                && record.namespaceGeneration == namespaceGeneration
+        }
+    }
+
+    func uniqueRecord(
+        for variantDigest: String,
+        baseKeyDigest: String,
+        namespaceFingerprint: StorageNamespaceFingerprint,
+        namespaceGeneration: UInt64
+    ) -> RepresentationRecord? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !mutationInProgress else { return nil }
+        var matched: RepresentationRecord?
+        for record in recordsByBaseKey[baseKeyDigest] ?? []
+        where record.securityNamespaceFingerprint == namespaceFingerprint
+            && record.namespaceGeneration == namespaceGeneration
+        {
+            guard matched == nil else { return nil }
+            matched = record
+        }
+        guard matched?.variantKeyDigest == variantDigest else { return nil }
+        return matched
+    }
+
+    func replaceAll(_ records: [String: RepresentationRecord]) {
+        var grouped: [String: [RepresentationRecord]] = [:]
+        for record in records.values {
+            grouped[record.baseKeyDigest, default: []].append(record)
+        }
+        for baseKey in grouped.keys {
+            grouped[baseKey]?.sort { $0.variantKeyDigest < $1.variantKeyDigest }
+        }
+        lock.lock()
+        recordsByBaseKey = grouped
+        mutationInProgress = false
+        lock.unlock()
+    }
+
+    func beginMutation() {
+        lock.lock()
+        mutationInProgress = true
+        lock.unlock()
+    }
+
+    func endMutationWithoutChange() {
+        lock.lock()
+        mutationInProgress = false
+        lock.unlock()
+    }
+}
+
 /// 由清单索引的规范表征记录持久化存储。
 
-package actor RepresentationRecordStore: RepresentationRecordMaintaining {
+package actor RepresentationRecordStore:
+    RepresentationRecordMaintaining,
+    RepresentationRecordSnapshotLookingUp,
+    RepresentationRecordExactLookingUp
+{
     private static let maximumManifestBytes = 64 * 1024 * 1024
     private static let maximumManifestEntryCount = 100_000
     private nonisolated let ioExecutor = FoveaBlockingIOExecutor(
         label: "dev.fovea.http.representation-records"
     )
+    private nonisolated let exactLookupIndex = RepresentationRecordExactLookupIndex()
 
     package nonisolated var unownedExecutor: UnownedSerialExecutor {
         ioExecutor.asUnownedSerialExecutor()
@@ -72,6 +147,7 @@ package actor RepresentationRecordStore: RepresentationRecordMaintaining {
             }
             recordsByVariant = manifest.records
             rebuildIndexes()
+            exactLookupIndex.replaceAll(manifest.records)
             return
         }
 
@@ -93,7 +169,34 @@ package actor RepresentationRecordStore: RepresentationRecordMaintaining {
         }
     }
 
-    /// 仅供包内测试和诊断使用。生产查询必须从基础键开始。
+    package nonisolated func recordsSnapshot(
+        for baseKeyDigest: String,
+        namespaceFingerprint: StorageNamespaceFingerprint,
+        namespaceGeneration: UInt64
+    ) -> [RepresentationRecord]? {
+        exactLookupIndex.recordsSnapshot(
+            for: baseKeyDigest,
+            namespaceFingerprint: namespaceFingerprint,
+            namespaceGeneration: namespaceGeneration
+        )
+    }
+
+    /// 单候选快路径仍绑定 base、namespace 与 generation；存在第二个候选时必须回退完整 Vary 选择。
+    package nonisolated func uniqueRecord(
+        for variantDigest: String,
+        baseKeyDigest: String,
+        namespaceFingerprint: StorageNamespaceFingerprint,
+        namespaceGeneration: UInt64
+    ) -> RepresentationRecord? {
+        exactLookupIndex.uniqueRecord(
+            for: variantDigest,
+            baseKeyDigest: baseKeyDigest,
+            namespaceFingerprint: namespaceFingerprint,
+            namespaceGeneration: namespaceGeneration
+        )
+    }
+
+    /// 仅供包内测试和诊断使用。
     package func record(for variantDigest: String) -> RepresentationRecord? {
         recordsByVariant[variantDigest]
     }
@@ -105,9 +208,16 @@ package actor RepresentationRecordStore: RepresentationRecordMaintaining {
         let previous = recordsByVariant[record.variantKeyDigest]
         var next = recordsByVariant
         next[record.variantKeyDigest] = record
-        try persist(next)
+        exactLookupIndex.beginMutation()
+        do {
+            try persist(next)
+        } catch {
+            exactLookupIndex.endMutationWithoutChange()
+            throw error
+        }
         recordsByVariant = next
         updateIndexes(replacing: previous, with: record)
+        exactLookupIndex.replaceAll(next)
     }
 
     package func containsReference(
@@ -141,9 +251,16 @@ package actor RepresentationRecordStore: RepresentationRecordMaintaining {
         else { return }
         var next = recordsByVariant
         next.removeValue(forKey: variantDigest)
-        try persist(next)
+        exactLookupIndex.beginMutation()
+        do {
+            try persist(next)
+        } catch {
+            exactLookupIndex.endMutationWithoutChange()
+            throw error
+        }
         recordsByVariant = next
         updateIndexes(replacing: record, with: nil)
+        exactLookupIndex.replaceAll(next)
     }
 
     package func contentReferences() async -> Set<StoredContentReference> {
@@ -154,9 +271,16 @@ package actor RepresentationRecordStore: RepresentationRecordMaintaining {
         let fingerprint = StorageNamespaceFingerprint(namespace: namespace)
         let next = recordsByVariant.filter { $0.value.securityNamespaceFingerprint != fingerprint }
         guard next.count != recordsByVariant.count else { return }
-        try persist(next)
+        exactLookupIndex.beginMutation()
+        do {
+            try persist(next)
+        } catch {
+            exactLookupIndex.endMutationWithoutChange()
+            throw error
+        }
         recordsByVariant = next
         rebuildIndexes()
+        exactLookupIndex.replaceAll(next)
     }
 
     private func persist(_ records: [String: RepresentationRecord]) throws {

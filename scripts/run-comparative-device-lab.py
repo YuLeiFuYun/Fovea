@@ -238,6 +238,7 @@ def calibration_runs(selected: list[str]) -> list[dict[str, Any]]:
                     "comparator": comparator,
                     "workload": workload,
                     "cacheState": "cold",
+                    "cachePreparationRepetitions": 1,
                     "networkProfile": "NET-LOCAL-V1",
                     "runIndex": 0,
                     "timeScale": 0.1 if workload == "W1-SCROLL-V1" else 1.0,
@@ -250,6 +251,7 @@ def calibration_runs(selected: list[str]) -> list[dict[str, Any]]:
                     "comparator": comparator,
                     "workload": "W2-HERO-V1",
                     "cacheState": cache_state,
+                    "cachePreparationRepetitions": 1,
                     "networkProfile": "NET-LOCAL-V1",
                     "runIndex": 0,
                     "timeScale": 1.0,
@@ -277,6 +279,7 @@ def formal_runs() -> list[dict[str, Any]]:
                             "comparator": comparator,
                             "workload": workload,
                             "cacheState": cache_state,
+                            "cachePreparationRepetitions": 1,
                             "networkProfile": "NET-LOCAL-V1",
                             "runIndex": index,
                             "timeScale": 1.0,
@@ -333,6 +336,8 @@ def run_one(
             specification["workload"],
             "--cache-state",
             specification["cacheState"],
+            "--cache-preparation-repetitions",
+            str(specification["cachePreparationRepetitions"]),
             "--network-profile",
             specification["networkProfile"],
             "--run-index",
@@ -389,8 +394,17 @@ def validate_result(
     data: dict[str, Any], comparator: str, specification: dict[str, Any], private_values: list[str],
     identity: dict[str, Any], plan_digest: str, claim_family_digest: str,
 ) -> None:
-    if data.get("schemaVersion") != 3 or data.get("planID") != "FOVEA-P0B-COMP-V1":
+    if data.get("schemaVersion") != 5 or data.get("planID") != "FOVEA-P0B-COMP-V1":
         raise RuntimeError("result schema/plan mismatch")
+    runtime_configuration = data.get("comparatorRuntimeConfiguration")
+    if not isinstance(runtime_configuration, dict) or runtime_configuration.get("schemaVersion") != 1:
+        raise RuntimeError("result comparator runtime configuration attestation is missing or invalid")
+    runtime_parameters = runtime_configuration.get("parameters")
+    if not isinstance(runtime_parameters, dict) or not runtime_parameters or not all(
+        isinstance(key, str) and isinstance(value, str)
+        for key, value in runtime_parameters.items()
+    ):
+        raise RuntimeError("result comparator runtime configuration parameters are invalid")
     if data.get("harnessIdentity") != identity:
         raise RuntimeError("result harness identity mismatch")
     if data.get("experimentPlanDigest") != plan_digest:
@@ -405,6 +419,8 @@ def validate_result(
         raise RuntimeError("result workload mismatch")
     if data.get("cacheState") != specification["cacheState"]:
         raise RuntimeError("result cache-state mismatch")
+    if data.get("cachePreparationRepetitions") != specification["cachePreparationRepetitions"]:
+        raise RuntimeError("result cache-preparation repetition mismatch")
     if data.get("environment", {}).get("deviceProfileID") != "iphone-16e-ios27-beta-primary-v1":
         raise RuntimeError("result device profile mismatch")
     if not data.get("provisional", False):

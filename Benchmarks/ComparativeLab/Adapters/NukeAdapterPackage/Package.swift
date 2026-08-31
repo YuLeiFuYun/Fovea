@@ -18,7 +18,11 @@ let package = Package(
                 .product(name: "ComparativeLabCore", package: "FoveaComparativeLab"),
                 .product(name: "Nuke", package: "Nuke"),
             ]
-        )
+        ),
+        .testTarget(
+            name: "NukeComparatorAdapterTests",
+            dependencies: ["NukeComparatorAdapter"]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

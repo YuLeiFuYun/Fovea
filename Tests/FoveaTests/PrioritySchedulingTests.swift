@@ -443,7 +443,7 @@ final class PrioritySchedulingTests: XCTestCase {
         let large = Task {
             let permit = try await pool.acquire(units: 3, priority: .high)
             await order.append("large")
-            try await Task.sleep(for: .milliseconds(20))
+            try await testSleep(.milliseconds(20))
             await permit.release()
         }
         try await waitForQueuedCount(1, in: pool)
@@ -491,7 +491,7 @@ final class PrioritySchedulingTests: XCTestCase {
         let task = Task {
             let cancelled = try await cancellationPool.acquire()
             try await cancelled.withPermit { () async throws -> Void in
-                try await Task.sleep(for: .seconds(10))
+                try await testSleep(.seconds(10))
             }
         }
         task.cancel()

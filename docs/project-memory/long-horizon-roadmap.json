@@ -40,7 +40,7 @@
       "id": "P1-GOVERNANCE-001",
       "phase": "P1",
       "status": "completed-current-public-xcode27-ci-green-required-check-active",
-      "summary": "ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 are the only supported component revisions. Both are public, MIT licensed, xcode-27 CI-green and protected by required core checks; physical-device evidence remains open."
+      "summary": "Fovea resolves ImageCraft 736d0fb75e9e128642ce418ad984ce5151b1f324 (an exact public commit after 0.1.0-alpha.5) and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 (0.1.0-alpha.5) as its only production component pins. Existing composition evidence applies to those pinned static/progressive and persistence surfaces; the local unpublished ImageCraft animation candidate is not consumed by Fovea. Physical-device evidence remains open."
     },
     {
       "id": "P3-CONTRACT-001",
@@ -69,8 +69,8 @@
     {
       "id": "P4-MANIFEST-001",
       "phase": "P4",
-      "status": "active-retained-counterexample",
-      "summary": "Retain the 64 x 4 KiB small-object workload that exposes about 3.8033x application-layer logical write amplification from full-manifest replacement. Compare batching, segmented manifests and append/checkpoint candidates only behind the existing crash, recovery, schema and partition gates."
+      "status": "completed-local-compact-record-v2-retained-regression-gate-physical-io-pending",
+      "summary": "The historical 64 x 4 KiB full-manifest counterexample (~3.8033x) is superseded. Current Akashic first reached 1.1012x with per-key incremental records, then compact record v2 reduced metadata writes by 51.4% to 12,897 B and total logical write amplification to about 1.0492x without changing the per-key durable transaction boundary. Legacy v1 create/tombstone replay and future-schema/filename-key fail-closed checks are retained. Resource verification now enforces <=1.06x for 64 x 4 KiB, <=1.005x for 32 x 64 KiB and <=1.001x for 8 x 1 MiB. Physical NAND/write-cache/energy amplification remains under P4-EVIDENCE-001."
     },
     {
       "id": "P0-CLEAN-PUBLICATION-BASELINE-001",
@@ -81,8 +81,8 @@
     {
       "id": "P2-IMAGECRAFT-EXTERNAL-SWITCH-001",
       "phase": "P2",
-      "status": "clean-alpha5-composition-simulator-host-and-portable-source-copy-qualified-public-ci-pending",
-      "summary": "Fovea consumes ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) as the only supported exact revision. Clean premerge, conformance, Release, iOS Simulator 485/485, five-relaunch host evidence 10/10, and git-archive portable replay (root 484/484, Release, rebuilt-comparator CacheLab 7/7) pass; public CI, production streaming and physical-device evidence remain open. Full profile portability remains a tooling obligation."
+      "status": "static-progressive-public-pin-animation-v2-provider-lifetime-owned-gif-overlay-qualified-publication-pin-device-pending",
+      "summary": "Fovea remains pinned to public ImageCraft 736d0fb75e9e128642ce418ad984ce5151b1f324 for static/progressive work. The unpublished animation candidate remains based on HEAD 04e153795b80164983a57b0b871f10d87ba79ea1; the latest V2 source-overlay qualification captured ImageCraft working tree 4dbcec99e08461edfe83106d5b4875c7bb06d169 and passes W5_ADAPTER_PT_001-008, including automatic owned-APNG, owned-GIF, bounded subrect-GIF handoff and real owned-GIF automatic-to-bounded fallback. Whole-track automatic upgrade requires decoded-resident, provider-retained and predecode-peak bounds; independently, any known provider-retained payload/palette/checkpoint cost is reserved for the entire handle lifetime across fixed, bounded and predecodeAll strategies. Fovea currently passes 731/731 with PT_188-195 covering shared resident accounting, automatic contention, missing-bound fallback, automatic/fixed provider lifetime and namespace revoke; ImageCraft remains 125 ImageIO plus 16 Core tests with public API verification and SwiftPM/iOS15 simulator/device consumers green. The production pin still cannot represent the unpublished animation bytes, so the fail-closed pin-readiness gate remains authoritative. Publication, exact clean production-pin integration and physical end-to-end startup/steady-state plus energy/thermal evidence remain open; no decoder-speed or global performance-dominance claim is made."
     },
     {
       "id": "P6-CROSS-REPOSITORY-CONFORMANCE-001",
@@ -179,6 +179,60 @@
       "phase": "P7",
       "status": "v4-local-thirteen-of-thirteen-dominance-trusted-publication-pending",
       "summary": "Cache Lab V4 binds twenty fresh-cache hot rounds, 1536 post-throughput disk p99 samples, eight shards, independent process blocks and contamination rejection. The local twenty-block campaign passes all thirteen applicable comparisons with zero correctness, inferior, inconclusive or dominance failures. The result remains local research evidence until the measured Akashic candidate is published, Fovea pins that exact revision and protected trusted CI repeats from clean checkouts."
+    },
+    {
+      "id": "P7-BOUNDED-CANCELLATION-HANDOFF-001",
+      "phase": "P7",
+      "status": "implemented-local-bounded-policy-and-instrumentation-formal-calibration-pending",
+      "summary": "Cancellation handoff now continues an observed transport only when Content-Length makes the remaining bytes known and the remainder is no larger than min(target RGBA surface bytes, transport memory threshold). Each retry response resets its byte counter, non-identity content encodings and unknown-length observed transfers fail closed, and transports without progress observation retain the prior compatibility behavior. ComparativeLab separates post-cancellation bytes for completed and abandoned requests. The 495-test root suite and FoveaComparatorBench generic iOS Simulator build pass. Dirty-source W7 cancellation calibration, stable-device resource tails and release claims remain pending."
+    },
+    {
+      "id": "P7-DERIVED-RASTER-CACHE-001",
+      "phase": "P7",
+      "status": "local-opt-in-alias-aware-byte-and-durable-logical-write-budgets-integrated-default-disabled-clean-physical-device-qualification-pending",
+      "summary": "The package-internal default-off P7 derived-raster path now has alias-aware physical-byte accounting/eviction above Akashic, shared-container byte deduplication, in-memory second-chance recency, reopen reconciliation/GC, eager normal orphan cleanup and a restart-durable fixed-window logical write admission gate. Logical budget rejection carries the actual container-plus-projected-alias-manifest charge. W11_PT_040-048 plus pipeline coverage pass inside a 47-test derived-raster strict suite. Public/default admission remains off: clean W2/W11, physical write-amplification calibration, fixed-window burst policy, large-store reconciliation cost, eviction-policy comparison and stable-device energy/thermal/reclaim-tail evidence remain open."
+    },
+    {
+      "id": "P7-WARM-MEMORY-IDENTITY-CACHE-001",
+      "phase": "P7",
+      "status": "local-optimization-passed-end-to-end-gap-remains",
+      "summary": "Validated ImageRequest construction now caches namespace and fetch-base digests, removing repeated SHA-256 from rendered-memory authorization. Release microbenchmarks and five diagnostic W2 blocks show a stable local improvement, but Apple warm-memory display-ready remains faster because comparator delivery and pixel materialization dominate. Further work must preserve one request path and use clean stable-device evidence."
+    },
+    {
+      "id": "P7-W11-SHARED-PROGRESSIVE-FINALIZATION-001",
+      "phase": "P7",
+      "status": "local-correctness-fix-passed-clean-matrix-pending",
+      "summary": "Same-source multi-target event subscribers now distinguish the transport owner from a subscriber that observed no progress. Response completion closes only the latter empty finalization and falls back to ordinary full-body decode, preventing an indefinite wait while preserving one origin transport. Adapter and root tests pass; clean W11 simulator and cancellation/revoke stress remain pending."
+    },
+    {
+      "id": "P7-W5-ANIMATED-MEDIA-FOUNDATION-001",
+      "phase": "P7",
+      "status": "actor-reentrant-cancel-linearizability-fixed-local-root-stress-green-publication-pin-device-energy-structural-gaps-remain",
+      "summary": "W5 retains the authorized encoded-animation seam, bounded frame/provider/peak accounting and platform presentation work. A reproduced suite-order liveness bug in automatic whole-track cancellation is now repaired: stale produce invocations revalidate cancellation/publication generation after cross-actor awaits before creating predecode work. Old W5_PT_205 failed at delay=17 with a provider call after cancel; fixed W5_PT_175/W5_PT_205 plus AnimationPlaybackRuntimeTests 24/24 and three consecutive 756/756 root runs pass, with controller independent verification. Remaining gaps are the immutable published ImageCraft animation pin/real adapter adoption, physical iOS/player timing-memory-energy-thermal evidence, fair player-level comparator A/B, and existing animation structural file-size/module debt."
+    },
+    {
+      "id": "P0-VERIFICATION-IMPACT-001",
+      "phase": "P0",
+      "status": "completed-local-effective-escalation-run-scoped-smart-green",
+      "summary": "Close OPEN-FOVEA-PUBLICATION's local verification-routing and evidence-isolation gaps: apply downstream rules after every effective-profile transition, classify known Tool/performance/capture surfaces, retain premerge escalation for genuine unknowns, reject concurrent profile writers, and preserve digest-bound logs plus a source-bound report per run. Exclusive smart run 20260806T060153.388539Z-23894 passed 26 phases with 660/660 root tests at tree d7abaff9304b. Release, clean-copy, hosted and physical-device evidence remain open."
+    },
+    {
+      "id": "P2-CODEC-HOST-OUTPUT-CONTRACT-001",
+      "phase": "P2",
+      "status": "complete-frame-host-output-boundary-closed-progressive-predecode-peak-and-new-format-contract-open",
+      "summary": "Fovea exact ImageCraft pin 736d0fb75ec612082817ff782d25cb638cb8469e now sits behind a host postcondition: complete-frame pixels must satisfy DecodeLimits, target geometry, actual resident bytes versus admitted working-set bytes and source-profile consistency before publication; progressive previews satisfy limits/target/returned-resident checks. CODEC-PT-012..017 and the expanded finite model cover hostile backend violations. DecodeStage is now a 453-line orchestrator with cohesive codec/execution helpers. The exact pin still represents only PNG/JPEG/GIF and progressive sessions expose no pre-decode peak resource estimate, so AVIF/JPEG XL contract evolution, a second backend, progressive transient-peak admission, fuzz/sanitizer and device evidence remain P8/P0 prerequisites."
+    },
+    {
+      "id": "P0-WORKBENCH-LIFECYCLE-VISUAL-2026-08",
+      "phase": "P0",
+      "status": "local-project-generation-build-static-visual-and-phone-tablet-unit-evidence-passed",
+      "summary": "Workbench project lifecycle is reproducible through XcodeGen 2.46.0 from project.yml and generic iOS Simulator build-for-testing succeeds. Static visual source audit has localization=0, layout=0 and asset findings=0 after making bundled real-media generation explicitly 1280px and replacing two undersized derivatives. WorkbenchVisualSystemTests validate actual bundle raster dimensions and pass 6/6 on iPhone 17e plus 6/6 on iPad Pro 11-inch M5. Subjective screenshot geometry, stable physical-device presentation and release evidence remain separate."
+    },
+    {
+      "id": "P0-REV32-CANDIDATE-AUTHORITY-001",
+      "phase": "P0",
+      "status": "owned-quality-zero-controller-root-green-untraced-candidate-blocked",
+      "summary": "Revision 32 binds conservative candidate and maintainability baselines to the same migration-time Git HEAD, attributes quality only to COMMITTED transaction-owned paths, and repairs all eight owned complexity violations without weakening thresholds. Both bounded refactor tasks pass independent 756/756 controller root tests. Raw external quality drift remains visible; the pre-continuity candidate projection has 332 untraced changed paths, so final candidate authority must recompute and block merge readiness until the owning work traces or removes them. Xcode documentation build also remains blocked by the current FoveaAnimationMacLab AppKit dependency-scan environment failure."
     }
   ],
   "phases": [
@@ -419,9 +473,13 @@
     {
       "adoption": "Adopt async defer, weak let, linear writer lease and Swift Build path discovery; defer RawSpan hot paths, public linear decode preparation, cancellation shields, SBOM certification and manual optimizer attributes until explicit gates pass.",
       "name": "Swift 6.4 ownership and toolchain audit"
+    },
+    {
+      "adoption": "Compare buffering, lifecycle, timing, memory-warning and format-breadth mechanisms. Exact-pin W5 adapters now cover SDWebImage, Kingfisher, PINRemoteImage, FLAnimatedImage and AnimatedImage plus the Fovea player-only path; AnimatedImage variable-delay semantics are explicitly not-comparable and FL uses a public Objective-C displayLayer observation shim. APNGKit runtime timing and YYImage source-oracle gaps are now structurally closed; adopt only mechanisms that pass Fovea correctness/resource gates and stable physical-device non-inferiority.",
+      "name": "AnimatedImageComparatorMechanismAudit"
     }
   ],
-  "reviewedOn": "2026-08-03",
+  "reviewedOn": "2026-08-09",
   "roadmapID": "FOVEA-LONG-HORIZON-ROADMAP-V1",
   "routeInvariants": [
     "Every multi-step Fovea task loads this manifest through the mandatory project context before changes.",
@@ -431,7 +489,10 @@
     "ImageCraft and Akashic are consumed only through current exact public revisions and isolated source identities.",
     "Fovea retains HTTP, authorization, identity, namespace revocation, shared-work and cross-store commit state machines.",
     "A second production codec cannot be admitted until resource-estimate coverage and codec conformance obligations are explicit.",
-    "New research changes the route only through a recorded adoption, rejection or supersession decision."
+    "New research changes the route only through a recorded adoption, rejection or supersession decision.",
+    "Maintainability repair is transaction-owned: unowned reviewable source drift remains candidate-authority work and must not force one change to refactor another actor's files.",
+    "A legacy conservative candidate/quality epoch begins at the migration-time Git HEAD tree; it never reconstructs earlier dirty state or swallows current dirty working-tree bytes.",
+    "Concurrency and lifecycle regression tests must mechanically establish the suspended, queued, pending, coalesced or restored state they claim; fixed Task.yield counts are scheduling hints and cannot serve as proof of admission or state transition."
   ],
   "schemaVersion": 1,
   "status": "active"

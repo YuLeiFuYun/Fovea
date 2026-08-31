@@ -76,32 +76,60 @@ extension PipelineFailure {
         _ error: ImageCraftError,
         stage: Stage
     ) -> PipelineFailure {
-        switch error {
-        case .invalidTarget:
+        if error == .invalidTarget {
             return requestLimitFailure(error)
-        case .encodedBytesExceeded, .dimensionLimitExceeded, .pixelLimitExceeded,
-            .frameLimitExceeded:
+        }
+        if isDecodeLimitFailure(error) {
             return decodeLimitFailure(error, stage: stage)
-        case .unsupportedFormat, .formatMismatch, .metadataLimitExceeded,
-            .auxiliaryAttachmentLimitExceeded:
+        }
+        if isProbeLimitFailure(error) {
             return probeLimitFailure(error)
-        case .unsupportedOrCorruptImage, .probeMismatch, .decodeFailed:
+        }
+        if isExecutionFailure(error) {
             return executionFailure(error)
-        case .progressiveDecodingUnsupported:
+        }
+        if error == .progressiveDecodingUnsupported {
             return Mapping(
                 category: .decode,
                 stage: stage,
                 disposition: .terminal,
                 reasonCode: "progressive-decoding-unsupported"
             ).failure
-        case .progressiveSessionFinished:
+        }
+        if error == .progressiveSessionFinished {
             return internalContractFailure(
                 stage: stage,
                 reasonCode: "progressive-session-finished"
             )
-        case .progressiveSessionCancelled:
+        }
+        if error == .progressiveSessionCancelled {
             return cancelled(stage: stage)
         }
+        // ImageCraft is an independently versioned exact-pin dependency. New public error cases
+        // must fail closed without making a candidate pin source-incompatible with Fovea. Equality
+        // classification avoids both an old-pin unreachable-default diagnostic and a newer-pin
+        // non-exhaustive-switch diagnostic under warnings-as-errors.
+        return unexpectedImageCraftFailure(error, stage: stage)
+    }
+
+    private static func isDecodeLimitFailure(_ error: ImageCraftError) -> Bool {
+        error == .encodedBytesExceeded
+            || error == .dimensionLimitExceeded
+            || error == .pixelLimitExceeded
+            || error == .frameLimitExceeded
+    }
+
+    private static func isProbeLimitFailure(_ error: ImageCraftError) -> Bool {
+        error == .unsupportedFormat
+            || error == .formatMismatch
+            || error == .metadataLimitExceeded
+            || error == .auxiliaryAttachmentLimitExceeded
+    }
+
+    private static func isExecutionFailure(_ error: ImageCraftError) -> Bool {
+        error == .unsupportedOrCorruptImage
+            || error == .probeMismatch
+            || error == .decodeFailed
     }
 
     private static func requestLimitFailure(_ error: ImageCraftError) -> PipelineFailure {

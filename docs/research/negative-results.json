@@ -1160,9 +1160,986 @@
       ],
       "exitCondition": "Reconsider only with a design that reduces the complete events delivery path, preserves cancellation cohort and progressive semantics, and demonstrates repeated Fovea-own warm-memory improvements without cold, disk, memory, hitch or correctness regressions.",
       "id": "NEG-W2-EVENTS-RENDERED-MEMORY-FASTPATH-001"
+    },
+    {
+      "area": "ordinary-image-public-load-surface",
+      "claimRejected": "Routing W2 ordinary still images through image(for:) instead of events(for:) will materially close Fovea warm-memory latency without affecting cold or warm-disk behavior.",
+      "counterexample": "Across three directional iOS Simulator blocks with an interleaved Apple anchor, the direct surface changed Fovea warm-memory per-image median from about 0.261 ms to 0.246 ms, but nine-load total duration increased from about 4.574 ms to 4.806 ms and p95 increased from about 0.296 ms to 0.319 ms. Cold normalized total latency also moved from about 1.004x to 1.025x Apple.",
+      "decision": "Revert the benchmark load-surface fork. W2 continues to exercise the existing events surface until a complete request/delivery-chain change demonstrates material self-normalized improvement. Do not trade W1/W7 cancellation semantics or add a second control path for a microsecond-scale median-only movement.",
+      "evidencePaths": [
+        "docs/research/ordinary-image-w2-direct-surface-evidence-2026-08.json",
+        "Benchmarks/ComparativeLab/Adapters/FoveaAdapterPackage/Sources/FoveaComparatorAdapter/FoveaComparatorAdapter.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/OtherWorkloads.swift"
+      ],
+      "exitCondition": "Reconsider only after attribution identifies a removable production cost and repeated interleaved blocks improve Fovea total and tail latency without cold, disk, memory, cancellation, progressive, identity, or correctness regressions.",
+      "id": "NEG-W2-DIRECT-FINAL-LOAD-SURFACE-001"
+    },
+    {
+      "area": "animated-image-performance-methodology",
+      "claimRejected": "Measuring all ImageCraft animation samples before all direct ImageIO samples is sufficient to establish frame-decode direction.",
+      "counterexample": "Fixed-order 24-frame GIF/APNG/JPEG-sequence runs produced large and unstable apparent advantages, including APNG sequence ratios near 0.52x, after earlier runs on the same code were near parity. Replacing the campaign with 18 retained samples, 9/9 pair alternation and a three-way selected-frame rotation moved the sequence ratios to 1.020x, 1.017x and 1.028x, proving the fixed-order result was cache and host-state contamination.",
+      "decision": "Reject fixed-order animation benchmarks. Retain schema-2 reports with explicit measurement orders, balanced pair alternation, three-way rotation, raw samples, input identities and pixel digests.",
+      "evidencePaths": [
+        "../ImageCraft/Sources/ImageCraftEvidence/AnimationPerformanceEvidence.swift",
+        "../ImageCraft/Tools/Performance/validate_animation_performance_evidence.py",
+        "../ImageCraft/.artifacts/performance/animation-initial/reports/balanced-gif-256-window8.json",
+        "../ImageCraft/.artifacts/performance/animation-initial/reports/balanced-apng-256-window8.json",
+        "../ImageCraft/.artifacts/performance/animation-initial/reports/balanced-jpeg-sequence-256-window8.json"
+      ],
+      "exitCondition": "None for fixed ordering. Future animation comparisons must remain balanced or randomized and retain the executed order in evidence.",
+      "id": "NEG-W5-FIXED-ORDER-ANIMATION-BENCH-001"
+    },
+    {
+      "area": "imagecraft-performance-tool-product-surface",
+      "claimRejected": "A new standalone ImageCraftAnimationLab executable product is a harmless way to add animation benchmarks.",
+      "counterexample": "ImageCraft integration-contract verification failed with root product set drift because every executable target becomes a package product. Keeping the separate target would have expanded the consumer-visible package surface for an evidence-only tool.",
+      "decision": "Remove the extra executable target and route animation performance through the existing ImageCraftEvidence product. Evidence tooling must not create a second public executable product.",
+      "evidencePaths": [
+        "../ImageCraft/Package.swift",
+        "../ImageCraft/Sources/ImageCraftEvidence/AnimationPerformanceEvidence.swift",
+        "../ImageCraft/Sources/ImageCraftEvidence/main.swift",
+        "../ImageCraft/scripts/verify-integration-contract.sh"
+      ],
+      "exitCondition": "Reconsider only if the integration contract is intentionally versioned to publish a separate product for a consumer-facing purpose rather than benchmark convenience.",
+      "id": "NEG-IMAGECRAFT-ANIMATION-LAB-PRODUCT-001"
+    },
+    {
+      "area": "animated-image-comparator-semantic-equivalence",
+      "claimRejected": "SDWebImage GIF/APNG frame timings can enter the exact-pixel codec ranking merely because dimensions, alpha and visual appearance match.",
+      "counterexample": "Across six rotated process blocks, SDWebImage selected frames differed from ImageCraft and PINRemoteImage on up to 35.8 percent of pixels, with maximum channel difference 2 and maximum mean absolute channel difference about 0.101. ImageCraft and PIN were byte-identical.",
+      "decision": "Exclude SDWebImage from the preregistered exact-pixel timing pair. Retain its timing and visual-difference diagnostics separately; do not relax the digest gate after observing results.",
+      "evidencePaths": [
+        "docs/research/w5-animated-codec-study-2026-08.json",
+        "Benchmarks/ComparativeLab/animated-image-plan.json",
+        "Benchmarks/ComparativeLab/AnimatedCodecLabPackage/README.md",
+        "Tools/Performance/validate_w5_animated_codec.py"
+      ],
+      "exitCondition": "A separately preregistered visually equivalent endpoint may be added before a new campaign, with an explicit oracle and tolerance. It cannot replace the existing exact-pixel endpoint.",
+      "id": "NEG-W5-SDWEBIMAGE-EXACT-PIXEL-001"
+    },
+    {
+      "area": "animated-frame-source-selection",
+      "claimRejected": "Using CGImageSourceCreateImageAtIndex for every no-downsample animated frame dominates the thumbnail path.",
+      "counterexample": "The full-image path substantially improved repeated selected-frame latency but caused the APNG first-sequence experiment to rise from roughly 28 ms to roughly 59 ms for 24 frames. A single source-selection policy therefore did not dominate both random reuse and continuous-window endpoints.",
+      "decision": "Use the full-image cache path for frame(at:) and the thumbnail/window path for frames(in:). Pixel digests between the two paths are tested equal.",
+      "evidencePaths": [
+        "../ImageCraft/Sources/ImageCraftImageIO/ImageIOAnimationFrameProvider.swift",
+        "../ImageCraft/Sources/ImageCraftImageIO/ImageIOAnimationFrameRenderer.swift",
+        "../ImageCraft/Tests/ImageCraftImageIOTests/AnimatedImageDecoderTests.swift"
+      ],
+      "exitCondition": "Reconsider only with a bounded cache policy that improves both repeated-frame and continuous-window endpoints without increasing peak memory or reclaim latency.",
+      "id": "NEG-IMAGECRAFT-ANIMATION-UNIVERSAL-FULL-IMAGE-FASTPATH-001"
+    },
+    {
+      "area": "animated-image-performance-methodology",
+      "claimRejected": "A warm ImageIO source with every full frame implicitly cached is an equivalent baseline for a bounded frame window.",
+      "counterexample": "After warming all full frames, GIF and JPEG-sequence 24-frame loops fell to about 0.43 ms and 0.19 ms, roughly 46x and 61x faster than the bounded ImageCraft window, but the baseline implicitly retains the entire decoded track and has no matched memory or reclaim budget.",
+      "decision": "Keep unbounded all-frame cache as a diagnostic only. The primary continuous-window endpoint uses the same thumbnail/window policy and reports about 1.01x mechanism overhead.",
+      "evidencePaths": [
+        "../ImageCraft/docs/PERFORMANCE.md",
+        "../ImageCraft/Sources/ImageCraftEvidence/AnimationPerformanceEvidence.swift",
+        "../ImageCraft/Tools/Performance/validate_animation_performance_evidence.py"
+      ],
+      "exitCondition": "It can become a primary endpoint only after both systems receive the same explicit decoded-byte budget, eviction policy, peak-memory accounting and reclaim-latency gate.",
+      "id": "NEG-W5-UNBOUNDED-FULL-FRAME-CACHE-AS-WINDOW-BASELINE-001"
+    },
+    {
+      "area": "animated-image-performance-methodology",
+      "claimRejected": "Yielding a burst and releasing the first gated MJPEG decode immediately is sufficient to produce a deterministic latest-only mechanism endpoint.",
+      "counterexample": "The first eight-trial mechanism run decoded between two and four frames instead of the intended two because the producer had yielded all 120 parts but the asynchronous ingestion task had not yet converged on inputFinished, pending source index 119 and 118 superseded frames. The observed work count therefore depended on scheduler interleaving, not solely on the latest-only policy.",
+      "decision": "Reject the unfenced harness. The accepted runner waits for the live session snapshot to prove inputFinished, pendingPartIndex 119 and droppedEncodedFrameCount 118 before releasing the first decode. The validator then requires exactly two decodes, 118 drops, final source index 119 and exact final pixel equality in every trial.",
+      "evidencePaths": [
+        "Tools/FoveaNetworkLab/MJPEGMechanismLab.swift",
+        "Tools/Performance/capture_mjpeg_mechanism.py",
+        "Tools/Performance/validate_mjpeg_mechanism.py",
+        "docs/research/w5-mjpeg-mechanism-study-2026-08.json"
+      ],
+      "exitCondition": "No burst/latest-only comparison may be accepted unless ingestion completion and the exact pending/drop state are fenced before the gated decode resumes, and every independent process block passes the fixed work-count and final-pixel oracle.",
+      "id": "NEG-W5-MJPEG-MECHANISM-UNFENCED-INGESTION-001"
+    },
+    {
+      "area": "background-derived-raster-test-methodology",
+      "claimRejected": "A fixed two-to-eight-second polling timeout is a reliable oracle for completion of detached utility-priority derived-raster work.",
+      "counterexample": "The ordinary root suite passed on a quieter host, but premerge under concurrent Swift workloads timed out one coordinator case and three pipeline publication cases while active work had produced no admission rejection. Replays with explicit activity fencing passed even when aspect-fit creation took 20.7 seconds and individual 48 MP integration creations took 22-24 seconds.",
+      "decision": "Replace wall-clock polling with monotonic scheduled/terminal activity counters and a cancellation-aware quiescence waiter. Tests capture a baseline before the triggering load, prove a new task was registered, and wait for that registered cohort to reach zero active entries.",
+      "evidencePaths": [
+        "Sources/FoveaCore/DerivedRasterCreationCoordinator.swift",
+        "Sources/FoveaCore/DerivedRasterRuntime.swift",
+        "Tests/FoveaTests/DerivedRasterCreationCoordinatorTests.swift",
+        "Tests/FoveaTests/DerivedRasterPipelineIntegrationTests.swift"
+      ],
+      "exitCondition": "Do not restore a fixed sleep or polling deadline as the primary completion oracle. Any future bounded timeout must wrap an explicit registration/completion signal and be justified as a global test-run safety limit rather than a scheduler-performance assertion.",
+      "id": "NEG-DERIVED-RASTER-WALL-CLOCK-QUIESCENCE-001"
+    },
+    {
+      "area": "progressive-preview-delivery-semantics",
+      "claimRejected": "Every progressive JPEG generation must be delivered to every subscriber in exact sequence even though each subscription uses bufferingNewest(1).",
+      "counterexample": "Under premerge host contention, a shared four-generation producer delivered qualities [1,2,3] before finalization instead of [1,2,3,4]. The transport and producer remained single-instance, both subscribers received the replayed latest preview and one final image, and the omitted generation was permitted by the explicit coalescing buffer.",
+      "decision": "Validate the actual contract: late subscribers replay the current latest preview; each observed preview sequence is nonempty, source-valid and strictly increasing; intermediate generations may coalesce; final delivery remains exactly once. Do not convert the buffer to unbounded delivery merely to satisfy an exact-sequence test.",
+      "evidencePaths": [
+        "Sources/FoveaCore/PipelineProgressivePreview.swift",
+        "Sources/FoveaCore/FoveaPipeline+Operations.swift",
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
+      ],
+      "exitCondition": "An exact all-generation assertion is valid only for a separately specified lossless progressive stream with a bounded backpressure/resource contract; it is not valid for bufferingNewest(1).",
+      "id": "NEG-PROGRESSIVE-BUFFERING-NEWEST-EXACT-SEQUENCE-001"
+    },
+    {
+      "area": "verification-resource-capacity",
+      "claimRejected": "A long qualification chain can safely discover disk exhaustion only when a later build or report write actually fails.",
+      "counterexample": "The current animation qualification completed CacheLab 7/7, then the loopback laboratory failed while printing its result because the data volume had only about 715 MiB free. The failure discarded the remaining conformance sequence and required cleanup plus a resumed run even though the product code was sound.",
+      "decision": "Add a fail-closed free-space preflight as the first serial phase of premerge and release profiles. The default minimum is 2 GiB, configuration is integer-bounded, and iteration remains unaffected. Completed DerivedData and benchmark build caches may be removed after their logs and exit evidence are retained.",
+      "evidencePaths": [
+        "scripts/check-verification-capacity.py",
+        "scripts/test-verification-capacity.py",
+        "scripts/run-verification-profile.py"
+      ],
+      "exitCondition": "Do not remove or move the capacity check behind parallel or expensive phases unless a replacement proves equivalent early failure. Any threshold change must retain bounded parsing, fail-closed behavior, and evidence that expected qualification artifacts fit the target environment.",
+      "id": "NEG-QUALIFICATION-DISK-CAPACITY-PREFLIGHT-001"
+    },
+    {
+      "area": "verification-impact-escalation",
+      "claimRejected": "Once iteration verification broadens to smart, no further escalation decision is required for unknown or unknown-tooling paths.",
+      "counterexample": "The current 141-file candidate contained ten legitimate Tool and performance-lab paths that were unclassified. Requesting the iteration profile reported effective=smart even though the resulting impact still contained unknown and unknown-tooling categories; the smart contract would have escalated the same input to premerge. The one-pass branch therefore bypassed the downstream fail-closed rule.",
+      "decision": "Evaluate the escalation ladder against the current effective profile, not only the originally requested profile. Explicitly classify repository Tool products and capture scripts so known lab surfaces do not trigger conservative unknown-path escalation, while genuinely unknown iteration inputs continue through smart to premerge.",
+      "evidencePaths": [
+        "scripts/run-verification-profile.py",
+        "scripts/check-tooling-syntax.py",
+        "scripts/test-verification-candidate-baseline.py"
+      ],
+      "exitCondition": "Every profile transition must be followed by all rules that apply to the new effective profile. Regression coverage must prove iteration plus an unknown path reaches premerge and includes both the capacity preflight and root tests; new Tool path classes must remain explicit rather than silently treated as known.",
+      "id": "NEG-VERIFICATION-ESCALATION-SHORT-CIRCUIT-001"
+    },
+    {
+      "area": "verification-evidence-isolation",
+      "claimRejected": "Repository-global phase log names and a shared latest report are sufficient evidence when verification profiles can overlap.",
+      "counterexample": "Two smart-profile invocations overlapped after one foreground bridge call timed out but continued executing. Both writers used .artifacts/verification/root-tests.log and latest.json. During observation the shared root log first showed 645 tests from one execution and was later overwritten by a 660-test execution, while the report contained no log digest or run-specific path. The apparent 645/660 product discrepancy was therefore an evidence collision, not a test-suite change.",
+      "decision": "Acquire a nonblocking repository verification lock before planning or execution, retain each run under a unique timestamp-and-PID directory, write phase logs only inside that directory, publish a schema-3 report containing each log byte count and SHA-256, verify log containment and digests before report publication, and atomically copy the retained report to latest.json.",
+      "evidencePaths": [
+        "scripts/run-verification-profile.py",
+        "scripts/check-tooling-syntax.py",
+        "docs/project-memory/project-memory.json"
+      ],
+      "exitCondition": "Do not restore shared mutable phase-log paths or permit concurrent profile writers. Any replacement must prove per-run provenance, source identity, log containment, content digests, collision rejection, and byte-identical retained/latest reports.",
+      "id": "NEG-VERIFICATION-SHARED-ARTIFACT-COLLISION-001"
+    },
+    {
+      "area": "animated-codec-source-identity",
+      "claimRejected": "A dirty local comparator can be identified adequately by a placeholder such as local-uncommitted-source-tree plus a short status listing or selected-file hashes.",
+      "counterexample": "The ImageCraft animation candidate contains modified and untracked public API, parser, budget, renderer and provider files. The schema-1 W5 reports hard-coded local-uncommitted-source-tree, while the runner hashed only six selected files and the validator re-read mutable external input paths. Those artifacts could not reconstruct the complete source bytes. A source-bound rerun also moved the APNG 24-frame ratio from about 1.019 to 1.245, so the legacy timing values cannot be retroactively upgraded merely by attaching a newer identity.",
+      "decision": "Use a temporary Git index with git add -A and git write-tree to bind every unignored tracked, modified, deleted and untracked file plus executable bits. Inject HEAD, complete working-tree tree and dirty state into every report; compare source and input identities before and after capture; require fixed comparator checkouts to be clean at exact commits; inventory every report and RGBA sidecar by byte count and SHA-256; reject identity, pixel, containment, artifact-set and source-after tampering.",
+      "evidencePaths": [
+        "Tools/Performance/capture_w5_animated_codec.py",
+        "Tools/Performance/validate_w5_animated_codec.py",
+        "Tools/Performance/test_w5_animated_codec_identity.py",
+        "Benchmarks/ComparativeLab/AnimatedCodecLabPackage/Sources/W5AnimatedCodecLab/Models.swift",
+        "Benchmarks/ComparativeLab/AnimatedCodecLabPackage/README.md",
+        "docs/research/w5-animated-codec-study-2026-08.json"
+      ],
+      "exitCondition": "No dirty or unpublished comparator evidence may use a placeholder, HEAD-only identity, partial file whitelist or validator dependency on mutable external inputs. Any replacement must bind complete source state, source stability during execution, report-injected identity and retained artifact digests, with executable tamper tests.",
+      "id": "NEG-W5-ANIMATED-CODEC-PLACEHOLDER-IDENTITY-001"
+    },
+    {
+      "area": "apng-partial-composition-oracle",
+      "claimRejected": "APNGKit preRenderAllFrames can be treated as the exact full-canvas pixel oracle for APNG none, background, and previous disposal fixtures.",
+      "counterexample": "In the current source-, system-, and mechanism-bound six-fixture capture, ImageCraft and Apple ImageIO are byte-exact on all 21 supported frames. APNGKit is exact on background disposal, both SpecTesting subrect none/background fixtures, and all six mixed previous/source frames from pia.png, but only the first frame of the full-canvas none and previous fixtures. The later full-canvas frames differ by up to two and one channel levels respectively. The owned straight-alpha reference independently matches ImageCraft and Apple on all 21 frames and shows that a premultiplied byte canvas reproduces the APNGKit-style one-level drift.",
+      "decision": "Retain APNGKit as a mechanism comparator with explicit preRenderAllFrames memory-policy differences, not as a universal exact oracle. Use the owned straight-alpha reference plus pairwise full-canvas RGBA digests and independently recomputed differences. Bind Apple ImageIO to the macOS build, Xcode/Swift toolchain, framework bundle metadata and Info.plist digest. Do not infer memory, replay-depth, player or product superiority from local pixel agreement.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/Package.swift",
+        "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/Package.resolved",
+        "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/Sources/W5APNGCompositionOracleLab/W5APNGCompositionOracleLabMain.swift",
+        "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/README.md",
+        "Tools/Performance/w5_apng_reference.py",
+        "Tools/Performance/test_w5_apng_reference.py",
+        "Tools/Performance/capture_w5_apng_reference.py",
+        "Tools/Performance/validate_w5_apng_reference.py",
+        "Tools/Performance/test_w5_apng_reference_capture.py",
+        "Tools/Performance/capture_w5_apng_composition_oracle.py",
+        "Tools/Performance/validate_w5_apng_composition_oracle.py",
+        "Tools/Performance/test_w5_apng_composition_oracle.py",
+        "docs/research/w5-apng-composition-oracle-2026-08.json",
+        "docs/research/w5-apng-owned-reference-2026-08.json",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json"
+      ],
+      "exitCondition": "Do not restore APNGKit as a universal exact oracle unless a new source-bound capture proves exact full-canvas equality on the retained semi-transparent none/previous fixtures and broader source/over, partial-alpha and random-access cases. Any replacement must retain the owned semantic reference and independent system or third-party adjudication.",
+      "id": "NEG-W5-APNGKIT-EXACT-ORACLE-001"
+    },
+    {
+      "area": "imagecraft-apng-subrect-resource-mechanism",
+      "claimRejected": "Publishing APNG frame rect, disposal and blend metadata means the current ImageCraft animation path implements subrect decoded storage, composition checkpoints or bounded random-access replay.",
+      "counterexample": "The source-bound mechanism audit shows ImageIOAnimationFrameProvider maps every supported requested index directly to ImageIOAnimationFrameRenderer, whose SourceBox calls CGImageSourceCreateImageAtIndex or CGImageSourceCreateThumbnailAtIndex. The provider and renderer contain no explicit checkpoint state, and DecodedAnimationFrame is documented as a complete composed frame. Runtime evidence retains full-canvas RGBA for every supported subrect frame: SpecTesting 013 and 015 each expand aggregate metadata-subrect bytes by about 2.400x, while the six-frame pia.png previous/source sequence expands them by about 2.612x. Pixel correctness is exact against Apple ImageIO, so the failure is the resource mechanism claim, not supported-frame composition correctness. A later package-internal owned Swift prototype now parses compressed APNG subrect payloads, composes straight-alpha state and implements bounded compressed checkpoints, but it is not connected to ImageIOAnimatedImageDecoder or ImageIOAnimationFrameProvider; therefore it does not change the production-path mechanism finding. The later ImageCraft implementationVersion 2 public decoder now routes admitted RGBA8 non-interlaced APNG at maximum dimension 1024 through the owned compressed-payload/checkpoint mechanism; a retained Release binary is exact on 24/24 Python and 21/21 Apple frames. Unsupported aligned APNG can still fall back to ImageIO full-frame materialization, so a universal ImageCraft-subrect-storage claim remains false.",
+      "decision": "Supersede the rejection for the explicitly admitted owned subset only. Do not generalize it to all APNG or all ImageCraft animation: aligned formats outside RGBA8 non-interlaced <=1024 may still use ImageIO, and their retained bytes/replay mechanism remains different. Bind claims to codec fingerprint impl=2 and the actual backing selected by admission policy.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/Sources/W5APNGCompositionOracleLab/W5APNGCompositionOracleLabMain.swift",
+        "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/README.md",
+        "Tools/Performance/capture_w5_apng_composition_oracle.py",
+        "Tools/Performance/validate_w5_apng_composition_oracle.py",
+        "Tools/Performance/test_w5_apng_composition_oracle.py",
+        "docs/research/w5-apng-composition-oracle-2026-08.json",
+        "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+        "Tools/Performance/w5_apng_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_checkpoint_model.py",
+        "docs/research/w5-apng-checkpoint-model-2026-08.json",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+        "Tools/Performance/capture_w5_apng_owned_swift_playback.py",
+        "Tools/Performance/validate_w5_apng_owned_swift_playback.py",
+        "docs/research/w5-apng-owned-swift-playback-2026-08.json",
+        "Tools/Performance/capture_w5_apng_public_decoder_playback.py",
+        "Tools/Performance/validate_w5_apng_public_decoder_playback.py",
+        "Tools/Performance/test_w5_apng_public_decoder_playback.py",
+        "docs/research/w5-apng-public-decoder-playback-2026-08.json"
+      ],
+      "exitCondition": "A universal ImageCraft subrect/checkpoint claim requires every admitted APNG format/canvas policy to use a source-bound bounded-state path or to expose fallback mechanism diagnostics; current evidence supports only the RGBA8 non-interlaced <=1024 owned subset.",
+      "id": "NEG-W5-IMAGECRAFT-SUBRECT-METADATA-NOT-STORAGE-001"
+    },
+    {
+      "area": "apng-animation-index-domain",
+      "claimRejected": "APNG animation metadata frame indices can always be passed directly to CGImageSourceCreateImageAtIndex, including containers whose static default image precedes the first fcTL.",
+      "counterexample": "APNG SpecTesting 016 places IDAT before the first fcTL, so the red IDAT is a static default image and the green fdAT is animation frame zero. The owned APNG parser/compositor and APNGKit agree byte-for-byte on all three animation frames. Direct Apple ImageIO/ImageCraft source-index materialization before the guard returned the red default image for animation frames zero and two, producing 255-level red/green differences and only one exact frame. Source count equality did not expose the index-domain mismatch.",
+      "decision": "Keep direct ImageIO timeline-index guessing rejected. ImageCraft implementationVersion 2 now replaces the public guard for supported RGBA8 non-interlaced <=1024 separate-default APNG by selecting the owned timeline; SpecTesting 016 is exact on 3/3 public frames. If the owned subset rejects an unaligned container, the decoder still fails closed instead of using ImageIO source indices.",
+      "evidencePaths": [
+        "Tools/Performance/w5_apng_reference.py",
+        "Tools/Performance/test_w5_apng_reference.py",
+        "Tools/Performance/capture_w5_apng_composition_oracle.py",
+        "Tools/Performance/validate_w5_apng_composition_oracle.py",
+        "Tools/Performance/test_w5_apng_composition_oracle.py",
+        "docs/research/w5-apng-composition-oracle-2026-08.json",
+        "docs/research/w5-apng-owned-reference-2026-08.json",
+        "Tools/Performance/capture_w5_apng_owned_swift_playback.py",
+        "Tools/Performance/validate_w5_apng_owned_swift_playback.py",
+        "docs/research/w5-apng-owned-swift-playback-2026-08.json",
+        "Tools/Performance/capture_w5_apng_public_decoder_playback.py",
+        "Tools/Performance/validate_w5_apng_public_decoder_playback.py",
+        "docs/research/w5-apng-public-decoder-playback-2026-08.json"
+      ],
+      "exitCondition": "Never restore direct ImageIO index mapping for unaligned separate-default APNG. Additional formats may be supported only through an owned animation-timeline path with source-bound exactness, lifecycle and resource evidence.",
+      "id": "NEG-W5-APNG-SEPARATE-DEFAULT-IMAGEIO-INDEX-001"
+    },
+    {
+      "area": "apng-owned-composition-arithmetic",
+      "claimRejected": "An APNG compositor can maintain an 8-bit premultiplied canvas and quantize each source-over contribution independently without changing exact output.",
+      "counterexample": "On the retained semi-transparent full-canvas none and previous fixtures, the premultiplied-byte model matches only the first frame and differs on later frames by one or two channel levels, reproducing APNGKit-style drift. The owned straight-alpha model instead keeps unpremultiplied 8-bit canvas samples, evaluates source-over color with the exact alpha numerator and floor division, and premultiplies only the emitted frame with nearest rounding; it matches Apple ImageIO and ImageCraft on all 21 supported frames.",
+      "decision": "Use apng-straight-alpha-exact-numerator-floor-v1 as the executable arithmetic specification. Treat final top-down nearest premultiplication as a separately calibrated output representation step. Do not use a premultiplied byte canvas as the Swift implementation model.",
+      "evidencePaths": [
+        "Tools/Performance/w5_apng_reference.py",
+        "Tools/Performance/test_w5_apng_reference.py",
+        "Tools/Performance/capture_w5_apng_reference.py",
+        "Tools/Performance/validate_w5_apng_reference.py",
+        "Tools/Performance/test_w5_apng_reference_capture.py",
+        "docs/research/w5-apng-owned-reference-2026-08.json"
+      ],
+      "exitCondition": "Any replacement arithmetic must remain byte-exact on the retained 21-frame corpus, the translucent two-frame unit counterexample, and broader held-out partial-alpha cases under an independently recomputed validator.",
+      "id": "NEG-W5-APNG-PREMULTIPLIED-BYTE-CANVAS-001"
+    },
+    {
+      "area": "apng-random-access-checkpoint-budget",
+      "claimRejected": "Retained full-canvas pre-frame checkpoints are a generally viable default for bounding APNG random-access replay under the current 32 MiB Fovea animation-frame budget and eight-frame replay limit.",
+      "counterexample": "The source-bound analytical matrix evaluates seven scaled scenarios, two access profiles, two source/raw retention strategies, seven budgets and three replay limits. Only 156 of 588 cases are feasible. At the preregistered 32 MiB/eight-frame point, only two of twenty-eight cases pass, both for the same 1024x1024 60-frame subrect-none encoded-source-retained scenario. No scenario is fully feasible across both retention strategies and access profiles. Sparse 2048x2048 tracks remain checkpoint-dominated because each retained canvas costs 16 MiB.",
+      "decision": "Reject full-canvas checkpoints as the default representation. Evaluate persistent tile roots, bounded dirty-region snapshots, or independently validated compressed checkpoints against the same byte/replay matrix. Keep frame-zero transparent state implicit and report retained state separately from compositor working and output bytes.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+        "Tools/Performance/w5_apng_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_checkpoint_model.py",
+        "Tools/Performance/capture_w5_apng_checkpoint_model.py",
+        "Tools/Performance/validate_w5_apng_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_checkpoint_capture.py",
+        "docs/research/w5-apng-checkpoint-model-2026-08.json",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json"
+      ],
+      "exitCondition": "A replacement may advance only if it preserves exact pixels and previous-disposal state while clearing the 32 MiB/eight-frame reference point across the preregistered scenario set or establishes a narrower explicitly gated support envelope backed by physical-device memory evidence.",
+      "id": "NEG-W5-APNG-FULL-CANVAS-CHECKPOINT-DEFAULT-001"
+    },
+    {
+      "area": "apng-persistent-tile-checkpoint-budget",
+      "claimRejected": "Immutable persistent tile versions with shared checkpoint roots are a generally viable replacement for full-canvas APNG checkpoints under the current 32 MiB retained-state, eight-frame replay, and 32 MiB modeled-peak policy.",
+      "counterexample": "The source-bound candidate-family matrix evaluates seven scaled scenarios, four tile sizes, two access profiles, two retention strategies, seven retained budgets, and three replay limits for 2,352 cases. Although 774 cases have at least one feasible candidate layout, only 4 of 112 cases pass the 32 MiB/eight-frame retained-state reference point. All four are the same SPARSE-2048-256 encoded-source-retained scenario with 32- or 64-pixel tiles under uniform or tail-hot access. The best retained state is about 25.98 MiB with 64-pixel tiles, but modeled peak remains about 57.98 MiB; zero reference-point cases fit the 32 MiB Fovea hard cap. The other six scenarios have no feasible reference-point tile candidate.",
+      "decision": "Do not adopt persistent tiles as the general default. Preserve the model as evidence for an explicitly gated extremely-sparse support envelope only. Continue with bounded dirty-region snapshots or independently validated compressed checkpoints, and separate retained-state feasibility from total modeled peak including output and compositor working bytes.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+        "Benchmarks/ComparativeLab/apng-tile-checkpoint-plan.json",
+        "Tools/Performance/w5_apng_tile_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_tile_checkpoint_model.py",
+        "Tools/Performance/capture_w5_apng_tile_checkpoint_model.py",
+        "Tools/Performance/validate_w5_apng_tile_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_tile_checkpoint_capture.py",
+        "docs/research/w5-apng-tile-checkpoint-model-2026-08.json",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json"
+      ],
+      "exitCondition": "A tile-based production path may advance only behind a measurable sparse-update eligibility gate and physical-device peak-memory evidence. A general-default claim requires clearing both retained-state and modeled-peak limits across the preregistered scenario set without weakening exact straight-alpha composition, previous-disposal semantics, or replay bounds.",
+      "id": "NEG-W5-APNG-PERSISTENT-TILE-GENERAL-DEFAULT-001"
+    },
+    {
+      "area": "apng-compressed-checkpoint-support-envelope",
+      "claimRejected": "Deterministic compressed full-canvas checkpoints are a universal APNG random-access default under the current 32 MiB retained-state, eight-frame replay, and 32 MiB modeled-peak policy.",
+      "counterexample": "The source-bound 5,880-case sensitivity matrix finds 2,510 retained-state-feasible cases and 810 modeled-peak-feasible cases overall. At the reference point, 80 of 280 ratio cases satisfy retained state but only 42 clear modeled peak. Peak-clearing cases are limited to encoded-source-retained 1024-square scenarios: full-canvas 60-frame at checkpoint ratios up to 25%, subrect-none 60-frame up to 50%, and subrect-previous 120-frame up to 10%. No 2048-square reference case clears peak, and raw-subrect-retained reference paths do not open a general envelope.",
+      "decision": "Retain compressed checkpoints as the leading bounded prototype for an explicit at-most-1024-square encoded-source support envelope, not as a universal default. Require content-independent admission bounds, measured compression/decompression latency, hostile-state validation, exact pixels, and physical-device peak evidence before product integration.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/apng-compressed-checkpoint-plan.json",
+        "Tools/Performance/w5_apng_compressed_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_compressed_checkpoint_model.py",
+        "Tools/Performance/capture_w5_apng_compressed_checkpoint_model.py",
+        "Tools/Performance/validate_w5_apng_compressed_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_compressed_checkpoint_capture.py",
+        "docs/research/w5-apng-compressed-checkpoint-model-2026-08.json",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json"
+      ],
+      "exitCondition": "Do not call compressed checkpoints universal unless a source-bound replacement clears retained and peak gates across the full preregistered scenario set and physical-device latency/energy gates. A narrower implementation must encode its maximum canvas, retention strategy, ratio/admission fallback, and fail-closed behavior in public policy.",
+      "id": "NEG-W5-APNG-COMPRESSED-CHECKPOINT-UNIVERSAL-DEFAULT-001"
+    },
+    {
+      "area": "apng-modeled-peak-lower-bound",
+      "claimRejected": "Changing only the retained checkpoint representation can make a separate straight-alpha compositor canvas plus separate premultiplied output canvas fit a 32 MiB total modeled-peak cap for 2048x2048 RGBA animation.",
+      "counterexample": "A 2048x2048 RGBA canvas is 16 MiB. The exact owned composition model needs straight-alpha state, while the current output endpoint is premultiplied RGBA. Keeping those as separate full-canvas surfaces consumes 32 MiB before any encoded source, current raw subrect, previous-disposal save region, compressed checkpoint blob, decompressor workspace, allocator overhead, or frame-cache ownership is counted. Consequently the compressed sensitivity matrix has zero 2048-square reference cases under the 32 MiB modeled-peak cap regardless of checkpoint ratio.",
+      "decision": "Treat the 2048-square failure as a representation/policy invariant, not a checkpoint-tuning problem. Evaluate output-buffer aliasing or destructive finalization for one-shot requests, an explicit maximum-canvas support envelope, or a revised definition of the animation-frame hard cap before spending further effort on dirty-region checkpoint state alone.",
+      "evidencePaths": [
+        "Tools/Performance/w5_apng_reference.py",
+        "Benchmarks/ComparativeLab/apng-compressed-checkpoint-plan.json",
+        "Tools/Performance/w5_apng_compressed_checkpoint_model.py",
+        "docs/research/w5-apng-compressed-checkpoint-model-2026-08.json"
+      ],
+      "exitCondition": "Remove this result only if a source-bound implementation proves exact APNG output without simultaneously owning two full 2048-square RGBA surfaces, or governance explicitly changes the peak metric/hard-cap scope with physical-device evidence.",
+      "id": "NEG-W5-APNG-2048-DOUBLE-CANVAS-32MIB-001"
+    },
+    {
+      "area": "apng-compressed-checkpoint-zlib-framing",
+      "claimRejected": "Apple Compression COMPRESSION_ZLIB output can be placed directly in the FOVAPNG1 payload and decoded by standard RFC 1950 zlib implementations.",
+      "counterexample": "The first Swift/Python interop probe produced a payload beginning with raw DEFLATE bytes and Python zlib.decompress rejected it with an incorrect-header error; conversely the Swift decoder rejected a Python payload beginning with the RFC 1950 0x78DA header. Apple compression_encode_buffer and compression_decode_buffer with COMPRESSION_ZLIB operate on raw DEFLATE in this environment rather than adding or consuming the RFC 1950 wrapper expected by Python zlib.",
+      "decision": "The package-internal codec explicitly writes and validates the RFC 1950 CMF/FLG header and Adler-32 trailer around Apple Compression raw DEFLATE. It also retains the FOVAPNG1 CRC32 over decoded bytes. Unit tests include a Python-generated RFC 1950 fixture, and the source-bound retained binary is exercised in both directions.",
+      "evidencePaths": [
+        "Tools/Performance/capture_w5_apng_compressed_checkpoint_interop.py",
+        "Tools/Performance/validate_w5_apng_compressed_checkpoint_interop.py",
+        "docs/research/w5-apng-compressed-checkpoint-interop-2026-08.json"
+      ],
+      "exitCondition": "Do not remove explicit RFC 1950 framing unless a replacement source- and binary-bound capture proves that the selected system compression API emits and accepts the same portable wrapper on every supported platform and deployment target.",
+      "id": "NEG-W5-APNG-APPLE-COMPRESSION-ZLIB-WRAPPER-001"
+    },
+    {
+      "area": "apng-compressed-checkpoint-byte-identity",
+      "claimRejected": "Two conforming FOVAPNG1 encoders must produce byte-identical compressed payloads for the same straight-alpha canvas.",
+      "counterexample": "In the four-fixture Swift/Python interop capture, tiny, structured and gradient blobs were byte-identical, but the sparse 64x32 state produced a 94-byte Python blob and a 151-byte Swift blob. Both payloads passed RFC 1950, raw-count, CRC32 and Adler-32 validation and decoded to the exact same 8,192 source bytes in both directions.",
+      "decision": "Treat decoded-byte identity plus framing and checksum validity as the compatibility contract. Record compressed byte count and digest for provenance, but never use cross-implementation compressed SHA equality as a correctness or cache-key requirement.",
+      "evidencePaths": [
+        "Tools/Performance/w5_apng_compressed_checkpoint_model.py",
+        "Tools/Performance/capture_w5_apng_compressed_checkpoint_interop.py",
+        "Tools/Performance/validate_w5_apng_compressed_checkpoint_interop.py",
+        "docs/research/w5-apng-compressed-checkpoint-interop-2026-08.json"
+      ],
+      "exitCondition": "Compressed byte equality may be required only for a single pinned encoder implementation and toolchain. Cross-implementation compatibility must continue to use exact decoded bytes and validated metadata/checksums.",
+      "id": "NEG-W5-APNG-COMPRESSED-BLOB-BYTE-IDENTITY-001"
+    },
+    {
+      "area": "apng-owned-playback-product-readiness",
+      "claimRejected": "Byte-exact package-internal owned APNG playback on the retained oracle corpus means the production ImageCraft decoder and Fovea adapter are ready to ship.",
+      "counterexample": "The retained Swift release binary is exact against Python on 24/24 frames and against Apple on 21/21 aligned frames, including the three-frame separate-default animation timeline. However the implementation is package-only, restricted to RGBA8 non-interlaced APNG, not connected to ImageIOAnimatedImageDecoder, not public API, not pinned by Fovea, and has no physical-device latency, allocator, energy or thermal evidence. The decoder/provider integration portion is now complete for the admitted subset and passes 124 tests plus public retained-binary oracle evidence, but the candidate remains dirty/unpublished, Fovea pins an older static/progressive revision, no concrete Fovea adapter consumes it, and no physical-device resource gates have run. Backing diagnostics now confirm ownedAPNG and explicit retained/peak accounting for all seven retained public fixtures, closing mechanism-attribution ambiguity, but publication, Fovea adapter/pin and physical-device gates remain absent.",
+      "decision": "Retire only the decoder/provider-integration sub-obligation. Continue rejecting product readiness until the candidate is published and pinned, the Fovea adapter is integrated with authorization/cache identity, and physical-device deadline/memory/energy/thermal/reclamation gates pass.",
+      "evidencePaths": [
+        "Tools/Performance/capture_w5_apng_owned_swift_playback.py",
+        "Tools/Performance/validate_w5_apng_owned_swift_playback.py",
+        "Tools/Performance/test_w5_apng_owned_swift_playback.py",
+        "docs/research/w5-apng-owned-swift-playback-2026-08.json",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+        "Tools/Performance/capture_w5_apng_public_decoder_playback.py",
+        "docs/research/w5-apng-public-decoder-playback-2026-08.json"
+      ],
+      "exitCondition": "Do not claim Fovea production readiness until a published exact ImageCraft revision is pinned, EncodedAnimationPlaybackPreparing uses the public decoder/provider, the <=1024 and fallback policy is product-approved, and clean physical-device gates pass.",
+      "id": "NEG-W5-APNG-OWNED-ORACLE-PRODUCTION-READINESS-001"
+    },
+    {
+      "area": "apng-checkpoint-test-coverage",
+      "claimRejected": "Exact random-access output on the seven retained real APNG fixtures proves that retained compressed checkpoints are created and restored correctly.",
+      "counterexample": "All seven real fixtures have at most six animation frames, below the default eight-frame replay interval, so their retained checkpoint count is zero. They prove parser/compositor correctness but cannot exercise checkpoint insertion or restoration. A separate ten-frame synthetic APNG is required and creates one pre-frame checkpoint at frame eight before random access to frames 9, 7 and 0.",
+      "decision": "Report real-corpus exactness and checkpoint execution as separate evidence. Keep IMG_ANIM_PT_044 or an equivalent longer retained fixture mandatory whenever checkpoint interval, blob format, replay lookup or store accounting changes.",
+      "evidencePaths": [
+        "Tools/Performance/capture_w5_apng_owned_swift_playback.py",
+        "docs/research/w5-apng-owned-swift-playback-2026-08.json"
+      ],
+      "exitCondition": "A real-corpus checkpoint claim requires at least one retained source-bound fixture longer than the active replay interval with exact forward, backward and checkpoint-crossing access; until then the synthetic checkpoint test remains required.",
+      "id": "NEG-W5-APNG-REAL-CORPUS-CHECKPOINT-COVERAGE-001"
+    },
+    {
+      "area": "apng-mechanism-attribution",
+      "claimRejected": "Pixel equality against the owned Python reference or Apple ImageIO is sufficient to prove that the public ImageCraft decoder selected the owned APNG parser/compositor/checkpoint backing.",
+      "counterexample": "The public decoder intentionally retains an ImageIO fallback for aligned APNG outside the owned RGBA8 non-interlaced <=1024 subset. A fallback frame can be pixel-exact while using full-frame ImageIO materialization and no owned checkpoint state. Therefore the earlier 24/24 and 21/21 pixel result alone could not distinguish ownedAPNG from imageIOEncoded.",
+      "decision": "Require package-only preparation diagnostics to identify backingKind and bind the associated retained/checkpoint/replay/peak fields. The current retained Release-binary capture reports ownedAPNG for all seven fixtures, false source-index alignment only for the separate-default fixture, zero real-fixture checkpoints, replay limit eight and retained bytes within 32 MiB. Keep the RGB aligned fallback and unaligned fail-closed tests mandatory.",
+      "evidencePaths": [
+        "Tools/Performance/capture_w5_apng_public_decoder_playback.py",
+        "Tools/Performance/validate_w5_apng_public_decoder_playback.py",
+        "Tools/Performance/test_w5_apng_public_decoder_playback.py",
+        "docs/research/w5-apng-public-decoder-playback-2026-08.json",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json"
+      ],
+      "exitCondition": "No mechanism-specific memory or replay claim may rely on pixels alone. Any replacement must expose or independently bind actual backing selection and its resource accounting for every admitted/fallback path.",
+      "id": "NEG-W5-APNG-PIXEL-EXACTNESS-BACKING-PROOF-001"
+    },
+    {
+      "area": "apng-imageio-fallback-materialization",
+      "claimRejected": "Retaining the same CGImageSource and requesting the same APNG frame index guarantees identical pixels even when single-frame and window paths use different ImageIO cache/materialization options.",
+      "counterexample": "The retained historical binary produced 23 mismatches across 24 frames when the single-frame path permitted full-image caching while the window path used bounded thumbnail materialization. The current tree unifies both public fallback paths and reports zero mismatches.",
+      "decision": "Treat ImageIO materialization options as part of the decoding mechanism contract. Keep IMG_ANIM_PT_052 and the retained historical capture.",
+      "evidencePaths": [
+        "Tools/Performance/capture_w5_apng_imageio_cache_divergence.py",
+        "docs/research/w5-apng-imageio-cache-divergence-2026-08.json",
+        "docs/research/w5-apng-public-decoder-mac-performance-2026-08.json"
+      ],
+      "exitCondition": "Remove only if every supported ImageIO/runtime combination proves equivalent normalized pixels under both policies and the product intentionally restores a single documented policy.",
+      "id": "NEG-W5-APNG-IMAGEIO-CACHE-POLICY-EQUIVALENCE-001"
+    },
+    {
+      "area": "apng-global-performance-ranking",
+      "claimRejected": "The current owned APNG route can be described as globally Pareto-dominant over Apple ImageIO and all third-party animated-image projects.",
+      "counterexample": "The historical bound physical-Mac capture established a real earlier-tree deficit: the exact bounded owned six-frame route measured 6.49x the direct retained ImageIO selected-frame median and 2.37x its sequential median. That performance fact is now superseded for the current working tree: a source-bound 200-iteration directional capture on the same PIA-6 workload measures 0.8504x selected and 0.3911x sequential, with prepare at 1.0033x the direct lower bound, exact pixels, exact reverse random access and fenced cancellation. The global-dominance rejection still stands because this is one physical Mac, one owned APNG workload, no online physical iOS device, no energy/thermal/allocator/reclamation endpoint and no common third-party comparator matrix. External projects also expose different format breadth, UI lifecycle, buffering and deployment envelopes.",
+      "decision": "Treat the historical slow-path result as resolved for the current PIA-6 Mac mechanism, not as deleted evidence. Continue pursuing Pareto improvement by dimension: correctness, fail-closed security, retained memory, cancellation, random-access latency, sequential latency, format breadth and UI lifecycle. Require a common source-bound comparator matrix and formal physical-device resource vector before any dominance statement.",
+      "evidencePaths": [
+        "docs/research/w5-apng-public-decoder-mac-performance-2026-08.json",
+        "docs/research/w5-apng-owned-hotpath-optimization-2026-08-10.json",
+        "docs/research/animated-image-library-registry-2026-08.json",
+        "Benchmarks/ComparativeLab/animated-image-plan.json"
+      ],
+      "exitCondition": "A dominance claim requires unchanged workload semantics, common devices, repeated confidence intervals and no regression across every declared dimension and comparator.",
+      "id": "NEG-W5-APNG-GLOBAL-PARETO-DOMINANCE-001"
+    },
+    {
+      "area": "animation-presentation-visibility",
+      "claimRejected": "A presenter can cache screen-intersection visibility on ordinary view callbacks and safely pause decoding whenever a view scrolls outside the visible region.",
+      "counterexample": "Ancestor scrolling can change a child view’s window-space intersection without changing the child frame, bounds, window, superview, hidden, or alpha and without invoking a child layout callback. A cached false intersection can therefore pause the driver with no reliable callback to resume it when the view scrolls back.",
+      "decision": "Adopt cached structural visibility only: attachment, superview, hidden, alpha, and AppKit ancestor hide/unhide. Defer screen-intersection or occlusion pausing until the platform adapter owns a reliable scroll/reentry observer or a display-refresh probe with bounded overhead.",
+      "evidencePaths": [
+        "Sources/FoveaCore/AnimationPresentationVisibility.swift",
+        "Sources/FoveaUIKit/FoveaImageView.swift",
+        "Sources/FoveaAppKit/FoveaImageView.swift",
+        "Tests/FoveaTests/AnimationPresentationVisibilityTests.swift",
+        "Tests/FoveaTests/AnimatedPlatformPresenterTests.swift",
+        "docs/research/animated-image-library-registry-2026-08.json"
+      ],
+      "exitCondition": "Enable intersection-based pausing only after tests prove offscreen detection and deterministic resume for ancestor scroll, clipping, transforms, window moves, and view reuse on every supported platform.",
+      "id": "NEG-W5-ANIMATION-CACHED-SCREEN-INTERSECTION-001"
+    },
+    {
+      "area": "ios15-test-target-qualification",
+      "claimRejected": "A successful iOS 15 FoveaUIKit production build implies that the repository full test product also compiles at the iOS 15 deployment target.",
+      "counterexample": "The arm64 iOS 15 Simulator FoveaUIKit target builds, but FoveaTests fails before reaching UIKit-specific tests because TestSupport.swift and CacheGarbageCollectionTests.swift use Duration.seconds, Duration.milliseconds and Task.sleep(for:), which require iOS 16. Rebuilding the same test product for iOS 16 succeeds.",
+      "decision": "Keep the production iOS 15 build as the deployment gate and compile the current UIKit test product at iOS 16. Record the iOS 15 full-test-target matrix as incomplete until shared test clocks and sleeps are made deployment-compatible; do not weaken production deployment support or suppress availability errors.",
+      "evidencePaths": [
+        "Sources/FoveaUIKit/FoveaAnimationDisplayLinkDriver.swift",
+        "Tests/FoveaTests/TestSupport.swift",
+        "Tests/FoveaTests/CacheGarbageCollectionTests.swift",
+        "Tests/FoveaTests/AnimatedPlatformPresenterTests.swift",
+        "docs/project-memory/project-memory.json"
+      ],
+      "exitCondition": "The complete FoveaTests product compiles for arm64-apple-ios15.0-simulator without availability suppression, while all existing test semantics remain intact.",
+      "id": "NEG-IOS15-FULL-TEST-TARGET-DURATION-API-001"
+    },
+    {
+      "area": "w5-test-evidence-identity",
+      "claimRejected": "The general requirement traceability check guarantees that every W5_PT test identifier names exactly one Swift test definition.",
+      "counterexample": "The traceability check remained green while newly added presentation tests reused W5_PT_094 through W5_PT_100 already owned by live MJPEG and runtime tests. Requirement evidence remained present, but the same identifier referred to two different executable contracts.",
+      "decision": "Keep general requirement IDs reusable where one requirement intentionally has several implementation tests, but enforce uniqueness specifically for W5_PT function definitions in check-animated-image-library-registry.py. Move the presentation visibility and targetTimestamp group to W5_PT_125 through W5_PT_131.",
+      "evidencePaths": [
+        "scripts/check-animated-image-library-registry.py",
+        "Tests/FoveaTests/AnimationPresentationVisibilityTests.swift",
+        "Tests/FoveaTests/AnimatedPlatformPresenterTests.swift",
+        "Tests/FoveaTests/AnimationPlaybackDriverTests.swift",
+        "Tests/FoveaTests/AnimationPresentationTargetBufferTests.swift",
+        "docs/research/animated-image-library-registry-2026-08.json"
+      ],
+      "exitCondition": "Remove only if W5 abandons single-test evidence identities and every registry, plan and report is migrated to an explicit one-to-many evidence schema with equivalent ambiguity checks.",
+      "id": "NEG-W5-TEST-ID-REUSE-001"
+    },
+    {
+      "area": "swift64-xctest-mainactor-teardown",
+      "claimRejected": "Wrapping access to a @MainActor XCTestCase property in MainActor.assumeIsolated from synchronous nonisolated tearDown is a valid warning-only cleanup under Swift 6.4.",
+      "counterexample": "The iOS 16 FoveaTests build rejects that pattern with a region-isolation error because the nonisolated tearDown sends self into a main-actor closure. The original direct access emits warnings but still compiles; the assumeIsolated rewrite upgrades the issue to a hard failure.",
+      "decision": "Revert the assumeIsolated rewrite. Keep the existing warning visible and resolve it only through an XCTest-supported actor-isolated teardown boundary or a cleanup design that does not transfer the test-case instance across isolation domains.",
+      "evidencePaths": [
+        "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
+        "docs/project-memory/project-memory.json"
+      ],
+      "exitCondition": "The iOS test product compiles without the teardown isolation warning and without nonisolated unsafe state, assumeIsolated self capture, detached cleanup, or main-thread semantic regression.",
+      "id": "NEG-SWIFT64-XCTEST-MAINACTOR-TEARDOWN-001"
+    },
+    {
+      "area": "animation-playback-scheduling-state",
+      "claimRejected": "An animation decision with no next-frame deadline is equivalent to terminal playback and may be marked finished permanently.",
+      "counterexample": "The firstFrame mode intentionally emits one frame and has no next deadline, but critical memory pressure purges that frame and normal pressure must repopulate it. Marking no-deadline as finished caused both AnimationPlaybackRuntimeTests W5_PT_049 and AnimationSystemIntegrationTests W5_PT_066 to time out after critical-to-normal recovery. It would also leave the external presentation contract unable to distinguish a stopped link that can wake from a terminal asset.",
+      "decision": "Separate terminal completion from recoverable scheduling dormancy. Dormancy stops automatic and display-link work, but visibility, application activation, explicit resume, seek, restart or pressure relief can clear it. Only an explicit finished decision or fatal error marks the driver terminal.",
+      "evidencePaths": [
+        "Sources/FoveaCore/AnimationPlaybackDriver.swift",
+        "Tests/FoveaTests/AnimationPlaybackDriverTests.swift",
+        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
+        "Tests/FoveaTests/AnimationSystemIntegrationTests.swift",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json"
+      ],
+      "exitCondition": "Remove only if every supported playback mode gains an explicit terminal marker independent of deadline presence and critical-to-normal recovery remains correct under that replacement state model.",
+      "id": "NEG-W5-NO-DEADLINE-TERMINAL-EQUIVALENCE-001"
+    },
+    {
+      "area": "animation-frame-window-byte-model",
+      "claimRejected": "Target pixel count multiplied by four is a universally safe hard upper bound for an animation frame and can be used to size the first decode window before any frame is observed.",
+      "counterexample": "DecodedImage.estimatedByteCost is CGImage.bytesPerRow multiplied by pixelHeight, and the animation provider seam is decoder-neutral. ImageCraft convert-to-sRGB commonly yields 32bpp, but preserve-color or another conforming provider can return a wider row representation. Treating targetPixels x 4 as a hard bound would therefore turn a format assumption into a host memory-safety policy.",
+      "decision": "Keep the first uncached batch under the existing frame-count policy. Validate every returned frame against target dimensions and the actual single-frame AnimationFrameMemory cost limit before publication. Learn the maximum observed DecodedImage.estimatedByteCost and use that exact value to cap subsequent upcoming windows. Continue using the real SIEVE insertion cost as the hard residency authority.",
+      "evidencePaths": [
+        "Sources/FoveaCore/AnimationFrameMemory.swift",
+        "Sources/FoveaCore/AnimationPlaybackSession.swift",
+        "Sources/FoveaCore/AnimationPlaybackCoordinator.swift",
+        "Tests/FoveaTests/AnimationPlaybackSessionTests.swift",
+        "Tests/FoveaTests/AnimationPlaybackCoordinatorTests.swift",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json"
+      ],
+      "exitCondition": "Remove only if the AnimationFrameProvider contract is narrowed to a single immutable pixel layout with a source-bound proof that target geometry determines bytesPerRow for every supported backend and color policy.",
+      "id": "NEG-W5-ANIMATION-TARGET-RGBA-BUDGET-001"
+    },
+    {
+      "area": "animation-memory-pressure-shared-frame-cache",
+      "claimRejected": "FLAnimatedImage or YYImage style per-player memory-warning buffer purge can be copied directly into each Fovea animation session without changing ownership semantics.",
+      "counterexample": "Fovea deliberately shares AnimationFrameMemory across independent view clocks for the same namespace/generation/decode identity. Two views can be displaying different frame indices at the same instant. If each session independently purges every frame outside its own warning window, the second purge can delete the first view current frame or vice versa. FLAnimatedImage and YYAnimatedImageView own per-player buffers, so their immediate-warning purge does not have this cross-session conflict.",
+      "decision": "Do not perform per-session destructive warning trim. Warning pressure now revokes any in-flight pre-warning publication so an old normal-size decode window cannot repopulate memory, and subsequent work uses the smaller warning/actual-byte window. A future proactive trim must be two-phase at AnimationPlaybackRuntime: freeze affected publications, collect and union retention keys across all active drivers sharing frame memory, trim once, then resume scheduling.",
+      "evidencePaths": [
+        "Sources/FoveaCore/AnimationPlaybackRuntime.swift",
+        "Sources/FoveaCore/AnimationPlaybackCoordinator.swift",
+        "Sources/FoveaCore/AnimationPlaybackSession.swift",
+        "Tests/FoveaTests/AnimationPlaybackCoordinatorTests.swift",
+        "docs/research/animated-image-library-registry-2026-08.json",
+        "docs/research/animated-image-source-audit-2026-08.md",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json"
+      ],
+      "exitCondition": "Remove only after a runtime-level union-retention implementation proves that warning trim cannot evict any active view current frame, stale pre-warning publications remain fenced, and physical-device recovery/decode-churn tails are non-inferior.",
+      "id": "NEG-W5-ANIMATION-PER-SESSION-WARNING-TRIM-001"
+    },
+    {
+      "area": "imagecraft-exact-pin-error-enum-forward-compatibility",
+      "claimRejected": "An exhaustive switch over every public error-enum case of an independently versioned exact-pin codec is a safe dependency-upgrade boundary for Fovea.",
+      "counterexample": "The production Fovea pin predates ImageCraft animation errors, so an exhaustive PipelineFailure+ImageCraft switch compiled against the old enum but failed as non-exhaustive in the isolated current-ImageCraft overlay. Adding a plain default fixed the newer enum but failed the old production pin under warnings-as-errors because the compiler diagnosed that default as unreachable. The same source therefore needs a non-exhaustive classification structure rather than either exhaustive-switch variant.",
+      "decision": "Preserve explicit stable mappings for product-relevant known cases, but avoid a top-level exhaustive switch over the independently versioned dependency enum. Classify adopted cases with direct Equatable comparisons and finish with unexpectedImageCraftFailure. This avoids both the old-pin unreachable-default diagnostic and the newer-pin non-exhaustive-switch diagnostic under warnings-as-errors. When a newer ImageCraft revision becomes the production pin, add explicit stable mappings for adopted animation cases while retaining the non-exhaustive fallback boundary.",
+      "evidencePaths": [
+        "Sources/FoveaCore/PipelineFailure+ImageCraft.swift",
+        "Tests/FoveaTests/PipelineFailureTests.swift",
+        "Tools/AnimationAdapterQualification/ImageCraftAnimationPlaybackPreparer.swift.fixture",
+        "Tools/AnimationAdapterQualification/qualify_imagecraft_animation_adapter.py",
+        "Tools/AnimationAdapterQualification/validate_imagecraft_animation_adapter_qualification.py",
+        "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json"
+      ],
+      "exitCondition": "Remove only if the dependency error surface becomes frozen/non-exhaustive by contract or an automated pin-upgrade compatibility gate proves that newly introduced codec errors cannot make Fovea source-incompatible while all adopted errors retain explicit stable mappings.",
+      "id": "NEG-W5-IMAGECRAFT-ERROR-ENUM-EXHAUSTIVE-PIN-UPGRADE-001"
+    },
+    {
+      "area": "uikit-lifecycle-override-public-api-budget",
+      "claimRejected": "Overriding an inherited public UIKit lifecycle/property member only to observe animation visibility is an implementation detail and therefore does not expand FoveaUIKit public API accounting.",
+      "counterexample": "The historical iOS DocC symbol graph counted 12 FoveaUIKit public symbols. After adding explicit public overrides for isHidden, alpha, didMoveToSuperview and layoutSubviews, the same public/open + source-location budget filter counted 16 symbols even though callers already had those inherited UIView members. The new BenchmarkDiagnostics SPI itself was absent from the default graph and was not the cause.",
+      "decision": "Mark the four lifecycle overrides @_spi(AnimationLifecycle) while retaining their dynamic override behavior. A dedicated check-foveauikit-api-budget.py gate rebuilds the iOS15 simulator module with warnings-as-errors, extracts default and include-SPI symbol graphs, requires the default budget to remain 12/12, requires the diagnostic/lifecycle symbols to remain SPI-only, and typechecks a normal non-SPI consumer using the inherited UIView members.",
+      "evidencePaths": [
+        "Sources/FoveaUIKit/FoveaImageView.swift",
+        "Sources/FoveaUIKit/FoveaAnimationPresentationDiagnostics.swift",
+        "scripts/check-foveauikit-api-budget.py",
+        "docs/public-api-budget.json",
+        "docs/research/public-api-budget-review-2026-07.md"
+      ],
+      "exitCondition": "Remove only if public API accounting deliberately changes to exclude overriding declarations by a documented toolchain-independent rule, or the lifecycle observation mechanism no longer requires these overrides while the default FoveaUIKit symbol budget remains independently verified.",
+      "id": "NEG-W5-UIKIT-LIFECYCLE-OVERRIDE-API-BUDGET-001"
+    },
+    {
+      "area": "animated-player-comparative-timing",
+      "claimRejected": "A player internal dropped-frame or accumulator counter can be compared directly across animated-image libraries as the W5 timing oracle.",
+      "counterexample": "The retained comparator sources implement materially different clocks and skip semantics: AnimatedImage maps CADisplayLink.targetTimestamp directly to a source index; FLAnimatedImage accumulates predicted presentation time and may advance across multiple source frames; Gifu advances from displayLink.duration; YYImage also accumulates duration but clamps so it does not jump over a frame. Their internal counters therefore do not denote the same event.",
+      "decision": "Score every player from the same normalized source timeline and externally observed source-frame index at display callbacks. Persist the raw trace and recompute the derived score on artifact decode; keep Fovea target-buffer supersession diagnostics as explanatory telemetry only.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/Sources/ComparativeLabCore/AnimatedPresentationOracle.swift",
+        "Benchmarks/ComparativeLab/Tests/ComparativeLabCoreTests/ComparativeLabCoreTests.swift",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+        "docs/research/animated-image-source-audit-2026-08.md"
+      ],
+      "exitCondition": "Replace only if all compared players expose a versioned, semantically identical source-frame presentation event contract that can be independently verified against the same raw display trace.",
+      "id": "NEG-W5-INTERNAL-DROP-COUNTERS-CROSS-PLAYER-ORACLE-001"
+    },
+    {
+      "area": "animated-player-physical-measurement",
+      "claimRejected": "A separate common CADisplayLink sampler should stay enabled for both W5 timing and energy runs because common instrumentation is always fairer.",
+      "counterexample": "A separate display link participates in display-refresh scheduling and can change ProMotion cadence, wakeups, callback ordering, and therefore both the energy endpoint and which source frame is observed before or after a player callback on the same refresh.",
+      "decision": "Use the common ComparativeLabCore timeline/scoring artifact, but require each player adapter to emit source-frame observations at its own actual presentation callback. Run physical energy without the extra timing sampler; correlate by identical preregistered fixture and policy rather than simultaneous instrumentation.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/Sources/ComparativeLabCore/AnimatedPresentationOracle.swift",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+        "Sources/FoveaUIKit/FoveaAnimationBenchmarkFixture.swift"
+      ],
+      "exitCondition": "Only merge timing and energy instrumentation if a physical-device perturbation study shows the observer does not materially change refresh cadence, callback count, timing distribution, or energy on every claim device class.",
+      "id": "NEG-W5-SHARED-DISPLAY-SAMPLER-ENERGY-ORACLE-001"
+    },
+    {
+      "area": "animatedimage-variable-delay-semantic-equivalence",
+      "claimRejected": "AnimatedImage 0.2.4 with maxLevelOfIntegrity=1 preserves the encoded per-frame variable GIF timeline and can be scored directly against Fovea on the primary W5 variable-delay fixture.",
+      "counterexample": "At exact commit d64237a33ce91b0513dd850589fea32fa28f4f80, FrameDecimator returns every source index when levelOfIntegrity is 1.0 but sets Result.delayTime to delays.first. AnimatedImageState then maps every target timestamp using that one delay. The formal W5 variable-delay run therefore fails the native-timeline semantic gate rather than producing a timing rank.",
+      "decision": "Keep GIF-VARIABLE-DELAY-60 as the primary source-timeline gate and record AnimatedImage as not-comparable there. Use GIF-UNIFORM-50MS-60 only as a secondary targetTimestamp/update-link mechanism fixture. Never substitute the uniform result for variable-delay correctness evidence.",
+      "evidencePaths": [
+        ".artifacts/research/animation-libs/AnimatedImage/Sources/AnimatedImageCore/Processors/FrameDecimator.swift",
+        ".artifacts/research/animation-libs/AnimatedImage/Sources/AnimatedImageCore/Utilities/AnimatedImageState.swift",
+        "Benchmarks/ComparativeLab/Adapters/AnimatedImageAdapterPackage/Sources/AnimatedImageComparatorAdapter/AnimatedImageComparatorAdapter.swift",
+        ".artifacts/w5-player-timing/simulator/20260807T050706Z/manifest.json"
+      ],
+      "exitCondition": "Remove only if the exact retained AnimatedImage player preserves independently verified per-frame source durations, at which point it must pass the primary variable-delay semantic gate before timing can be compared.",
+      "id": "NEG-W5-ANIMATEDIMAGE-VARIABLE-DELAY-001"
+    },
+    {
+      "area": "flanimatedimage-public-presentation-observation",
+      "claimRejected": "A Swift subclass display override or KVO of FLAnimatedImageView.currentFrame is sufficient to observe every public frame presentation without an Objective-C bridge.",
+      "counterexample": "On retained FLAnimatedImage 1.0.17, the Swift display override yielded no continuing W5 events and public currentFrame KVO yielded only the initial poster event; the bounded runner reported count=0/1 and zero progression while the player remained alive. An Objective-C subclass overriding the public/standard displayLayer: callback, calling super, and then reading public currentFrame produced a complete 61-observation/60-transition primary loop.",
+      "decision": "Use a comparator-only Objective-C displayLayer: shim for FLAnimatedImage. It may read only public currentFrame and may not declare private readwrite properties or inspect private ivars. Continue forbidding a second CADisplayLink sampler because it would perturb timing and energy.",
+      "evidencePaths": [
+        "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageBenchmarkShim/FoveaFLAnimatedImageBenchmarkView.m",
+        "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageComparatorAdapter/FLAnimatedImageComparatorAdapter.swift",
+        ".artifacts/w5-player-timing/simulator/20260807T053303Z/manifest.json"
+      ],
+      "exitCondition": "Replace only if the retained public Swift-imported surface gains a versioned frame-presentation callback that produces the same complete source-frame trace without private state or an extra refresh source.",
+      "id": "NEG-W5-FLANIMATEDIMAGE-SWIFT-OBSERVATION-HOOK-001"
+    },
+    {
+      "area": "gifu-public-player-observation",
+      "claimRejected": "Gifu GIFImageView is public, so a comparator can subclass it outside the Gifu module to intercept display callbacks.",
+      "counterexample": "At retained commit 672a8d4fea3faf234518be2db00815936e55f85f, GIFImageView is declared public rather than open and its display override is not open. Swift 6 correctly rejects cross-module inheritance/override. The public GIFAnimatable protocol and Animator(withDelegate:) are the supported composition surface instead.",
+      "decision": "Do not weaken access control or copy Gifu internals. The comparator owns a UIImageView that conforms to public GIFAnimatable; it invokes the public updateImageIfNeeded() extension from its own display callback and recovers source identity from the actually displayed pixel. Treat Gifu Swift 6 manifest iOS16 as the comparator deployment floor while Fovea remains iOS15.",
+      "evidencePaths": [
+        ".artifacts/research/animation-libs/Gifu/Sources/Gifu/Classes/GIFImageView.swift",
+        ".artifacts/research/animation-libs/Gifu/Sources/Gifu/Classes/GIFAnimatable.swift",
+        "Benchmarks/ComparativeLab/Adapters/GifuAdapterPackage/Sources/GifuComparatorAdapter/GifuComparatorAdapter.swift",
+        ".artifacts/w5-player-timing/simulator/20260807T054742Z/manifest.json"
+      ],
+      "exitCondition": "Replace only if a retained Gifu release makes GIFImageView open or adds a versioned public presentation callback that is at least as non-invasive as the protocol-composition path.",
+      "id": "NEG-W5-GIFU-PUBLIC-SUBCLASS-001"
+    },
+    {
+      "area": "apng-owned-compositor-semantic-replay",
+      "claimRejected": "Any full-canvas source frame or any background-disposal frame can be treated as a persistent replay reset for all later APNG targets.",
+      "counterexample": "A full-canvas source frame with disposal=previous restores the pre-frame canvas after presentation, so its displayed pixels do not establish the post-frame state needed by later targets. A subrect background-disposal frame clears only its own rectangle, not the entire canvas. Treating either as a persistent transparent/full replacement anchor can make batched frames start from the wrong canvas. The retained full-source+previous control therefore remains checkpoint bounded, while the full-background control safely reaches zero checkpoints.",
+      "decision": "Adopt only persistent anchors that preserve later-state semantics: a full-canvas source frame is a current-frame anchor only when disposal is not previous; after a full-canvas background-disposal frame, the next frame may start from transparent canvas. Do not promote target-local YYImage blendFromIndex behavior into a persistent runtime anchor without an independent state proof. Current executable evidence is IMG_ANIM_PT_053-056; ImageCraft additionally enforces unique contiguous IMG_ANIM_PT identities in scripts/verify.sh.",
+      "evidencePaths": [
+        "docs/research/w5-apng-semantic-replay-2026-08.json",
+        "Tools/Performance/w5_yyimage_semantic_replay_oracle.py",
+        "../ImageCraft/Sources/ImageCraftImageIO/APNGOwnedStraightAlphaPlayback.swift",
+        "../ImageCraft/Tests/ImageCraftImageIOTests/APNGRawSubrectDecoderTests.swift",
+        "../ImageCraft/Tests/ImageCraftImageIOTests/AnimatedImageDecoderTests.swift"
+      ],
+      "exitCondition": "Broaden the persistent reset rule only after exact-pixel random and multi-frame range tests plus source-bound composition semantics prove that the proposed anchor reconstructs every later pre-frame canvas without additional hidden state.",
+      "id": "NEG-W5-APNG-SEMANTIC-RESET-OVERGENERALIZATION-001"
+    },
+    {
+      "area": "w5-animated-simulator-evidence-harness",
+      "claimRejected": "A Simulator app data-container path captured before benchmark launch remains valid after runner recovery performs uninstall/install of the same bundle.",
+      "counterexample": "During the digest-bound GIF consolidation run rooted at .artifacts/w5-player-timing/simulator/20260807T074143Z, Kingfisher launch IPC entered the existing recovery path. Recovery uninstalled/reinstalled the app, changing its Simulator data-container UUID. The runner kept waiting on the pre-reinstall Documents path and reported a timeout, while the new container later contained a valid Kingfisher artifact. That late artifact validates as encoded-native with 61 observations and 60 transitions; SHA256 a9078402afdc96b36f419253fbaed3ae522491bc20fb68591eb65ecba1d58708.",
+      "decision": "Resolve the app data container and derive result/failure paths after every install, including recovery reinstall. App bundle content is also digest-bound in each final runner result so prebuilt/current-run binary ambiguity is explicit.",
+      "evidencePaths": [
+        ".artifacts/w5-player-timing/simulator/20260807T074143Z/kingfisher-gif_variable_delay_60-101-late-after-reinstall.json",
+        "scripts/run-w5-animated-simulator-lab.py",
+        "scripts/test-w5-animated-simulator-runner.py"
+      ],
+      "exitCondition": "Any future recovery path that replaces or reinstalls an app must reacquire its container before waiting for filesystem evidence; runner contract and a successful recovered consolidation must remain green.",
+      "id": "NEG-W5-SIMULATOR-REINSTALL-CONTAINER-PATH-001"
+    },
+    {
+      "area": "w5-animated-simulator-comparator-isolation",
+      "claimRejected": "Sequentially launching different animated-player comparator apps on one continuously booted Simulator is sufficiently isolated for structural presentation evidence.",
+      "counterexample": "In the digest-bound GIF run rooted at .artifacts/w5-player-timing/simulator/20260807T074837Z, Fovea, Kingfisher, SDWebImage and PINRemoteImage completed 61/60 sequentially, after which FLAnimatedImage produced a real workload failure with count=0. The exact same freshly built FLAnimatedImage app immediately completed 61/60 when run alone in .artifacts/w5-player-timing/simulator/20260807T075127Z. Therefore the zero-callback event is order/state dependent rather than an adapter or binary regression.",
+      "decision": "Use the same exact registered Simulator/runtime but shutdown and boot it between comparator runs. Record comparatorIsolationMode=shutdown-boot-between-comparators-v1 in each result and the manifest. Continue to treat simulator timing as structural/non-ranking.",
+      "evidencePaths": [
+        ".artifacts/w5-player-timing/simulator/20260807T074837Z",
+        ".artifacts/w5-player-timing/simulator/20260807T075127Z/manifest.json",
+        "scripts/run-w5-animated-simulator-lab.py",
+        "scripts/test-w5-animated-simulator-runner.py"
+      ],
+      "exitCondition": "Any future shared-boot multi-comparator mode requires repeated randomized-order evidence proving no callback/progression or lifecycle-state dependence across comparators.",
+      "id": "NEG-W5-SIMULATOR-CROSS-COMPARATOR-STATE-001"
+    },
+    {
+      "area": "flanimatedimage-fresh-simulator-structural-calibration",
+      "claimRejected": "FLAnimatedImage fresh-Simulator count0/1 zero-progression can be made reproducible by comparator-side public frame-cache prewarming, a short post-boot settle, terminal boot completion, or public visibility re-triggering.",
+      "counterexample": "The exact 1.0.17 adapter historically completed 61 observations/60 transitions in warm state and again as a warm single-comparator control at .artifacts/w5-player-timing/simulator/20260807T075127Z. Under fresh shutdown/boot conditions it repeatedly timed out with zero progression. A full public imageLazilyCachedAtIndex polling prewarm within the 32 MiB fixture budget still produced count=0. Terminal boot plus a 2 second settle produced only count=1/frame1. Waiting one main-queue turn and toggling public isHidden true/false to force FLAnimatedImageView visibility recomputation still produced count=0. Those comparator-specific experiments were reverted.",
+      "decision": "Do not retain unsuccessful comparator-specific workarounds and do not retry until a passing run appears. Keep the public Objective-C displayLayer observation shim, preserve warm historical evidence separately, and classify only the narrow count0/1 progression0 primary-GIF failure as not-comparable-fresh-simulator-instability in the current isolated simulator protocol. Any other failure remains fail closed.",
+      "evidencePaths": [
+        ".artifacts/w5-player-timing/simulator/20260807T075127Z/manifest.json",
+        "scripts/run-w5-animated-simulator-lab.py",
+        "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageComparatorAdapter/FLAnimatedImageComparatorAdapter.swift",
+        "Benchmarks/ComparativeLab/Adapters/FLAnimatedImageAdapterPackage/Sources/FLAnimatedImageBenchmarkShim/FoveaFLAnimatedImageBenchmarkView.m"
+      ],
+      "exitCondition": "Promote FLAnimatedImage back into the fresh structural set only after a source-bound clean-start run reproduces a full source loop without comparator-specific private hooks or retry-until-success behavior, preferably also on physical iOS.",
+      "id": "NEG-W5-FLANIMATEDIMAGE-FRESH-SIMULATOR-WORKAROUNDS-001"
+    },
+    {
+      "area": "appkit-display-link-physical-mechanism-harness",
+      "claimRejected": "A command-line AppKit mechanism lab can create a visible NSWindow and receive NSView.displayLink callbacks without completing NSApplication launch.",
+      "counterexample": "The first physical-Mac FoveaAnimationMacLab run ordered a real visible window front but received zero view-bound display-link callbacks and failed closed. A minimal independent probe showed callbacks only after NSApplication.finishLaunching(); an async @main probe with finishLaunching then received roughly one callback per display refresh without manually pumping a second display source.",
+      "decision": "Every command-line AppKit display-link evidence process must call NSApplication.finishLaunching() before creating the evidence window. Do not interpret a zero-callback unlaunched AppKit process as product playback behavior.",
+      "evidencePaths": [
+        "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift",
+        ".artifacts/performance/w5-appkit-display-link-preclamp-counterexample-v1/summary.json"
+      ],
+      "exitCondition": "Remove only if Apple changes the command-line AppKit launch contract and a retained probe proves view-bound display-link callbacks before application launch completion.",
+      "id": "NEG-W5-APPKIT-MAC-LAB-APPLICATION-LAUNCH-001"
+    },
+    {
+      "area": "animated-presentation-visibility-ordering",
+      "claimRejected": "When a newer visibility request arrives, it is safe to skip an older pending hidden mutation by generation because only the latest visible state matters.",
+      "counterexample": "The attempted generation-skip implementation paused the display link synchronously on hidden but skipped the corresponding driver setVisible(false). The driver therefore retained external-active=true; the later visible mutation could not produce the required false-to-true external-state edge, and W5_PT_143 timed out waiting for the AppKit display link to resume.",
+      "decision": "Preserve ordered visibility transitions within one presentation identity. A newer task waits for the previous transition to finish; replacement/cancellation still fail closed through presentation identity. Do not drop the hidden Core mutation after synchronously pausing the presentation clock.",
+      "evidencePaths": [
+        "Sources/FoveaAppKit/FoveaAnimatedImageViewPresenter.swift",
+        "Sources/FoveaUIKit/FoveaAnimatedImageViewPresenter.swift",
+        "Tests/FoveaTests/AnimatedPlatformPresenterTests.swift"
+      ],
+      "exitCondition": "A coalescing visibility controller may replace ordered transitions only if it atomically reconciles presentation-clock state and Core eligibility and passes deterministic hide/show edge tests without relying on a missing false-to-true callback.",
+      "id": "NEG-W5-PRESENTATION-VISIBILITY-GENERATION-SKIP-001"
+    },
+    {
+      "area": "animated-presentation-targettimestamp-lifecycle-clock",
+      "claimRejected": "Lifecycle mutations can always sample clock.now directly after an external CADisplayLink targetTimestamp tick because both timestamps use a monotonic timebase.",
+      "counterexample": "CADisplayLink.targetTimestamp predicts a future presentation instant. In the physical-Mac pre-fix campaign, resume repeatedly failed with presenter effectiveVisibility=true while the display link remained paused=true. Diagnostic runs showed accepted targets and provider work frozen, driver mode still externalPresentationTicks. The deterministic W5_PT_144 reproduces the ordering with presentation target 100 while clock.now remains 0: without clamping, setVisible(false) regresses the cursor timestamp and fails with nonMonotonicClock.",
+      "decision": "In externalPresentationTicks mode only, lifecycle, seek, restart and memory-pressure mutations use max(clock.now, last accepted external presentation target). Automatic deadline scheduling and the cursor non-monotonic invariant remain unchanged. The display clock can still pause immediately; the clamp only prevents Core state from moving backward behind an already-sampled future presentation instant.",
+      "evidencePaths": [
+        "Sources/FoveaCore/AnimationPlaybackDriver.swift",
+        "Tests/FoveaTests/AnimationPlaybackDriverTests.swift",
+        ".artifacts/performance/w5-appkit-display-link-preclamp-counterexample-v1/summary.json"
+      ],
+      "exitCondition": "Remove the clamp only if presentation targets stop being future-predictive or the cursor adopts a separately proven dual-clock model that preserves monotonic lifecycle semantics under the same deterministic counterexample.",
+      "id": "NEG-W5-EXTERNAL-PRESENTATION-LIFECYCLE-CLOCK-REGRESSION-001"
+    },
+    {
+      "area": "appkit-callback-timing-evidence-harness",
+      "claimRejected": "A physical callback-timing run should be admitted only when it observes every source frame contiguously before scoring.",
+      "counterexample": "The first external/deadline callback-timing smoke used a hard 0...59 contiguous-frame guard. Both schedulers failed that guard, so the harness discarded the exact skipped-frame behavior the experiment was intended to measure. After switching to the ComparativeLab source-progression rule, a full loop completes when cumulative forward source ordinal reaches at least frameCount; skipped source frames remain in the raw trace and are scored rather than filtered out.",
+      "decision": "Never use frame contiguity as a timing-evidence admission gate. Require valid monotonic callback observations and at least one full cumulative source progression, then preserve source-frame skips, missed deadlines, early deadlines and timing error in the score. The paired Mac capture alternates scheduler order and has no retry path.",
+      "evidencePaths": [
+        "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift",
+        "Tools/Performance/capture_w5_appkit_callback_timing.py",
+        "Tools/Performance/test_w5_appkit_callback_timing_capture.py",
+        "Benchmarks/ComparativeLab/Apps/Shared/W5AnimatedTimingWorkload.swift"
+      ],
+      "exitCondition": "Any stronger admission rule must prove it does not condition on the performance outcome being measured; skipped frames must remain observable as data rather than cause sample deletion.",
+      "id": "NEG-W5-APPKIT-CALLBACK-CONTIGUITY-ADMISSION-001"
+    },
+    {
+      "area": "appkit-display-refresh-timing-coordinate",
+      "claimRejected": "Presenter image-commit callback timestamps can be scored directly against the source timeline to compare targetTimestamp external ticks with the automatic deadline loop.",
+      "counterexample": "The fixed-six-pair Release callback capture completed without retries, but external targetTimestamp runs accumulated many oracle 'early' transitions because the presenter commits a frame before the future CADisplayLink.targetTimestamp it is intended for, while automatic-deadline commits occur on the current clock after a deadline. The two schedulers therefore use asymmetrical temporal coordinates even though both callbacks are MainActor image commits; the callback artifact's 15.5 ms versus 58.4 ms median p95 values are not a fair presentation-timing comparison.",
+      "decision": "Keep the callback artifact as mechanism/counterexample evidence only. For the internal AppKit scheduler A/B, observe the currently committed source frame for both modes on the same view-bound NSView.displayLink.timestamp refresh coordinate. External mode uses that one link both as observer and future-target driver; automatic deadline mode uses it as observer only. Do not interpret either coordinate as hardware pixel scanout or energy evidence.",
+      "evidencePaths": [
+        ".artifacts/performance/w5-appkit-callback-timing-physical-v1/manifest.json",
+        "Sources/FoveaAppKit/FoveaAnimationDisplayLinkDriver.swift",
+        "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift",
+        "Tools/Performance/capture_w5_appkit_refresh_timing.py"
+      ],
+      "exitCondition": "A callback-only comparison may replace refresh sampling only if both schedulers expose callbacks defined on the same physical presentation instant, with a source-bound proof that future-target and current-deadline timestamps are not mixed.",
+      "id": "NEG-W5-APPKIT-COMMIT-CALLBACK-TIMING-COORDINATE-001"
+    },
+    {
+      "area": "appkit-physical-refresh-cadence-calibration",
+      "claimRejected": "NSScreen.maximumFramesPerSecond can be inverted and treated as the actual display-link refresh period for physical-Mac deadline tolerance.",
+      "counterexample": "On the retained physical Mac, NSScreen.maximumFramesPerSecond reports 120 while the view-bound NSView.displayLink refresh observer repeatedly measures a median interval near 16,666,625 ns, approximately 60 Hz. Using 1/120 s as if it were one observed refresh period therefore overstates missed/early deadline counts and mislabels the active display cadence.",
+      "decision": "Record every actual view-display-link interval in refresh-sampled evidence. The primary internal scheduler direction gate uses playback-start-anchored p95 timing error and raw skipped source frames, neither of which depends on a tolerance. maximumFramesPerSecond-derived missed/early counts remain supplemental ComparativeLab-compatible diagnostics only and are not a primary physical-Mac gate.",
+      "evidencePaths": [
+        "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift",
+        "Tools/Performance/capture_w5_appkit_refresh_timing.py",
+        ".artifacts/performance/w5-appkit-refresh-timing-physical-v1-first-observation-normalized/manifest.json"
+      ],
+      "exitCondition": "Use a maximum-FPS-derived period as actual cadence only when a source-bound run proves the observed display-link interval distribution matches that period on the claim environment.",
+      "id": "NEG-W5-APPKIT-MAXFPS-AS-ACTUAL-REFRESH-PERIOD-001"
+    },
+    {
+      "area": "appkit-physical-energy-evidence",
+      "claimRejected": "The current host can provide an unprivileged physical-Mac energy endpoint using Xcode Power Profiler or powermetrics, so scheduler energy non-inferiority can be measured now.",
+      "counterexample": "A host Power Profiler probe exits with an Instruments issue stating that Power Profiler is not supported on macOS and should be recorded on iOS/iPadOS. /usr/bin/powermetrics exits because it must be invoked as superuser, and sudo -n reports that a password is required. Therefore the current environment has no unattended privileged Mac energy endpoint.",
+      "decision": "Keep physical-Mac energy non-inferiority explicitly blocked. Do not rename CPU time, cycles, instructions, context switches, RSS, or ProcessInfo thermal state as energy. A fixed-pair /usr/bin/time -l resource study may only act as a non-energy falsifier for obvious resource-cost tradeoffs.",
+      "evidencePaths": [
+        ".artifacts/performance/w5-appkit-energy-tooling-probe-v1/summary.json",
+        "Tools/Performance/capture_w5_appkit_resource_proxy.py"
+      ],
+      "exitCondition": "Reopen physical-Mac energy measurement only with a supported energy instrument or authorized powermetrics access under a preregistered non-perturbing protocol; otherwise satisfy the energy gate on an appropriate supported physical platform.",
+      "id": "NEG-W5-APPKIT-MAC-ENERGY-TOOLING-001"
+    },
+    {
+      "area": "appkit-targettimestamp-resource-tradeoff",
+      "claimRejected": "The physical-Mac targetTimestamp timing improvement is effectively free in process resource cost, so it can already be described as a local Pareto improvement over automatic deadlines.",
+      "counterexample": "A source-bound Release fixed-six-pair/no-retry 10-second resource proxy study, with no extra display observer in the deadline control, shows targetTimestamp higher in every pair for CPU time, cycles, retired instructions and context switches. Median paired external/deadline ratios are 3.819x CPU time, 3.875x cycles, 2.344x instructions and 5.714x context switches; maximum RSS is near parity at 1.003x. All coarse thermal states remain nominal, but no true energy endpoint is available on the host.",
+      "decision": "Keep the strong refresh-timing improvement and resource-proxy cost as a tradeoff. Do not call AppKit targetTimestamp locally Pareto-dominant until a lower-overhead scheduler or mode preserves timing with non-inferior resource/energy evidence. CPU/cycles/context switches must never be relabeled as energy.",
+      "evidencePaths": [
+        ".artifacts/performance/w5-appkit-resource-proxy-physical-v1/manifest.json",
+        "docs/research/w5-appkit-resource-proxy-physical-2026-08.json",
+        "docs/research/w5-appkit-refresh-timing-physical-2026-08.json"
+      ],
+      "exitCondition": "A Pareto claim requires repeated same-host evidence that timing/skips remain no worse while process resource proxies are materially reduced and a supported real energy endpoint proves non-inferiority.",
+      "id": "NEG-W5-APPKIT-TARGETTIMESTAMP-FREE-RESOURCE-COST-001"
+    },
+    {
+      "area": "appkit-deadline-clock-experiment",
+      "claimRejected": "Replacing Task.sleep with a strict zero-leeway DispatchSourceTimer makes the low-overhead automatic-deadline path a local Pareto improvement.",
+      "counterexample": "The fixed-six-block Release/no-retry physical-Mac study completed 18 timing and 18 resource runs. Strict deadline improved median start-anchored p95 timing to about 16.82 ms from Task deadline 38.24 ms and reduced total source skips to 1 from 36, but median resource cost increased to 1.371x CPU, 1.245x cycles and 1.288x context switches versus Task deadline. Relative to external targetTimestamp, strict used roughly 0.324x CPU and 0.331x cycles but had about 1.356x p95 timing error.",
+      "decision": "Treat strict Dispatch deadline timing as an intermediate timing/resource tradeoff, not a production default or Pareto result. Preserve the benchmark result; do not replace SystemAnimationPlaybackClock on this evidence.",
+      "evidencePaths": [
+        ".artifacts/performance/w5-appkit-deadline-clock-physical-v1/manifest.json",
+        "Tools/Performance/capture_w5_appkit_deadline_clock_experiment.py"
+      ],
+      "exitCondition": "Reconsider a strict timer only if a new scheduler proves repeated timing/skipped-frame non-regression together with CPU/cycles/context-switch non-regression against the production deadline clock and supported energy evidence.",
+      "id": "NEG-W5-APPKIT-STRICT-DEADLINE-NOT-PARETO-001"
+    },
+    {
+      "area": "appkit-external-tick-coalescing",
+      "claimRejected": "Once Core reports the next source-frame boundary, all external display targets strictly before that boundary can be dropped without reducing presentation robustness.",
+      "counterexample": "The Release fixed-six-pair exact-boundary study cut median CPU to 0.454x, cycles to 0.479x, instructions to 0.578x and context switches to 0.488x while reducing roughly 300 accepted timing targets to about 61. Despite favorable aggregate p95, the coalesced path produced 3 skipped source frames across six timing runs while every-refresh produced 0, and the preregistered all-pairs direction gate failed.",
+      "decision": "Do not adopt exact next-frame-boundary Core tick coalescing. Every-refresh target sampling remains the product behavior. Resource savings do not override skipped-source-frame regression.",
+      "evidencePaths": [
+        ".artifacts/performance/w5-appkit-external-coalescing-physical-v1/manifest.json",
+        "docs/research/w5-appkit-scheduler-optimization-frontier-2026-08.json"
+      ],
+      "exitCondition": "A future coalescer must retain every source transition across repeated physical runs and pass the same timing/resource no-regression gate without retry-until-success.",
+      "id": "NEG-W5-APPKIT-EXTERNAL-EXACT-BOUNDARY-COALESCING-001"
+    },
+    {
+      "area": "appkit-external-tick-coalescing",
+      "claimRejected": "Allowing one display-refresh lead before each predicted source-frame boundary is sufficient to recover every-refresh timing robustness while keeping most Core-tick coalescing savings.",
+      "counterexample": "The fixed-six-pair one-refresh-lead study still produced 3 skipped source frames versus 0 for every-refresh and worsened median start-anchored p95 to 1.302x, even though CPU fell to 0.637x, cycles to 0.590x, instructions to 0.679x and context switches to 0.680x. The all-pairs timing/resource gate failed.",
+      "decision": "Do not continue tuning boundary lead as an adoption strategy. The result indicates that reducing Core sampling opportunities itself weakens short-frame robustness on this variable-delay workload. Keep every-refresh sampling until a mechanism with a stronger correctness proof exists.",
+      "evidencePaths": [
+        ".artifacts/performance/w5-appkit-external-coalescing-lead-physical-v1/manifest.json",
+        "docs/research/w5-appkit-scheduler-optimization-frontier-2026-08.json"
+      ],
+      "exitCondition": "Reopen only with a mechanism that does not conditionally remove presentation samples needed to observe short source-frame boundaries, plus deterministic and physical no-skip evidence.",
+      "id": "NEG-W5-APPKIT-EXTERNAL-LEAD-COALESCING-001"
+    },
+    {
+      "area": "appkit-repeated-frame-image-commit",
+      "claimRejected": "Suppressing repeated NSImage assignment for the same source frame is already proven locally Pareto-safe and should become the AppKit production default.",
+      "counterexample": "Two fixed-six-pair physical-Mac studies consistently showed strong process-resource reductions when same-source-frame image assignment was suppressed: the current safe-identity callback/resource run reports median ratios about 0.579x CPU, 0.643x cycles, 0.708x instructions and 0.884x context switches. W5_PT_150-151 prove external image mutation and backing-scale refresh ownership semantics. However callback timing still failed the preregistered all-pairs gate: median p95 was 1.097x and total observed source skips were 7 versus 5 for every-tick. The earlier refresh-sampled study likewise failed its all-pairs p95 gate.",
+      "decision": "Do not switch the product default to same-frame commit suppression on the current evidence. Preserve the resource finding and correctness tests as research input, but require a timing endpoint that passes the preregistered physical no-regression gate before adoption.",
+      "evidencePaths": [
+        ".artifacts/performance/w5-appkit-frame-commit-dedup-physical-v1/manifest.json",
+        ".artifacts/performance/w5-appkit-frame-commit-dedup-callback-physical-v1/manifest.json",
+        "docs/research/w5-appkit-scheduler-optimization-frontier-2026-08.json"
+      ],
+      "exitCondition": "Adopt only after source-transition commit suppression passes repeated physical timing/skipped-frame non-regression under the same external scheduler and retains external-image/backing-scale/lifecycle correctness.",
+      "id": "NEG-W5-APPKIT-SAME-FRAME-COMMIT-DEDUP-ADOPTION-001"
+    },
+    {
+      "area": "appkit-nsimage-wrapper-reuse",
+      "claimRejected": "Reusing the same NSImage wrapper for an identical decoded CGImage/backing scale is already proven timing-safe enough to become the AppKit production default.",
+      "counterexample": "A Release fixed-six-pair/no-retry physical-Mac study kept every external targetTimestamp and every imageView.image assignment. Wrapper reuse reduced median CPU to 0.446x, cycles to 0.503x, retired instructions to 0.699x and context switches to 0.746x with RSS at 1.000x. All six p95 results stayed within the preregistered one-observed-refresh non-inferiority margin, but one reuse timing run produced one skipped source frame while its paired rebuild control produced zero. Because the preregistered gate required no additional skips in every pair, the adoption gate failed.",
+      "decision": "Do not switch AppKit to wrapper reuse on this evidence. Preserve the resource finding, but remove the default-off product experiment rather than carrying an unadopted cache. Future evaluation should use a preregistered longer-run skip-rate protocol or another deterministic proof before reintroducing the optimization.",
+      "evidencePaths": [
+        ".artifacts/performance/w5-appkit-image-wrapper-reuse-physical-v1/manifest.json",
+        "docs/research/w5-appkit-scheduler-optimization-frontier-2026-08.json"
+      ],
+      "exitCondition": "Reopen only under a preregistered protocol that can distinguish rare physical scheduling noise from a real skip-rate regression while retaining every target tick/assignment and proving backing-scale/external-image semantics.",
+      "id": "NEG-W5-APPKIT-NSIMAGE-WRAPPER-REUSE-ADOPTION-001"
+    },
+    {
+      "area": "automatic-whole-track-resident-memory-accounting",
+      "claimRejected": "Resident decoded-frame bytes plus a bounded predecode peak are sufficient to make automatic whole-track admission safe for the full playback lifetime.",
+      "counterexample": "Owned APNG/GIF providers retain compressed frame payload, palettes and/or checkpoints after the predecode peak permit is released. Charging only decoded CGImage frames leaves those long-lived provider bytes outside AnimationFrameMemory; multiple simultaneously admitted animations can therefore accumulate steady-state provider memory without reducing later resident admission capacity. A second audit found that restricting the reservation to successful automatic predecode was still incomplete: the same owned provider remains alive after automatic fallback or fixed/bounded selection, so strategy-dependent charging created another escape path.",
+      "decision": "Known provider-retained cost is now a handle-lifetime resident reservation independent of frame strategy. Automatic whole-track upgrade still requires the full decoded/provider/peak proof bundle, but automatic fallback and explicit fixed/bounded handles retain the provider charge. Runtime admission uses decoded + provider-retained steady state for automatic selection; provider reservations evict only ordinary SIEVE entries, cannot displace pins/other reservations, remain charged through provider cancellation, and release on handle/namespace/all cancellation. Caller maximumDecodedByteCost continues to mean decoded bytes only.",
+      "evidencePaths": [
+        "Sources/FoveaCore/AnimationFrameMemory.swift",
+        "Sources/FoveaCore/AnimationPlaybackRuntime.swift",
+        "Sources/FoveaCore/AuthorizedAnimationPlaybackAsset.swift",
+        "Tests/FoveaTests/AnimationFrameMemoryTests.swift",
+        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
+        "Tests/FoveaTests/SystemEncodedAnimationPlaybackTests.swift",
+        "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json"
+      ],
+      "exitCondition": "Remove the separate provider-retained reservation only if provider state is proven to share an already charged lifetime allocation or a replacement global resident-memory model accounts the same bytes cumulatively across concurrent handles without weakening PT_188-191 and adapter PT_005-007.",
+      "id": "NEG-W5-ANIMATION-PROVIDER-RETAINED-BUDGET-OMISSION-001"
+    },
+    {
+      "area": "owned-gif-whole-track-decoder-throughput",
+      "claimRejected": "The owned GIF path introduced to prove whole-track memory bounds is itself a decoder-throughput optimization over direct Apple ImageIO.",
+      "counterexample": "On the retained local 607000-byte people-motion-24f.gif directional endpoint, the first owned implementation measured about 77.95 ms median for prepare plus 24 frames while direct ImageIO was about 1.28 ms. After exact-size output buffers, byte-reservoir and unsafe-byte LZW readers, fixed temporary dictionaries/literal fast path and UInt32 palette lookup, the owned path improved to 15.979938 ms median but direct ImageIO remained 1.266291 ms; owned was still about 12.62x slower on that decoder-only endpoint.",
+      "decision": "Do not describe owned GIF as a decoder speedup. Keep it because it provides strict LZW/pixel semantics and conservative resident/provider/peak cost bounds needed by fail-closed automatic whole-track admission. Evaluate its one-time startup cost against the separately measured steady-state compositor savings in an end-to-end production-pin experiment; continue local LZW tuning only when a profile identifies a material low-risk bottleneck.",
+      "evidencePaths": [
+        "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json",
+        "docs/research/w5-appkit-predecode-compositor-adoption-2026-08.json"
+      ],
+      "exitCondition": "A decoder-speed claim requires a preregistered equivalent-semantics benchmark with the same pixel outputs, cache policy, memory boundary and input corpus showing owned GIF non-inferior or faster than the chosen ImageIO baseline; compositor amortization is a separate claim.",
+      "id": "NEG-W5-IMAGECRAFT-OWNED-GIF-DECODER-SPEEDUP-001"
+    },
+    {
+      "area": "owned-gif-lzw-admission",
+      "claimRejected": "A GIF that Apple ImageIO accepts and whose outer sub-block structure passes the GIF inspector can be admitted to the owned LZW path without independently validating the compressed code stream during preparation.",
+      "counterexample": "A one-pixel fixture with LZW minimum code size 2 and payload byte 0x44 encodes clear(4) and literal(0) but does not contain enough bits for the required end code(5). ImageIO accepts the lenient stream, while the initial owned selector admitted it and only failed later during playback decode. That creates the forbidden state prepare/cost-estimate success followed by owned playback failure for an input that should have remained on the compatibility fallback.",
+      "decision": "Owned GIF preparation now runs bounded structural LZW validation with the same 4096-entry/code-size limits and requires an explicit end code plus exact pixel count. ImageIO-lenient but structurally incomplete streams fall back to ImageIO and expose no owned whole-track cost estimate; the owned decoder itself is not made more permissive to match ImageIO leniency.",
+      "evidencePaths": [
+        "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json"
+      ],
+      "exitCondition": "Relax explicit end-code validation only if the owned decoder gains a separately specified compatibility mode whose preparation and playback semantics are proven identical, bounded, and covered by retained malformed-stream tests; Apple ImageIO acceptance alone is not sufficient evidence.",
+      "id": "NEG-W5-IMAGECRAFT-GIF-IMAGEIO-ACCEPTANCE-IS-OWNED-LZW-PROOF-001"
+    },
+    {
+      "area": "animation-automatic-whole-track-cancellation-linearizability",
+      "claimRejected": "Actor isolation plus cancelling the currently stored automatic predecode task is sufficient to guarantee that no automatic whole-track provider/permit work can be created after handle cancellation.",
+      "counterexample": "AnimationPlaybackCoordinator.produce captured publicationGeneration, then suspended on cross-actor session work/cached-frame/admission queries. Cancellation could re-enter while no automaticWholeTrackPredecodeTask had been assigned, set isCancelled, advance the generation, and find no task to cancel. The stale produce invocation then resumed without revalidating cancellation/generation and created a new weighted predecode task after cancellation. W5-PT-175 manifested this as a full-suite XCTest waiter hang. The fast W5-PT-205 schedule search made the failure non-hanging by releasing the first permit after cancellation and reproduced the old bug at delay=17: the cancelled second provider was called once.",
+      "decision": "Keep Swift actors reentrant. Revalidate cancellation and the captured publication generation after the cross-actor cached-frame await and again after the automatic-admission await, before any automatic predecode task can be created. With no suspension between the final revalidation and task assignment, cancellation either wins before the guard and rejects stale work or wins afterward and cancels an already visible task. Retain W5-PT-175 and W5-PT-205 as regression evidence.",
+      "evidencePaths": [
+        "docs/research/animation-cancellation-reentrancy-audit-2026-08-08.md",
+        "Sources/FoveaCore/AnimationPlaybackCoordinator.swift",
+        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
+        ".project-local/animation-cancel-root-stress-20260808.log"
+      ],
+      "exitCondition": "Do not remove post-await revalidation unless an alternative design proves the cancellation/publication invariant in one synchronous actor critical section and W5-PT-175/W5-PT-205 plus suite-order stress remain green.",
+      "id": "NEG-W5-ACTOR-REENTRANCY-CANCEL-POSTAWAIT-SPAWN-001",
+      "status": "resolved-with-retained-regression"
+    },
+    {
+      "area": "derived-raster-direct-provider-whole-surface-pointer",
+      "claimRejected": "Supplying CGDataProvider getBytePointer so the schema4 LZ4 surface is reconstructed once into a transient contiguous buffer should reduce W2 display-ready latency by eliminating per-row direct-provider callbacks.",
+      "counterexample": "DEBUG tracing showed the intended lifetime: CGImage construction requested no pointer, while one materialization requested exactly one getBytePointer/release pair and zero row callbacks. Nevertheless the Release W2 diagnostic median regressed to about 1.919 ms display-ready and 0.576 ms callback versus roughly 1.164-1.405 ms display-ready for the row-provider samples. The physical-footprint delta remained low at about 0.43 MB, so the rejection is latency-driven rather than a leak/lifetime failure.",
+      "decision": "Do not expose getBytePointer on the current derived RGBX provider. Keep the random-access getBytesAtPosition path and optimize its actual row/copy/cache costs instead of forcing whole-surface reconstruction.",
+      "evidencePaths": [
+        "docs/research/w2-derived-provider-experiments-2026-08.json",
+        "Sources/FoveaCore/DerivedRasterPixelBridge.swift"
+      ],
+      "exitCondition": "Reconsider whole-surface pointer access only if a different CoreGraphics handoff proves repeated same-window display-ready improvement without moving decode work earlier or increasing retained memory; isolated callback-count reduction alone is insufficient.",
+      "id": "NEG-W2-DERIVED-GETBYTEPOINTER-LATENCY-001"
+    },
+    {
+      "area": "derived-raster-container-parser-single-pass",
+      "claimRejected": "Fusing schema4 chunk-length parsing, range construction and LZ4-frame validation into one pass is a proven worthwhile hot-path simplification over the established two-pass parser.",
+      "counterexample": "The directional Release W2 sample with the fused parser plus the short-lock provider measured about 1.423 ms median display-ready with a 3.75 MB footprint delta. Restoring the established two-pass parser while retaining the short-lock provider produced about 1.407 ms and 1.517 ms display-ready sandwich samples with only about 0.46 MB and 0.41 MB footprint deltas. The latency difference is within host variance and supplies no repeatable positive evidence for the extra parser rewrite.",
+      "decision": "Keep the established two-pass parser. Do not retain structural hot-path rewrites merely because they remove one small allocation or traversal when end-to-end evidence does not improve.",
+      "evidencePaths": [
+        "docs/research/w2-derived-provider-experiments-2026-08.json",
+        "Sources/FoveaCore/DerivedRasterContainer.swift"
+      ],
+      "exitCondition": "Reopen only with a targeted parser microbenchmark plus repeated same-window W2 evidence showing a material callback/display-ready gain and no memory regression while preserving every hostile-frame and bound check.",
+      "id": "NEG-W2-DERIVED-SINGLE-PASS-PARSER-NOT-PROVEN-001"
+    },
+    {
+      "area": "urlsession-body-credit-window",
+      "claimRejected": "Widening Fovea URLSession body credit from one outstanding callback to two or four will materially reduce transport latency while preserving a hard application-side outstanding-byte bound.",
+      "counterexample": "Three final Release mechanism reports produced median-of-medians of 3.760 ms at credit 1, 3.793 ms at credit 2 and 3.786 ms at credit 4, so widening did not improve latency. All three configurations also observed up to a 4 MiB outstanding callback despite the 256 KiB application threshold, because URLSession callback coalescing is outside that threshold's control.",
+      "decision": "Keep production on direct one-callback suspend/resume with no body-credit controller on the hot path. Retain the package-only 1/2/4 seam strictly for research; describe maximumOutstandingBytes as an application suspend threshold, never as a hard resident-memory bound.",
+      "evidencePaths": [
+        "docs/research/network-cancellation-and-body-credit-negative-results-2026-08.json",
+        "Sources/FoveaHTTP/URLSessionBodyCreditController.swift",
+        "Sources/FoveaHTTP/URLSessionEventRouter.swift",
+        "Sources/FoveaHTTP/URLSessionTransport.swift",
+        "Tests/FoveaTests/URLSessionTransportTests.swift",
+        "Tools/FoveaNetworkLab/BodyCreditMechanismLab.swift"
+      ],
+      "exitCondition": "Reopen only with a bounded design whose resource semantics remain true under URLSession callback coalescing and whose repeated self-normalized latency/cancellation/resource vector materially dominates the strict one-callback production path.",
+      "id": "NEG-H009-BODY-CREDIT-WIDENING-001"
+    },
+    {
+      "area": "w1-cancellation-control-plane",
+      "claimRejected": "The remaining W1 post-cancellation tail is primarily caused by a removable Fovea shared-registry, relay/executor, or progressive-producer hop and can be eliminated by a local control-plane rewrite.",
+      "counterexample": "The W1 Fovea comparator defaults to TransportReusePolicy.taskLocal, so it bypasses FetchStage.executeShared and SharedTaskRegistry entirely. Lock-relay, @concurrent comparator-task and suspend-before-cancel candidates did not produce a stable Pareto improvement. A later direct progressive-producer handle proved synchronous cancellation could reach the real task-local transport handler, yet three interleaved runs per arm were worse: median acknowledgement p95 22.778 ms direct vs 9.306 ms legacy, post-cancel bytes 1,159,445 vs 864,756, completed-after-cancel 999,436 vs 831,988 and abandoned bytes 131,072 vs 98,304. This rejects the remaining app-layer shortening hypothesis on the current simulator fixture.",
+      "decision": "Retain the current task-local cancellation path and actor-based subscription relay. Do not shard SharedTaskRegistry for W1 because it is not on that path, and do not add a direct producer-cancellation SPI or suspend-before-cancel without new end-to-end evidence. Treat the observed 32 KiB common tail only as provisional URLSession/fixture behavior, not a universal bound.",
+      "evidencePaths": [
+        "docs/research/network-cancellation-and-body-credit-negative-results-2026-08.json",
+        "Sources/FoveaCore/SharedTaskRegistry.swift",
+        "Sources/FoveaHTTP/URLSessionEventRouter.swift",
+        "Sources/FoveaHTTP/URLSessionTransport.swift",
+        "Tools/FoveaNetworkLab/SharedTaskRelayMechanismLab.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkOrigin.swift",
+        "Benchmarks/ComparativeLab/Apps/Shared/FeedBenchmark.swift",
+        ".artifacts/performance/h006-direct-producer-ab/report.json"
+      ],
+      "exitCondition": "Reopen when stable physical-device or deterministic network tracing identifies material app-owned time before URLSessionTask.cancel, or a candidate improves cancellation waste without normal completion, latency, memory, correctness or lifecycle regressions.",
+      "id": "NEG-H006-CANCELLATION-CONTROL-PLANE-001"
     }
   ],
   "registryID": "FOVEA-NEGATIVE-RESULTS-V1",
-  "reviewedOn": "2026-08-05",
+  "reviewedOn": "2026-08-10",
   "schemaVersion": 1
 }

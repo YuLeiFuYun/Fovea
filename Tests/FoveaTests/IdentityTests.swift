@@ -655,12 +655,37 @@ final class IdentityTests: XCTestCase {
         let retargeted = try original.retargeted(to: target)
 
         XCTAssertEqual(retargeted.fetchBaseKey, original.fetchBaseKey)
+        XCTAssertEqual(original.fetchBaseDigest, original.fetchBaseKey.digestHex)
+        XCTAssertEqual(retargeted.fetchBaseDigest, original.fetchBaseDigest)
+        XCTAssertEqual(
+            retargeted.storageNamespaceFingerprint,
+            original.storageNamespaceFingerprint
+        )
         XCTAssertEqual(retargeted.fetchVariantKey, original.fetchVariantKey)
         XCTAssertEqual(retargeted.fetchExecutionKey, original.fetchExecutionKey)
         XCTAssertEqual(retargeted.target, target.pixels)
         XCTAssertEqual(retargeted.contentMode, .fill)
         XCTAssertEqual(retargeted.renderCacheAdmission, .transient)
         XCTAssertNotEqual(retargeted.displayIdentity, original.displayIdentity)
+    }
+
+    func testReprioritizedRequestPreservesCachedPersistentIdentity_PIPE_PT_017() throws {
+        let original = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.com/reprioritized.png")),
+            logicalSource: LogicalSourceID("asset:reprioritized"),
+            target: try TargetPixels(width: 48, height: 48),
+            appID: "tests"
+        )
+        let reprioritized = original.reprioritized(.high)
+
+        XCTAssertEqual(reprioritized.fetchBaseDigest, original.fetchBaseDigest)
+        XCTAssertEqual(
+            reprioritized.storageNamespaceFingerprint,
+            original.storageNamespaceFingerprint
+        )
+        XCTAssertEqual(reprioritized.fetchBaseKey, original.fetchBaseKey)
+        XCTAssertEqual(reprioritized.fetchVariantKey, original.fetchVariantKey)
+        XCTAssertEqual(reprioritized.priority, .high)
     }
 
     func testTargetChangesDisplayIdentityWithoutChangingFetchIdentity() throws {

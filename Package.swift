@@ -147,6 +147,36 @@ let package = Package(
             path: "Tools/FoveaStoreProbe",
             swiftSettings: concurrencySettings
         ),
+        .executableTarget(
+            name: "FoveaDerivedRasterLab",
+            dependencies: [
+                "FoveaCore", "FoveaPersistence", "FoveaStorage",
+                .product(name: "AkashicCore", package: "Akashic"),
+                .product(name: "ImageCraftCore", package: "ImageCraft"),
+                .product(name: "ImageCraftImageIO", package: "ImageCraft"),
+            ],
+            path: "Tools/FoveaDerivedRasterLab",
+            swiftSettings: concurrencySettings
+        ),
+        .executableTarget(
+            name: "FoveaWarmMemoryLab",
+            dependencies: [
+                "FoveaCore", "FoveaHTTP", "FoveaPersistence", "FoveaTesting",
+                .product(name: "ImageCraftCore", package: "ImageCraft"),
+                .product(name: "ImageCraftImageIO", package: "ImageCraft"),
+            ],
+            path: "Tools/FoveaWarmMemoryLab",
+            swiftSettings: concurrencySettings
+        ),
+        .executableTarget(
+            name: "FoveaAnimationMacLab",
+            dependencies: [
+                "FoveaCore", "FoveaAppKit",
+                .product(name: "ImageCraftCore", package: "ImageCraft"),
+            ],
+            path: "Tools/FoveaAnimationMacLab",
+            swiftSettings: concurrencySettings
+        ),
         .target(
             name: "FoveaTesting",
             dependencies: [

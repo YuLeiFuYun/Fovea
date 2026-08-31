@@ -12,6 +12,16 @@ import ImageCraftImageIO
 import XCTest
 
 final class StagingAndStorageTests: XCTestCase {
+    func testStorageNamespaceFingerprintMatchesCanonicalSHA256Hex_STORAGE_PT_018() {
+        let namespace = "account:hex-equivalence"
+        let material = Data("fovea-storage-namespace-v1\u{0}\(namespace)".utf8)
+        let expected = SHA256.hash(data: material)
+            .map { String(format: "%02x", $0) }
+            .joined()
+
+        XCTAssertEqual(StorageNamespaceFingerprint(namespace: namespace).value, expected)
+    }
+
     func testAccumulatorSpillsAndPreservesDigest_SEC_CASE_019() throws {
         let directory = try makeTemporaryDirectory()
         let accumulator = try BoundedStagingAccumulator(
@@ -271,6 +281,12 @@ final class StagingAndStorageTests: XCTestCase {
         }
         let retainedRecord = await store.record(for: record.variantKeyDigest)
         XCTAssertNil(retainedRecord)
+        let snapshotAfterFailure = store.recordsSnapshot(
+            for: record.baseKeyDigest,
+            namespaceFingerprint: StorageNamespaceFingerprint(namespace: "public:tests"),
+            namespaceGeneration: 0
+        )
+        XCTAssertEqual(snapshotAfterFailure?.isEmpty, true)
     }
 
     func testRecordLookupRejectsPreviousNamespaceGeneration() async throws {
@@ -296,6 +312,48 @@ final class StagingAndStorageTests: XCTestCase {
         ).first
         XCTAssertNotNil(current)
         XCTAssertNil(revoked)
+    }
+
+    func testUniqueRecordFastPathRequiresSingleNamespaceGenerationCandidate_CACHE_PT_049()
+        async throws
+    {
+        let store = try await RepresentationRecordStore.open(root: makeTemporaryDirectory())
+        let first = makeRepresentationRecord(
+            namespace: "unique-record-fast-path",
+            baseKeyDigest: "unique-base",
+            variantKeyDigest: "unique-variant-a"
+        )
+        try await store.put(first)
+
+        let unique = store.uniqueRecord(
+            for: first.variantKeyDigest,
+            baseKeyDigest: first.baseKeyDigest,
+            namespaceFingerprint: StorageNamespaceFingerprint(namespace: "unique-record-fast-path"),
+            namespaceGeneration: 0
+        )
+        XCTAssertEqual(unique?.variantKeyDigest, first.variantKeyDigest)
+        let wrongNamespace = store.uniqueRecord(
+            for: first.variantKeyDigest,
+            baseKeyDigest: first.baseKeyDigest,
+            namespaceFingerprint: StorageNamespaceFingerprint(namespace: "other-namespace"),
+            namespaceGeneration: 0
+        )
+        XCTAssertNil(wrongNamespace)
+
+        let second = makeRepresentationRecord(
+            namespace: "unique-record-fast-path",
+            baseKeyDigest: first.baseKeyDigest,
+            variantKeyDigest: "unique-variant-b"
+        )
+        try await store.put(second)
+
+        let ambiguous = store.uniqueRecord(
+            for: first.variantKeyDigest,
+            baseKeyDigest: first.baseKeyDigest,
+            namespaceFingerprint: StorageNamespaceFingerprint(namespace: "unique-record-fast-path"),
+            namespaceGeneration: 0
+        )
+        XCTAssertNil(ambiguous)
     }
 
     func testPreReleaseRecordSchemaFailsWithoutRewritingFile_CACHE_PT_018() async throws {
@@ -386,6 +444,16 @@ final class StagingAndStorageTests: XCTestCase {
                 payloadLength: data.count
             )
         )
+        if try akashicManifestSchemaVersion(root: encodedRoot) == 4 {
+            let checkpointNamespace = "public:privacy-checkpoint-\(UUID().uuidString)"
+            let checkpointMarker = Data("privacy-checkpoint".utf8)
+            _ = try await encoded.commit(
+                data: checkpointMarker,
+                contentID: ContentID(data: checkpointMarker).description,
+                namespace: checkpointNamespace
+            )
+            try await encoded.removeAll(namespace: checkpointNamespace)
+        }
 
         let manifest = try akashicManifestMetadataData(root: encodedRoot)
             .map { String(decoding: $0, as: UTF8.self) }
@@ -410,29 +478,55 @@ final class StagingAndStorageTests: XCTestCase {
 
     func testRemoveDoesNotDeleteBlobWhenManifestPublicationFails_CACHE_PT_013() async throws {
         let root = try makeTemporaryDirectory()
-        let store = try await AkashicOriginalEncodedStore.open(root: root)
+        let blobsRoot = root.appendingPathComponent("blobs", isDirectory: true)
+        var store: AkashicOriginalEncodedStore? = try await AkashicOriginalEncodedStore.open(root: root)
         let data = Data("remove-transaction".utf8)
         let contentID = ContentID(data: data).description
-        let stored = try await store.commit(
+        let stored = try await XCTUnwrap(store).commit(
             data: data,
             contentID: contentID,
             namespace: "public:tests"
         )
         let blobURL = root.appendingPathComponent("blobs/\(stored.physicalID.foveaStorageFileName)")
-        let metadataURL = try akashicSingleEntryMetadataURL(root: root)
-        try FileManager.default.removeItem(at: metadataURL)
-        try FileManager.default.createDirectory(at: metadataURL, withIntermediateDirectories: false)
+
+        func setMetadataWriteEnabled(_ enabled: Bool) throws {
+            let mode = NSNumber(value: Int16(enabled ? 0o700 : 0o500))
+            try FileManager.default.setAttributes([.posixPermissions: mode], ofItemAtPath: root.path)
+            try FileManager.default.setAttributes(
+                [.posixPermissions: mode],
+                ofItemAtPath: blobsRoot.path
+            )
+        }
+
+        try setMetadataWriteEnabled(false)
+        var permissionsRestored = false
+        defer {
+            if !permissionsRestored {
+                try? setMetadataWriteEnabled(true)
+            }
+        }
 
         do {
-            try await store.remove(contentID: contentID, namespace: "public:tests")
+            try await XCTUnwrap(store).remove(contentID: contentID, namespace: "public:tests")
             XCTFail("元数据发布失败时删除操作必须失败")
         } catch {
+            try setMetadataWriteEnabled(true)
+            permissionsRestored = true
             XCTAssertTrue(FileManager.default.fileExists(atPath: blobURL.path))
-            let retainedPhysicalID = await store.physicalID(
+
+            store = nil
+            await Task.yield()
+            let reopened = try await reopenAkashicOriginalEncodedStore(root: root)
+            let retainedPhysicalID = await reopened.physicalID(
                 contentID: contentID,
                 namespace: "public:tests"
             )
             XCTAssertEqual(retainedPhysicalID, stored.physicalID)
+            let restored = try await reopened.read(
+                contentID: contentID,
+                namespace: "public:tests"
+            )
+            XCTAssertEqual(restored, data)
         }
     }
 
@@ -540,7 +634,7 @@ final class StagingAndStorageTests: XCTestCase {
         let firstID = ContentID(data: first).description
         let secondID = ContentID(data: second).description
         _ = try await store.commit(data: first, contentID: firstID, namespace: "public:tests")
-        try await Task.sleep(for: .milliseconds(5))
+        try await testSleep(.milliseconds(5))
         _ = try await store.commit(data: second, contentID: secondID, namespace: "public:tests")
 
         do {
@@ -733,7 +827,7 @@ final class StagingAndStorageTests: XCTestCase {
             firstBlob = try await activeStore.commit(
                 data: first, contentID: firstID, namespace: namespace
             )
-            try await Task.sleep(for: .milliseconds(20))
+            try await testSleep(.milliseconds(20))
             _ = try await activeStore.commit(
                 data: second, contentID: secondID, namespace: namespace
             )
@@ -754,7 +848,7 @@ final class StagingAndStorageTests: XCTestCase {
         await Task.yield()
 
         let reopened = try await reopenAkashicOriginalEncodedStore(root: root, limits: limits)
-        try await Task.sleep(for: .milliseconds(20))
+        try await testSleep(.milliseconds(20))
         _ = try await reopened.commit(data: third, contentID: thirdID, namespace: namespace)
 
         let retainedFirst = try await reopened.read(contentID: firstID, namespace: namespace)
@@ -789,7 +883,7 @@ final class StagingAndStorageTests: XCTestCase {
         let firstPersistedAccess = try XCTUnwrap(
             FileManager.default.attributesOfItem(atPath: blobURL.path)[.modificationDate] as? Date
         )
-        try await Task.sleep(for: .milliseconds(20))
+        try await testSleep(.milliseconds(20))
         _ = try await store.read(contentID: contentID, namespace: namespace)
         let secondPersistedAccess = try XCTUnwrap(
             FileManager.default.attributesOfItem(atPath: blobURL.path)[.modificationDate] as? Date
@@ -814,7 +908,7 @@ final class StagingAndStorageTests: XCTestCase {
             _ = try await activeStore.commit(
                 data: first, contentID: firstID, namespace: namespace
             )
-            try await Task.sleep(for: .milliseconds(20))
+            try await testSleep(.milliseconds(20))
             _ = try await activeStore.commit(
                 data: second, contentID: secondID, namespace: namespace
             )

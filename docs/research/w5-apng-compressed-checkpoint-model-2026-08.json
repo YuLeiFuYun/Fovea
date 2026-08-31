@@ -1,0 +1,332 @@
+{
+  "schemaVersion": 1,
+  "studyID": "FOVEA-W5-APNG-COMPRESSED-CHECKPOINT-MODEL-SOURCE-BOUND-2026-08",
+  "date": "2026-08-06",
+  "status": "completed-local-sensitivity-compressed-checkpoints-clear-1024-encoded-source-envelope-not-universal-or-2048-peak-cap",
+  "objective": "Quantify the deterministic compressed full-canvas checkpoint ratios required to satisfy APNG retained-state, replay-depth, and modeled-peak bounds, while retaining exact round-trip anchors for native straight-alpha pre-frame states.",
+  "evidence": {
+    "plan": "Benchmarks/ComparativeLab/apng-compressed-checkpoint-plan.json",
+    "basePlan": "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+    "model": "Tools/Performance/w5_apng_compressed_checkpoint_model.py",
+    "modelTests": "Tools/Performance/test_w5_apng_compressed_checkpoint_model.py",
+    "captureRunner": "Tools/Performance/capture_w5_apng_compressed_checkpoint_model.py",
+    "validator": "Tools/Performance/validate_w5_apng_compressed_checkpoint_model.py",
+    "tamperContract": "Tools/Performance/test_w5_apng_compressed_checkpoint_capture.py",
+    "report": ".artifacts/performance/w5-apng-compressed-checkpoint-model-v1/report.json",
+    "reportSHA256": "2af41f0c7eece7d37d052b637ef58b83321344050843d88e69c7c5df8e31e9b7",
+    "captureManifest": ".artifacts/performance/w5-apng-compressed-checkpoint-model-v1/capture-manifest.json",
+    "captureManifestSHA256": "27e237db06a6e6e906d2ade8c3a0d0a5f184878500e6ce5ba879c69c5d12ec0a",
+    "sourceIdentity": ".artifacts/performance/w5-apng-compressed-checkpoint-model-v1/source-identity.json",
+    "sourceIdentitySHA256": "b6a79751c9fe2099590586d65ead7ce6e5cdf5823c03a4d8ba8a50d16d3c6f5a"
+  },
+  "scope": {
+    "syntheticScenarioCount": 7,
+    "accessProfiles": [
+      "uniform",
+      "tail-hot"
+    ],
+    "retentionStrategies": [
+      "raw-subrect-retained",
+      "encoded-source-retained"
+    ],
+    "checkpointBlobRatioPPM": [
+      2500,
+      5000,
+      10000,
+      20000,
+      50000,
+      100000,
+      250000,
+      500000,
+      750000,
+      1000000
+    ],
+    "retainedBudgetMiB": [
+      8,
+      16,
+      32,
+      64,
+      128,
+      256,
+      512
+    ],
+    "maximumReplayFrames": [
+      4,
+      8,
+      16
+    ],
+    "referencePolicyPoint": {
+      "retainedBudgetMiB": 32,
+      "maximumReplayFrames": 8,
+      "modeledPeakHardCapMiB": 32
+    },
+    "compressionModel": "straight-alpha-zlib-level-9-checksummed-v1",
+    "decompressorWorkspaceBytes": 262144
+  },
+  "nativeRoundTripAnchor": {
+    "fixtureCount": 9,
+    "checkpointBlobCount": 38,
+    "minimumRatioPPM": 1534,
+    "medianRatioPPM": 15700.0,
+    "meanRatioPPM": 33890.52631578947,
+    "maximumRatioPPM": 125725,
+    "fixtures": {
+      "BALL-MOTION": {
+        "canvasWidth": 100,
+        "canvasHeight": 100,
+        "frameCount": 20,
+        "retainedCheckpointCount": 19,
+        "minimumRatioPPM": 2225,
+        "medianRatioPPM": 2225,
+        "maximumRatioPPM": 125725
+      },
+      "EXTREME-SPARSE": {
+        "canvasWidth": 240,
+        "canvasHeight": 240,
+        "frameCount": 3,
+        "retainedCheckpointCount": 2,
+        "minimumRatioPPM": 40738,
+        "medianRatioPPM": 40738.0,
+        "maximumRatioPPM": 40738
+      },
+      "FULL-BACKGROUND": {
+        "canvasWidth": 150,
+        "canvasHeight": 150,
+        "frameCount": 3,
+        "retainedCheckpointCount": 2,
+        "minimumRatioPPM": 1534,
+        "medianRatioPPM": 1534.0,
+        "maximumRatioPPM": 1534
+      },
+      "FULL-NONE": {
+        "canvasWidth": 150,
+        "canvasHeight": 150,
+        "frameCount": 3,
+        "retainedCheckpointCount": 2,
+        "minimumRatioPPM": 15700,
+        "medianRatioPPM": 21983.5,
+        "maximumRatioPPM": 28267
+      },
+      "FULL-PREVIOUS": {
+        "canvasWidth": 150,
+        "canvasHeight": 150,
+        "frameCount": 3,
+        "retainedCheckpointCount": 2,
+        "minimumRatioPPM": 15700,
+        "medianRatioPPM": 15700.0,
+        "maximumRatioPPM": 15700
+      },
+      "MIXED-PREVIOUS-SOURCE": {
+        "canvasWidth": 220,
+        "canvasHeight": 220,
+        "frameCount": 6,
+        "retainedCheckpointCount": 5,
+        "minimumRatioPPM": 35527,
+        "medianRatioPPM": 52655,
+        "maximumRatioPPM": 53699
+      },
+      "SUBRECT-BACKGROUND": {
+        "canvasWidth": 128,
+        "canvasHeight": 64,
+        "frameCount": 3,
+        "retainedCheckpointCount": 2,
+        "minimumRatioPPM": 4639,
+        "medianRatioPPM": 4654.5,
+        "maximumRatioPPM": 4670
+      },
+      "SUBRECT-NONE": {
+        "canvasWidth": 128,
+        "canvasHeight": 64,
+        "frameCount": 3,
+        "retainedCheckpointCount": 2,
+        "minimumRatioPPM": 2533,
+        "medianRatioPPM": 3586.0,
+        "maximumRatioPPM": 4639
+      },
+      "SUBRECT-PREVIOUS": {
+        "canvasWidth": 128,
+        "canvasHeight": 64,
+        "frameCount": 3,
+        "retainedCheckpointCount": 2,
+        "minimumRatioPPM": 2533,
+        "medianRatioPPM": 2533.0,
+        "maximumRatioPPM": 2533
+      }
+    },
+    "interpretationBoundary": "Native deterministic zlib ratios are exact for these retained small fixture states only. They are not used to assign synthetic scaled scenario ratios."
+  },
+  "results": {
+    "summary": {
+      "infeasibleCaseCount": 3370,
+      "matrixCaseCount": 5880,
+      "modeledPeakHardCapFeasibleCaseCount": 810,
+      "referencePolicyCaseCount": 280,
+      "referencePolicyGlobalOptimalityClaim": false,
+      "referencePolicyPeakHardCapFeasibleCaseCount": 42,
+      "referencePolicyRetainedFeasibleCaseCount": 80,
+      "referencePolicyScenariosWithAnyPeakClearingRatio": [
+        "FULL-1024-60",
+        "SUBRECT-NONE-1024-60",
+        "SUBRECT-PREVIOUS-1024-120"
+      ],
+      "referencePolicyScenariosWithAnyRetainedFeasibleRatio": [
+        "BALL-2048-120",
+        "FULL-1024-60",
+        "SPARSE-2048-256",
+        "SUBRECT-NONE-1024-60",
+        "SUBRECT-PREVIOUS-1024-120"
+      ],
+      "retainedFeasibleCaseCount": 2510
+    },
+    "referencePolicyThresholds": {
+      "BALL-2048-120": {
+        "encoded-source-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": true,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": 50000
+        },
+        "raw-subrect-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": false,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": null
+        }
+      },
+      "FULL-1024-60": {
+        "encoded-source-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": true,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": true,
+          "largestPeakClearingRatioPPM": 250000,
+          "largestRetainedFeasibleRatioPPM": 750000
+        },
+        "raw-subrect-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": false,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": null
+        }
+      },
+      "FULL-2048-32": {
+        "encoded-source-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": false,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": null
+        },
+        "raw-subrect-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": false,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": null
+        }
+      },
+      "MIXED-PREVIOUS-2048-120": {
+        "encoded-source-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": false,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": null
+        },
+        "raw-subrect-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": false,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": null
+        }
+      },
+      "SPARSE-2048-256": {
+        "encoded-source-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": true,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": 50000
+        },
+        "raw-subrect-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": true,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": 20000
+        }
+      },
+      "SUBRECT-NONE-1024-60": {
+        "encoded-source-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": true,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": true,
+          "largestPeakClearingRatioPPM": 500000,
+          "largestRetainedFeasibleRatioPPM": 1000000
+        },
+        "raw-subrect-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": false,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": null
+        }
+      },
+      "SUBRECT-PREVIOUS-1024-120": {
+        "encoded-source-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": true,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": true,
+          "largestPeakClearingRatioPPM": 100000,
+          "largestRetainedFeasibleRatioPPM": 250000
+        },
+        "raw-subrect-retained": {
+          "allAccessProfilesPeakClearingAtLargestRatio": false,
+          "allAccessProfilesRetainedFeasibleAtLargestRatio": false,
+          "largestPeakClearingRatioPPM": null,
+          "largestRetainedFeasibleRatioPPM": null
+        }
+      }
+    },
+    "structuralPeakFloor": {
+      "separateStraightAndPremultipliedCanvasBytesAt2048Square": 33554432,
+      "hardCapBytes": 33554432,
+      "conclusion": "Two separate 2048x2048 RGBA canvases consume the entire 32 MiB hard cap before encoded source, raw subrect, previous-disposal save region, compressed checkpoints, or decompressor workspace are counted."
+    }
+  },
+  "interpretation": [
+    "Compressed full-canvas checkpoints are materially broader than persistent tiles: at the 32 MiB/eight-frame reference point, 80 of 280 ratio cases are retained-state feasible and 42 also clear the modeled-peak hard cap.",
+    "Peak-clearing cases exist only for encoded-source-retained 1024-square scenarios. FULL-1024-60 clears through a 25 percent checkpoint-blob ratio, SUBRECT-NONE-1024-60 through 50 percent, and SUBRECT-PREVIOUS-1024-120 through 10 percent under both access profiles.",
+    "No 2048-square reference case clears the modeled-peak hard cap. With separate straight-alpha compositor and premultiplied output surfaces, the two canvases alone consume exactly 32 MiB.",
+    "The 38 native checkpoint blobs round-trip exactly. Their observed ratios range from 0.1534 percent to 12.5725 percent with a 1.57 percent median, but these small-fixture ratios are not extrapolated to scaled production content or decode latency.",
+    "Raw-subrect-retained strategies generally fail the reference point because total decoded track bytes dominate. The viable compressed envelope retains encoded source and decodes subrect payloads during replay.",
+    "The next production decision is not simply another checkpoint representation: Fovea must either constrain supported canvas size, permit an output-buffer alias/destructive finalization mode, or revise what the 32 MiB hard cap covers. Dirty-region state alone cannot remove a two-canvas transient floor."
+  ],
+  "claimBoundary": {
+    "formalClaimEligible": false,
+    "reasons": [
+      "Synthetic checkpoint blob ratios are explicit sensitivity inputs from 0.25 percent through 100 percent; they are not inferred from native fixture compression.",
+      "The checkpoint blob stores the complete straight-alpha pre-frame canvas with a deterministic header, zlib payload, dimensions, raw byte count, and CRC32.",
+      "Frame zero uses an implicit transparent pre-frame state and retains no compressed blob.",
+      "Modeled peak counts retained source or raw subrect state, retained compressed checkpoints, one straight-alpha compositor canvas, the largest current raw subrect, the largest previous-disposal save region, one premultiplied output canvas, and 256 KiB decompressor workspace.",
+      "The model excludes allocator fragmentation, ImageIO private state, compression latency, CPU, energy, thermal effects, and physical-device pressure.",
+      "A feasible analytical ratio is a threshold requirement, not evidence that production animation content achieves that ratio or latency."
+    ]
+  },
+  "sourceIdentity": {
+    "sourceUnchangedDuringCapture": true,
+    "inputSourcesUnchangedDuringCapture": true,
+    "policySourcesUnchangedDuringCapture": true,
+    "governingFilesUnchangedDuringCapture": true,
+    "sources": {
+      "APNGKit": {
+        "headCommit": "341383f61000e8d2e55d45db0f0756b239d0a2f1",
+        "headTree": "02fb85b92d6200ef03c0f207b68ba652eb2a9b99",
+        "workingTree": "02fb85b92d6200ef03c0f207b68ba652eb2a9b99",
+        "dirty": false
+      },
+      "Fovea": {
+        "headCommit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+        "headTree": "2909946901b525e108d147fca4eb14da1d722ba5",
+        "workingTree": "39c8bfba2b1d596fb1efa2883f2499c6dfee28a4",
+        "dirty": true
+      },
+      "ImageCraft": {
+        "headCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+        "headTree": "b8dfb362ce6eb3b07cd48f72247edd2b7401cabf",
+        "workingTree": "d30856f58e0b6485bd88c94881705209c48aa989",
+        "dirty": true
+      }
+    }
+  }
+}

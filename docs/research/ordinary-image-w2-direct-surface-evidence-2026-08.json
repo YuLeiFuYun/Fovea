@@ -1,0 +1,328 @@
+{
+  "baseline": {
+    "cold": {
+      "Apple URLSession + URLCache + ImageIO": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 37377959,
+        "medianOfImageP95LatencyNanoseconds": 194782583,
+        "medianPhysicalFootprintDeltaBytes": 18317384,
+        "medianTotalDurationNanoseconds": 621634708,
+        "physicalFootprintDeltaSamplesBytes": [
+          18333744,
+          10534984,
+          18317384
+        ],
+        "requestCounts": [
+          3,
+          3,
+          3
+        ],
+        "totalDurationSamplesNanoseconds": [
+          619661583,
+          621634708,
+          623601583
+        ]
+      },
+      "Fovea": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 35043875,
+        "medianOfImageP95LatencyNanoseconds": 194747875,
+        "medianPhysicalFootprintDeltaBytes": 9830424,
+        "medianTotalDurationNanoseconds": 624096917,
+        "physicalFootprintDeltaSamplesBytes": [
+          8798232,
+          9830424,
+          18513920
+        ],
+        "requestCounts": [
+          3,
+          3,
+          3
+        ],
+        "totalDurationSamplesNanoseconds": [
+          624096917,
+          622786666,
+          634405500
+        ]
+      }
+    },
+    "warm-disk": {
+      "Apple URLSession + URLCache + ImageIO": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 26162667,
+        "medianOfImageP95LatencyNanoseconds": 45407167,
+        "medianPhysicalFootprintDeltaBytes": 17825816,
+        "medianTotalDurationNanoseconds": 240480958,
+        "physicalFootprintDeltaSamplesBytes": [
+          17825816,
+          17907736,
+          17825816
+        ],
+        "requestCounts": [
+          0,
+          0,
+          0
+        ],
+        "totalDurationSamplesNanoseconds": [
+          241029792,
+          240480958,
+          238114750
+        ]
+      },
+      "Fovea": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 26828292,
+        "medianOfImageP95LatencyNanoseconds": 46271125,
+        "medianPhysicalFootprintDeltaBytes": 17825816,
+        "medianTotalDurationNanoseconds": 243557334,
+        "physicalFootprintDeltaSamplesBytes": [
+          17809408,
+          17842200,
+          17825816
+        ],
+        "requestCounts": [
+          0,
+          0,
+          0
+        ],
+        "totalDurationSamplesNanoseconds": [
+          246397750,
+          243557334,
+          235304167
+        ]
+      }
+    },
+    "warm-memory": {
+      "Apple URLSession + URLCache + ImageIO": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 2542,
+        "medianOfImageP95LatencyNanoseconds": 7875,
+        "medianPhysicalFootprintDeltaBytes": 49152,
+        "medianTotalDurationNanoseconds": 1395000,
+        "physicalFootprintDeltaSamplesBytes": [
+          49152,
+          49152,
+          81920
+        ],
+        "requestCounts": [
+          0,
+          0,
+          0
+        ],
+        "totalDurationSamplesNanoseconds": [
+          1404500,
+          1377542,
+          1395000
+        ]
+      },
+      "Fovea": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 261042,
+        "medianOfImageP95LatencyNanoseconds": 295792,
+        "medianPhysicalFootprintDeltaBytes": 49152,
+        "medianTotalDurationNanoseconds": 4573792,
+        "physicalFootprintDeltaSamplesBytes": [
+          49152,
+          49152,
+          65536
+        ],
+        "requestCounts": [
+          0,
+          0,
+          0
+        ],
+        "totalDurationSamplesNanoseconds": [
+          4778958,
+          4573792,
+          4572583
+        ]
+      }
+    }
+  },
+  "baselineSourceIdentity": {
+    "commit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+    "includesWorkingTreeChanges": true,
+    "sourceTreeDigest": "e1e44df1287ee85ac21567a1083336021d89f2fa3fd5ac3bc20910e872cdd20f"
+  },
+  "candidate": {
+    "cold": {
+      "Apple URLSession + URLCache + ImageIO": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 37083875,
+        "medianOfImageP95LatencyNanoseconds": 193245666,
+        "medianPhysicalFootprintDeltaBytes": 18481248,
+        "medianTotalDurationNanoseconds": 613350000,
+        "physicalFootprintDeltaSamplesBytes": [
+          18333768,
+          18481248,
+          18497584
+        ],
+        "requestCounts": [
+          3,
+          3,
+          3
+        ],
+        "totalDurationSamplesNanoseconds": [
+          621105375,
+          613350000,
+          612865084
+        ]
+      },
+      "Fovea": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 35742500,
+        "medianOfImageP95LatencyNanoseconds": 196860708,
+        "medianPhysicalFootprintDeltaBytes": 18481152,
+        "medianTotalDurationNanoseconds": 628407250,
+        "physicalFootprintDeltaSamplesBytes": [
+          10977304,
+          18481152,
+          19087408
+        ],
+        "requestCounts": [
+          3,
+          3,
+          3
+        ],
+        "totalDurationSamplesNanoseconds": [
+          621552958,
+          628407250,
+          661799375
+        ]
+      }
+    },
+    "warm-disk": {
+      "Apple URLSession + URLCache + ImageIO": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 25997042,
+        "medianOfImageP95LatencyNanoseconds": 45158333,
+        "medianPhysicalFootprintDeltaBytes": 17809432,
+        "medianTotalDurationNanoseconds": 238184792,
+        "physicalFootprintDeltaSamplesBytes": [
+          17825816,
+          17809432,
+          17809432
+        ],
+        "requestCounts": [
+          0,
+          0,
+          0
+        ],
+        "totalDurationSamplesNanoseconds": [
+          238625500,
+          238184792,
+          237100750
+        ]
+      },
+      "Fovea": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 26160791,
+        "medianOfImageP95LatencyNanoseconds": 46726417,
+        "medianPhysicalFootprintDeltaBytes": 17809408,
+        "medianTotalDurationNanoseconds": 242147417,
+        "physicalFootprintDeltaSamplesBytes": [
+          17842200,
+          17793048,
+          17809408
+        ],
+        "requestCounts": [
+          0,
+          0,
+          0
+        ],
+        "totalDurationSamplesNanoseconds": [
+          243326500,
+          242147417,
+          242057000
+        ]
+      }
+    },
+    "warm-memory": {
+      "Apple URLSession + URLCache + ImageIO": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 2750,
+        "medianOfImageP95LatencyNanoseconds": 5500,
+        "medianPhysicalFootprintDeltaBytes": 49152,
+        "medianTotalDurationNanoseconds": 1351125,
+        "physicalFootprintDeltaSamplesBytes": [
+          49152,
+          81920,
+          49152
+        ],
+        "requestCounts": [
+          0,
+          0,
+          0
+        ],
+        "totalDurationSamplesNanoseconds": [
+          1351125,
+          1322250,
+          1671000
+        ]
+      },
+      "Fovea": {
+        "blockCount": 3,
+        "medianOfImageMedianLatencyNanoseconds": 246375,
+        "medianOfImageP95LatencyNanoseconds": 319416,
+        "medianPhysicalFootprintDeltaBytes": 32768,
+        "medianTotalDurationNanoseconds": 4805791,
+        "physicalFootprintDeltaSamplesBytes": [
+          32768,
+          32768,
+          32768
+        ],
+        "requestCounts": [
+          0,
+          0,
+          0
+        ],
+        "totalDurationSamplesNanoseconds": [
+          4805791,
+          4963083,
+          4595208
+        ]
+      }
+    }
+  },
+  "candidateSourceIdentity": {
+    "commit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+    "includesWorkingTreeChanges": true,
+    "sourceTreeDigest": "60814d7dd394b6a7125d183044cc8ff05edb2b9c82adeedf3cc659c0db8d4bcb"
+  },
+  "decision": {
+    "nextMechanism": "Profile the complete warm-memory request/delivery chain and evaluate a derived-raster persistence policy only with disk footprint, write amplification, admission, revocation, and multi-target evidence.",
+    "outcome": "reject-and-revert",
+    "reason": "The candidate reduced Fovea warm-memory per-image median by only about 15 microseconds while worsening nine-load total duration and p95, and did not improve Fovea/Apple normalized total latency. It also creates a second adapter control path without a material benefit."
+  },
+  "environment": {
+    "deviceProfileID": "ios26-4-simulator-calibration-v1",
+    "deviceRole": "primary-current-mid",
+    "osBuild": "23E254a",
+    "osChannel": "stable",
+    "osFamily": "iOS Simulator",
+    "osVersion": "26.4.1"
+  },
+  "evidenceID": "FOVEA-W2-DIRECT-FINAL-SURFACE-DIRECTIONAL-2026-08-05",
+  "generatedAt": "2026-08-05T02:38:21.177670+00:00",
+  "method": {
+    "baseline": "existing events(for:) adapter surface",
+    "blocksPerCampaign": 3,
+    "cacheStates": [
+      "cold",
+      "warm-disk",
+      "warm-memory"
+    ],
+    "candidate": "explicit direct image(for:) adapter surface for W2 only",
+    "comparisonAnchor": "Apple URLSession + URLCache + ImageIO interleaved in both campaigns",
+    "limitations": [
+      "dirty Fovea worktree",
+      "iOS Simulator",
+      "diagnostic host gate bypassed",
+      "campaigns sequential rather than randomized paired source builds"
+    ],
+    "workload": "W2-HERO-V1"
+  },
+  "question": "Does routing ordinary W2 still-image loads through image(for:) instead of events(for:) materially reduce Fovea warm-memory latency without regressing other W2 states?",
+  "schemaVersion": 1,
+  "status": "completed-dirty-simulator-directional-rejected-no-performance-claim"
+}

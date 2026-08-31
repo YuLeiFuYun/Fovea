@@ -13,6 +13,7 @@ DESTINATION = ROOT / "Benchmarks/ComparativeLab/Apps/GeneratedResources"
 HEROES = ROOT / "Sources/FoveaTesting/Fixtures"
 DEVICE = ROOT / ".artifacts/phase0b/device-profile.json"
 PROBES = ROOT / "Benchmarks/ComparativeLab/Fixtures/correctness-probes.json"
+ANIMATED_FIXTURES = ROOT / "Benchmarks/ComparativeLab/Fixtures/animated-player-fixtures.json"
 PROGRESSIVE = HEROES / "progressive-people-usda-meeting-1920x1280.jpg"
 
 
@@ -56,6 +57,24 @@ def main() -> int:
             return 1
         shutil.copy2(source, probe_directory / probe["resourceName"])
     shutil.copy2(PROBES, staging / "correctness-probes.json")
+    animated_manifest = json.loads(ANIMATED_FIXTURES.read_text())
+    if animated_manifest.get("schemaVersion") != 1 or not animated_manifest.get("fixtures"):
+        print("animated player fixture manifest is invalid", file=sys.stderr)
+        return 1
+    animated_directory = staging / "animated"
+    animated_directory.mkdir()
+    for fixture in animated_manifest["fixtures"]:
+        source = ANIMATED_FIXTURES.parent / fixture["fileName"]
+        payload = source.read_bytes()
+        if len(payload) != fixture["byteCount"]:
+            print(f"animated fixture byte count mismatch: {fixture['id']}", file=sys.stderr)
+            return 1
+        digest = hashlib.sha256(payload).hexdigest()
+        if digest != fixture["sha256"]:
+            print(f"animated fixture digest mismatch: {fixture['id']}", file=sys.stderr)
+            return 1
+        shutil.copy2(source, animated_directory / fixture["fileName"])
+    shutil.copy2(ANIMATED_FIXTURES, staging / "animated-player-fixtures.json")
     shutil.copy2(DEVICE, staging / "device-profile.json")
     progressive_payload = PROGRESSIVE.read_bytes()
     progressive_name = "w4-progressive-1920x1280.jpg"
@@ -66,6 +85,10 @@ def main() -> int:
         "datasetAssetCount": data["assetCount"],
         "heroCount": 3,
         "correctnessProbeCount": len(probe_manifest["probes"]),
+        "animatedPlayerFixtureCount": len(animated_manifest["fixtures"]),
+        "animatedPlayerFixtureManifestSHA256": hashlib.sha256(
+            ANIMATED_FIXTURES.read_bytes()
+        ).hexdigest(),
         "deviceProfileID": json.loads(DEVICE.read_text())["profileID"],
         "progressiveFixture": {
             "name": progressive_name,

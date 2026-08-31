@@ -1,0 +1,360 @@
+{
+  "claimBoundary": {
+    "formalClaimEligible": false,
+    "reasons": [
+      "ImageCraft source is dirty, unpublished and not the Fovea production dependency revision.",
+      "APNGKit preRenderAllFrames is not an equivalent memory or performance strategy.",
+      "Apple ImageIO is OS/framework-bound and its executable is supplied through the dyld shared cache.",
+      "Only six local correctness fixtures were evaluated on one macOS host.",
+      "The rejected separate-default multi-frame class is fail-closed rather than implemented by an owned compositor.",
+      "No physical-device deadline, memory, energy, thermal, lifecycle or reclamation endpoint was measured."
+    ]
+  },
+  "date": "2026-08-06",
+  "evidence": {
+    "aggregate": ".artifacts/performance/w5-apng-composition-oracle-v5/aggregate.json",
+    "aggregateSHA256": "34c5f7beb542f2fc8a9b2d3695baa036352407c9c38f93d6264bb2f95a9a1270",
+    "artifactInventoryCount": 69,
+    "captureManifest": ".artifacts/performance/w5-apng-composition-oracle-v5/capture-manifest.json",
+    "captureManifestSHA256": "f05ab23bde98966b34e78b27c1c89c9fe0bfb50c4083fa03a5deae7f7cf19ca8",
+    "captureRunner": "Tools/Performance/capture_w5_apng_composition_oracle.py",
+    "lab": "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage",
+    "mechanismPlan": "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+    "sourceIdentity": ".artifacts/performance/w5-apng-composition-oracle-v5/source-identity.json",
+    "sourceIdentitySHA256": "69e492a480de8c3c7e5edb10e25bc9e93bd6427fc42f7fde6e223993b3ccc1b2",
+    "tamperContract": "Tools/Performance/test_w5_apng_composition_oracle.py",
+    "validator": "Tools/Performance/validate_w5_apng_composition_oracle.py"
+  },
+  "interpretation": [
+    "ImageCraft and Apple ImageIO are byte-exact on all 21 supported retained frames across six full-canvas and true-subrect fixtures.",
+    "APNGKit is byte-exact with both comparators on background disposal, the two SpecTesting none/background subrect fixtures, and all six mixed previous/source frames from pia.png.",
+    "APNGKit differs on frames 1 and 2 of the full-canvas none and previous fixtures by at most two and one channel levels respectively; the exact-pixel gate therefore remains failed for APNGKit as a universal oracle.",
+    "The ImageCraft source audit proves that parsed subrect metadata does not imply subrect storage: supported frames are still materialized as full canvases through Apple ImageIO, with composed/subrect byte ratios of about 2.400x on SpecTesting 013/015 and 2.612x on pia.png.",
+    "A separate-default APNG with multiple animation frames is not included in the positive ImageIO oracle because ImageIO source indices are not proven to align with the APNG animation timeline. The bound ImageCraft candidate now rejects that class with animationUnsupported while retaining the aligned one-frame special case.",
+    "The evidence establishes local correctness and a fail-closed boundary only; it does not establish bounded checkpoint state, memory superiority, player timing, energy, thermal, network or physical-device behavior."
+  ],
+  "objective": "Adjudicate supported APNG full-canvas and true-subrect source/over blend plus none/background/previous disposal across ImageCraft, APNGKit and Apple ImageIO, while separately proving that unaligned multi-frame separate-default ImageIO indexing fails closed.",
+  "results": {
+    "allFixturesPairExact": {
+      "APNGKitAppleImageIO": false,
+      "ImageCraftAPNGKit": false,
+      "ImageCraftAppleImageIO": true
+    },
+    "allFixturesTimelineEligible": true,
+    "fixtures": {
+      "APNG-OVER-BACKGROUND": {
+        "adjudication": "all-three-exact",
+        "frameCount": 3,
+        "imageCraftResourceObservation": {
+          "allDecodedFramesAreFullCanvas": true,
+          "decodedOverMetadataSubrectByteRatio": 1.0,
+          "explicitImageCraftCheckpointStateObserved": false,
+          "fullCanvasDecodedFrameCount": 3,
+          "randomAccessCompositionDelegatedToAppleImageIO": true,
+          "totalDecodedRGBAByteCount": 270000,
+          "totalFrameCount": 3,
+          "totalMetadataSubrectRGBAByteCount": 270000
+        },
+        "pairAllFramesExact": {
+          "APNGKitAppleImageIO": true,
+          "ImageCraftAPNGKit": true,
+          "ImageCraftAppleImageIO": true
+        },
+        "pairExactFrameCounts": {
+          "APNGKitAppleImageIO": 3,
+          "ImageCraftAPNGKit": 3,
+          "ImageCraftAppleImageIO": 3
+        },
+        "pairMaximumChannelDifference": {
+          "APNGKitAppleImageIO": 0,
+          "ImageCraftAPNGKit": 0,
+          "ImageCraftAppleImageIO": 0
+        },
+        "pairMaximumDifferentPixelFraction": {
+          "APNGKitAppleImageIO": 0.0,
+          "ImageCraftAPNGKit": 0.0,
+          "ImageCraftAppleImageIO": 0.0
+        },
+        "role": "full-canvas-background-disposal",
+        "timelineEligible": true
+      },
+      "APNG-OVER-NONE": {
+        "adjudication": "imagecraft-and-apple-exact-apngkit-differs",
+        "frameCount": 3,
+        "imageCraftResourceObservation": {
+          "allDecodedFramesAreFullCanvas": true,
+          "decodedOverMetadataSubrectByteRatio": 1.0,
+          "explicitImageCraftCheckpointStateObserved": false,
+          "fullCanvasDecodedFrameCount": 3,
+          "randomAccessCompositionDelegatedToAppleImageIO": true,
+          "totalDecodedRGBAByteCount": 270000,
+          "totalFrameCount": 3,
+          "totalMetadataSubrectRGBAByteCount": 270000
+        },
+        "pairAllFramesExact": {
+          "APNGKitAppleImageIO": false,
+          "ImageCraftAPNGKit": false,
+          "ImageCraftAppleImageIO": true
+        },
+        "pairExactFrameCounts": {
+          "APNGKitAppleImageIO": 1,
+          "ImageCraftAPNGKit": 1,
+          "ImageCraftAppleImageIO": 3
+        },
+        "pairMaximumChannelDifference": {
+          "APNGKitAppleImageIO": 2,
+          "ImageCraftAPNGKit": 2,
+          "ImageCraftAppleImageIO": 0
+        },
+        "pairMaximumDifferentPixelFraction": {
+          "APNGKitAppleImageIO": 0.2826222222222222,
+          "ImageCraftAPNGKit": 0.2826222222222222,
+          "ImageCraftAppleImageIO": 0.0
+        },
+        "role": "full-canvas-none-disposal",
+        "timelineEligible": true
+      },
+      "APNG-OVER-PREVIOUS": {
+        "adjudication": "imagecraft-and-apple-exact-apngkit-differs",
+        "frameCount": 3,
+        "imageCraftResourceObservation": {
+          "allDecodedFramesAreFullCanvas": true,
+          "decodedOverMetadataSubrectByteRatio": 1.0,
+          "explicitImageCraftCheckpointStateObserved": false,
+          "fullCanvasDecodedFrameCount": 3,
+          "randomAccessCompositionDelegatedToAppleImageIO": true,
+          "totalDecodedRGBAByteCount": 270000,
+          "totalFrameCount": 3,
+          "totalMetadataSubrectRGBAByteCount": 270000
+        },
+        "pairAllFramesExact": {
+          "APNGKitAppleImageIO": false,
+          "ImageCraftAPNGKit": false,
+          "ImageCraftAppleImageIO": true
+        },
+        "pairExactFrameCounts": {
+          "APNGKitAppleImageIO": 1,
+          "ImageCraftAPNGKit": 1,
+          "ImageCraftAppleImageIO": 3
+        },
+        "pairMaximumChannelDifference": {
+          "APNGKitAppleImageIO": 1,
+          "ImageCraftAPNGKit": 1,
+          "ImageCraftAppleImageIO": 0
+        },
+        "pairMaximumDifferentPixelFraction": {
+          "APNGKitAppleImageIO": 0.17875555555555556,
+          "ImageCraftAPNGKit": 0.17875555555555556,
+          "ImageCraftAppleImageIO": 0.0
+        },
+        "role": "full-canvas-previous-disposal",
+        "timelineEligible": true
+      },
+      "APNG-SUBRECT-BACKGROUND": {
+        "adjudication": "all-three-exact",
+        "frameCount": 3,
+        "imageCraftResourceObservation": {
+          "allDecodedFramesAreFullCanvas": true,
+          "decodedOverMetadataSubrectByteRatio": 2.399765647885949,
+          "explicitImageCraftCheckpointStateObserved": false,
+          "fullCanvasDecodedFrameCount": 3,
+          "randomAccessCompositionDelegatedToAppleImageIO": true,
+          "totalDecodedRGBAByteCount": 98304,
+          "totalFrameCount": 3,
+          "totalMetadataSubrectRGBAByteCount": 40964
+        },
+        "pairAllFramesExact": {
+          "APNGKitAppleImageIO": true,
+          "ImageCraftAPNGKit": true,
+          "ImageCraftAppleImageIO": true
+        },
+        "pairExactFrameCounts": {
+          "APNGKitAppleImageIO": 3,
+          "ImageCraftAPNGKit": 3,
+          "ImageCraftAppleImageIO": 3
+        },
+        "pairMaximumChannelDifference": {
+          "APNGKitAppleImageIO": 0,
+          "ImageCraftAPNGKit": 0,
+          "ImageCraftAppleImageIO": 0
+        },
+        "pairMaximumDifferentPixelFraction": {
+          "APNGKitAppleImageIO": 0.0,
+          "ImageCraftAPNGKit": 0.0,
+          "ImageCraftAppleImageIO": 0.0
+        },
+        "role": "offset-subrect-over-background-disposal",
+        "timelineEligible": true
+      },
+      "APNG-SUBRECT-NONE": {
+        "adjudication": "all-three-exact",
+        "frameCount": 3,
+        "imageCraftResourceObservation": {
+          "allDecodedFramesAreFullCanvas": true,
+          "decodedOverMetadataSubrectByteRatio": 2.399765647885949,
+          "explicitImageCraftCheckpointStateObserved": false,
+          "fullCanvasDecodedFrameCount": 3,
+          "randomAccessCompositionDelegatedToAppleImageIO": true,
+          "totalDecodedRGBAByteCount": 98304,
+          "totalFrameCount": 3,
+          "totalMetadataSubrectRGBAByteCount": 40964
+        },
+        "pairAllFramesExact": {
+          "APNGKitAppleImageIO": true,
+          "ImageCraftAPNGKit": true,
+          "ImageCraftAppleImageIO": true
+        },
+        "pairExactFrameCounts": {
+          "APNGKitAppleImageIO": 3,
+          "ImageCraftAPNGKit": 3,
+          "ImageCraftAppleImageIO": 3
+        },
+        "pairMaximumChannelDifference": {
+          "APNGKitAppleImageIO": 0,
+          "ImageCraftAPNGKit": 0,
+          "ImageCraftAppleImageIO": 0
+        },
+        "pairMaximumDifferentPixelFraction": {
+          "APNGKitAppleImageIO": 0.0,
+          "ImageCraftAPNGKit": 0.0,
+          "ImageCraftAppleImageIO": 0.0
+        },
+        "role": "offset-subrect-over-none-disposal",
+        "timelineEligible": true
+      },
+      "APNG-SUBRECT-PREVIOUS-SOURCE": {
+        "adjudication": "all-three-exact",
+        "frameCount": 6,
+        "imageCraftResourceObservation": {
+          "allDecodedFramesAreFullCanvas": true,
+          "decodedOverMetadataSubrectByteRatio": 2.6119335863718947,
+          "explicitImageCraftCheckpointStateObserved": false,
+          "fullCanvasDecodedFrameCount": 6,
+          "randomAccessCompositionDelegatedToAppleImageIO": true,
+          "totalDecodedRGBAByteCount": 1161600,
+          "totalFrameCount": 6,
+          "totalMetadataSubrectRGBAByteCount": 444728
+        },
+        "pairAllFramesExact": {
+          "APNGKitAppleImageIO": true,
+          "ImageCraftAPNGKit": true,
+          "ImageCraftAppleImageIO": true
+        },
+        "pairExactFrameCounts": {
+          "APNGKitAppleImageIO": 6,
+          "ImageCraftAPNGKit": 6,
+          "ImageCraftAppleImageIO": 6
+        },
+        "pairMaximumChannelDifference": {
+          "APNGKitAppleImageIO": 0,
+          "ImageCraftAPNGKit": 0,
+          "ImageCraftAppleImageIO": 0
+        },
+        "pairMaximumDifferentPixelFraction": {
+          "APNGKitAppleImageIO": 0.0,
+          "ImageCraftAPNGKit": 0.0,
+          "ImageCraftAppleImageIO": 0.0
+        },
+        "role": "mixed-offset-subrect-previous-and-source-blend",
+        "timelineEligible": true
+      }
+    },
+    "mechanismObservations": {
+      "apngInspectorPublishesSubrectDisposalAndBlendMetadata": true,
+      "decodedAnimationFrameDocumentedAsCompleteComposedFrame": true,
+      "explicitCheckpointStateObservedInProviderOrRenderer": false,
+      "providerDecodesSingleRequestedIndexDirectly": true,
+      "providerWindowMapsEveryRequestedIndex": true,
+      "rendererUsesImageIORequestedIndexMaterialization": true,
+      "separateDefaultMultiFrameRequiresAlignedImageIOIndices": true
+    }
+  },
+  "schemaVersion": 2,
+  "scope": {
+    "comparators": {
+      "APNGKit": "clean exact checkout; preRenderAllFrames decoded-image cache",
+      "AppleImageIO": "CGImageSourceCreateImageAtIndex under bound OS/framework/toolchain identity",
+      "ImageCraft": "dirty unpublished local animation candidate; supported full-frame ImageIO materialization plus explicit separate-default multi-frame alignment guard"
+    },
+    "fixtureCount": 6,
+    "fixtureSource": "APNGKit clean exact source test resources",
+    "fixtures": [
+      "APNG-OVER-BACKGROUND",
+      "APNG-OVER-NONE",
+      "APNG-OVER-PREVIOUS",
+      "APNG-SUBRECT-BACKGROUND",
+      "APNG-SUBRECT-NONE",
+      "APNG-SUBRECT-PREVIOUS-SOURCE"
+    ],
+    "pixelEndpoint": "full-canvas sRGB premultiplied RGBA",
+    "timelineToleranceNanoseconds": 1000,
+    "totalFrameCount": 21
+  },
+  "sourceIdentity": {
+    "algorithm": "git-temporary-index-add-all-write-tree-v1",
+    "imageCraftMechanismAuditUnchangedDuringCapture": true,
+    "inputsUnchangedDuringCapture": true,
+    "sourceUnchangedDuringCapture": true,
+    "sources": {
+      "APNGKit": {
+        "dirty": false,
+        "headCommit": "341383f61000e8d2e55d45db0f0756b239d0a2f1",
+        "headTree": "02fb85b92d6200ef03c0f207b68ba652eb2a9b99",
+        "version": "2.3.0-source-audit-candidate",
+        "workingTree": "02fb85b92d6200ef03c0f207b68ba652eb2a9b99"
+      },
+      "Delegate": {
+        "dirty": false,
+        "headCommit": "ec3014ca2621c717f758d8718ec90e84b6e774b3",
+        "headTree": "36df81b342fc5b0e62cd0e652451e335c05be3b0",
+        "version": "1.3.0",
+        "workingTree": "36df81b342fc5b0e62cd0e652451e335c05be3b0"
+      },
+      "Fovea": {
+        "dirty": true,
+        "headCommit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+        "headTree": "2909946901b525e108d147fca4eb14da1d722ba5",
+        "workingTree": "883dbf641e1c23a6b63360f0f41d0404ebbc3a47"
+      },
+      "ImageCraft": {
+        "dirty": true,
+        "headCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+        "headTree": "b8dfb362ce6eb3b07cd48f72247edd2b7401cabf",
+        "version": "local-animation-contract-v1",
+        "workingTree": "d30856f58e0b6485bd88c94881705209c48aa989"
+      }
+    },
+    "systemComparators": {
+      "AppleImageIO": {
+        "binaryIdentityBoundary": "ImageIO executable is supplied through the dyld shared cache; the capture binds the OS build, Xcode toolchain, framework bundle metadata and Info.plist digest rather than claiming a standalone framework-binary hash.",
+        "frameworkBundleVersion": "2847",
+        "frameworkIdentifier": "com.apple.ImageIO",
+        "frameworkPlatformBuild": "26A5387s",
+        "frameworkSDKBuild": "26A5387s",
+        "frameworkShortVersion": "3.3.0",
+        "infoPlist": {
+          "byteCount": 1413,
+          "path": "/System/Library/Frameworks/ImageIO.framework/Versions/A/Resources/Info.plist",
+          "sha256": "da91ed46cfafa6f3c8d9a9f858a61b4fdd8a100e40b4701a01f9a2058645ca29"
+        },
+        "name": "AppleImageIO",
+        "operatingSystem": {
+          "buildVersion": "26A5388g",
+          "productName": "macOS",
+          "productVersion": "27.0"
+        },
+        "swift": [
+          "Apple Swift version 6.4 (swiftlang-6.4.0.27.1 clang-2100.3.27.1)",
+          "Target: arm64-apple-macosx27.0.0"
+        ],
+        "xcode": [
+          "Xcode 27.0",
+          "Build version 27A5228h"
+        ]
+      }
+    },
+    "systemComparatorsUnchangedDuringCapture": true
+  },
+  "status": "completed-local-source-system-and-mechanism-bound-positive-oracle-plus-separate-default-fail-closed-no-product-claim",
+  "studyID": "FOVEA-W5-APNG-COMPOSITION-ORACLE-SOURCE-BOUND-2026-08"
+}

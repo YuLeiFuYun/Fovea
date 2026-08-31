@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "studyID": "FOVEA-W5-APPKIT-DISPLAY-LINK-PHYSICAL-MECHANISM-2026-08",
+  "reviewedOn": "2026-08-07",
+  "status": "physical-mac-fixed-six-mechanism-passed-no-ranking",
+  "formalClaimEligible": false,
+  "claimBoundary": [
+    "physical Mac targetTimestamp/lifecycle mechanism evidence only",
+    "fixed six Release runs; capture has no retry-until-success path",
+    "no third-party comparator or aggregate player ranking",
+    "no energy, thermal, memory, startup, codec, or cross-platform superiority claim",
+    "stable physical-iOS comparison remains blocked because the attached iPhone is Offline"
+  ],
+  "implementation": {
+    "appKitAvailability": "macOS 14+ NSView.displayLink(target:selector:) targetTimestamp external ticks; macOS 12-13 automatic absolute-deadline fallback",
+    "displayTargetBuffer": "newest-only monotonic single slot shared with UIKit core",
+    "initialDetachedBehavior": "defer modern driver startup until first effective visibility so runtime.start publishes the first frame immediately",
+    "lifecycleClockRule": "externalPresentationTicks lifecycle/seek/restart/pressure timestamps clamp to max(clock.now,last accepted presentation target)",
+    "diagnostics": "package-scoped AppKit presentation snapshot; ordinary public API unchanged",
+    "regressionTests": [
+      "W5_PT_142",
+      "W5_PT_143",
+      "W5_PT_144"
+    ]
+  },
+  "counterexample": {
+    "artifact": ".artifacts/performance/w5-appkit-display-link-preclamp-counterexample-v1/summary.json",
+    "artifactSHA256": "1097d6ba82d2079ffeff0a3ad787e54051dedc1b32101106d6caec497241a882",
+    "observedBoundary": "pre-clamp physical runs could resume with presenter effectiveVisibility=true while display link remained paused=true",
+    "deterministicReproduction": "W5_PT_144 uses future presentation target 100 while lifecycle clock remains 0; unclamped lifecycle sampling regresses cursor monotonic time",
+    "negativeResults": [
+      "NEG-W5-APPKIT-MAC-LAB-APPLICATION-LAUNCH-001",
+      "NEG-W5-PRESENTATION-VISIBILITY-GENERATION-SKIP-001",
+      "NEG-W5-EXTERNAL-PRESENTATION-LIFECYCLE-CLOCK-REGRESSION-001"
+    ]
+  },
+  "physicalCapture": {
+    "manifest": ".artifacts/performance/w5-appkit-display-link-physical-v1/manifest.json",
+    "manifestSHA256": "9635941e1d22fbed8f8e734c1c2137bc4a3b78660b503d8ac1c8f12c3a0110df",
+    "status": "passed-fixed-six-no-retry",
+    "configuration": "Release",
+    "runCount": 6,
+    "allReturnCodesZero": true,
+    "allValidationErrorsEmpty": true,
+    "sourceTreeDigest": "150f4bef647eb9076b6d21a467def356d0b0dfeb58c0e2c5b4d466ab10c44528",
+    "sourceUnchangedDuringCapture": true,
+    "executableSHA256": "a9afc9e6be7f258bbeaa1ca58f418522decf54087b676588b235ef2f78ce984b",
+    "runtime": {
+      "operatingSystemVersion": "Version 27.0 (Build 26A5388g)",
+      "architecture": "arm64",
+      "displayMaximumFramesPerSecond": 120,
+      "displayBackingScaleFactor": 2
+    },
+    "invariants": [
+      "visible stage accepts and consumes real display targets",
+      "hidden settled-to-end display target count is unchanged",
+      "hidden settled-to-end provider frame count is unchanged",
+      "visible resume advances both display targets and provider work",
+      "runtime registered driver count is zero after cancellation"
+    ]
+  },
+  "nextGates": [
+    "retain the package-scoped capture contract in iteration/premerge/release verification",
+    "on physical Mac, compare targetTimestamp against an explicit automatic-deadline control only under a preregistered timing protocol before any timing claim",
+    "collect physical-Mac energy/thermal in separate non-perturbing runs before energy claims",
+    "run stable physical-iPhone timing/memory/offscreen/energy/thermal evidence after the device becomes available"
+  ]
+}

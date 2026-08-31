@@ -1,0 +1,584 @@
+{
+  "adoptionGates": [
+    {
+      "boundary": "No screen-intersection or occlusion cache until scroll/reentry observation is reliable.",
+      "currentResult": "Implemented for UIKit and AppKit without public API expansion. Repeated state is deduplicated; detached, hidden and alpha-zero views pause while preserving the handle for resume.",
+      "evidence": [
+        "W5_PT_068",
+        "W5_PT_072",
+        "W5_PT_094",
+        "W5_PT_095"
+      ],
+      "feature": "cached structural presentation visibility",
+      "requires": [
+        "zero decode while structurally invisible",
+        "resume without cursor catch-up",
+        "no duplicate driver restart",
+        "platform behavior tests"
+      ]
+    },
+    {
+      "feature": "display-refresh targetTimestamp adapter",
+      "requires": [
+        "lower p95 timing error or missed-deadline rate",
+        "no increase in offscreen work",
+        "non-inferior energy",
+        "capture BenchmarkDiagnostics target counters so display-refresh supersession is distinguished from timeline dropped frames"
+      ],
+      "currentResult": "Implemented for UIKit and macOS 14+ AppKit with newest-only targetTimestamp external ticks; macOS 12-13 keep the absolute-deadline fallback. AppKit package-scoped diagnostics and FoveaAnimationMacLab now bind lifecycle, target-buffer, scheduler-control and refresh-observer behavior. W5_PT_144 prevents lifecycle time from regressing behind a future targetTimestamp; W5_PT_145-147 bind the automatic-deadline control, source-frame commit hook and observer-only display link, and W5_PT_148 binds the exact driver playback-start clock anchor. The fixed-six/no-retry physical-Mac lifecycle capture remains green. A later fixed-six-pair Release timing study samples both schedulers on the same NSView.displayLink.timestamp refresh coordinate and scores against the exact playback-start anchor. On one arm64 macOS 27 host, all six pairs have no-worse external start-anchored p95 error and no-worse source-frame skips; median anchored p95 is 14.102375 ms external versus 75.461355 ms deadline, with 0 versus 82 total skipped source frames. Actual median display-link interval is 16.666625 ms in every retained run even though maximumFramesPerSecond reports 120, so maximum-FPS-derived missed/early counts are supplemental only. This is a scoped internal Fovea scheduling result, not a cross-player or release ranking.",
+      "evidence": [
+        "W5_PT_127",
+        "W5_PT_128",
+        "W5_PT_129",
+        "W5_PT_130",
+        "W5_PT_131",
+        "W5_PT_132",
+        "W5_PT_137",
+        "COMP_PT_025",
+        "COMP_PT_026",
+        "COMP_PT_027",
+        "COMP_PT_028",
+        "COMP_PT_029",
+        "COMP_PT_030",
+        "COMP_PT_031",
+        "COMP_PT_032",
+        "COMP_PT_033",
+        "COMP_PT_034",
+        "COMP_PT_035",
+        "COMP_PT_036",
+        "COMP_PT_037",
+        "COMP_PT_038",
+        "COMP_PT_039",
+        "W5_PT_142",
+        "W5_PT_143",
+        "W5_PT_144",
+        ".artifacts/performance/w5-appkit-display-link-physical-v1/manifest.json",
+        "docs/research/w5-appkit-display-link-physical-2026-08.json",
+        "W5_PT_145",
+        "W5_PT_146",
+        "W5_PT_147",
+        "W5_PT_148",
+        ".artifacts/performance/w5-appkit-refresh-timing-physical-v1/manifest.json",
+        "docs/research/w5-appkit-refresh-timing-physical-2026-08.json"
+      ],
+      "boundary": "FoveaAppKit keeps the macOS 12 deployment floor; the targetTimestamp path is macOS 14+ and the old deadline loop remains the 12-13 fallback. The physical-Mac A/B observes committed source-frame state at the same view-display-link timestamp and is anchored to the exact driver start clock, but it is not hardware pixel scanout timing. It covers one host and one synthetic 60-frame variable-delay timeline. The primary direction gate uses anchored p95 timing error plus raw source-frame skips; energy, thermal, memory, startup and maximum-FPS-derived missed/early counts are not part of that gate. No third-party, physical-iOS, cross-platform or global Pareto claim follows. Stable physical iOS and exact production ImageCraft integration remain required.",
+      "nextEvidence": "Collect physical-Mac energy/thermal in separate runs that do not add another concurrent display sampler; require non-inferiority before calling the local scheduler change Pareto-improving. When a stable physical iPhone is online, run the semantically equivalent W5 player set with the same source timeline and target-buffer diagnostics. Startup remains excluded until the exact published ImageCraft production adapter is pinned."
+    },
+    {
+      "feature": "adaptive upcoming-frame window",
+      "requires": [
+        "lower peak bytes or decode churn",
+        "bounded pressure release",
+        "non-inferior recovery tail"
+      ],
+      "currentResult": "Implemented locally as a deterministic actual-byte learned cap: provider frames are validated against target geometry and the single-frame animation-memory budget before publication; after observing exact DecodedImage.estimatedByteCost, later windows are capped by cache capacity / maximum observed frame cost. Tight-budget publication prioritizes the current frame. Warning pressure advances publication generation so an already in-flight normal-size window cannot publish after the warning; the retry uses the warning-size window. Existing shared frames are not destructively trimmed per session.",
+      "evidence": [
+        "W5_PT_133",
+        "W5_PT_134",
+        "W5_PT_135",
+        "W5_PT_136"
+      ],
+      "boundary": "No targetPixels x 4 hard-budget assumption is used. The first uncached batch still uses the existing frame-count window because no trustworthy actual frame byte cost exists yet. Proactive warning trim remains deferred because AnimationFrameMemory is shared across independent view clocks; a safe implementation must union retention keys across all active drivers before deleting frames.",
+      "nextEvidence": "On physical iOS devices, compare equal animation-memory budgets against Gifu, FLAnimatedImage, YYImage-derived policy references and current fixed-window Fovea; require non-inferior missed-frame/recovery tails plus lower or equal decoded-byte churn before adding any predictive controller."
+    },
+    {
+      "correctnessEvidence": "Current public route is exact against Python on 24/24 frames and Apple on 21/21 aligned frames; separate-default is 3/3 exact.",
+      "currentResult": "ImageCraft public decoder/provider integrates the owned RGBA8 non-interlaced <=1024 parser, straight-alpha compositor and compressed checkpoint replay. It passes 115 ImageIO plus 16 Core tests and current source-bound public oracle evidence.",
+      "feature": "subrect composition checkpoints",
+      "nextEvidence": "Publish and pin the exact ImageCraft revision, integrate the concrete Fovea adapter, then run physical-device deadline, memory, energy, thermal and reclamation gates.",
+      "requires": [
+        "exact pixels",
+        "lower peak decoded bytes",
+        "bounded random-access replay depth"
+      ],
+      "supportBoundary": "Owned route is RGBA8 non-interlaced APNG <=1024; aligned unsupported APNG may use ImageIO, unaligned unsupported timelines fail closed."
+    },
+    {
+      "feature": "streaming first-pass metadata",
+      "requires": [
+        "material startup improvement",
+        "unchanged hostile-input validation",
+        "bounded retained input"
+      ]
+    },
+    {
+      "feature": "timeline-aligned preferred display cadence",
+      "requires": [
+        "non-inferior common-oracle p95 timing error",
+        "lower display callback count under slow-cadence animations",
+        "lower physical-device energy",
+        "no Low Power Mode or Reduce Motion policy conflict"
+      ],
+      "currentResult": "Default-off BenchmarkDiagnostics experiment implemented. Fovea computes gcd(all normalized frame durations, one second), requests an integer preferred FPS only when that exact-boundary cadence is below the attached screen maximum, and records the requested FPS in presentation diagnostics. Ordinary FoveaImageView playback remains maximum-refresh.",
+      "evidence": [
+        "W5_PT_138",
+        "W5_PT_139",
+        "W5_PT_140",
+        "W5_PT_141"
+      ],
+      "plannedDeviceEvidence": [
+        "W5_DEVICE_PT_002"
+      ],
+      "boundary": "W5_DEVICE_PT_002 is configuration evidence only until executed on a physical device. An independent display sampler must not be present in energy runs because it can alter ProMotion refresh behavior.",
+      "nextEvidence": "On a stable physical iPhone, compare maximum-refresh and timeline-aligned modes for 100/150/250 ms variable-delay timelines using the common W5 presentation oracle; collect energy in a separate run without an extra display-link sampler."
+    }
+  ],
+  "checkpointEvidence": {
+    "compressedFullCanvas": {
+      "nativeAnchor": "38 exact zlib round-trips; observed ratio 0.1534%-12.5725%, median 1.57%; no scaled-content or latency claim.",
+      "plan": "Benchmarks/ComparativeLab/apng-compressed-checkpoint-plan.json",
+      "referencePolicyPoint": {
+        "maximumReplayFrames": 8,
+        "modeledPeakHardCapMiB": 32,
+        "peakFeasibleCases": 42,
+        "retainedBudgetMiB": 32,
+        "retainedFeasibleCases": 80,
+        "totalRatioCases": 280
+      },
+      "result": "Leading bounded prototype candidate, not a universal default. No 2048-square reference case clears modeled peak.",
+      "study": "docs/research/w5-apng-compressed-checkpoint-model-2026-08.json",
+      "supportEnvelope": "Encoded-source-retained 1024-square scenarios only: full-canvas ratio <=25%, subrect-none <=50%, subrect-previous <=10% under both access profiles."
+    },
+    "fullCanvas": {
+      "plan": "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+      "referencePolicyPoint": {
+        "feasibleCases": 2,
+        "fullyFeasibleScenarios": 0,
+        "maximumReplayFrames": 8,
+        "retainedBudgetMiB": 32,
+        "totalCases": 28
+      },
+      "result": "Retained full-canvas pre-frame checkpoints do not jointly satisfy the retained-byte and replay bounds across the preregistered scenario set.",
+      "study": "docs/research/w5-apng-checkpoint-model-2026-08.json"
+    },
+    "nextCandidates": [
+      "publish and pin the exact ImageCraft implementationVersion 2 animation revision containing semantic replay diagnostics",
+      "move the already qualified Fovea EncodedAnimationPlaybackPreparing adapter into the compiled production target without weakening authorization, DecodeKey, cache or cancellation identity",
+      "approve the owned RGBA8 non-interlaced <=1024 admission and aligned-ImageIO-fallback policy, and decide a 2048 output-surface policy",
+      "run clean stable-device encoded-native Fovea plus comparator deadline/memory/offscreen-work/energy/thermal/reclamation gates"
+    ],
+    "persistentTiles": {
+      "plan": "Benchmarks/ComparativeLab/apng-tile-checkpoint-plan.json",
+      "referencePolicyPoint": {
+        "feasibleCandidateCases": 4,
+        "maximumReplayFrames": 8,
+        "modeledPeakWithinHardCapCases": 0,
+        "retainedBudgetMiB": 32,
+        "totalCases": 112
+      },
+      "result": "Persistent tiles are not a general default and do not clear the 32 MiB modeled-peak hard cap at the reference point.",
+      "study": "docs/research/w5-apng-tile-checkpoint-model-2026-08.json",
+      "supportEnvelope": "Only SPARSE-2048-256 with encoded-source retention and 32- or 64-pixel tiles is retained-state feasible under both access profiles."
+    },
+    "status": "completed-local-imagecraft-public-decoder-integrated-for-owned-rgba8-1024-subset-publication-fovea-pin-and-device-gates-pending",
+    "swiftPrototype": {
+      "boundary": "The current public ImageCraft animation API has a concrete Fovea EncodedAnimationPlaybackPreparing candidate qualified only in an isolated copied-source overlay. PT001/002 cover the real authorized FoveaSystemPipeline plus retained separate-default APNG first-frame and full three-frame timeline pixels. PT003 covers a retained two-frame zero-duration GIF, explicit 10 ms timing replacement and exact direct-ImageCraft pixels. PT004 deliberately supplies an invalid zero-duration replacement after a valid ImageCraft prepare; timeline normalization fails closed with invalidZeroDurationReplacement and no runtime driver is registered, exercising the adapter post-prepare failure cleanup branch. The production ImageCraft pin remains older; publication, exact pin adoption, explicit adopted animation-error mappings, broader corpora and physical iOS gates remain open.",
+      "codecFingerprint": "dev.fovea.imageio.animation#impl=2#contract=2",
+      "historicalImageIOCacheDivergenceStudy": "docs/research/w5-apng-imageio-cache-divergence-2026-08.json",
+      "imageCraftWorkingTree": "5c07f313cf57495b6ffc7f578be8acbdd3e64c13",
+      "oracle": {
+        "fixtureCount": 7,
+        "frameCount": 24,
+        "realFixtureRetainedCheckpointCount": 0,
+        "separateDefaultExactFrames": 3,
+        "swiftAppleExactFramesWhereAvailable": 21,
+        "swiftPythonExactFrames": 24,
+        "syntheticCheckpointTest": "IMG_ANIM_PT_044"
+      },
+      "performanceBoundary": "Physical Mac directional only; owned selected/sequential remain slower than direct retained ImageIO in the current bound run, so no global dominance claim.",
+      "policy": {
+        "decompressorWorkspaceBytes": 262144,
+        "maximumCanvasDimension": 1024,
+        "maximumCheckpointRatioPPM": 100000,
+        "maximumReplayFrames": 8,
+        "maximumRetainedBytes": 33554432,
+        "smallCanvasBlobAllowanceBytes": 4096
+      },
+      "publicDecoderStudy": "docs/research/w5-apng-public-decoder-playback-2026-08.json",
+      "publicMacPerformanceStudy": "docs/research/w5-apng-public-decoder-mac-performance-2026-08.json",
+      "publicOracle": {
+        "allBackingsOwnedAPNG": true,
+        "allCancellationFenced": true,
+        "allOwnedRetainedWithin32MiB": true,
+        "allRealFixtureCheckpointCountsZero": true,
+        "allReverseRandomAccessExact": true,
+        "backingAndAccountingDiagnosticsTest": "IMG_ANIM_PT_050",
+        "fallbackPixelConsistencyTest": "IMG_ANIM_PT_052",
+        "fixtureCount": 7,
+        "frameCount": 24,
+        "maximumObservedModeledPeakBytesUpperBound": 981940,
+        "maximumObservedRetainedBytes": 23796,
+        "publicAppleExactFramesWhereAvailable": 21,
+        "publicCheckpointCrossingTest": "IMG_ANIM_PT_049",
+        "publicPythonExactFrames": 24,
+        "separateDefaultExactFrames": 3,
+        "sharedCanvasRangeReplayTest": "IMG_ANIM_PT_051"
+      },
+      "qualification": {
+        "coreTests": 16,
+        "imageIOTests": 115,
+        "totalTests": 131,
+        "failures": 0,
+        "warningsAsErrorsReleaseBuildPassed": true
+      },
+      "sourceBoundInteropStudy": "docs/research/w5-apng-compressed-checkpoint-interop-2026-08.json",
+      "sourceBoundPlaybackStudy": "docs/research/w5-apng-owned-swift-playback-2026-08.json",
+      "status": "public-imagecraft-animation-candidate-and-isolated-fovea-adapter-qualified-local-dirty-unpublished-production-pin-unchanged",
+      "foveaAdapterQualificationStudy": "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json",
+      "foveaAdapterQualification": {
+        "status": "isolated-source-overlay-passed-production-pin-unchanged",
+        "test": "W5_ADAPTER_PT_001",
+        "imageCraftWorkingTree": "5c07f313cf57495b6ffc7f578be8acbdd3e64c13",
+        "authorizedFoveaSystemPipeline": true,
+        "separateDefaultFrameCount": 3,
+        "firstFramePixelExactVsDirectImageCraft": true,
+        "driverCountAfterCancellation": 0,
+        "warningsAsErrorsPassed": true,
+        "productionImageCraftPinChanged": false,
+        "candidateSource": "Tools/AnimationAdapterQualification/ImageCraftAnimationPlaybackPreparer.swift.fixture",
+        "tests": [
+          "W5_ADAPTER_PT_001",
+          "W5_ADAPTER_PT_002",
+          "W5_ADAPTER_PT_003",
+          "W5_ADAPTER_PT_004"
+        ],
+        "timelineTest": "W5_ADAPTER_PT_002",
+        "fullTimelinePixelExactVsDirectImageCraft": true,
+        "firstThreeVisibleFrameIndices": [
+          0,
+          1,
+          2
+        ],
+        "directAdditionalRepeatCount": 0,
+        "driverCountAfterTimelineCancellation": 0,
+        "gifTest": "W5_ADAPTER_PT_003",
+        "gifFrameCount": 2,
+        "gifFullTimelinePixelExactVsDirectImageCraft": true,
+        "gifSourceFrameDurationsAreZero": true,
+        "gifZeroDurationReplacementDeadlinesNanoseconds": [
+          10000000,
+          20000000
+        ],
+        "driverCountAfterGIFCancellation": 0,
+        "invalidTimingTest": "W5_ADAPTER_PT_004",
+        "invalidZeroDurationReplacementRejected": true,
+        "postPrepareTimelineFailureFailsClosed": true,
+        "driverCountAfterInvalidTimingFailure": 0,
+        "captureReportSHA256": "ad52d1411923021e9a917538d64fca0ab90ab6af243be4b59c23ce382bdc61f5",
+        "qualificationLogSHA256": "74937c3cad5b626e2868175e9e2dc448333bf7d99d503405e7335a0f4725c299"
+      },
+      "semanticReplayStudy": "docs/research/w5-apng-semantic-replay-2026-08.json",
+      "semanticReplayDiagnostics": {
+        "tests": [
+          "IMG_ANIM_PT_053",
+          "IMG_ANIM_PT_054",
+          "IMG_ANIM_PT_055",
+          "IMG_ANIM_PT_056"
+        ],
+        "fullBackgroundResetCount": 9,
+        "fullBackgroundRetainedCheckpointCount": 0,
+        "fullBackgroundMaximumResolvedReplayFrames": 1,
+        "controlFullSourcePreviousRemainsCheckpointBounded": true
+      }
+    },
+    "semanticReplay": {
+      "plan": "Benchmarks/ComparativeLab/apng-semantic-replay-plan.json",
+      "study": "docs/research/w5-apng-semantic-replay-2026-08.json",
+      "sourceOracle": "YYImage 1.0.4 exact commit 42ba209608cb332887a33ebcae1bde50c52b151d _updateSourceAPNG blendFromIndex/lastBlendIndex",
+      "result": "All six real composition fixtures are non-regressing at equal retained and modeled peak bytes; APNG-OVER-BACKGROUND improves replay 1/2/3 to 1/1/1. The preregistered FULL-BACKGROUND-1024-60 analytical case at 64 MiB improves from about 64 MiB retained / 76 MiB peak / worst replay 4 to 8 MiB retained / 20 MiB peak / worst replay 1.",
+      "runtimeCandidate": "ImageCraft working tree 5c07f313cf57495b6ffc7f578be8acbdd3e64c13 implements a narrower persistent semantic anchor and exposes semanticReplayResetCount / maximumResolvedReplayFrames. IMG_ANIM_PT_053-056 pass; scripts/check-animation-test-ids.py enforces unique contiguous animation evidence IDs.",
+      "boundary": "Analytical and dirty local runtime evidence only; no physical-device or universal APNG Pareto claim."
+    }
+  },
+  "compositionEvidence": {
+    "compositionModel": "apng-straight-alpha-exact-numerator-floor-v1",
+    "imageCraftAppleExactFrames": 21,
+    "oracleStudy": "docs/research/w5-apng-composition-oracle-2026-08.json",
+    "outputNormalization": {
+      "orientation": "top-down",
+      "premultiplyRounding": "nearest"
+    },
+    "ownedReferenceAppleExactFrames": 21,
+    "ownedReferenceImageCraftExactFrames": 21,
+    "ownedReferenceStudy": "docs/research/w5-apng-owned-reference-2026-08.json",
+    "ownedSwiftAppleExactFramesWhereAvailable": 21,
+    "ownedSwiftFixtureCount": 7,
+    "ownedSwiftPlaybackStudy": "docs/research/w5-apng-owned-swift-playback-2026-08.json",
+    "ownedSwiftPythonExactFrames": 24,
+    "ownedSwiftSeparateDefaultExactFrames": 3,
+    "publicDecoderAppleExactFramesWhereAvailable": 21,
+    "publicDecoderBackingDiagnostics": "all-seven-retained-fixtures-ownedAPNG",
+    "publicDecoderCancellationFenced": true,
+    "publicDecoderCodecFingerprint": "dev.fovea.imageio.animation#impl=2#contract=2",
+    "publicDecoderMaximumObservedModeledPeakBytesUpperBound": 981940,
+    "publicDecoderMaximumObservedRetainedBytes": 23796,
+    "publicDecoderPythonExactFrames": 24,
+    "publicDecoderRealFixtureCheckpointCount": 0,
+    "publicDecoderReverseRandomAccessExact": true,
+    "publicDecoderSeparateDefaultExactFrames": 3,
+    "publicDecoderStudy": "docs/research/w5-apng-public-decoder-playback-2026-08.json",
+    "status": "completed-local-owned-python-package-internal-swift-and-public-imagecraft-decoder-exact-for-admitted-subset-publication-and-device-gates-pending",
+    "supportBoundary": "The public ImageCraft decoder uses the owned route only for RGBA8 non-interlaced APNG within the 1024 policy. Unsupported aligned formats may retain ImageIO semantics; unsupported unaligned separate-default formats fail closed.",
+    "supportedFixtureCount": 6,
+    "supportedFrameCount": 21
+  },
+  "createdOn": "2026-08-06",
+  "execution": {
+    "blocksPerComparator": 6,
+    "cachePolicy": "equivalent decoded-byte budget and first-frame policy where configurable; report unsupported controls",
+    "claimEnvironment": [
+      "physical iPhone",
+      "physical iPad where form-factor behavior differs"
+    ],
+    "correctnessEnvironment": [
+      "macOS",
+      "iOS Simulator"
+    ],
+    "localAPNGCorrectnessIdentity": {
+      "imageIOBundleVersion": "2847",
+      "imageIOInfoPlistSHA256": "da91ed46cfafa6f3c8d9a9f858a61b4fdd8a100e40b4701a01f9a2058645ca29",
+      "imageIOShortVersion": "3.3.0",
+      "macOSBuildVersion": "26A5388g",
+      "macOSProductVersion": "27.0",
+      "swift": [
+        "Apple Swift version 6.4 (swiftlang-6.4.0.27.1 clang-2100.3.27.1)",
+        "Target: arm64-apple-macosx27.0.0"
+      ],
+      "xcode": [
+        "Xcode 27.0",
+        "Build version 27A5228h"
+      ]
+    },
+    "network": "preloaded identical encoded bytes for player mechanisms; network is a separate workload",
+    "order": "balanced randomized comparator and fixture order",
+    "thermalPolicy": "record initial/final thermal state and invalidate blocks that cross the preregistered boundary",
+    "trialsPerBlock": 8,
+    "warmup": "discard one warmup loop per fixture and comparator"
+  },
+  "fixtures": [
+    {
+      "format": "GIF",
+      "id": "GIF-VARIABLE-DELAY-60",
+      "purpose": "nonuniform frame timing and frame skipping",
+      "requirements": [
+        "60 frames",
+        "mixed 20-250 ms rational delays",
+        "finite and infinite loop variants"
+      ]
+    },
+    {
+      "format": "GIF",
+      "id": "GIF-LARGE-FRAME-120",
+      "purpose": "bounded frame memory and pressure recovery",
+      "requirements": [
+        "120 full-canvas frames",
+        "decoded working set larger than normal frame budget"
+      ]
+    },
+    {
+      "format": "APNG",
+      "id": "APNG-SUBRECT-DISPOSAL",
+      "purpose": "partial composition correctness and memory",
+      "requirements": [
+        "source and over blend",
+        "none, background, and previous disposal",
+        "small moving subrects"
+      ]
+    },
+    {
+      "format": "APNG",
+      "id": "APNG-LONG-FIRST-PASS",
+      "purpose": "test whether partial metadata materially improves startup",
+      "requirements": [
+        "large encoded body",
+        "many chunks",
+        "known full oracle",
+        "hostile CRC/order variants"
+      ]
+    }
+  ],
+  "forbiddenInterpretations": [
+    "No aggregate winner across incompatible format or player roles.",
+    "Unsupported capability is not scored as zero latency or zero memory.",
+    "Simulator timing and energy are not physical-device evidence.",
+    "Codec-only results do not imply player, transport, lifecycle, or product superiority.",
+    "Source inspection does not activate a performance claim.",
+    "APNGKit preRenderAllFrames is not an exact oracle for the retained none/previous fixtures and must not be used to declare ImageCraft incorrect when Apple ImageIO matches ImageCraft byte-for-byte.",
+    "No global Pareto-dominance claim without a common source-bound workload, device set, confidence intervals, and non-regression across every declared dimension."
+  ],
+  "objective": "Compare animated raster player mechanisms under equivalent semantics without producing an aggregate library ranking.",
+  "roles": [
+    {
+      "comparators": [
+        "Fovea",
+        "SDWebImage",
+        "PINRemoteImage",
+        "Kingfisher",
+        "Gifu",
+        "FLAnimatedImage",
+        "APNGKit",
+        "AnimatedImage",
+        "SwiftyGif",
+        "YYImage"
+      ],
+      "id": "PLAYER-TIMING",
+      "metrics": [
+        "source-frame index shown at each display callback",
+        "absolute display-time error versus normalized timeline",
+        "missed display deadlines",
+        "dropped or coalesced source frames",
+        "main-thread callback duration"
+      ]
+    },
+    {
+      "comparators": [
+        "Fovea",
+        "SDWebImage",
+        "PINRemoteImage",
+        "Kingfisher",
+        "Gifu",
+        "FLAnimatedImage",
+        "YYImage"
+      ],
+      "id": "PLAYER-MEMORY-PRESSURE",
+      "metrics": [
+        "peak decoded frame bytes",
+        "decoded frames retained",
+        "decode count",
+        "warning and critical pressure release latency",
+        "recovery-to-smooth-playback tail"
+      ]
+    },
+    {
+      "comparators": [
+        "Fovea",
+        "SDWebImage",
+        "PINRemoteImage",
+        "Kingfisher",
+        "Gifu",
+        "FLAnimatedImage",
+        "APNGKit",
+        "AnimatedImage",
+        "SwiftyGif"
+      ],
+      "id": "PLAYER-LIFECYCLE",
+      "metrics": [
+        "offscreen decode work",
+        "background decode work",
+        "replacement late-publication count",
+        "cancel-to-zero-work latency",
+        "Reduce Motion first-frame correctness"
+      ]
+    },
+    {
+      "comparators": [
+        "ImageCraft",
+        "SDWebImage",
+        "PINRemoteImage",
+        "APNGKit",
+        "YYImage",
+        "Apple ImageIO lower bound"
+      ],
+      "id": "APNG-PARTIAL-COMPOSITION",
+      "localEvidence": {
+        "artifactInventoryCount": 30,
+        "boundary": "APNGKit preRenderAllFrames is a correctness mechanism comparator, not an exact oracle or equivalent memory/performance policy.",
+        "captureManifest": ".artifacts/performance/w5-apng-composition-oracle-v3/capture-manifest.json",
+        "captureManifestSHA256": "ba95abe1a30a34c5e07e3533639e79fa04bcbb129d93f1eccc9c81fdbd6bec92",
+        "result": "ImageCraft and Apple ImageIO exact on 9/9 frames; APNGKit exact on background 3/3 but only 1/3 for none and previous.",
+        "sourceIdentitySHA256": "24d89a1d17fcecb0aaf2a849ea9e2380501ae488a471f8b53c383d06620d51bb",
+        "status": "completed-correctness-only-source-and-system-bound-no-performance-claim",
+        "study": "docs/research/w5-apng-composition-oracle-2026-08.json"
+      },
+      "metrics": [
+        "exact full-canvas pixel equality",
+        "subrect decode bytes",
+        "composition checkpoint bytes",
+        "random-access replay depth",
+        "dispose previous/background correctness"
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "status": "current-local-owned-apng-correctness-mac-mechanism-and-structural-visibility-complete-publication-adapter-device-gates-pending",
+  "reviewedOn": "2026-08-07",
+  "presentationOracleEvidence": {
+    "status": "digest-bound-current-gif-five-calibrated-two-explicit-gaps-apng-four-calibrated-physical-ranking-pending",
+    "workloadID": "W5-ANIMATED-MEDIA-V1",
+    "source": "Benchmarks/ComparativeLab/Sources/ComparativeLabCore/AnimatedPresentationOracle.swift",
+    "tests": [
+      "COMP_PT_025",
+      "COMP_PT_026",
+      "COMP_PT_027",
+      "COMP_PT_028",
+      "COMP_PT_029",
+      "COMP_PT_030",
+      "COMP_PT_031",
+      "COMP_PT_032",
+      "COMP_PT_033",
+      "COMP_PT_034",
+      "COMP_PT_035",
+      "COMP_PT_036",
+      "COMP_PT_037",
+      "COMP_PT_038",
+      "COMP_PT_039"
+    ],
+    "rawTraceContract": "source-frame observations are normalized to elapsed zero at the first real callback; scoring rotates the reference timeline to that first real source frame rather than synthesizing a frame-zero event",
+    "scoreIntegrity": "decoded artifacts recompute score and reject stored-summary mismatch",
+    "instrumentationBoundary": "Adapters observe their own public presentation/frame-change path. Independent display-link sampling is forbidden for energy evidence. FLAnimatedImage uses a comparator-only Objective-C displayLayer subclass shim because Swift override/KVO hooks did not observe ongoing frame commits; current fresh-isolated Simulator count=0/1 behavior is preserved as an explicit not-comparable instability rather than being retried until success.",
+    "claimBoundary": "all simulator evidence is structural/provisional and cannot rank players or activate a performance claim; Fovea startup is also not comparable because its current W5 adapter uses synthetic decoded frames. FLAnimatedImage current fresh-isolated instability and AnimatedImage variable-delay timeline mismatch are explicit evidence gaps, not performance scores.",
+    "structuralSimulatorEvidence": {
+      "primaryVariableFixture": {
+        "fixtureID": "GIF-VARIABLE-DELAY-60",
+        "finalManifest": ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+        "finalManifestSHA256": "54e28f46938af1fdc95eaa686f1b82af6ef6d63d793fc318db7c6917f007697d",
+        "sourceTreeDigest": "3b587209c7314a74f5845e44154e95a57f734e379df583acd2634db45bce8d77",
+        "comparatorIsolationMode": "shutdown-boot-between-comparators-v1",
+        "calibratedPlayers": [
+          "Fovea-player-only",
+          "Kingfisher",
+          "PINRemoteImage",
+          "SDWebImage",
+          "Gifu"
+        ],
+        "notComparable": [
+          "FLAnimatedImage-1.0.17-fresh-simulator-instability-count0-or1-progression0",
+          "AnimatedImage-0.2.4-variable-delay-semantic-timeline-mismatch"
+        ],
+        "result": "five calibrated paths each 61 observations / 60 transitions; two explicit not-comparable boundaries; no simulator ranking"
+      },
+      "uniformMechanismFixture": {
+        "fixtureID": "GIF-UNIFORM-50MS-60",
+        "players": [
+          "Fovea-player-only",
+          "Kingfisher",
+          "PINRemoteImage",
+          "SDWebImage",
+          "AnimatedImage",
+          "FLAnimatedImage",
+          "Gifu"
+        ],
+        "externalFourManifest": ".artifacts/w5-player-timing/simulator/20260807T050943Z/manifest.json",
+        "animatedImageManifest": ".artifacts/w5-player-timing/simulator/20260807T050901Z/manifest.json",
+        "flAnimatedImageManifest": ".artifacts/w5-player-timing/simulator/20260807T053409Z/manifest.json",
+        "gifuManifest": ".artifacts/w5-player-timing/simulator/20260807T054821Z/manifest.json"
+      }
+    },
+    "apngVariableDelay": {
+      "fixtureID": "APNG-VARIABLE-DELAY-60",
+      "finalManifest": ".artifacts/w5-player-timing/simulator/20260807T084837Z/manifest.json",
+      "finalManifestSHA256": "53ff1f81cf6deb73faa68adeb9720e235d42eced472813b14b9c4c59d3a16176",
+      "sourceTreeDigest": "3b587209c7314a74f5845e44154e95a57f734e379df583acd2634db45bce8d77",
+      "comparatorIsolationMode": "shutdown-boot-between-comparators-v1",
+      "encodedNativePlayers": [
+        "SDWebImage",
+        "PINRemoteImage",
+        "APNGKit"
+      ],
+      "foveaInputPath": "synthetic-decoded-frames",
+      "structuralResult": "Fovea player-only plus all three encoded-native external players complete 61 observations / 60 transitions; simulator timing is provisional and non-ranking",
+      "inputBoundary": "external libraries use encoded-native; Fovea uses synthetic-decoded-frames and is not a production codec/startup comparison"
+    }
+  },
+  "planID": "FOVEA-W5-ANIMATED-PLAYER-MECHANISMS-V1"
+}

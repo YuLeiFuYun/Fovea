@@ -54,76 +54,14 @@ extension FoveaPipeline {
             let cancellationHandoffLease = FetchCancellationHandoffLease()
             let imageLoadTicket = imageLoadAdmission.begin(for: request)
             let task = Task { [self] in
-                let previewFence = ProgressivePreviewPublicationFence()
-                let previewSubscription = await progressivePreviewHub.subscribe(request: request)
-                let previewTask = Task {
-                    do {
-                        for await preview in previewSubscription.stream {
-                            try Task.checkCancellation()
-                            try await previewFence.requireOpen()
-                            if case .terminated = continuation.yield(
-                                .preview(preview.image, quality: preview.quality)
-                            ) {
-                                throw CancellationError()
-                            }
-                        }
-                    } catch {
-                        // Final or cancellation closes the publication fence.
-                    }
-                }
-                do {
-                    let image = try await execute {
-                        try validateAccess(to: request)
-                        try validateAuthorization(of: request)
-                        return try await withImageLoadAdmission(
-                            request: request,
-                            ticket: imageLoadTicket,
-                            cancellationHandoffLease: cancellationHandoffLease
-                        ) {
-                            return try await SharedTaskAdmissionContext.$current.withValue(
-                                admission
-                            ) {
-                                try await self.imageCoordinator.load(
-                                    request: request,
-                                    onFullQualityPreview: { preview in
-                                        try Task.checkCancellation()
-                                        if case .terminated = continuation.yield(
-                                            .preview(preview, quality: UInt16.max)
-                                        ) {
-                                            throw CancellationError()
-                                        }
-                                    },
-                                    progressObserver: previewSubscription.progressObserver,
-                                    progressiveFinalization: previewSubscription.finalization
-                                )
-                            }
-                        }
-                    }
-                    await previewFence.close()
-                    await previewSubscription.cancel()
-                    previewTask.cancel()
-                    try Task.checkCancellation()
-                    if case .terminated = continuation.yield(.final(image)) {
-                        throw CancellationError()
-                    }
-                    terminalState.markCompleted()
-                    continuation.finish()
-                } catch {
-                    await previewFence.close()
-                    await previewSubscription.cancel()
-                    previewTask.cancel()
-                    if Self.isCancellation(error),
-                        terminalState.claimCancellationIfIncomplete()
-                    {
-                        handleCancelledRequest(
-                            request,
-                            ticket: imageLoadTicket,
-                            admission: admission,
-                            cancellationHandoffLease: cancellationHandoffLease
-                        )
-                    }
-                    continuation.finish(throwing: error)
-                }
+                await runEventLoad(
+                    request: request,
+                    admission: admission,
+                    ticket: imageLoadTicket,
+                    cancellationHandoffLease: cancellationHandoffLease,
+                    terminalState: terminalState,
+                    continuation: continuation
+                )
             }
             continuation.onTermination = { @Sendable [weak self] termination in
                 guard let self else {
@@ -145,31 +83,160 @@ extension FoveaPipeline {
         }
     }
 
-    public func encodedData(for request: ImageRequest) async throws -> Data {
-        let admission = SharedTaskAdmission.now()
-        return try await SharedTaskAdmissionContext.$current.withValue(admission) {
-            try await execute {
-                try validateAccess(to: request)
-                try validateAuthorization(of: request)
-                return try await encodedCoordinator.load(request: request)
+    private func runEventLoad(
+        request: ImageRequest,
+        admission: SharedTaskAdmission,
+        ticket: AdaptiveImageLoadAdmission.Ticket,
+        cancellationHandoffLease: FetchCancellationHandoffLease,
+        terminalState: ImageEventStreamTerminalState,
+        continuation: AsyncThrowingStream<ImageLoadingEvent, any Error>.Continuation
+    ) async {
+        let previewFence = ProgressivePreviewPublicationFence()
+        let previewSubscription = await progressivePreviewHub.subscribe(request: request)
+        cancellationHandoffLease.configureProgressObservation(
+            supported: previewSubscription.progressObservationSupported
+        )
+        let previewTask = relayProgressivePreviews(
+            subscription: previewSubscription,
+            fence: previewFence,
+            continuation: continuation
+        )
+        do {
+            let image = try await loadEventImage(
+                request: request,
+                admission: admission,
+                ticket: ticket,
+                cancellationHandoffLease: cancellationHandoffLease,
+                subscription: previewSubscription,
+                continuation: continuation
+            )
+            await previewFence.close()
+            await previewSubscription.cancel()
+            previewTask.cancel()
+            try Task.checkCancellation()
+            if case .terminated = continuation.yield(.final(image)) { throw CancellationError() }
+            terminalState.markCompleted()
+            continuation.finish()
+        } catch {
+            await previewFence.close()
+            await previewSubscription.cancel()
+            previewTask.cancel()
+            if Self.isCancellation(error), terminalState.claimCancellationIfIncomplete() {
+                handleCancelledRequest(
+                    request,
+                    ticket: ticket,
+                    admission: admission,
+                    cancellationHandoffLease: cancellationHandoffLease
+                )
+            }
+            continuation.finish(throwing: error)
+        }
+    }
+
+    private func relayProgressivePreviews(
+        subscription: PipelineProgressivePreviewSubscription,
+        fence: ProgressivePreviewPublicationFence,
+        continuation: AsyncThrowingStream<ImageLoadingEvent, any Error>.Continuation
+    ) -> Task<Void, Never> {
+        Task {
+            do {
+                for await preview in subscription.stream {
+                    try Task.checkCancellation()
+                    try await fence.requireOpen()
+                    if case .terminated = continuation.yield(
+                        .preview(preview.image, quality: preview.quality)
+                    ) { throw CancellationError() }
+                }
+            } catch {
+                // 最终结果或取消都会关闭渐进发布 fence。
             }
         }
     }
 
-    /// 立即清空当前 pipeline 的 RenderedMemory。
-    /// 系统内存压力、账户切换或宿主应用主动降级时可安全重复调用。
+    private func loadEventImage(
+        request: ImageRequest,
+        admission: SharedTaskAdmission,
+        ticket: AdaptiveImageLoadAdmission.Ticket,
+        cancellationHandoffLease: FetchCancellationHandoffLease,
+        subscription: PipelineProgressivePreviewSubscription,
+        continuation: AsyncThrowingStream<ImageLoadingEvent, any Error>.Continuation
+    ) async throws -> DecodedImage {
+        try await execute {
+            try validateAccess(to: request)
+            try validateAuthorization(of: request)
+            return try await withImageLoadAdmission(
+                request: request,
+                ticket: ticket,
+                cancellationHandoffLease: cancellationHandoffLease
+            ) {
+                try await SharedTaskAdmissionContext.$current.withValue(admission) {
+                    let progressiveObserver = subscription.progressObserver
+                    return try await self.imageCoordinator.load(
+                        request: request,
+                        onFullQualityPreview: { preview in
+                            try Task.checkCancellation()
+                            if case .terminated = continuation.yield(
+                                .preview(preview, quality: UInt16.max)
+                            ) { throw CancellationError() }
+                        },
+                        progressObserver: { event in
+                            cancellationHandoffLease.observe(event)
+                            progressiveObserver(event)
+                        },
+                        progressiveFinalization: subscription.finalization
+                    )
+                }
+            }
+        }
+    }
+
+    /// 系统 warning 优先回收低价值、可重建的内存层；不支持分层回收的自定义 rendered
+    /// cache 保持历史 full-purge 语义。compressed derived hot tier 不承担 correctness 或
+    /// presentation ownership，因此 warning 始终回收。critical 仍由 `purgeMemoryCache()`
+    /// 执行完整清理。
     @discardableResult
-    public func purgeMemoryCache() async -> Int {
-        let removed = await cache.purgeRendered()
+    package func reclaimMemoryCacheForWarning() async -> Int {
+        let removed = await cache.reclaimRenderedForWarning()
+        let removedHotContainers = derivedRasterRuntime?.purgeHotContainers() ?? 0
         await diagnostics.record(
             DiagnosticEvent(
                 kind: .renderedMemoryPurged,
                 byteCount: removed.costBytes,
-                itemCount: removed.itemCount,
+                itemCount: removed.itemCount + removedHotContainers,
+                reason: "system-warning-tiered-reclaim"
+            )
+        )
+        return removed.itemCount + removedHotContainers
+    }
+
+    /// 立即清空当前 pipeline 的 rendered memory 与 compressed derived hot tier。
+    /// 系统 critical 内存压力、账户切换或宿主应用主动降级时可安全重复调用。
+    @discardableResult
+    public func purgeMemoryCache() async -> Int {
+        let removed = await cache.purgeRendered()
+        let removedHotContainers = derivedRasterRuntime?.purgeHotContainers() ?? 0
+        await diagnostics.record(
+            DiagnosticEvent(
+                kind: .renderedMemoryPurged,
+                byteCount: removed.costBytes,
+                itemCount: removed.itemCount + removedHotContainers,
                 reason: "explicit-or-system-pressure"
             )
         )
-        return removed.itemCount
+        return removed.itemCount + removedHotContainers
+    }
+
+    /// Comparative-Lab-only full in-memory cache reset.
+    ///
+    /// `purgeMemoryCache()` clears currently retained transport-verified handoffs but keeps that
+    /// transient tier usable for future requests. A benchmark `warm-disk` boundary is stricter:
+    /// it invalidates the transient handoff store for the remainder of the pipeline lifetime so
+    /// later preparation/timed loads cannot repopulate a reusable in-memory representation.
+    /// Keep that stronger semantic behind SPI instead of silently changing the public API.
+    @_spi(FoveaBenchmarking)
+    public func purgeMemoryStateForBenchmarking() async {
+        _ = await purgeMemoryCache()
+        await cache.discardTransientHandoffs()
     }
 
     /// 回收未被表征记录引用的持久化数据块。
@@ -209,19 +276,31 @@ extension FoveaPipeline {
                 )
             }
         }
+        await namespaceRevocationObserver?.namespaceWillRevoke(
+            namespace,
+            minimumActiveGeneration: revocationGeneration
+        )
         await fetchStage.cancelAll(namespace: namespace)
         await decodeStage.cancelAll(namespace: namespace)
         await deliveryCoordinator.cancelAll(namespace: namespace)
         await encodedWarmups.cancelAll(namespace: namespace)
-        let cleanupFailed = await cache.cleanup(namespace: namespace)
+        let derivedCleanupFailed =
+            await derivedRasterRuntime?.revoke(
+                namespaceFingerprint: StorageNamespaceFingerprint(namespace: namespace.value)
+            ) ?? false
+        let cleanupFailed = await cache.cleanup(namespace: namespace) || derivedCleanupFailed
         await diagnostics.record(
             DiagnosticEvent(
                 kind: .namespaceRevoked,
                 reason: cleanupFailed ? "persistent-cleanup-failed" : nil
             )
         )
-        if cleanupFailed { throw PipelineFailure.namespaceCleanupFailed }
-        if let registryFailure { throw registryFailure }
+        if cleanupFailed {
+            throw PipelineFailure.namespaceCleanupFailed
+        }
+        if let registryFailure {
+            throw registryFailure
+        }
     }
 
     @_spi(BenchmarkDiagnostics)
@@ -239,14 +318,115 @@ extension FoveaPipeline {
 
     package func cancelAdaptiveWork() async {
         await encodedWarmups.cancelAll()
+        await derivedRasterRuntime?.cancelAllCreations()
         await cache.discardTransientHandoffs()
     }
 
-    /// 测试缝：精确查询某个执行身份是否已有 transport-verified handoff。
-    /// 查询不读取正文、不刷新 SIEVE 访问位，也不产生 cache-hit 诊断。
-    ///
-    /// 仅 Comparative Lab 通过 SPI 使用该只读计数，以证明名义 burst 的每个顶层
-    /// 调用已经进入 exact fetch single-flight；它不创建任务、不改变优先级或租约。
+    package func derivedRasterActiveCreationCountForTesting() async -> Int {
+        guard let derivedRasterRuntime else { return 0 }
+        return await derivedRasterRuntime.creationActivity().activeCount
+    }
+
+    package func derivedRasterCreationActivityForTesting() async -> DerivedRasterCreationActivity {
+        guard let derivedRasterRuntime else {
+            return DerivedRasterCreationActivity(
+                scheduledCount: 0,
+                terminalCount: 0,
+                activeCount: 0
+            )
+        }
+        return await derivedRasterRuntime.creationActivity()
+    }
+
+    package func waitForDerivedRasterCreationForTesting(
+        after baseline: DerivedRasterCreationActivity
+    ) async -> DerivedRasterCreationActivity {
+        guard let derivedRasterRuntime else { return baseline }
+        return await derivedRasterRuntime.waitUntilCreationQuiescent(after: baseline)
+    }
+
+    @_spi(FoveaBenchmarking)
+    public func derivedRasterCreationActivityForBenchmarking()
+        async -> FoveaDerivedRasterCreationActivitySnapshot
+    {
+        guard let derivedRasterRuntime else {
+            return FoveaDerivedRasterCreationActivitySnapshot(
+                scheduledCount: 0,
+                terminalCount: 0,
+                activeCount: 0
+            )
+        }
+        return Self.benchmarkSnapshot(await derivedRasterRuntime.creationActivity())
+    }
+
+    @_spi(FoveaBenchmarking)
+    public func waitForDerivedRasterCreationForBenchmarking(
+        after baseline: FoveaDerivedRasterCreationActivitySnapshot
+    ) async -> FoveaDerivedRasterCreationActivitySnapshot {
+        guard let derivedRasterRuntime else { return baseline }
+        let current = await derivedRasterRuntime.creationActivity()
+        guard current.scheduledCount > baseline.scheduledCount, current.activeCount > 0 else {
+            return Self.benchmarkSnapshot(current)
+        }
+        let completed = await derivedRasterRuntime.waitUntilCreationQuiescent(
+            after: DerivedRasterCreationActivity(
+                scheduledCount: baseline.scheduledCount,
+                terminalCount: baseline.terminalCount,
+                activeCount: baseline.activeCount
+            )
+        )
+        return Self.benchmarkSnapshot(completed)
+    }
+
+    private static func benchmarkSnapshot(
+        _ activity: DerivedRasterCreationActivity
+    ) -> FoveaDerivedRasterCreationActivitySnapshot {
+        FoveaDerivedRasterCreationActivitySnapshot(
+            scheduledCount: activity.scheduledCount,
+            terminalCount: activity.terminalCount,
+            activeCount: activity.activeCount
+        )
+    }
+
+    // 测试缝：精确查询某个执行身份是否已有 transport-verified handoff。
+    // 查询不读取正文、不刷新 SIEVE 访问位，也不产生 cache-hit 诊断。
+    //
+    // 仅 Comparative Lab 通过 SPI 使用该只读计数，以证明名义 burst 的每个顶层
+    // 调用已经进入 exact fetch single-flight；它不创建任务、不改变优先级或租约。
+
+    @_spi(FoveaBenchmarking)
+    public func warmMemoryTimingForBenchmarking(
+        _ request: ImageRequest
+    ) async throws -> FoveaWarmMemoryTimingSample {
+        let totalStarted = DispatchTime.now().uptimeNanoseconds
+        let validationStarted = totalStarted
+        try validateAccess(to: request)
+        try validateAuthorization(of: request)
+        let validationFinished = DispatchTime.now().uptimeNanoseconds
+        let result = try await imageCoordinator.warmMemoryHitForBenchmarking(request: request)
+        let totalFinished = DispatchTime.now().uptimeNanoseconds
+        return FoveaWarmMemoryTimingSample(
+            requestValidationNanoseconds: validationFinished &- validationStarted,
+            namespaceGenerationNanoseconds: result.namespaceGenerationNanoseconds,
+            aliasAuthorizationNanoseconds: result.aliasAuthorizationNanoseconds,
+            aliasIndexLookupNanoseconds: result.aliasIndexLookupNanoseconds,
+            representationAuthorizationNanoseconds:
+                result.representationAuthorizationNanoseconds,
+            varySelectionNanoseconds: result.varySelectionNanoseconds,
+            fixedIdentityAuthorizationNanoseconds:
+                result.fixedIdentityAuthorizationNanoseconds,
+            renderedImageLookupNanoseconds: result.renderedImageLookupNanoseconds,
+            freshnessClockNanoseconds: result.freshnessClockNanoseconds,
+            freshnessEvaluationNanoseconds: result.freshnessEvaluationNanoseconds,
+            activeNamespaceFenceNanoseconds: result.activeNamespaceFenceNanoseconds,
+            cancellationFenceNanoseconds: result.cancellationFenceNanoseconds,
+            coordinatorTotalNanoseconds: result.coordinatorTotalNanoseconds,
+            totalNanoseconds: totalFinished &- totalStarted,
+            pixelWidth: result.image.pixelWidth,
+            pixelHeight: result.image.pixelHeight
+        )
+    }
+
     @_spi(FoveaBenchmarking)
     public func fetchSubscriberCountForBenchmarking(_ request: ImageRequest) async -> Int {
         await fetchStage.subscriberCountForTesting(request: request)
@@ -293,7 +473,9 @@ extension FoveaPipeline {
                 // 首次加载与并发 fan-out 跳过 actor/stream 控制面，不改变任何可见语义。
                 let warmupRequest = request.reprioritized(.background)
                 let completion = await encodedWarmups.completionStream(for: warmupRequest)
-                for await _ in completion { break }
+                for await _ in completion {
+                    break
+                }
                 try Task.checkCancellation()
                 cancellationHandoffLease.activate(
                     graceNanoseconds: CancellationCohortPolicy.retentionNanoseconds
@@ -320,9 +502,8 @@ extension FoveaPipeline {
     ) {
         let observation = imageLoadAdmission.recordCancellation(ticket)
         guard observation.shouldWarmCancelledRequest else { return }
-        // Activate the fetch-level orphan lease before cancelling the foreground task.
-        // The warmup can then join the existing single-flight instead of opening a
-        // replacement transport request during a rapid cancellation cohort.
+        // 在取消前台任务前先激活 fetch 级 orphan 租约，使 warmup 能加入现有
+        // single-flight，而不是在快速取消 cohort 中重新打开 transport 请求。
         cancellationHandoffLease.activate(
             graceNanoseconds: CancellationCohortPolicy.retentionNanoseconds
         )
@@ -330,7 +511,9 @@ extension FoveaPipeline {
     }
 
     private static func isCancellation(_ error: any Error) -> Bool {
-        if error is CancellationError { return true }
+        if error is CancellationError {
+            return true
+        }
         guard let failure = error as? PipelineFailure else { return false }
         return failure.disposition == .cancelled
     }
@@ -354,20 +537,20 @@ extension FoveaPipeline {
         }
     }
 
-    private func validateAccess(to request: ImageRequest) throws {
+    package func validateAccess(to request: ImageRequest) throws {
         guard profileAccessPolicy.permits(request) else {
             throw PipelineFailure.profileAccessDenied
         }
     }
 
-    private func validateAuthorization(of request: ImageRequest) throws {
+    package func validateAuthorization(of request: ImageRequest) throws {
         guard request.containsCredentialHeaders else { return }
         guard request.authorizationContext != .public, request.credentialGeneration != nil else {
             throw PipelineFailure.missingAuthorizationContext
         }
     }
 
-    private func execute<Value: Sendable>(
+    package func execute<Value: Sendable>(
         _ operation: () async throws -> Value
     ) async throws -> Value {
         do {

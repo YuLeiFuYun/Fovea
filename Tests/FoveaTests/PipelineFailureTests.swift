@@ -440,14 +440,37 @@ private func makePNGWithOversizedTextMetadata(payloadBytes: Int) throws -> Data 
     guard let iend = data.range(of: iendSignature)?.lowerBound else {
         throw NSError(domain: "FoveaTests", code: 5)
     }
-    var chunk = Data()
-    let length = UInt32(payloadBytes).bigEndian
-    withUnsafeBytes(of: length) { chunk.append(contentsOf: $0) }
-    chunk.append(contentsOf: Data("tEXt".utf8))
-    chunk.append(Data(repeating: 65, count: payloadBytes))
-    chunk.append(Data(repeating: 0, count: 4))
+    let payload = Data(repeating: 65, count: payloadBytes)
+    let chunk = makePNGFailureFixtureChunk(type: "tEXt", payload: payload)
     data.insert(contentsOf: chunk, at: iend)
     return data
+}
+
+private func makePNGFailureFixtureChunk(type: String, payload: Data) -> Data {
+    precondition(type.utf8.count == 4)
+    let typeData = Data(type.utf8)
+    var chunk = Data()
+    var length = UInt32(payload.count).bigEndian
+    withUnsafeBytes(of: &length) { chunk.append(contentsOf: $0) }
+    chunk.append(typeData)
+    chunk.append(payload)
+
+    var crcInput = typeData
+    crcInput.append(payload)
+    var crc = pngFailureFixtureCRC32(crcInput).bigEndian
+    withUnsafeBytes(of: &crc) { chunk.append(contentsOf: $0) }
+    return chunk
+}
+
+private func pngFailureFixtureCRC32(_ data: Data) -> UInt32 {
+    var crc = UInt32.max
+    for byte in data {
+        crc ^= UInt32(byte)
+        for _ in 0..<8 {
+            crc = (crc & 1) == 0 ? crc >> 1 : (crc >> 1) ^ 0xedb8_8320
+        }
+    }
+    return ~crc
 }
 
 private struct TestUnclassifiedFailure: Error {}

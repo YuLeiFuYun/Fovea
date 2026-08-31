@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "studyID": "FOVEA-W5-APNG-SEMANTIC-REPLAY-2026-08",
+  "reviewedOn": "2026-08-07",
+  "status": "completed-source-bound-analytical-plus-imagecraft-runtime-candidate-no-device-claim",
+  "objective": "Test whether APNG composition semantics can provide safe replay anchors that reduce retained checkpoint state without weakening pixel correctness or the maximum replay bound.",
+  "sourceIdentity": {
+    "algorithm": "_updateSourceAPNG blendFromIndex/lastBlendIndex",
+    "commit": "42ba209608cb332887a33ebcae1bde50c52b151d",
+    "name": "YYImage",
+    "sourceFile": "YYImage/YYImageCoder.m",
+    "sourceFileSHA256": "acdc7da4aa8cbc5c5902ed0220c9ce1abb1aa476100dd941a89d52b0b4798456",
+    "version": "1.0.4",
+    "workingTreeClean": true
+  },
+  "analyticalEvidence": {
+    "plan": "Benchmarks/ComparativeLab/apng-semantic-replay-plan.json",
+    "planSHA256": "94525a22a565898fde63b536622ee090f6f8aa42e6a80672f717d368be0dd7ba",
+    "checkpointModel": "Tools/Performance/w5_apng_checkpoint_model.py",
+    "checkpointModelSHA256": "97de463f2b5f383ffb20cdab760b7deab04c63d50697c09b7eb506aa442f8dc1",
+    "checkpointModelTests": "Tools/Performance/test_w5_apng_checkpoint_model.py",
+    "checkpointModelTestsSHA256": "9dd57920af7891aab9d622d202af83f6e2e456ebada4ce861713fb1434941815",
+    "sourceOracle": "Tools/Performance/w5_yyimage_semantic_replay_oracle.py",
+    "sourceOracleSHA256": "048e4c1ade0468825359644617d1330c86ed434e235b2df747c63ef30b3c0177",
+    "sourceOracleTests": "Tools/Performance/test_w5_yyimage_semantic_replay_oracle.py",
+    "sourceOracleTestsSHA256": "8c41d78a83251c82776d8b5b01b123278fb4b842de589ac0cefe8bda3ad373fd",
+    "report": ".artifacts/performance/w5-yyimage-semantic-replay-v1/report.json",
+    "reportFileSHA256": "67bf131256fa7ae400834b9c64260ce267ca96759fee987390355b204ff74095",
+    "reportCanonicalSHA256": "1504983de00db7d958c94ba069ad3effef42aa30c77dd56ebc2907c1da229f8c",
+    "modelTestsPassed": 13,
+    "sourceOracleTestsPassed": 4
+  },
+  "results": {
+    "allRealFixturesNonRegressingAtSameRetainedAndPeakBytes": true,
+    "realFixturesWithStrictReplayImprovement": [
+      "APNG-OVER-BACKGROUND"
+    ],
+    "allComparableSyntheticRowsNonRegressing": true,
+    "syntheticScenariosWithStrictImprovementOrFeasibilityExpansion": [
+      "FULL-BACKGROUND-1024-60",
+      "MIXED-SOURCE-PREVIOUS-1024-120",
+      "FULL-BACKGROUND-2048-120"
+    ],
+    "fullBackground1024At64MiB": {
+      "baseline": {
+        "retainedMiB": 64.0,
+        "modeledPeakMiB": 76.0,
+        "worstReplayFrames": 4
+      },
+      "semantic": {
+        "retainedMiB": 8.0,
+        "modeledPeakMiB": 20.0,
+        "worstReplayFrames": 1
+      },
+      "interpretation": "analytical strict multi-endpoint improvement for the preregistered source-derived scenario only"
+    }
+  },
+  "imageCraftRuntimeCandidate": {
+    "headCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+    "workingTree": "5c07f313cf57495b6ffc7f578be8acbdd3e64c13",
+    "implementationFiles": {
+      "playback": {
+        "path": "Sources/ImageCraftImageIO/APNGOwnedStraightAlphaPlayback.swift",
+        "sha256": "c204933f1188601fa528e223ba0f232ef81e6cd9995244d803585a8cf32eaa6f"
+      },
+      "checkpointStore": {
+        "path": "Sources/ImageCraftImageIO/APNGCompressedCheckpoint.swift",
+        "sha256": "40aa47aa8bf09be3437a7a39eab3cfa070fe3e3841b3e0cad5b0fcde37cdc937"
+      },
+      "preparationDiagnostics": {
+        "path": "Sources/ImageCraftImageIO/ImageIOAnimationPreparationDiagnostics.swift",
+        "sha256": "2dc2aeaf1dd1992e3d045bd12a1e5a5653e05f3525ebdd1c6f8f19e119cf60c7"
+      }
+    },
+    "tests": {
+      "semanticCheckpointResolution": "IMG_ANIM_PT_053",
+      "fullBackgroundEliminatesCheckpoints": "IMG_ANIM_PT_054",
+      "fullSourcePreviousRemainsCheckpointBounded": "IMG_ANIM_PT_055",
+      "publicDecoderSemanticDiagnostics": "IMG_ANIM_PT_056",
+      "imageIOTestsPassed": 115,
+      "coreTestsPassed": 16,
+      "warningsAsErrorsReleaseBuildPassed": true
+    },
+    "diagnostics": [
+      "semanticReplayResetCount",
+      "maximumResolvedReplayFrames"
+    ],
+    "persistentAnchorRule": "full-canvas source blend with disposal != previous establishes the current frame as a persistent start; full-canvas background disposal establishes the next frame as a transparent-canvas persistent start",
+    "explicitlyExcludedRule": "full-canvas source + previous is not retained as a persistent anchor; subrect background is not a transparent full-canvas reset",
+    "testIdentityGate": "scripts/check-animation-test-ids.py enforces unique contiguous IMG_ANIM_PT_001-056 and is invoked by ImageCraft scripts/verify.sh"
+  },
+  "foveaOverlayQualification": {
+    "report": ".artifacts/qualification/w5-imagecraft-animation-adapter-v1/report.json",
+    "reportSHA256": "ad52d1411923021e9a917538d64fca0ab90ab6af243be4b59c23ce382bdc61f5",
+    "qualificationLogSHA256": "74937c3cad5b626e2868175e9e2dc448333bf7d99d503405e7335a0f4725c299",
+    "imageCraftWorkingTree": "5c07f313cf57495b6ffc7f578be8acbdd3e64c13",
+    "foveaWorkingTree": "ed25b1c33889380f04f2acad5d6c71dec15ec3f2",
+    "passed": true,
+    "boundary": "The overlay proves the existing Fovea adapter remains compatible with this ImageCraft candidate under warnings-as-errors; its retained adapter fixtures do not themselves measure semantic-reset memory savings."
+  },
+  "claimBoundary": {
+    "formalClaimEligible": false,
+    "allowed": "scoped analytical Pareto statements for the bound semantic-replay scenarios and local runtime correctness/checkpoint-count statements for the bound ImageCraft candidate",
+    "forbidden": "universal APNG superiority, released-product claims, encoded-native Fovea startup ranking, physical-device memory/energy/thermal superiority, or cross-library global Pareto dominance"
+  },
+  "nextGates": [
+    "publish the exact ImageCraft revision containing the semantic-reset owned APNG runtime and diagnostics",
+    "pin that exact revision in Fovea and move the qualified adapter into the compiled production target",
+    "capture encoded-native Fovea W5 timing/memory evidence from the production pin",
+    "run stable physical iPhone timing, memory, offscreen-work, energy, thermal and reclamation gates"
+  ]
+}

@@ -98,18 +98,47 @@ enum WorkloadRunner {
                     priority: .immediate,
                     headers: ["X-Benchmark-Request-ID": requestID]
                 )
+                let displayStarted = DispatchTime.now().uptimeNanoseconds
                 let output = try await adapter.makeLoad(request).result()
-                await accumulator.append(resourceID: resourceID, target: target, output: output)
+                let normalizedOutput: ComparatorLoadOutput
                 if output.measurement.outcome == .completed {
                     guard let image = output.image else {
                         throw BenchmarkAppError.adapterDidNotRender
                     }
+                    let materializationStarted = DispatchTime.now().uptimeNanoseconds
+                    _ = try materializePixels(image.cgImage)
+                    let materializationDuration =
+                        DispatchTime.now().uptimeNanoseconds &- materializationStarted
+                    let displayReadyDuration =
+                        DispatchTime.now().uptimeNanoseconds &- displayStarted
+                    let measurement = try ComparatorLoadResult(
+                        outcome: output.measurement.outcome,
+                        cacheSource: output.measurement.cacheSource,
+                        latencyNanoseconds: output.measurement.latencyNanoseconds,
+                        pixelWidth: output.measurement.pixelWidth,
+                        pixelHeight: output.measurement.pixelHeight,
+                        receivedBytes: output.measurement.receivedBytes,
+                        failureCategory: output.measurement.failureCategory,
+                        pixelMaterializationNanoseconds: materializationDuration,
+                        displayReadyLatencyNanoseconds: displayReadyDuration
+                    )
+                    normalizedOutput = ComparatorLoadOutput(
+                        measurement: measurement,
+                        image: image
+                    )
                     if image.cgImage.width > target.width || image.cgImage.height > target.height {
                         targetViolations += 1
                     }
                     controller.imageView.image = UIImage(cgImage: image.cgImage)
                     await Task.yield()
+                } else {
+                    normalizedOutput = output
                 }
+                await accumulator.append(
+                    resourceID: resourceID,
+                    target: target,
+                    output: normalizedOutput
+                )
             }
         }
         let snapshot = await accumulator.snapshot()
@@ -128,6 +157,42 @@ enum WorkloadRunner {
             cancelledLoads: snapshot.cancelled,
             failedLoads: snapshot.failed
         )
+    }
+
+    private static func materializePixels(_ image: CGImage) throws -> UInt8 {
+        guard image.width > 0, image.height > 0,
+            let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)
+        else {
+            throw BenchmarkAppError.adapterDidNotRender
+        }
+        let bytesPerRow = image.width * 4
+        var pixels = Data(count: bytesPerRow * image.height)
+        let drew = pixels.withUnsafeMutableBytes { storage -> Bool in
+            guard let baseAddress = storage.baseAddress,
+                let context = CGContext(
+                    data: baseAddress,
+                    width: image.width,
+                    height: image.height,
+                    bitsPerComponent: 8,
+                    bytesPerRow: bytesPerRow,
+                    space: colorSpace,
+                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                        | CGBitmapInfo.byteOrder32Big.rawValue
+                )
+            else { return false }
+            context.setBlendMode(.copy)
+            context.interpolationQuality = .none
+            context.draw(
+                image,
+                in: CGRect(x: 0, y: 0, width: image.width, height: image.height)
+            )
+            return true
+        }
+        guard drew else { throw BenchmarkAppError.adapterDidNotRender }
+        return pixels.withUnsafeBytes { storage in
+            guard let first = storage.first, let last = storage.last else { return 0 }
+            return first &+ last
+        }
     }
 
     private static func probeViolationCount(
@@ -228,12 +293,29 @@ enum WorkloadRunner {
             headers: ["X-Benchmark-Request-ID": completeRequestID]
         )
         let completeLoad = try await progressive.makeProgressiveLoad(completeRequest)
+        let presentationRecorder = ImageViewPresentationRecorder(imageView: controller.imageView)
+        presentationRecorder.start()
+        defer { presentationRecorder.stop() }
         var completeFrames: [ComparatorProgressiveFrameMeasurement] = []
+        var completeFrameBindings:
+            [(measurement: ComparatorProgressiveFrameMeasurement, token: UInt64, boundAt: UInt64)] =
+                []
         var finalFrame: ComparatorProgressiveFrame?
         var finalObservedAtNanoseconds: UInt64?
+        var nextBindingToken: UInt64 = 1
         for try await frame in completeLoad.frames {
             completeFrames.append(frame.measurement)
             controller.imageView.image = UIImage(cgImage: frame.image.cgImage)
+            let boundAt = DispatchTime.now().uptimeNanoseconds
+            let bindingToken = nextBindingToken
+            nextBindingToken &+= 1
+            presentationRecorder.didBind(
+                image: frame.image.cgImage,
+                bindingToken: bindingToken
+            )
+            completeFrameBindings.append(
+                (measurement: frame.measurement, token: bindingToken, boundAt: boundAt)
+            )
             await Task.yield()
             if frame.measurement.kind == .final {
                 finalFrame = frame
@@ -243,8 +325,32 @@ enum WorkloadRunner {
         guard let finalFrame else {
             throw BenchmarkAppError.runFailed("w4-final-missing")
         }
+        // `Task.yield()` is not a presentation oracle. Give the final binding a bounded number of
+        // actual refresh opportunities so P2 is defined by CADisplayLink observation instead.
+        await DisplayFrameBarrier(frameCount: 3).wait()
+        presentationRecorder.stop()
         let previews = completeFrames.filter { $0.kind == .preview }
         let firstPreview = previews.first
+        let previewBindings = completeFrameBindings.filter { $0.measurement.kind == .preview }
+        guard
+            let finalBinding = completeFrameBindings.last(where: { $0.measurement.kind == .final })
+        else { throw BenchmarkAppError.runFailed("w4-final-binding-missing") }
+        let finalP2 = presentationRecorder.observation(for: finalBinding.token)
+        let usefulPreviewBindings = previewBindings.filter { binding in
+            guard let observation = presentationRecorder.observation(for: binding.token),
+                let finalP2
+            else { return false }
+            return observation.uptimeNanoseconds < finalP2.uptimeNanoseconds
+        }
+        let obsoletePreviewCount: Int? = finalP2.map { _ in
+            previewBindings.count - usefulPreviewBindings.count
+        }
+        let finalBindToP2Nanoseconds: UInt64
+        if let finalP2, finalP2.uptimeNanoseconds >= finalBinding.boundAt {
+            finalBindToP2Nanoseconds = finalP2.uptimeNanoseconds - finalBinding.boundAt
+        } else {
+            finalBindToP2Nanoseconds = 0
+        }
         let completeOrigin = DeterministicBenchmarkURLProtocol.metrics()
         let finalAfterLastByteNanoseconds: UInt64
         if let finalObservedAtNanoseconds,
@@ -346,6 +452,26 @@ enum WorkloadRunner {
                 identifier: "w4-complete-preview-count",
                 passed: true,
                 value: previews.count
+            ),
+            BenchmarkCheck(
+                identifier: "w4-p2-observed-preview-count",
+                passed: finalP2 != nil,
+                value: finalP2 == nil ? -1 : usefulPreviewBindings.count
+            ),
+            BenchmarkCheck(
+                identifier: "w4-p2-obsolete-preview-count",
+                passed: obsoletePreviewCount != nil,
+                value: obsoletePreviewCount ?? -1
+            ),
+            BenchmarkCheck(
+                identifier: "w4-final-p2-observed",
+                passed: finalP2 != nil,
+                value: finalP2 == nil ? 0 : 1
+            ),
+            BenchmarkCheck(
+                identifier: "w4-final-bind-to-p2-nanoseconds",
+                passed: finalBindToP2Nanoseconds > 0,
+                value: Int(clamping: finalBindToP2Nanoseconds)
             ),
             BenchmarkCheck(
                 identifier: "w4-cancel-preview-count-at-220ms",

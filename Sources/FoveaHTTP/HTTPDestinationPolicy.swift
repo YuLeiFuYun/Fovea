@@ -94,9 +94,7 @@ public struct HTTPDestinationPolicy: Hashable, Sendable {
                 material.append(contentsOf: origin.utf8)
                 material.append(0)
             }
-            let digest = SHA256.hash(data: material)
-                .map { String(format: "%02x", $0) }
-                .joined()
+            let digest = httpLowercaseHexString(SHA256.hash(data: material))
             return "destination-origins-v1:\(digest)"
         }
     }

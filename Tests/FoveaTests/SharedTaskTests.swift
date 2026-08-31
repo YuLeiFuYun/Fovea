@@ -60,6 +60,20 @@ final class SharedTaskTests: XCTestCase {
         XCTAssertEqual(operationCount, 1)
         await first.cancel()
         await second.cancel()
+
+        // A mismatched completion must not mark a still-running task as completed. The
+        // last real subscriber must therefore take the normal cancellation path.
+        let releaseGate = HandoffOperationGate()
+        let releasable = await registry.subscribe(key: "task-id-stale-release") {
+            try await releaseGate.run()
+        }
+        await releaseGate.waitUntilStarted()
+        await registry.completed(key: "task-id-stale-release", taskID: UUID())
+        await releasable.cancel()
+        let cancellationsAfterMismatchedCompletion =
+            await registry.cancellationCount(for: "task-id-stale-release")
+        XCTAssertEqual(cancellationsAfterMismatchedCompletion, 1)
+        await releaseGate.release()
     }
 
     func testDetachedSubscriberLeavesTaskAvailableForLateHandoff() async throws {
@@ -379,7 +393,7 @@ final class SharedTaskTests: XCTestCase {
         let registry = SharedTaskRegistry<FetchExecutionKey, Int>(recordsCancellationCounts: true)
         let key = makeKey("https://example.com/a")
         let operation: @Sendable () async throws -> Int = {
-            try await Task.sleep(for: .seconds(10))
+            try await testSleep(.seconds(10))
             throw CancellationError()
         }
         let first = await registry.subscribe(key: key, operation: operation)
@@ -417,7 +431,7 @@ final class SharedTaskTests: XCTestCase {
         let registry = SharedTaskRegistry<String, Int>()
         for index in 0..<1_000 {
             let subscription = await registry.subscribe(key: "high-cardinality-\(index)") {
-                try await Task.sleep(for: .seconds(10))
+                try await testSleep(.seconds(10))
                 return index
             }
             await subscription.cancel()

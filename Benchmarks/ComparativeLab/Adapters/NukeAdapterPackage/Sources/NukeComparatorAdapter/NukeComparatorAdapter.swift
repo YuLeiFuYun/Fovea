@@ -32,6 +32,7 @@ private final class NukeProgressiveTaskBox: @unchecked Sendable {
 
 public final class NukeComparatorAdapter: ComparatorProgressiveAdapter, @unchecked Sendable {
     public let identity: ComparatorIdentity
+    public let runtimeConfiguration: ComparatorRuntimeConfiguration?
 
     private let pipeline: ImagePipeline
     private let dataCache: DataCache
@@ -56,16 +57,37 @@ public final class NukeComparatorAdapter: ComparatorProgressiveAdapter, @uncheck
         session.httpCookieStorage = nil
         session.urlCredentialStorage = nil
         session.httpShouldSetCookies = false
+        let boundedDownloads = max(1, maximumConcurrentDownloads)
+        let boundedMemoryCost = max(1, memoryCostLimit)
         var configuration = ImagePipeline.Configuration()
         configuration.dataLoader = DataLoader(configuration: session)
-        configuration.dataLoadingQueue.maxConcurrentOperationCount = max(
-            1, maximumConcurrentDownloads
-        )
+        configuration.dataLoadingQueue.maxConcurrentOperationCount = boundedDownloads
         configuration.dataCache = dataCache
         configuration.dataCachePolicy = .storeOriginalData
-        configuration.imageCache = ImageCache(costLimit: max(1, memoryCostLimit))
+        configuration.imageCache = ImageCache(costLimit: boundedMemoryCost)
         configuration.isProgressiveDecodingEnabled = progressiveDecodingEnabled
         configuration.progressiveDecodingInterval = 0
+        runtimeConfiguration = try ComparatorRuntimeConfiguration(
+            parameters: [
+                "adapter.profile": "nuke-data-cache",
+                "cache.data": "Nuke.DataCache",
+                "cache.dataPolicy": "storeOriginalData",
+                "cache.dataSizeLimitBytes": String(dataCache.sizeLimit),
+                "cache.dataSweepEnabled": String(dataCache.isSweepEnabled),
+                "cache.dataSweepIntervalSeconds": String(dataCache.sweepInterval),
+                "cache.imageCostLimitBytes": String(boundedMemoryCost),
+                "progressive.enabledAtInitialization": String(progressiveDecodingEnabled),
+                "progressive.intervalSeconds": "0",
+                "scheduler.maximumConcurrentDownloads": String(boundedDownloads),
+                "session.base": "ephemeral",
+                "session.cookies": "disabled",
+                "session.credentials": "disabled",
+                "session.httpMaximumConnectionsPerHost": String(
+                    session.httpMaximumConnectionsPerHost
+                ),
+                "session.urlCache": "nil",
+            ]
+        )
         pipeline = ImagePipeline(configuration: configuration)
     }
 

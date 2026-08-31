@@ -210,6 +210,10 @@ public struct ComparatorLoadResult: Codable, Equatable, Sendable {
     public let pixelHeight: Int?
     public let receivedBytes: Int?
     public let failureCategory: String?
+    /// Cost of forcing the returned CGImage through a complete normalized pixel draw.
+    public let pixelMaterializationNanoseconds: UInt64?
+    /// Harness-observed latency from request construction through complete pixel materialization.
+    public let displayReadyLatencyNanoseconds: UInt64?
 
     public init(
         outcome: ComparatorOutcome,
@@ -218,12 +222,22 @@ public struct ComparatorLoadResult: Codable, Equatable, Sendable {
         pixelWidth: Int? = nil,
         pixelHeight: Int? = nil,
         receivedBytes: Int? = nil,
-        failureCategory: String? = nil
+        failureCategory: String? = nil,
+        pixelMaterializationNanoseconds: UInt64? = nil,
+        displayReadyLatencyNanoseconds: UInt64? = nil
     ) throws {
+        let hasPixelMaterialization = pixelMaterializationNanoseconds != nil
+        let hasDisplayReady = displayReadyLatencyNanoseconds != nil
         guard pixelWidth.map({ (0...32_768).contains($0) }) ?? true,
             pixelHeight.map({ (0...32_768).contains($0) }) ?? true,
             receivedBytes.map({ $0 >= 0 }) ?? true,
-            failureCategory.map({ !$0.contains("://") && $0.count <= 96 }) ?? true
+            failureCategory.map({ !$0.contains("://") && $0.count <= 96 }) ?? true,
+            hasPixelMaterialization == hasDisplayReady,
+            !hasPixelMaterialization || outcome == .completed,
+            displayReadyLatencyNanoseconds.map({ $0 >= latencyNanoseconds }) ?? true,
+            displayReadyLatencyNanoseconds.map({ ready in
+                pixelMaterializationNanoseconds.map({ ready >= $0 }) ?? false
+            }) ?? true
         else {
             throw ComparativeLabError.invalidMeasurement
         }
@@ -234,6 +248,8 @@ public struct ComparatorLoadResult: Codable, Equatable, Sendable {
         self.pixelHeight = pixelHeight
         self.receivedBytes = receivedBytes
         self.failureCategory = failureCategory
+        self.pixelMaterializationNanoseconds = pixelMaterializationNanoseconds
+        self.displayReadyLatencyNanoseconds = displayReadyLatencyNanoseconds
     }
 }
 
@@ -383,14 +399,99 @@ public protocol ComparatorProgressiveAdapter: ComparatorAdapter {
         -> ComparatorProgressiveLoad
 }
 
+/// Optional, non-timed diagnostic timeline exported only by adapters that can provide a bounded
+/// source-level trace. Events are comparator-neutral so shared workloads never import a library's
+/// private diagnostics types. Clean comparator runs do not require or query this protocol.
+public struct ComparatorDiagnosticEvent: Codable, Equatable, Sendable {
+    public let sequence: UInt64
+    public let elapsedNanoseconds: UInt64
+    public let kind: String
+    public let keyDigest: String?
+    public let byteCount: Int?
+    public let itemCount: Int?
+    public let durationNanoseconds: UInt64?
+    public let reason: String?
+    public let requestedPriority: Int?
+    public let effectivePriority: Int?
+
+    public init(
+        sequence: UInt64,
+        elapsedNanoseconds: UInt64,
+        kind: String,
+        keyDigest: String? = nil,
+        byteCount: Int? = nil,
+        itemCount: Int? = nil,
+        durationNanoseconds: UInt64? = nil,
+        reason: String? = nil,
+        requestedPriority: Int? = nil,
+        effectivePriority: Int? = nil
+    ) {
+        self.sequence = sequence
+        self.elapsedNanoseconds = elapsedNanoseconds
+        self.kind = kind
+        self.keyDigest = keyDigest
+        self.byteCount = byteCount
+        self.itemCount = itemCount
+        self.durationNanoseconds = durationNanoseconds
+        self.reason = reason
+        self.requestedPriority = requestedPriority
+        self.effectivePriority = effectivePriority
+    }
+}
+
+public protocol ComparatorDiagnosticAdapter: ComparatorAdapter {
+    /// Returns only measured-workload events; cache-preparation/setup events stay outside the
+    /// returned sequence window. Implementations may return an empty array when diagnostics are
+    /// disabled.
+    func diagnosticEvents() async -> [ComparatorDiagnosticEvent]
+}
+
+/// Stable, comparator-neutral attestation of the effective runtime configuration used by one
+/// adapter process. Only values that can affect semantics, scheduling, transport, cache behavior,
+/// decoding or resource cost belong here. The map is deliberately flat so evidence consumers can
+/// compare it exactly without knowing a comparator's private object graph.
+public struct ComparatorRuntimeConfiguration: Codable, Equatable, Sendable {
+    public let schemaVersion: Int
+    public let parameters: [String: String]
+
+    public init(parameters: [String: String]) throws {
+        guard !parameters.isEmpty, parameters.count <= 96,
+            parameters.allSatisfy({ key, value in
+                !key.isEmpty && key.count <= 160 && !key.contains("://")
+                    && value.count <= 2048 && !value.contains("\r") && !value.contains("\n")
+            })
+        else {
+            throw ComparativeLabError.invalidIdentifier
+        }
+        self.schemaVersion = 1
+        self.parameters = parameters
+    }
+}
+
 public protocol ComparatorAdapter: Sendable {
     var identity: ComparatorIdentity { get }
+    var runtimeConfiguration: ComparatorRuntimeConfiguration? { get }
 
     func makeLoad(_ request: ComparatorRequest) async throws -> ComparatorLoad
     func purgeMemory() async
     func purgeDisk() async throws
+    func finishCachePreparation() async throws
+    func cachePreparationDiagnostics() async -> [String: Int]
     func revoke(namespace: String) async throws
     func cancelAll() async
+}
+
+extension ComparatorAdapter {
+    /// Older/non-headless surfaces remain source-compatible, but formal ComparativeLab evidence
+    /// can require a non-nil attestation before importing a result.
+    public var runtimeConfiguration: ComparatorRuntimeConfiguration? { nil }
+
+    /// Allows adapters with asynchronous cache synthesis to finish preparation before timed work.
+    /// Comparators whose cache writes complete with their load operation require no barrier.
+    public func finishCachePreparation() async throws {}
+
+    /// Additive, non-timed cache-preparation diagnostics for exploratory attribution.
+    public func cachePreparationDiagnostics() async -> [String: Int] { [:] }
 }
 
 public enum ComparativeWorkloadID: String, Codable, CaseIterable, Sendable {
@@ -398,6 +499,7 @@ public enum ComparativeWorkloadID: String, Codable, CaseIterable, Sendable {
     case w2DetailHero = "W2-HERO-V1"
     case w3AuthGallery = "W3-AUTH-V1"
     case w4ProgressiveJPEG = "W4-PROGRESSIVE-JPEG-V1"
+    case w5AnimatedMedia = "W5-ANIMATED-MEDIA-V1"
     case w7ThousandConcurrent = "W7-THOUSAND-CONCURRENT-V1"
 }
 

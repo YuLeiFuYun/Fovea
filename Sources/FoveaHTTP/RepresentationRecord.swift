@@ -231,3 +231,28 @@ public protocol RepresentationRecordStoring: Sendable {
 public protocol RepresentationRecordMaintaining: AnyObject, RepresentationRecordStoring {
     func contentReferences() async -> Set<StoredContentReference>
 }
+
+/// 包内可选的精确 variant 索引能力。
+///
+/// 外部 store provider 不需要实现；FoveaCore 在能力缺失时回退到基础键候选扫描。
+package protocol RepresentationRecordSnapshotLookingUp: RepresentationRecordStoring {
+    /// Returns already-persistently-validated, unique-variant candidates for the exact
+    /// base/namespace/generation when no durable mutation is in progress. `nil` means the caller
+    /// must fall back to the store actor and perform the full defensive validation path.
+    func recordsSnapshot(
+        for baseKeyDigest: String,
+        namespaceFingerprint: StorageNamespaceFingerprint,
+        namespaceGeneration: UInt64
+    ) -> [RepresentationRecord]?
+}
+
+package protocol RepresentationRecordExactLookingUp: RepresentationRecordStoring {
+    /// 仅当 exact variant 是该 base/namespace/generation 下唯一候选时返回记录。
+    /// 多候选必须由调用方回退到完整 HTTP Vary 选择，不能绕过显式 Vary 优先规则。
+    func uniqueRecord(
+        for variantDigest: String,
+        baseKeyDigest: String,
+        namespaceFingerprint: StorageNamespaceFingerprint,
+        namespaceGeneration: UInt64
+    ) -> RepresentationRecord?
+}

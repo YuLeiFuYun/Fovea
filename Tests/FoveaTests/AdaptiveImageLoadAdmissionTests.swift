@@ -1,4 +1,5 @@
 import FoveaCore
+import FoveaHTTP
 import ImageCraftCore
 import XCTest
 
@@ -121,6 +122,136 @@ final class AdaptiveImageLoadAdmissionTests: XCTestCase {
         XCTAssertFalse(independent.preservesFetchOnCancellation)
         XCTAssertEqual(independent.stabilizationNanoseconds, 0)
         XCTAssertEqual(trackedStateCount, 2)
+    }
+
+    func testHandoffLeaseRequiresKnownBoundedRemainingBytes_UI_PT_029() throws {
+        let lease = FetchCancellationHandoffLease()
+        lease.activate(graceNanoseconds: 250_000_000)
+        lease.configureProgressObservation(supported: true)
+
+        XCTAssertEqual(
+            lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576),
+            0
+        )
+
+        let head = try TransportResponseHead(
+            statusCode: 200,
+            headers: ["Content-Length": "2097152"],
+            url: URL(string: "https://example.test/large.jpg")
+        )
+        lease.observe(.response(head))
+        lease.observe(.data(Data(), cumulativeByteCount: 524_288))
+        XCTAssertEqual(lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576), 0)
+
+        lease.observe(.data(Data(), cumulativeByteCount: 1_310_720))
+        XCTAssertEqual(
+            lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576),
+            250_000_000
+        )
+
+        lease.observe(.data(Data(), cumulativeByteCount: 2_097_153))
+        XCTAssertEqual(lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576), 0)
+    }
+
+    func testHandoffLeaseResetsProgressForEachRetryAttempt_UI_PT_029() throws {
+        let lease = FetchCancellationHandoffLease()
+        lease.activate(graceNanoseconds: 250_000_000)
+        lease.configureProgressObservation(supported: true)
+        let head = try TransportResponseHead(
+            statusCode: 200,
+            headers: ["Content-Length": "2097152"],
+            url: URL(string: "https://example.test/retried.jpg")
+        )
+
+        lease.observe(.response(head))
+        lease.observe(.data(Data(), cumulativeByteCount: 1_572_864))
+        XCTAssertEqual(
+            lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576),
+            250_000_000
+        )
+
+        lease.observe(.response(head))
+        XCTAssertEqual(lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576), 0)
+    }
+
+    func testHandoffLeaseRejectsEncodedContentLengthDomain_UI_PT_029() throws {
+        let lease = FetchCancellationHandoffLease()
+        lease.activate(graceNanoseconds: 250_000_000)
+        lease.configureProgressObservation(supported: true)
+        lease.observe(
+            .response(
+                try TransportResponseHead(
+                    statusCode: 200,
+                    headers: [
+                        "Content-Length": "262144",
+                        "Content-Encoding": "gzip",
+                    ],
+                    url: URL(string: "https://example.test/compressed.jpg")
+                )
+            )
+        )
+        lease.observe(.data(Data(), cumulativeByteCount: 196_608))
+
+        XCTAssertEqual(lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576), 0)
+    }
+
+    func testHandoffRemainingByteLimitUsesTargetSurfaceAndTransportCap_UI_PT_029() throws {
+        XCTAssertEqual(
+            FetchCancellationHandoffPolicy.maximumRemainingBytes(
+                targetWidth: 320,
+                targetHeight: 240,
+                transportMemoryThreshold: 1_048_576
+            ),
+            307_200
+        )
+        XCTAssertEqual(
+            FetchCancellationHandoffPolicy.maximumRemainingBytes(
+                targetWidth: 1_024,
+                targetHeight: 1_024,
+                transportMemoryThreshold: 1_048_576
+            ),
+            1_048_576
+        )
+        XCTAssertEqual(
+            FetchCancellationHandoffPolicy.maximumRemainingBytes(
+                targetWidth: 32,
+                targetHeight: 32,
+                transportMemoryThreshold: 0
+            ),
+            0
+        )
+    }
+
+    func testHandoffLeasePreservesLegacyBehaviorWithoutProgressObservation_UI_PT_029() {
+        let lease = FetchCancellationHandoffLease()
+        lease.activate(graceNanoseconds: 75_000_000)
+        XCTAssertEqual(
+            lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576),
+            75_000_000
+        )
+    }
+
+    func testHandoffLeaseRejectsUnknownLengthUntilCompletion_UI_PT_029() throws {
+        let lease = FetchCancellationHandoffLease()
+        lease.activate(graceNanoseconds: 100_000_000)
+        lease.configureProgressObservation(supported: true)
+        lease.observe(
+            .response(
+                try TransportResponseHead(
+                    statusCode: 200,
+                    headers: [:],
+                    url: URL(string: "https://example.test/chunked.jpg")
+                )
+            )
+        )
+        lease.observe(.data(Data(), cumulativeByteCount: 32_768))
+        XCTAssertEqual(lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576), 0)
+
+        lease.observe(.complete(digestHex: String(repeating: "0", count: 64), byteCount: 32_768))
+        XCTAssertEqual(
+            lease.eligibleGraceNanoseconds(maximumRemainingBytes: 1_048_576),
+            100_000_000
+        )
     }
 
     private func imageRequest(path: String, width: Int, height: Int) throws -> ImageRequest {

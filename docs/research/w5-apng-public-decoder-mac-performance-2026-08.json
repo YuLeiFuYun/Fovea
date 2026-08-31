@@ -1,0 +1,199 @@
+{
+  "claimBoundary": [
+    "physical Mac directional mechanism evidence only",
+    "no online physical iOS device was used",
+    "two different scenario roles are not cross-ranked",
+    "raw wall-clock samples are host and run specific",
+    "no energy thermal allocator Fovea-adapter or release claim"
+  ],
+  "date": "2026-08-07",
+  "evidence": {
+    "artifactInventoryCount": 37,
+    "captureManifest": ".artifacts/performance/w5-apng-public-decoder-mac-performance-v1/capture-manifest.json",
+    "captureManifestSHA256": "903c213e3144f93f9d005dbb7e8e1e37095b7d524a27a48ab303c9a610d98c91",
+    "captureRunner": "Tools/Performance/capture_w5_apng_public_decoder_mac_performance.py",
+    "report": ".artifacts/performance/w5-apng-public-decoder-mac-performance-v1/report.json",
+    "reportSHA256": "713f77a8730aa294dbe3963dc1fe80a76af124dd6301bbbc4200a53c62b78cb7",
+    "retainedReleaseBinary": ".artifacts/performance/w5-apng-public-decoder-mac-performance-v1/bin/ImageCraftEvidence",
+    "retainedReleaseBinarySHA256": "162c2669a9c9cfedb14a1744009481a007565d99b5416b6aac5911bb26c8143e",
+    "sourceIdentity": ".artifacts/performance/w5-apng-public-decoder-mac-performance-v1/source-identity.json",
+    "sourceIdentitySHA256": "f5cf9eca0ee357fa881f266a6ff36f58ca6c47bdeca829a156216f9eb400eab4",
+    "tamperContract": "Tools/Performance/test_w5_apng_public_decoder_mac_performance.py",
+    "validator": "Tools/Performance/validate_w5_apng_public_decoder_mac_performance.py"
+  },
+  "interpretation": [
+    "Both roles produce exact selected-frame normalized pixels, zero reverse-access mismatches and cancellation fencing in this capture.",
+    "The owned six-frame route prepares near the direct lower bound but bounded random access and sequential replay remain slower than direct retained ImageIO on this Mac endpoint.",
+    "The aligned fallback includes strict inspection and lifecycle work, so its prepare timing is not comparable to the direct ImageIO source-construction lower bound as a product-speed claim.",
+    "Owned and fallback scenarios have different inputs and roles; no aggregate ranking or global Pareto-dominance claim is permitted."
+  ],
+  "objective": "Measure two explicitly separate APNG mechanisms on the physical Mac host: the owned RGBA8 non-interlaced route and the aligned ImageIO fallback route, while retaining raw samples, backing diagnostics, pixel equality and lifecycle checks.",
+  "results": {
+    "bothCancellationFenced": true,
+    "bothSelectedFramePixelComparisonsExact": true,
+    "fallbackPrepareMedianOverDirectLowerBound": 21.851860702495845,
+    "fallbackReverseRandomAccessMismatchCount": 0,
+    "fallbackSelectedMedianOverDirectRetained": 1.2953457089050309,
+    "fallbackSequentialMedianOverDirectRetained": 1.6878466165349366,
+    "iterations": 18,
+    "ownedPrepareMedianOverDirectLowerBound": 1.3703157894736842,
+    "ownedReverseRandomAccessMismatchCount": 0,
+    "ownedSelectedMedianOverDirectRetained": 6.490457259713701,
+    "ownedSequentialMedianOverDirectRetained": 2.3695518851449577,
+    "qualification": {
+      "failures": 0,
+      "imageCraftCoreTests": 16,
+      "imageCraftImageIOTests": 111,
+      "totalTests": 127,
+      "warningsAsErrorsReleaseBuildPassed": true
+    },
+    "scenarioCount": 2,
+    "warmups": 3
+  },
+  "scenarios": {
+    "ALIGNED-FALLBACK-PEOPLE-24": {
+      "allReverseRandomAccessExact": true,
+      "backingDiagnostics": {
+        "backingKind": "imageIOEncoded",
+        "imageIOSourceIndicesMatchTimeline": true
+      },
+      "cancellationFenced": true,
+      "codecFingerprint": "dev.fovea.imageio.animation#impl=2#contract=2",
+      "frameCount": 24,
+      "medianRatios": {
+        "imageCraftPrepareOverDirectLowerBound": 21.851860702495845,
+        "imageCraftSelectedFrameOverDirectRetained": 1.2953457089050309,
+        "imageCraftSequentialAllFramesOverDirectRetained": 1.6878466165349366
+      },
+      "metrics": {
+        "directImageIOColdSelectedFrame": {
+          "medianNanoseconds": 2135792,
+          "p95Nanoseconds": 2328917
+        },
+        "directImageIOPrepareLowerBound": {
+          "medianNanoseconds": 1171708,
+          "p95Nanoseconds": 1400500
+        },
+        "directImageIORetainedSourceAllFrames": {
+          "medianNanoseconds": 26246584,
+          "p95Nanoseconds": 28133667
+        },
+        "directImageIORetainedSourceSelectedFrame": {
+          "medianNanoseconds": 2323125,
+          "p95Nanoseconds": 2616083
+        },
+        "directImageIOUnboundedCachedAllFrames": {
+          "medianNanoseconds": 22602292,
+          "p95Nanoseconds": 24493458
+        },
+        "imageCraftPrepare": {
+          "medianNanoseconds": 25604000,
+          "p95Nanoseconds": 25938208
+        },
+        "imageCraftSelectedFrame": {
+          "medianNanoseconds": 3009250,
+          "p95Nanoseconds": 3257583
+        },
+        "imageCraftSequentialAllFrames": {
+          "medianNanoseconds": 44300208,
+          "p95Nanoseconds": 47037708
+        }
+      },
+      "reverseRandomAccessMismatchCount": 0,
+      "selectedFramePixelsExact": true
+    },
+    "OWNED-PIA-6": {
+      "allReverseRandomAccessExact": true,
+      "backingDiagnostics": {
+        "backingKind": "ownedAPNG",
+        "imageIOSourceIndicesMatchTimeline": true,
+        "ownedCanvasRGBABytes": 193600,
+        "ownedDecompressorWorkspaceBytes": 262144,
+        "ownedEncodedFramePayloadBytes": 23796,
+        "ownedMaterializedOutputRGBABytes": 193600,
+        "ownedMaximumPreviousSaveRGBABytes": 115200,
+        "ownedMaximumRawSubrectRGBABytes": 193600,
+        "ownedMaximumReplayFrames": 8,
+        "ownedModeledPeakBytesUpperBound": 981940,
+        "ownedRetainedBytes": 23796,
+        "ownedRetainedCheckpointBytes": 0,
+        "ownedRetainedCheckpointCount": 0
+      },
+      "cancellationFenced": true,
+      "codecFingerprint": "dev.fovea.imageio.animation#impl=2#contract=2",
+      "frameCount": 6,
+      "medianRatios": {
+        "imageCraftPrepareOverDirectLowerBound": 1.3703157894736842,
+        "imageCraftSelectedFrameOverDirectRetained": 6.490457259713701,
+        "imageCraftSequentialAllFramesOverDirectRetained": 2.3695518851449577
+      },
+      "metrics": {
+        "directImageIOColdSelectedFrame": {
+          "medianNanoseconds": 511416,
+          "p95Nanoseconds": 680167
+        },
+        "directImageIOPrepareLowerBound": {
+          "medianNanoseconds": 175750,
+          "p95Nanoseconds": 261375
+        },
+        "directImageIORetainedSourceAllFrames": {
+          "medianNanoseconds": 1818083,
+          "p95Nanoseconds": 2080791
+        },
+        "directImageIORetainedSourceSelectedFrame": {
+          "medianNanoseconds": 611250,
+          "p95Nanoseconds": 1199208
+        },
+        "directImageIOUnboundedCachedAllFrames": {
+          "medianNanoseconds": 1114291,
+          "p95Nanoseconds": 1223042
+        },
+        "imageCraftPrepare": {
+          "medianNanoseconds": 240833,
+          "p95Nanoseconds": 728084
+        },
+        "imageCraftSelectedFrame": {
+          "medianNanoseconds": 3967292,
+          "p95Nanoseconds": 5442250
+        },
+        "imageCraftSequentialAllFrames": {
+          "medianNanoseconds": 4308042,
+          "p95Nanoseconds": 4522333
+        }
+      },
+      "reverseRandomAccessMismatchCount": 0,
+      "selectedFramePixelsExact": true
+    }
+  },
+  "schemaVersion": 1,
+  "sourceIdentity": {
+    "apngKitCommit": "341383f61000e8d2e55d45db0f0756b239d0a2f1",
+    "foveaWorkingTree": "13e623ba63c3332d149828c20868eca64fbe731b",
+    "governingFilesUnchangedDuringCapture": true,
+    "imageCraftHeadCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+    "imageCraftWorkingTree": "2799c28c0b8eeda718e63a7e74d4e45f20cd6bc5",
+    "inputSourcesUnchangedDuringCapture": true,
+    "sourceUnchangedDuringCapture": true
+  },
+  "status": "completed-local-directional-physical-mac",
+  "studyID": "FOVEA-W5-APNG-PUBLIC-DECODER-MAC-MECHANISM-PERFORMANCE-2026-08",
+  "system": {
+    "architecture": "arm64",
+    "hostRole": "physical-mac-directional-mechanism-endpoint",
+    "logicalCPUCount": 8,
+    "macOSBuildVersion": "26A5388g",
+    "macOSProductVersion": "27.0",
+    "physicalIOSDeviceOfflineCount": 1,
+    "physicalIOSDeviceOnlineCount": 0,
+    "physicalIOSDeviceUsed": false,
+    "swiftVersion": [
+      "Apple Swift version 6.4 (swiftlang-6.4.0.27.1 clang-2100.3.27.1)",
+      "Target: arm64-apple-macosx27.0.0",
+      "swift-driver version: 1.168.5"
+    ],
+    "xcodeVersion": [
+      "Xcode 27.0",
+      "Build version 27A5228h"
+    ]
+  }
+}
