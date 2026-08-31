@@ -291,9 +291,7 @@ private final class DerivedRasterDirectChunkSource: @unchecked Sendable {
         )
     }
 
-    /// The cached chunk is immutable after publication. The lock protects only the reference;
-    /// decompression and byte copies intentionally run outside it so concurrent draws do not
-    /// serialize on one source-wide critical section.
+    /// cached chunk 发布后不可变，锁只保护引用；解压与字节复制有意在锁外执行，避免并发 draw 串行在 source-wide 临界区。
     private func decodedChunk(
         at index: Int,
         decodedRange: Range<Int>

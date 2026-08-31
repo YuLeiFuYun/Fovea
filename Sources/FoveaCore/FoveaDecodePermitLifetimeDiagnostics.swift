@@ -31,10 +31,9 @@ package struct FoveaDecodePermitLifetimeSample: Sendable {
     package let globalDecodeLeaseNanoseconds: UInt64
 }
 
-/// Package-only recorder for H046 resource-hold experiments.
+/// 仅 package 内用于 H046 resource-hold 实验的 recorder。
 ///
-/// It intentionally records only successfully completed raster operations. Failed/cancelled
-/// acquisition paths require a separate waste trace before they can support cancellation claims.
+/// 有意只记录成功完成的 raster 操作；失败或取消的 acquisition path 必须另有 waste trace，才可支持 cancellation 结论。
 package actor FoveaDecodePermitLifetimeRecorder {
     private var completedOperationCount: UInt64 = 0
     private var admittedBytes: UInt64 = 0

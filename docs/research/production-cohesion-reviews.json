@@ -13,8 +13,8 @@
         "AppKit compositor/display-link attachment and upgrade decisions",
         "MainActor decoded-image publication and stale-generation rejection"
       ],
-      "reviewedLineCount": 596,
-      "sha256": "b35b55b4d6ac1b9cb95f4acc312ec619b071f8f42168f9fa1f8b4e530a1099ca",
+      "reviewedLineCount": 595,
+      "sha256": "d71d5a83f11791835e9849a9c323495bd1be2dda9d0e1422f5b2299eddec0019",
       "splitTriggers": [
         "compositor policy becomes reusable without the image-view presentation identity",
         "finite animation and live MJPEG acquire independent view ownership lifecycles",
@@ -36,7 +36,7 @@
         "CADisplayLink lifecycle, tick draining and playback activation"
       ],
       "reviewedLineCount": 608,
-      "sha256": "4f23804a7871779d2dd4c75e39bcb2526e9264607abab4260c421b7dff8634f8",
+      "sha256": "3708fbb0039578c83648df131f8200a2e3571b69977283970cd0fe923ee6be6e",
       "splitTriggers": [
         "the compositor becomes usable without the AppKit presentation timing contract",
         "a second platform driver needs the same compositor independently",
@@ -58,8 +58,8 @@
         "animation/live presentation handoff and effective visibility",
         "view accessibility, geometry policy and startup-mode translation"
       ],
-      "reviewedLineCount": 536,
-      "sha256": "cd37c5efa25fbe2dd831549ddb1bd78d50af3d8838528ae2ece7f53684bad2bc",
+      "reviewedLineCount": 535,
+      "sha256": "427df10ef96c3f43eb87de3d2e8944f3dfc8550b6fb269bf8d956a1d6a49dda5",
       "splitTriggers": [
         "static load lifecycle can move without reading NSView/window state",
         "animation startup becomes independent of this view visibility contract",
@@ -81,8 +81,8 @@
         "external presentation tick validation and coalescing",
         "visibility, pause, seek and memory-pressure transitions"
       ],
-      "reviewedLineCount": 573,
-      "sha256": "6f8659df8de8f8930222571882aace68f1910ac744f9d1564e321a570be4d268",
+      "reviewedLineCount": 571,
+      "sha256": "8714b0bb000801ca2d624eb36ff7281b76a73221c47ee3ffb6be84f47e0238ab",
       "splitTriggers": [
         "external and automatic scheduling no longer share playback generation",
         "clock policy becomes independently reusable across non-animation subsystems",
@@ -127,8 +127,8 @@
         "observed-hit/resource-budget admission decisions",
         "persisted artifact record, surface and output-geometry validation"
       ],
-      "reviewedLineCount": 599,
-      "sha256": "10d7896ef0ffaf7a69fb68edf4d5b279e59dee9db9f63982cdf0afa76af8b69c",
+      "reviewedLineCount": 595,
+      "sha256": "45ad191b865433c64ac355cd2c320d31bd1e4cc9dd4a3d8302153d8290b96cd0",
       "splitTriggers": [
         "artifact identity becomes a cross-repository public contract",
         "admission thresholds evolve independently from reuse authorization",
@@ -151,8 +151,8 @@
         "adaptive row filter and LZFSE payload coding",
         "pixel, payload and reconstructed-output integrity checks"
       ],
-      "reviewedLineCount": 565,
-      "sha256": "da2e1465da2886c33e9bb95bf230479576de5a58c7e447aee92f1bb19c38889f",
+      "reviewedLineCount": 562,
+      "sha256": "966e5c031b4214dc0c5f54bc3753f424e8b53e8033226227c853256a6c7a199d",
       "splitTriggers": [
         "a second container schema or compression backend requires independent evolution",
         "streaming decode can be implemented without duplicating header or integrity rules",
@@ -174,8 +174,8 @@
         "reusable rendered/derived/original lookup ordering",
         "fallback to original decode while preserving namespace and representation identity"
       ],
-      "reviewedLineCount": 592,
-      "sha256": "7d2cb2951306d47762fa46958c8886d59d31bfadc0a16293f4d642dc95c4d08b",
+      "reviewedLineCount": 589,
+      "sha256": "5e4798f38d888452b659a9ac6306b6aa0ffba82a47ee19676763900ccf8cc7bc",
       "splitTriggers": [
         "artifact reading is reused outside the request-level reuse transaction",
         "derived creation gains an independent scheduler or persistence lifecycle",
@@ -197,8 +197,8 @@
         "bounded LZFSE frame and chunk descriptor validation",
         "derived-container compressed region verification, decode and compression helpers"
       ],
-      "reviewedLineCount": 550,
-      "sha256": "f76b880016402ad6341aa4407716813b3e7174174386ffed9be91111e869166f",
+      "reviewedLineCount": 549,
+      "sha256": "95d9563b74c6fa5ca9070d7995d138776cf3be25bdd3873b0851a443c7ffc3c8",
       "splitTriggers": [
         "DerivedRasterContainerCodec is reused outside derived-raster persistence/runtime",
         "a second compression backend or container representation is introduced",
@@ -220,8 +220,8 @@
         "validated original prefetch, resumable range capture and persistence",
         "pipeline-facing encoded-data capability and authorization revalidation"
       ],
-      "reviewedLineCount": 581,
-      "sha256": "3d3c2bc1817ce5d17f22ee33e0b3ff4638e0e7c7e7915786aa37d69c837df1bf",
+      "reviewedLineCount": 580,
+      "sha256": "f4e6aa2446de91f26ac65ac5b74284ef450e87236db42d9bf92de3709e1c4ea1",
       "splitTriggers": [
         "prefetch gains a lifecycle or retry policy independent of encoded-data authorization",
         "resumable transfer becomes a transport-level reusable service",
@@ -271,8 +271,8 @@
         "pipeline cache maintenance, memory reclamation and namespace revocation",
         "benchmark/testing control-plane snapshots and waits over owned coordinators"
       ],
-      "reviewedLineCount": 592,
-      "sha256": "9871c16bd537aed344bf10d3c4d83a43b967bd121e77ac8b6aba393cfdd1c4e3",
+      "reviewedLineCount": 590,
+      "sha256": "3a9cee564643fe6fab8f11754e937e6038f327d5b3f0f7979af6ac47b311f62d",
       "splitTriggers": [
         "the operational facade grows materially beyond the current load/control-plane boundary",
         "benchmark/testing methods require production state not used by public operations",
@@ -295,8 +295,8 @@
         "representation commit barriers",
         "verified-byte and progressive-preparation delivery handoff"
       ],
-      "reviewedLineCount": 938,
-      "sha256": "2078c1a3f9b1062d26b6ce451264ad7c2df5e58643704e825273ec24102a3e3f",
+      "reviewedLineCount": 937,
+      "sha256": "323a8b64cc4055259f0733b9e5af02d01ecb4925f9a7a10e389c4951b6780556",
       "splitTriggers": [
         "a stable responsibility can move without sharing mutable state or transaction ordering",
         "progressive finalization gains independent persistence or retry authority",
@@ -319,8 +319,8 @@
         "rendered-memory hit/publication under scoped render identity",
         "delivery from reusable or transport-verified bytes plus optional derived publication"
       ],
-      "reviewedLineCount": 558,
-      "sha256": "d24273fd89e61cc02b1107d080993821ba3f1f36924199a3b74a8e9b96e2d8a3",
+      "reviewedLineCount": 556,
+      "sha256": "98a7b6e368ec5a6fc8929fb69f53baf6d858578c84367b85155b4e0ebda9d589",
       "splitTriggers": [
         "transport handoff delivery becomes usable without the same decode/publish transaction",
         "transform sharing gains independent persistence or retry policy",
@@ -412,8 +412,8 @@
         "namespace/item removal and unreferenced-blob cleanup",
         "reachability garbage collection, soft-budget grouping and deterministic trimming"
       ],
-      "reviewedLineCount": 558,
-      "sha256": "17b42c8c03acb8ca53301d82342e797d40705124ddfe74c99d0265bb608bdd9d",
+      "reviewedLineCount": 556,
+      "sha256": "7a0d355dc7f40a56bda380211a242013cc9b438d8426c637cfcc11eb4c777e67",
       "splitTriggers": [
         "budget eviction becomes shared by non-derived Akashic stores",
         "partition selection becomes an independent persistence service",

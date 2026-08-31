@@ -105,7 +105,7 @@ final class T100RepresentationRecordStoreIndexTests: XCTestCase {
             try await store.put(record)
             XCTFail("expected durable write failure")
         } catch {
-            // Expected: exact index must return to the pre-mutation snapshot.
+            // 预期路径：exact index 必须回到 mutation 前的 snapshot。
         }
         let snapshot = try XCTUnwrap(
             store.recordsSnapshot(

@@ -87,8 +87,7 @@ package struct DerivedRasterLoadedImage: Sendable {
     package let key: DerivedRasterArtifactKey
 }
 
-// Low-level container framing and compression mechanics live outside the format facade so
-// high-level container policy remains reviewable independently from byte-stream plumbing.
+// 低层 container framing 与压缩机制放在 format facade 之外，使高层 container policy 可独立于 byte-stream plumbing 审查。
 enum DerivedRasterContainerCodec {
     private struct BlockDescriptor {
         let decodedByteCount: Int

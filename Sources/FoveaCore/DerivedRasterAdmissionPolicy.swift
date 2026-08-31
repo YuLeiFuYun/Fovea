@@ -96,9 +96,8 @@ package struct DerivedRasterArtifactKey: Hashable, Sendable {
         )
     }
 
-    /// Fast constructor for a representation already validated by `PipelineCache.records`.
-    /// The supplied ContentID must be the value parsed from that exact immutable record. Debug
-    /// builds re-prove the contract; Release avoids repeated persistent-record parsing on hits.
+    /// 为已由 `PipelineCache.records` 验证的 representation 提供热路径构造。
+    /// 传入的 ContentID 必须来自同一份不可变 record；Debug 会重证契约，Release 命中时避免重复解析持久化 record。
     package init?(
         validatedRequest request: ImageRequest,
         validatedRepresentation representation: RepresentationRecord,
@@ -149,13 +148,11 @@ package struct DerivedRasterArtifactKey: Hashable, Sendable {
     }
 
     package func hash(into hasher: inout Hasher) {
-        // `digestHex` is already the canonical SHA-256 of every identity field. Use it only as
-        // the hash accelerator; synthesized Equatable still compares all stored fields exactly.
+        // `digestHex` 已是全部 identity 字段的 canonical SHA-256，只用作 hash 加速；合成的 Equatable 仍逐字段精确比较。
         hasher.combine(digestHex)
     }
 
-    /// Revalidate the live authorization inputs for an already constructed exact artifact key
-    /// without rebuilding and hashing an identical canonical key a second time.
+    /// 对已构造的精确 artifact key 重验实时授权输入，不再次构造并 hash 完全相同的 canonical key。
     package func matchesLiveAuthorization(
         request: ImageRequest,
         representation: RepresentationRecord,
@@ -184,9 +181,8 @@ package struct DerivedRasterArtifactKey: Hashable, Sendable {
         return true
     }
 
-    /// Same live authorization checks for a record already validated by the package-only cache
-    /// snapshot/exact lookup capability. This intentionally skips only immutable persistent-shape
-    /// validation; request-, representation-, generation-, and content-binding checks remain.
+    /// 对 package-only cache snapshot/exact lookup 已验证的 record 执行同样的实时授权检查；这里只跳过不可变持久化形状验证，
+    /// request、representation、generation 与 content 绑定检查全部保留。
     package func matchesValidatedLiveAuthorization(
         request: ImageRequest,
         representation: RepresentationRecord,

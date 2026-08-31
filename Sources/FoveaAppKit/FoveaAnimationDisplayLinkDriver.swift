@@ -411,11 +411,11 @@
         }
     }
 
-    /// Uses AppKit's view-bound display link when the platform can track the view's current screen.
+    /// 平台能够跟踪视图当前屏幕时，使用 AppKit 的视图绑定 display link。
     ///
-    /// macOS 14 introduced `NSView.displayLink(target:selector:)`. It follows the view across displays and
-    /// suppresses callbacks while the view is hidden or detached, so Fovea can use the same target-timestamp
-    /// scheduling contract as UIKit without adopting the deprecated worker-thread `CVDisplayLink` API.
+    /// macOS 14 的 `NSView.displayLink(target:selector:)` 会随视图跨屏迁移，并在隐藏或脱离时抑制回调；
+    /// 因而 Fovea 可以与 UIKit 共用 target-timestamp 调度契约，而无需采用已废弃的工作线程
+    /// 已废弃的 `CVDisplayLink` 接口。
     @available(macOS 14.0, *)
     @MainActor
     package final class FoveaAnimationDisplayLinkDriver: FoveaAppKitAnimationPresentationDriving {

@@ -323,7 +323,7 @@ final class AnimationPlaybackRuntimeTests: XCTestCase {
             try await secondStart.value
             XCTFail("Queued automatic predecode completed after its handle was cancelled")
         } catch is CancellationError {
-            // Expected: coordinator cancellation cancels the queued weighted permit request.
+            // 预期路径：coordinator 取消会同时取消排队中的 weighted permit request。
         } catch let error as AnimationPlaybackCoordinatorError {
             XCTAssertEqual(error, .cancelled)
         } catch let error as AnimationPlaybackDriverError {

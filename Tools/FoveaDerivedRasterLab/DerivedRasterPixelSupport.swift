@@ -7,8 +7,7 @@ import ImageCraftCore
 import ImageIO
 import UniformTypeIdentifiers
 
-/// Lab-only control that expands current RGB24 storage into opaque premultiplied RGBA so the
-/// CoreGraphics layout-conversion mechanism can still be compared after RGB24 became current.
+/// 仅 lab 使用的 control：把当前 RGB24 storage 展开为 opaque premultiplied RGBA，使 RGB24 成为现行实现后仍可比较 CoreGraphics layout conversion 机制。
 func opaquePremultipliedImage(from surface: DerivedRasterSurface) throws -> CGImage {
     guard surface.width > 0, surface.height > 0,
         surface.pixelLayout == .rgb24,
@@ -60,9 +59,8 @@ func packedRGB24Data(from surface: DerivedRasterSurface) throws -> Data {
     return surface.pixelData
 }
 
-/// Raw packed-RGB control. It keeps `alphaInfo == .none` and therefore preserves the public
-/// `DecodedImage.alphaMode` contract unlike the premultiplied-RGBA mechanism probe. Callers pass
-/// prepacked bytes so each timed iteration can create a fresh provider/CGImage without repacking.
+/// raw packed-RGB control 保持 `alphaInfo == .none`，因此与 premultiplied-RGBA probe 不同，仍维持 public `DecodedImage.alphaMode` 契约。
+/// 调用方传入预打包字节，使每次 timed iteration 都能创建新的 provider/CGImage，而不重复 repack。
 func packedRGB24Image(
     pixelData: Data,
     width: Int,
@@ -111,10 +109,8 @@ struct PackedRGB24CompressedSurface {
     }
 }
 
-/// Mechanism-only schema6 candidate: packed RGB24, the same 1 MiB decoded chunk size, independent
-/// LZFSE chunks, and a direct random-access provider with the same one-chunk memo shape as the
-/// production RGBX provider. Compression is performed once outside the measurement loop so every
-/// timed iteration can create a fresh provider/CGImage over identical immutable payload bytes.
+/// 仅机制比较的 schema6 候选：packed RGB24、相同 1 MiB decoded chunk、独立 LZFSE chunk，并使用与生产 RGBX provider 相同 one-chunk memo 形态的 direct random-access provider。
+/// compression 在 measurement loop 外只做一次，因此每次 timed iteration 都能基于同一不可变 payload 创建新的 provider/CGImage。
 func makePackedRGB24CompressedSurface(
     pixelData: Data,
     width: Int,
@@ -359,8 +355,7 @@ func packedRGB24ProviderReleaseInfo(_ info: UnsafeMutableRawPointer?) {
     Unmanaged<PackedRGB24DirectChunkSource>.fromOpaque(info).release()
 }
 
-/// Matches ComparativeLab W2's materialization boundary: same-size sRGB draw into a
-/// premultiplied-last 32-bit buffer, then touch only the first and last output bytes.
+/// 与 ComparativeLab W2 的 materialization boundary 对齐：同尺寸 sRGB draw 到 premultiplied-last 32-bit buffer，然后只触碰输出首尾字节。
 func w2MaterializePixels(_ image: CGImage) throws -> UInt8 {
     guard image.width > 0, image.height > 0,
         let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)

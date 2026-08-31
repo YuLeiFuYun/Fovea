@@ -13,7 +13,7 @@ package struct FoveaSystemPressureReport: Equatable, Sendable {
     package let animation: AnimationPlaybackRuntimeReport
 }
 
-/// Serializes externally ordered system events across asynchronous side effects.
+/// 在异步副作用之间保持外部 system event 的既定顺序，避免 await 使处理次序发生倒置。
 package final class FoveaSystemOrderedEventExecutor<Event: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
     private var tail: Task<Void, Never>?

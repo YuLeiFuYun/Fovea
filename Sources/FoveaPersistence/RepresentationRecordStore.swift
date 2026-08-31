@@ -4,9 +4,8 @@ import Foundation
 import FoveaHTTP
 import FoveaStorage
 
-/// Read-only exact-variant index used by the hot authorization path.
-/// Persistent mutations remain serialized by `RepresentationRecordStore`; while one is in
-/// progress this index returns a miss so callers fall back to the actor-isolated full Vary path.
+/// 热授权路径使用的只读 exact-variant index。
+/// 持久化 mutation 仍由 `RepresentationRecordStore` 串行化；mutation 进行中 index 返回 miss，使调用方回退到 actor-isolated 完整 Vary 路径。
 private final class RepresentationRecordExactLookupIndex: @unchecked Sendable {
     private let lock = NSLock()
     private var recordsByBaseKey: [String: [RepresentationRecord]] = [:]

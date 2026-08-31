@@ -236,9 +236,8 @@ public protocol RepresentationRecordMaintaining: AnyObject, RepresentationRecord
 ///
 /// 外部 store provider 不需要实现；FoveaCore 在能力缺失时回退到基础键候选扫描。
 package protocol RepresentationRecordSnapshotLookingUp: RepresentationRecordStoring {
-    /// Returns already-persistently-validated, unique-variant candidates for the exact
-    /// base/namespace/generation when no durable mutation is in progress. `nil` means the caller
-    /// must fall back to the store actor and perform the full defensive validation path.
+    /// 没有 durable mutation 时，返回 exact base/namespace/generation 下已持久化验证且 variant 唯一的候选。
+    /// 返回 nil 表示调用方必须回退到 store actor，并执行完整防御性验证路径。
     func recordsSnapshot(
         for baseKeyDigest: String,
         namespaceFingerprint: StorageNamespaceFingerprint,

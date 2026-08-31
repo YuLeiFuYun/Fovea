@@ -142,8 +142,7 @@ package final class FoveaCompactSieveCache<Key: Hashable & Sendable, Value: Send
         }
     }
 
-    /// Trims resident entries to the requested total cost using the same SIEVE victim policy.
-    /// Returns keys actually evicted. The requested limit is clamped to this cache's fixed cap.
+    /// 使用同一 SIEVE victim policy 将驻留条目裁剪到请求总成本；返回实际驱逐的 key，并把请求上限夹到 cache 固定 cap。
     package func trimReportingEvictions(toCost requestedCost: Int) -> [Key] {
         atomic {
             let target = min(costLimit, max(0, requestedCost))

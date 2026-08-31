@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-/// H013 default-off progressive resource attribution transition.
+/// H013 默认关闭的 progressive resource attribution 状态转换。
 package enum FoveaProgressiveResourceTransition: String, Codable, Sendable {
     case baselineAfterSetup = "baseline-after-setup"
     case transportOwnerBegin = "transport-owner-begin"
@@ -22,11 +22,10 @@ package enum FoveaProgressiveResourceTransition: String, Codable, Sendable {
     case allRequestsDrained = "all-requests-drained"
 }
 
-/// One source-ordered H013 owner-state sample.
+/// 按 source 顺序记录的一次 H013 owner-state sample。
 ///
-/// Logical byte columns are accounting owners, not physical-page ownership. In particular,
-/// Data/CGImage/provider storage may alias allocator or framework pages. `taskPhysicalFootprintBytes`
-/// is therefore kept as an independent task-level observation rather than being subtracted here.
+/// logical byte 列表示 accounting owner，而非 physical-page ownership；Data/CGImage/provider storage 可能别名到 allocator 或 framework page。
+/// 因此 `taskPhysicalFootprintBytes` 作为独立 task-level 观测保留，不在这里做相减推导。
 package struct FoveaProgressiveResourceSample: Codable, Equatable, Sendable {
     package let sequence: UInt64
     package let uptimeNanoseconds: UInt64
@@ -63,12 +62,10 @@ package struct FoveaProgressiveResourceSnapshot: Codable, Equatable, Sendable {
     package let previewLogicalBytes: Int
 }
 
-/// Package-only, fixed-capacity H013 recorder.
+/// 仅 package 内使用、固定容量的 H013 recorder。
 ///
-/// Production construction paths pass `nil`, so they do not sample clocks/footprint or take this
-/// lock. The recorder deliberately accepts independent UUIDs for transport/relay/session/preview
-/// owners: the experiment needs simultaneous aggregate residency, not a new cross-layer identity
-/// contract.
+/// 生产构造路径传 nil，因此不会采样时钟/footprint，也不会获取此锁。recorder 有意接受 transport/relay/session/preview 各自独立 UUID：
+/// 实验要测的是同时聚合驻留，不是建立新的跨层 identity contract。
 package final class FoveaProgressiveResourceRecorder: @unchecked Sendable {
     package struct TaskFootprintObservation: Sendable {
         package let currentBytes: UInt64?
@@ -278,7 +275,7 @@ package final class FoveaProgressiveResourceRecorder: @unchecked Sendable {
             lock.unlock()
 
             guard reachedBarrier else { return }
-            // No waiter is resumed until after this sample, so no prepared final decode can start.
+            // 此 sample 完成前不恢复任何 waiter，因此 prepared final decode 不可能提前开始。
             mutate(.progressivePhaseBarrierReady) {}
             continuation.resume()
             for waiter in waitersToResume { waiter.resume() }
@@ -422,9 +419,8 @@ package final class FoveaProgressiveResourceRecorder: @unchecked Sendable {
     }
 }
 
-/// H013-only lifetime token for ImageCraft prepared state retained after progressive finish.
-/// The token is idempotent because decode/discard/cancellation paths may converge on the same
-/// one-shot ImageDecodePreparation.
+/// 仅 H013 使用的 lifetime token，用于 progressive finish 后仍保留的 ImageCraft prepared state。
+/// decode/discard/cancellation 路径可能汇合到同一个 one-shot `ImageDecodePreparation`，因此 token 必须幂等。
 package final class FoveaProgressivePreparationResourceLease: @unchecked Sendable {
     private let lock = NSLock()
     private let recorder: FoveaProgressiveResourceRecorder

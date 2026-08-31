@@ -93,8 +93,8 @@ final class ImageLoadCoordinator: Sendable {
             )
         }
 
-        // 已验证的渲染内存命中是成本最低的完整结果，应先于临时编码交接检查，
-        // 避免热命中无意义地进入磁盘支撑状态。
+        // 已验证的渲染内存命中已绑定当前 ContentID 与 namespace generation，是成本最低的完整结果；应先于临时编码交接检查，
+        // 避免同一已授权身份的热命中无意义地进入磁盘 I/O 支撑状态。
         if let rendered = try await renderedMemoryHit(
             request: request,
             generation: generation

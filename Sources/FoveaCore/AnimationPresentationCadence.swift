@@ -1,9 +1,7 @@
-/// Exact-boundary cadence candidate for animation presentation experiments.
+/// 动画展示实验的精确边界 cadence 候选。
 ///
-/// The alignment quantum is the greatest duration that divides both one second and every normalized source
-/// frame duration. Therefore an integer-FPS display cadence derived from it has an ideal sample boundary at
-/// every source-frame transition. This is only a recommendation: platform refresh quantization and scheduling
-/// still require physical-device timing and energy evidence before changing production defaults.
+/// 对齐量子取同时整除一秒和所有归一化源帧时长的最大时长，因此由它导出的整数 FPS cadence 在每个源帧切换点都有理想采样边界。
+/// 这只是建议值；修改生产默认值前，平台刷新量化与调度仍需真机时序和能耗证据。
 package struct AnimationPresentationCadenceRecommendation: Equatable, Sendable {
     package let alignmentQuantumNanoseconds: UInt64
 
@@ -21,8 +19,7 @@ package struct AnimationPresentationCadenceRecommendation: Equatable, Sendable {
         alignmentQuantumNanoseconds = quantum
     }
 
-    /// Returns an integer preferred FPS only when it reduces callback frequency below the supplied platform
-    /// maximum. Returning nil preserves the platform maximum-refresh behavior.
+    /// 只有整数 preferred FPS 能把回调频率降到给定平台上限以下时才返回它；返回 nil 表示保持平台最大刷新行为。
     package func preferredFramesPerSecond(maximumFramesPerSecond: Int) -> Int? {
         guard maximumFramesPerSecond > 1,
             1_000_000_000 % alignmentQuantumNanoseconds == 0

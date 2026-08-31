@@ -366,8 +366,7 @@ package enum DerivedRasterContainer {
         guard pixelData.count == compressed.decodedByteCount else {
             throw DerivedRasterContainerError.integrityMismatch
         }
-        // Creation/standalone validation has no authenticated outer content identity, so prove
-        // the decoded bytes as well. Record-backed loads already authenticate the full container.
+        // 创建/独立验证没有已认证的外层 content identity，因此还必须证明解码字节；record-backed load 已认证完整 container。
         if verifyDecodedPixelDigest || !parsed.outerContentDigestVerified,
             Data(SHA256.hash(data: pixelData)) != parsed.expectedPixelDigest
         {
@@ -540,13 +539,11 @@ package enum DerivedRasterContainer {
         return tableBytes.partialValue
     }
 
-    /// Validates only LZFSE's outer block framing; it intentionally does not expand pixels.
+    /// 只验证 LZFSE 外层 block framing，有意不展开像素。
     ///
-    /// The authenticated chunk range must contain one or more non-empty blocks followed by a
-    /// `bvx$` marker that lands exactly on the range end. For V1/V2 blocks, the encoded block
-    /// size is the header plus literal and L/M/D payload byte counts. Payload semantics remain
-    /// the Compression decoder's responsibility; this parser exists so its permissive handling
-    /// of bytes after `bvx$` cannot weaken the container's canonical exact-input contract.
+    /// 已认证 chunk 范围必须包含一个或多个非空 block，并以恰好落在范围末尾的 `bvx$` 标记结束。
+    /// V1/V2 的 encoded block 大小由 header 与 literal、L/M/D payload 字节数构成；payload 语义仍由 Compression decoder 负责。
+    /// 此 parser 的职责是阻止 decoder 对 `bvx$` 后尾随字节的宽松处理削弱 container 的 canonical exact-input 契约。
 
     /// 把一个已经通过外层 LZFSE frame canonicality 验证的独立 chunk 单步解码到
     /// 调用方最终目标 buffer。frame parser 证明 EOS 恰好落在 chunk 末尾；这里要求

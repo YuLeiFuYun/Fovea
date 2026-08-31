@@ -82,10 +82,9 @@
     }
 
     extension FoveaImageView {
-        /// Starts an in-memory synthetic animation for physical presentation diagnostics only.
+        /// 仅为真机 presentation 诊断启动内存 synthetic animation。
         ///
-        /// The fixture performs no network or codec work. It exists solely to exercise the real UIKit
-        /// presentation bridge, playback cursor, bounded provider, frame memory, and lifecycle gates.
+        /// fixture 不做 network 或 codec 工作，只用于经过真实 UIKit presentation bridge、playback cursor、有界 provider、frame memory 与 lifecycle gate。
         @_spi(BenchmarkDiagnostics)
         @MainActor
         public func startSyntheticAnimationPresentationBenchmark(
@@ -101,7 +100,7 @@
             )
         }
 
-        /// Benchmark-only opt-in for device cadence A/B. Product callers remain on maximum refresh.
+        /// 仅 benchmark 可选择 device cadence A/B；产品调用方仍保持 maximum refresh。
         @_spi(BenchmarkDiagnostics)
         @MainActor
         public func startSyntheticAnimationPresentationBenchmark(
@@ -123,7 +122,7 @@
             )
         }
 
-        /// Benchmark-only variable-duration timeline used by cross-player W5 scheduling experiments.
+        /// 仅 benchmark 使用的 variable-duration timeline，服务于跨 player 的 W5 scheduling 实验。
         @_spi(BenchmarkDiagnostics)
         @MainActor
         public func startSyntheticAnimationPresentationBenchmark(

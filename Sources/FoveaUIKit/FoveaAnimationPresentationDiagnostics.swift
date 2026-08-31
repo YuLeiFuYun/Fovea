@@ -1,10 +1,9 @@
 #if canImport(UIKit)
     import Foundation
 
-    /// Benchmark-only UIKit animation presentation diagnostics.
+    /// 仅 benchmark 使用的 UIKit animation presentation 诊断。
     ///
-    /// These counters describe the bounded newest-only display-target bridge. They intentionally do not
-    /// reinterpret timeline dropped frames, decoder work, or product success as display-refresh loss.
+    /// 这些计数器只描述有界 newest-only display-target bridge，不把 timeline dropped frame、decoder work 或产品成功误解释为 display-refresh loss。
     @_spi(BenchmarkDiagnostics)
     public struct FoveaAnimationPresentationDiagnosticsSnapshot: Equatable, Sendable {
         public let acceptedTargetCount: UInt64

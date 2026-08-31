@@ -142,16 +142,14 @@ final class RenderedImageCacheTests: XCTestCase {
             cache.insert(image, for: makeKey(index), cost: 40)
         }
 
-        // Large first-hit identities replace one another in a dedicated probation slot. They
-        // reclaim ordinary probation before forcing proven main eviction, so a long hero-image
-        // scan cannot masquerade as 100 independently proven main-cache residents.
+        // 大型 first-hit identity 在专用 probation slot 中彼此替换，并先回收普通 probation，再迫使 proven main 驱逐。
+        // 因而长 hero-image scan 不能伪装成 100 个分别得到证明的 main-cache resident。
         XCTAssertNotNil(cache.image(for: hot))
         XCTAssertNil(cache.image(for: lowValue))
         XCTAssertNil(cache.image(for: makeKey(2)))
         XCTAssertEqual(cache.currentCost, 100)
         XCTAssertEqual(cache.count, 2)
-        // Do not read the latest large identity: warning reclaim must still classify it as a
-        // first-hit owner and discard it before the proven main resident.
+        // 不读取最新大型 identity：warning reclaim 必须仍把它判为 first-hit owner，并先于 proven main resident 丢弃。
         let summary = cache.reclaimLowValueAndReport()
         XCTAssertEqual(summary.itemCount, 1)
         XCTAssertEqual(summary.costBytes, 40)
@@ -223,8 +221,7 @@ final class RenderedImageCacheTests: XCTestCase {
         }
         XCTAssertEqual(cache.count, 16)
 
-        // Reuse must participate in the identity-only governor. Count pressure may evict one
-        // cold proven resident, but it must not override the main SIEVE by forcing out a hot key.
+        // reuse 必须参与 identity-only governor；count pressure 可以驱逐一个 cold proven resident，但不能覆盖 main SIEVE 而强制驱逐 hot key。
         XCTAssertNotNil(cache.image(for: keys[0]))
         cache.insert(image, for: keys[16], cost: 320 * 240 * 4)
         XCTAssertNotNil(cache.image(for: keys[16]))

@@ -105,10 +105,8 @@ extension PipelineFailure {
         if error == .progressiveSessionCancelled {
             return cancelled(stage: stage)
         }
-        // ImageCraft is an independently versioned exact-pin dependency. New public error cases
-        // must fail closed without making a candidate pin source-incompatible with Fovea. Equality
-        // classification avoids both an old-pin unreachable-default diagnostic and a newer-pin
-        // non-exhaustive-switch diagnostic under warnings-as-errors.
+        // ImageCraft 是独立版本化的 exact-pin 依赖；新增 public error case 必须失败关闭，但不能让候选 pin 与 Fovea 源码不兼容。
+        // 这里用 equality 分类，同时避开旧 pin 的 unreachable-default 和新 pin 的 non-exhaustive-switch warnings-as-errors 诊断。
         return unexpectedImageCraftFailure(error, stage: stage)
     }
 

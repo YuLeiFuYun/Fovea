@@ -8,12 +8,10 @@ package struct AnimationPresentationTargetBufferSnapshot: Equatable, Sendable {
     package let lastAcceptedTarget: UInt64?
 }
 
-/// Bounded newest-only buffer for externally supplied presentation timestamps.
+/// 外部 presentation timestamp 的有界 newest-only 缓冲区。
 ///
-/// The buffer accepts strictly increasing monotonic targets, retains at most one pending target, and never
-/// replays an older callback after a newer refresh prediction arrives. Clearing pending work intentionally
-/// preserves the monotonic high-water mark across lifecycle pauses. Counters are saturating so diagnostics
-/// cannot introduce a new overflow failure mode during long-lived playback.
+/// 只接受严格递增的单调 target，最多保留一个 pending target；新刷新预测到达后绝不重放旧回调。
+/// 清除 pending 工作时有意跨生命周期暂停保留单调高水位；计数器采用饱和语义，避免长时播放的诊断逻辑引入新的溢出故障。
 package struct AnimationPresentationTargetBuffer: Sendable {
     private var lastAcceptedTarget: UInt64?
     private var pendingTarget: UInt64?

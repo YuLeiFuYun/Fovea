@@ -227,9 +227,8 @@ extension PipelineCache {
             generation: generation,
             executionDigest: request.fetchExecutionKey.digestHex
         )
-        // The common warm-disk path has no transient transport handoff. Avoid dispatching an
-        // asynchronous file-I/O work item merely to discover an index miss; `entry` remains the
-        // authoritative read after a positive snapshot and safely handles concurrent removal.
+        // 常见 warm-disk 路径没有 transient transport handoff；不要仅为发现 index miss 就派发异步 file I/O。
+        // positive snapshot 之后仍以 `entry` 为权威读取，并由它安全处理并发删除。
         guard transportVerifiedHandoffs.contains(key) else { return nil }
         let entry: TransportVerifiedEncodedHandoffEntry
         do {

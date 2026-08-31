@@ -458,9 +458,8 @@ final class HTTPImageResponseProcessor: Sendable {
         }
     }
 
-    /// Refresh a validated-original record after a bodyless 304 without entering the pixel domain.
-    /// Returns `false` only when the retained original can no longer be read, allowing the caller
-    /// to perform one bounded unconditional validated-original recovery.
+    /// bodyless 304 后只刷新 validated-original record，不进入像素域；仅当已保留 original 无法再读取时返回 false，
+    /// 让调用方执行一次有界的无条件 validated-original 恢复。
     func refreshValidatedOriginalOnly304(
         _ response: TimedTransportResponse,
         existing: RepresentationRecord,

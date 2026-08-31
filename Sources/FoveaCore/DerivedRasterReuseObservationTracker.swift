@@ -1,11 +1,9 @@
 import FoveaStorage
 
-/// Bounded, process-local demand history for exact derived-raster identities.
+/// 精确 derived-raster identity 的有界进程内需求历史。
 ///
-/// This is deliberately observational rather than predictive: a derived artifact may only be
-/// admitted after enough authoritative original-cache reuses have actually occurred. Rejections
-/// feed a retry threshold back into the tracker so an expensive candidate is not recompressed on
-/// every warm-disk hit while its observed cohort is still below break-even.
+/// 该历史只做观测而不做预测：只有真实发生足够多次权威 original-cache reuse 后才允许派生 artifact 准入。
+/// 拒绝结果会把 retry 阈值反馈给 tracker，避免在观察 cohort 仍低于 break-even 时每次 warm-disk hit 都重复压缩昂贵候选。
 package actor DerivedRasterReuseObservationTracker {
     package struct Observation: Equatable, Sendable {
         package let hitCount: Int
@@ -49,7 +47,7 @@ package actor DerivedRasterReuseObservationTracker {
                 lastAccessSequence: accessSequence
             )
         guard entry.namespaceFingerprint == namespaceFingerprint else {
-            // A SHA-256 identity collision across namespaces must never merge observations.
+            // 即使发生跨 namespace 的 SHA-256 identity 碰撞，也绝不能合并观测。
             return Observation(hitCount: 1, shouldAttemptCreation: true)
         }
         entry.hitCount = Self.saturatingIncrement(entry.hitCount)

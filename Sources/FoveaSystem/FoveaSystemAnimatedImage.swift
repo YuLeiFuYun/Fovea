@@ -36,9 +36,8 @@ extension FoveaSystemPipeline {
         )
     }
 
-    /// Creates an encoded animation handle with fail-closed automatic whole-track admission.
-    /// The preparer must supply a conservative full-track decoded-byte upper bound; otherwise the
-    /// runtime keeps the bounded-frame-cache strategy.
+    /// 创建带失败关闭自动整轨准入的 encoded animation handle；preparer 必须提供保守的整轨解码字节上界，
+    /// 否则 runtime 继续使用 bounded-frame-cache 策略。
     package func makeEncodedAnimationHandle(
         for request: ImageRequest,
         using preparer: any EncodedAnimationPlaybackPreparing,

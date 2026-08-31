@@ -74,7 +74,7 @@ final class T100DecodeExecutionAdoptionTests: XCTestCase {
                 } as Int
             XCTFail("throwing operation must propagate")
         } catch T100DecodeExecutionTestError.expected {
-            // Expected.
+            // 预期异常路径。
         }
         let localUsedUnitsAfterThrow = await localDecode.usedUnits
         let globalUsedUnitsAfterThrow = await globalDecode.usedUnits
@@ -173,7 +173,7 @@ final class T100DecodeExecutionAdoptionTests: XCTestCase {
                 } as Int
             XCTFail("throwing operation must propagate")
         } catch T100DecodeExecutionTestError.expected {
-            // Expected.
+            // 预期异常路径。
         }
         snapshot = await recorder.snapshot()
         XCTAssertEqual(snapshot.completedOperationCount, 1)

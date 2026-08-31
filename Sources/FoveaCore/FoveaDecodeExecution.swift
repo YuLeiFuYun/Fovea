@@ -2,6 +2,8 @@ import Dispatch
 import Foundation
 import ImageCraftCore
 
+/// 解码执行层只记录 codec 终态诊断并承接完整帧执行；网络获取、缓存授权与资源估算仍由各自上游阶段持有。
+/// 这样 permit 生命周期与像素后验验证可在同一执行边界闭合，而不会把跨层 authority 混入诊断代码。
 package enum FoveaDecodeDiagnostics {
     package static func recordCompleted(
         diagnostics: any DiagnosticsSink,

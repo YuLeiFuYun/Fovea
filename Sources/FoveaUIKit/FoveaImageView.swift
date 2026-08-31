@@ -74,8 +74,7 @@
             retentionPolicy = retention
             if !forceReload, displaySession.isCurrentIdentity(request.displayIdentity) {
                 if case .cancelled = displaySession.phase {
-                    // A loader-originated cancellation is terminal for the old task but the same
-                    // display identity remains restartable by an explicit setImage call.
+                    // loader 发起的取消会终止旧任务，但相同 display identity 仍允许显式 setImage 再次启动。
                 } else {
                     return
                 }
@@ -216,8 +215,7 @@
             animationPresenter?.effectiveVisibilityForTesting
         }
 
-        /// Benchmark-only callback emitted after the presenter commits a decoded animation frame to UIImageView.
-        /// Product callers have no access to this hook and nil remains the default.
+        /// 仅 benchmark 使用的 callback，在 presenter 把已解码动画帧提交到 UIImageView 后发出；产品调用方不可访问，默认仍为 nil。
         @_spi(BenchmarkDiagnostics)
         public var animationBenchmarkPresentationHandler:
             (@MainActor @Sendable (Int, UInt64) -> Void)?
@@ -229,7 +227,7 @@
             }
         }
 
-        /// Benchmark-only snapshot of UIKit display-target coalescing and lifecycle state.
+        /// 仅 benchmark 使用的 UIKit display-target coalescing 与 lifecycle state snapshot。
         @_spi(BenchmarkDiagnostics)
         public var animationPresentationDiagnostics: FoveaAnimationPresentationDiagnosticsSnapshot?
         {

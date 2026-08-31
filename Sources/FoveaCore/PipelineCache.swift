@@ -85,8 +85,7 @@ final class PipelineCache: Sendable {
             )
         {
             guard await candidateCountIsAllowed(fast.count) else { return [] }
-            // Package-only snapshot providers guarantee persistently validated, exact-scope,
-            // unique-variant records. Avoid revalidating the same immutable metadata on every hit.
+            // package-only snapshot provider 保证 record 已持久化验证、scope 精确且 variant 唯一，因此不在每次命中时重复验证同一份不可变 metadata。
             return fast
         }
 

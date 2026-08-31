@@ -177,7 +177,7 @@ private enum FoveaAnimationCompositorLab {
         }
         try Data("\(playbackStart)\n".utf8).write(to: startURL, options: .atomic)
 
-        // The observer stops at 6.1s; retain the presentation for extra teardown headroom.
+        // observer 在 6.1 秒停止；继续保留 presentation 一小段时间，为 teardown 留出额外余量。
         try await Task.sleep(nanoseconds: 6_600_000_000)
         let diagnostics = imageView.animationPresentationDiagnostics
         let compositorActive = imageView.animationCompositorPresentationActiveForTesting == true

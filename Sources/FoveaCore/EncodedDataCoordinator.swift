@@ -261,8 +261,7 @@ final class EncodedDataCoordinator: Sendable {
     }
 }
 
-/// Owns reusable-original prefetch policy and resumable transport state without decoding pixels.
-/// This keeps ImageLoadCoordinator focused on display-oriented orchestration.
+/// 持有 reusable-original prefetch policy 与 resumable transport state，但不解码像素；这样 ImageLoadCoordinator 只负责面向展示的编排。
 final class ValidatedOriginalPrefetchCoordinator: Sendable {
     private enum Reuse {
         case fresh

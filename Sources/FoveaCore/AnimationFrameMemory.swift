@@ -9,9 +9,8 @@ package enum AnimationFrameStrategy: String, Codable, Hashable, Sendable {
     case predecodeAll
 }
 
-/// Chooses the concrete cache/decode strategy for an encoded animation after decoder preparation.
-/// `automaticWholeTrack` never guesses pixel cost: it requires a preparer-supplied whole-track
-/// decoded-byte upper bound and otherwise falls back to `.boundedFrameCache`.
+/// decoder 准备完成后选择编码动画的具体缓存/解码策略。
+/// `automaticWholeTrack` 不猜测像素成本；只有 preparer 提供整轨解码字节上界时才启用，否则失败关闭到 `.boundedFrameCache`。
 package enum AnimationFrameStrategySelection: Equatable, Sendable {
     case fixed(AnimationFrameStrategy)
     case automaticWholeTrack(
@@ -80,9 +79,8 @@ package struct AnimationFrameMemoryKey: Hashable, Sendable {
     }
 }
 
-/// A reference-counted pin lease. Pixel bytes stay charged to `AnimationFrameMemory` until every
-/// lease for the same keys is released. Release is synchronous and idempotent so platform
-/// presentation objects can make budget ownership follow their exact lifetime.
+/// 引用计数的 pin lease：同一组 key 的全部 lease 释放前，像素字节始终计入 `AnimationFrameMemory`。
+/// 释放操作同步且幂等，使平台 presentation 对象的预算所有权精确跟随其生命周期。
 package final class AnimationFrameMemoryPinLease: @unchecked Sendable {
     package let frames: [DecodedImage]
     package let byteCost: Int
@@ -154,9 +152,8 @@ package final class AnimationFrameMemory: @unchecked Sendable {
         lock.withLock { insertLocked(image, for: key) }
     }
 
-    /// Pins a complete ordered key set only if every frame is currently resident. The transfer from
-    /// ordinary SIEVE entries to pinned entries does not change total charged bytes. Multiple leases
-    /// over the same key share one charged pixel entry through a reference count.
+    /// 仅当完整有序 key 集合的每一帧都已驻留时才 pin；普通 SIEVE 条目转为 pinned 条目不会改变总计费字节。
+    /// 同一 key 的多个 lease 通过引用计数共享一份已计费像素条目。
     package func pinResidentFrames(
         for keys: [AnimationFrameMemoryKey]
     ) -> AnimationFrameMemoryPinLease? {
@@ -208,9 +205,8 @@ package final class AnimationFrameMemory: @unchecked Sendable {
         }
     }
 
-    /// Reserves non-evictable provider-retained bytes in the same animation resident budget as
-    /// decoded frames. Ordinary SIEVE entries may be evicted to make room, but active pins and other
-    /// provider reservations cannot be displaced. The reservation is keyed by handle identity.
+    /// provider 保留字节与解码帧共用动画驻留预算，并作为不可驱逐资源预留。
+    /// 空间不足时可驱逐普通 SIEVE 条目，但不能挤掉活动 pin 或其他 provider 预留；预留项以 handle identity 为键。
     package func reserveExternalRetainedCost(_ cost: Int, for identifier: UUID) -> Bool {
         guard cost >= 0 else { return false }
         return lock.withLock {
@@ -279,13 +275,11 @@ package final class AnimationFrameMemory: @unchecked Sendable {
         }
     }
 
-    /// Pixel-frame cost only. Provider-retained reservations are exposed separately so existing
-    /// frame-memory diagnostics keep their established meaning.
+    /// 这里只返回像素帧成本；provider 保留预留单独暴露，以维持既有帧内存诊断语义。
     package var currentCost: Int { lock.withLock { frameCostLocked } }
     package var count: Int { lock.withLock { storage.count + pinnedEntries.count } }
-    /// Maximum additional decoded whole-track byte cost after active presentation pins and
-    /// provider-retained reservations. Ordinary SIEVE entries are intentionally excluded because
-    /// they can be evicted to make room for a newly admitted whole track.
+    /// 扣除活动 presentation pin 与 provider 保留预留后，还可接纳的最大整轨解码字节成本。
+    /// 普通 SIEVE 条目可为新整轨腾出空间，因此有意不计入这一不可驱逐额度。
     package var availableWholeTrackAdmissionCost: Int {
         lock.withLock { max(0, costLimit - pinnedCost - externalRetainedCost) }
     }
@@ -311,8 +305,7 @@ package final class AnimationFrameMemory: @unchecked Sendable {
         for key: AnimationFrameMemoryKey
     ) -> [AnimationFrameMemoryKey] {
         if pinnedEntries[key] != nil {
-            // A pinned frame is immutable for the lease lifetime. Session planning treats it as cached,
-            // so a replacement indicates stale duplicate work; keep the pinned identity authoritative.
+            // pinned 帧在 lease 生命周期内不可变，session 规划也把它视为已缓存；此时替换说明存在陈旧重复工作，因此以 pinned identity 为权威。
             return []
         }
         storage.remove(key)

@@ -179,8 +179,7 @@ final class DerivedRasterLoadCoordinator: Sendable {
     }
 }
 
-/// Reads and validates persisted derived artifacts without participating in HTTP reuse authority.
-/// The caller still performs live representation/namespace authorization before publication.
+/// 读取并验证持久化 derived artifact，但不参与 HTTP reuse authority；发布前仍由调用方执行实时 representation/namespace 授权。
 struct DerivedRasterArtifactReader: Sendable {
     let store: any DerivedRasterStoring
     let diagnostics: any DiagnosticsSink
@@ -206,8 +205,7 @@ struct DerivedRasterArtifactReader: Sendable {
         } catch is CancellationError {
             throw CancellationError()
         } catch {
-            // A corrupt/stale memory value is local to this tier. A durable alias is deleted only
-            // after an independent store read fails validation.
+            // 损坏或陈旧的内存值只属于本层；只有独立 store 读取也验证失败后，才删除 durable alias。
             hotArtifacts.remove(key)
             return nil
         }
@@ -341,8 +339,7 @@ struct ReusableImageLookup {
     let image: DecodedImage?
 }
 
-/// Resolves the reusable-image hierarchy for one already-authorized namespace generation.
-/// Selection, rendered memory, derived raster and original encoded reuse remain ordered explicitly.
+/// 为已授权的单一 namespace generation 解析可复用图像层级；selection、rendered memory、derived raster 与原始 encoded reuse 的顺序保持显式。
 struct ReusableImageLookupCoordinator: Sendable {
     let cache: PipelineCache
     let fetchStage: FetchStage

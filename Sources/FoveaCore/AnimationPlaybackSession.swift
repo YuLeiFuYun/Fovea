@@ -125,8 +125,7 @@ package actor AnimationPlaybackSession {
         }
     }
 
-    /// Revalidates an automatic whole-track admission against current non-evictable pinned bytes.
-    /// On failure this session permanently falls back to its bounded window policy.
+    /// 针对当前不可驱逐的 pinned 字节重新验证自动整轨准入；失败后，本 session 永久回退到有界窗口策略。
     package func revalidateAutomaticWholeTrackAdmission(
         residentDecodedByteCostUpperBound: Int
     ) -> Bool {
@@ -193,9 +192,8 @@ package actor AnimationPlaybackSession {
         return frameMemory.image(for: key)
     }
 
-    /// Returns an immutable whole-track snapshot only when the existing predecode-all policy
-    /// has already left every frame resident under the shared frame-memory budget.
-    /// This method never asks the provider to decode and never inserts cache entries.
+    /// 仅当既有 predecode-all 策略已使每一帧都在共享帧内存预算内驻留时，才返回不可变整轨 snapshot。
+    /// 此方法不会要求 provider 解码，也不会插入缓存条目。
     package func effectivePlaybackStartNanosecondsForPresentation(
         at monotonicNanoseconds: UInt64
     ) -> UInt64? {

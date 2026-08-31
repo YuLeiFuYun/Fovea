@@ -93,25 +93,22 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
 
     private static let defaultProbationCostLimit = 16 * 1024 * 1024
     private static let defaultProbationCountLimit = 16
-    // Cardinality mirrors the byte-side complete-probation-window invariant: every identity
-    // admitted by one maximum-cardinality ordinary probation window can promote without a
-    // count-driven loss, while proven main does not reserve extra identity slots by default.
+    // cardinality 与字节侧完整 probation-window invariant 对齐：最大基数普通 probation window 接纳的每个 identity 都能提升而不因 count 丢失；
+    // 已证明 main 默认不额外预留 identity slot。
     private static let defaultMainCountLimit = defaultProbationCountLimit
 
     private let coordinationLock = NSLock()
     private let probation: FoveaCompactSieveCache<RenderedImageCacheKey, Resident>
     private let largeProbation: FoveaCompactSieveCache<RenderedImageCacheKey, Resident>
     private let main: ShardedMemoryCache<RenderedImageCacheKey, Resident>?
-    // Identity-only SIEVE governor mirrors proven-main reuse without duplicating image values.
-    // A main hit marks the identity visited here as well, so count pressure cannot override the
-    // reuse signal already observed by the byte-bounded main SIEVE.
+    // identity-only SIEVE governor 在不复制图像值的前提下镜像 proven-main reuse；main hit 也会标记 identity 已访问，
+    // 因而 count pressure 不能覆盖 byte-bounded main SIEVE 已观察到的 reuse 信号。
     private let mainCountGovernor: FoveaCompactSieveCache<RenderedImageCacheKey, Bool>?
     private let totalCostLimit: Int
     private let probationCostLimit: Int
     private let mainBaseCostLimit: Int
-    /// The proven main identity whose promotion/replacement currently justifies borrowing the
-    /// otherwise-unused probation budget. Keeping the key lets remove/revoke end the loan exactly
-    /// when its causal resident disappears instead of leaving main expanded behind a stale bool.
+    /// 当前因 promotion/replacement 而有资格借用未使用 probation budget 的 proven-main identity。
+    /// 保留具体 key，使 remove/revoke 能在因果 resident 消失时精确结束借用，而不是让 stale bool 使 main 长期扩张。
     private var expandedMainBudgetOwnerKey: RenderedImageCacheKey?
 
     package init(costLimit: Int, probationCostLimit requestedProbationCostLimit: Int? = nil) {
@@ -142,9 +139,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
             costLimit: selectedProbation,
             countLimit: Self.defaultProbationCountLimit
         )
-        // Residents too large for the ordinary probation window still need a first-use stage.
-        // Keep exactly one such identity so repeated large one-off images replace each other
-        // instead of masquerading as proven main-cache reuse.
+        // 超出普通 probation window 的 resident 仍需要 first-use 阶段；只保留一个此类 identity，使重复的大型一次性图像彼此替换，
+        // 不能伪装成 proven main-cache reuse。
         largeProbation = FoveaCompactSieveCache(
             costLimit: normalizedTotal,
             countLimit: 1
@@ -261,9 +257,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
         )
     }
 
-    /// Memory-warning fast reclaim: discard both ordinary and large first-hit probation residents
-    /// while preserving identities that proved a real second use. Proven main may temporarily
-    /// borrow otherwise-unused probation budget; warning pressure ends that loan as well.
+    /// memory warning 快速回收会丢弃普通与大型 first-hit probation resident，同时保留已证明真实二次使用的 identity。
+    /// proven main 可临时借用未使用的 probation budget；warning pressure 也会结束这笔借用。
     package func reclaimLowValueAndReport() -> RenderedImageCacheRemovalSummary {
         coordinationLock.lock()
         let probationSummary = probation.removeAllAndReport()
@@ -302,10 +297,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
     ) -> DecodedImage? {
         guard let main else { return probationResident.image }
 
-        // Misses never need the cross-segment lock. A probation hit takes it only to linearize
-        // promotion against remove/insert. If the entry is removed while waiting, returning the
-        // already-observed resident remains linearizable before that removal, but it is not
-        // resurrected into main.
+        // miss 不需要 cross-segment lock；probation hit 只为把 promotion 与 remove/insert 线性化才获取它。
+        // 若等待期间条目被删除，返回已观察到的 resident 仍可线性化在删除之前，但不会把它复活进 main。
         coordinationLock.lock()
         defer { coordinationLock.unlock() }
         if let resident = main.value(for: key) {
@@ -317,10 +310,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
         }
 
         restoreMainBaseBudgetIfNeededLocked(main)
-        // Every ordinary probation resident is bounded by probationCostLimit, which is never
-        // larger than mainBaseCostLimit when a main segment exists. A separate identity-only
-        // SIEVE governor bounds proven-main cardinality without shrinking the byte window needed
-        // by W2's small set of larger residents.
+        // 每个普通 probation resident 都受 probationCostLimit 约束；存在 main segment 时该上限不会大于 mainBaseCostLimit。
+        // 独立 identity-only SIEVE governor 约束 proven-main cardinality，同时不缩小 W2 少量较大 resident 所需的字节窗口。
         admitOrdinaryMainResidentLocked(resident, for: key, main: main)
         probation.remove(key)
         return resident.image
@@ -341,9 +332,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
             return largeProbationResident.image
         }
 
-        // A real lookup is the second-use evidence that admits a large first-hit resident to main.
-        // Remove the low-confidence owner first, then let proven main borrow the otherwise-unused
-        // probation budget until the next ordinary first-hit insertion restores the normal split.
+        // 真实 lookup 是允许大型 first-hit resident 进入 main 的二次使用证据；先移除低置信 owner，再让 proven main 借用未使用的 probation budget，
+        // 直到下一次普通 first-hit insertion 恢复正常分区。
         mainCountGovernor?.remove(key)
         largeProbation.remove(key)
         placeResidentUsingBorrowedProbationBudgetLocked(resident, for: key, main: main)
@@ -369,8 +359,7 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
         guard main.value(for: key) != nil else { return false }
         _ = mainCountGovernor?.value(for: key)
 
-        // Once an identity has earned main residency, replacement keeps that evidence rather
-        // than demoting it merely because a new DecodedImage instance was produced.
+        // identity 一旦获得 main residency，replacement 会保留这份复用证据，不会仅因产生新的 DecodedImage instance 就降级。
         probation.remove(key)
         discardLargeProbationLocked(main)
         if resident.cost <= mainBaseCostLimit {
@@ -440,9 +429,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
             _ = restoreMainBaseBudgetIfNeededLocked(main)
         }
 
-        // The large first-hit resident remains a probation owner. Reserve exactly enough of the
-        // global budget for it, shrinking proven main only when total capacity actually requires
-        // that tradeoff. A later large first hit replaces this one-slot low-confidence owner.
+        // 大型 first-hit resident 仍是 probation owner；只从全局预算预留恰好足够的空间，确有容量需求时才缩小 proven main。
+        // 后续大型 first hit 会替换这个单槽低置信 owner。
         let availableForMain = totalCostLimit - resident.cost
         let currentMainCost = main.currentCost
         if currentMainCost > availableForMain {

@@ -230,13 +230,11 @@ extension FoveaPipeline {
         return removed.itemCount + removedHotContainers
     }
 
-    /// Comparative-Lab-only full in-memory cache reset.
+    /// 仅 Comparative Lab 使用的完整内存 cache reset。
     ///
-    /// `purgeMemoryCache()` clears currently retained transport-verified handoffs but keeps that
-    /// transient tier usable for future requests. A benchmark `warm-disk` boundary is stricter:
-    /// it invalidates the transient handoff store for the remainder of the pipeline lifetime so
-    /// later preparation/timed loads cannot repopulate a reusable in-memory representation.
-    /// Keep that stronger semantic behind SPI instead of silently changing the public API.
+    /// `purgeMemoryCache()` 会清除当前 transport-verified handoff，但 transient tier 仍可用于后续请求；benchmark 的 `warm-disk` 边界更严格，
+    /// 它会在 pipeline 剩余生命周期内失效 transient handoff store，防止之后的 preparation/timed load 再填充可复用内存 representation。
+    /// 这种更强语义保留在 SPI 后面，避免静默改变 public API。
     @_spi(FoveaBenchmarking)
     public func purgeMemoryStateForBenchmarking() async {
         _ = await purgeMemoryCache()

@@ -224,9 +224,8 @@ final class ImageDeliveryCoordinator: Sendable {
             )
         }
         try Task.checkCancellation()
-        // Derived output stays in the bounded compressed-hot tier. Do not duplicate it into the
-        // rendered cache: the returned CGImage is display-lazy and retaining it there would add
-        // alias/fence work while overcharging memory as if full decoded pixels were resident.
+        // derived output 只留在有界 compressed-hot tier，不复制进 rendered cache：返回的 CGImage 是 display-lazy，
+        // 若在此额外持有会增加 alias/fence 工作，并按完整解码像素驻留错误高估内存。
         try await requireActive(generation, for: request.namespace)
         return loaded.image
     }
@@ -419,8 +418,7 @@ final class ImageDeliveryCoordinator: Sendable {
     }
 }
 
-/// Completes the transient transport-verified handoff boundary: trust image bytes first,
-/// then persist the reusable original only after namespace/cancellation fences still hold.
+/// 完成 transient transport-verified handoff 边界：先确认图像字节可信，只有 namespace/cancellation fence 仍成立后才持久化 reusable original。
 struct TransportVerifiedHandoffDelivery: Sendable {
     let cache: PipelineCache
     let fetchStage: FetchStage
@@ -500,7 +498,7 @@ struct TransportVerifiedHandoffDelivery: Sendable {
             )
             throw failure
         } catch is CancellationError {
-            // Subscriber cancellation does not prove the encoded bytes invalid.
+            // subscriber 取消只说明该订阅终止，并不能证明 encoded bytes 无效。
             throw CancellationError()
         } catch {
             await cache.removeTransportVerifiedHandoff(for: request, generation: generation)

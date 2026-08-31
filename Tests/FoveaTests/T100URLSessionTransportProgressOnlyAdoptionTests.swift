@@ -131,7 +131,7 @@ final class T100URLSessionTransportProgressOnlyAdoptionTests: XCTestCase {
             _ = try await task.value
             XCTFail("Cancelled progress-only transport unexpectedly completed")
         } catch is CancellationError {
-            // Expected stable Swift cancellation boundary.
+            // 预期稳定的 Swift cancellation boundary。
         } catch {
             XCTFail("Expected CancellationError, got \(error)")
         }
@@ -186,7 +186,7 @@ final class T100URLSessionTransportProgressOnlyAdoptionTests: XCTestCase {
             _ = try await task.value
             XCTFail("Cancelled materializing transport unexpectedly completed")
         } catch is CancellationError {
-            // Expected stable Swift cancellation boundary.
+            // 预期稳定的 Swift cancellation boundary。
         } catch {
             XCTFail("Expected CancellationError, got \(error)")
         }

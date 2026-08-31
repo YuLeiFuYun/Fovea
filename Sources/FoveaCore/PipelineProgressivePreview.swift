@@ -81,8 +81,8 @@ final class TransportProgressRelay: @unchecked Sendable {
             transportAfterCallbackBytes = accumulatorMemoryBytes
         case .complete(let digestHex, let byteCount):
             pendingCompletion = (digestHex, byteCount)
-            // URLSessionTransport constructs/materializes TransportResponse before emitting
-            // `.complete`, so the full encoded response is a live host-visible owner here.
+            // URLSessionTransport 在发出 `.complete` 前已经构造/物化 TransportResponse，因此完整 encoded response 此时仍是 host 可见的 live owner。
+            // 资源诊断必须把这段生命周期计入 callback 前后，不能把 `.complete` 误当成 encoded bytes 已经释放。
             transportBeforeCallbackBytes = max(0, byteCount)
             transportAfterCallbackBytes = max(0, byteCount)
         }

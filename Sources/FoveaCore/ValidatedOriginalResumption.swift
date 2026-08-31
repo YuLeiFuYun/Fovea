@@ -1,6 +1,7 @@
 import Foundation
 import FoveaHTTP
 
+/// 续传键把请求 execution、namespace 与 generation 绑定；任一身份变化都禁止复用旧的已验证前缀。
 package struct ValidatedOriginalResumeKey: Hashable, Sendable {
     package let executionDigest: String
     package let namespace: SecurityNamespaceID
@@ -49,6 +50,8 @@ package struct FetchByteRangeResume: Sendable {
     }
 }
 
+/// 续传 validator 优先使用可安全用于 If-Range 的 strong ETag；弱 ETag 不提供字节身份保证，因此拒绝。
+/// 缺少 strong ETag 时才退回 Last-Modified，由后续 Content-Range 与总长度检查继续失败关闭。
 package enum ValidatedOriginalResumeValidator {
     package static func value(in head: TransportResponseHead) -> String? {
         if let etag = head.value(forHeader: "ETag")?

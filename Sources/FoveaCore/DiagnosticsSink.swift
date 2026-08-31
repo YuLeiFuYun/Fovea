@@ -21,10 +21,8 @@ public protocol DiagnosticsSink: Sendable {
     func record(_ event: DiagnosticEvent) async
 }
 
-/// Benchmark-only escape hatch for a recorder whose `record` implementation is itself bounded,
-/// nonblocking, and safe to execute inline. Ordinary external sinks must not adopt this SPI: the
-/// production pipeline otherwise inserts `BufferedDiagnosticsRelay` to prevent observability from
-/// delaying image delivery.
+/// 仅 benchmark 可用的 inline recorder 逃生口：`record` 实现自身必须有界、非阻塞且可安全内联执行。
+/// 普通外部 sink 不得采用此 SPI；生产 pipeline 会插入 `BufferedDiagnosticsRelay`，防止 observability 延迟图像交付。
 @_spi(FoveaBenchmarking)
 public protocol InlineBenchmarkDiagnosticsSink: DiagnosticsSink {}
 
@@ -194,10 +192,8 @@ package func pipelineDiagnosticsSink(
     _ sink: any DiagnosticsSink
 ) -> any DiagnosticsSink {
     if sink is NullDiagnosticsSink { return sink }
-    // Explicit benchmark lifecycle tracing needs emit-site timestamps. DiagnosticEvent already
-    // validates every dynamic field (including requiring keyDigest to be lowercase SHA-256); the
-    // benchmark adapter re-correlates that digest after workload timing before exporting a sidecar.
-    // All ordinary external sinks retain the production redaction + buffered-relay boundary.
+    // 显式 benchmark 生命周期 tracing 需要 emit-site timestamp。DiagnosticEvent 已验证全部动态字段，包括 keyDigest 必须为小写 SHA-256；
+    // benchmark adapter 在 workload 计时后重新关联该 digest 再导出 sidecar，普通外部 sink 仍保留生产脱敏与 buffered-relay 边界。
     if sink is any InlineBenchmarkDiagnosticsSink { return sink }
     return RedactingDiagnosticsSink(downstream: nonBlockingDiagnosticsSink(sink))
 }

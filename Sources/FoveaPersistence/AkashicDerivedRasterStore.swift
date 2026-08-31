@@ -143,9 +143,8 @@ package actor AkashicDerivedRasterStore: DerivedRasterStoring {
         let base = try await FileBlobStore.open(
             root: root.appendingPathComponent("blobs", isDirectory: true),
             limits: FileBlobStoreLimits(
-                // Fovea owns alias-aware eviction. Akashic receives one-blob commit headroom so its
-                // lower-level trim cannot invalidate a still-published Fovea alias before the new
-                // alias has crossed every publication fence.
+                // alias-aware eviction 由 Fovea 持有；给 Akashic 一个 blob 的 commit headroom，避免其低层 trim 在新 alias 越过全部 publication fence 前，
+                // 就使仍已发布的 Fovea alias 失效。
                 softTotalBytes: limits.underlyingSoftTotalBytes,
                 maximumBlobBytes: limits.maximumBlobBytes
             )
@@ -180,9 +179,8 @@ package actor AkashicDerivedRasterStore: DerivedRasterStoring {
         let record = indexed.record
         let digest = indexed.containerDigest
         let partition = try cachedPartition(namespaceFingerprint)
-        // Mark the alias before touching disk so a concurrent trim sees the access and grants
-        // its second chance. A post-read index check clears the bit if a concurrent mutation
-        // removed/replaced this alias while the blob read was in flight.
+        // 触盘前先标记 alias，使并发 trim 能观察访问并给予 second chance；读取后再检查 index，
+        // 若 blob read 期间并发 mutation 已删除或替换该 alias，则清除此访问位。
         recentAccess.insert(artifactKeyDigest)
         let container: Data
         do {

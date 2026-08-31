@@ -7,10 +7,9 @@
         case timelineAlignedExperiment
     }
 
-    /// Converts UIKit display refresh callbacks into newest-only Fovea presentation ticks.
+    /// 把 UIKit display refresh callback 转为 Fovea newest-only presentation tick。
     ///
-    /// `CADisplayLink` can continue firing while decoding or publication is suspended. The adapter retains
-    /// only the newest target timestamp, so a slow frame provider cannot create an unbounded callback queue.
+    /// decode 或 publication 暂停时 `CADisplayLink` 仍可能回调；adapter 只保留最新 target timestamp，避免慢 frame provider 形成无界 callback queue。
     @MainActor
     package final class FoveaAnimationDisplayLinkDriver {
         @MainActor

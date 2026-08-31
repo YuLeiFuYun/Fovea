@@ -67,10 +67,8 @@ package struct FoveaDecodePermitController: Sendable {
         }
     }
 
-    /// Progressive codec work has no trustworthy per-session working-set estimate yet, so it
-    /// cannot enter the weighted memory pools without fabricating safety data. It must still obey
-    /// the same local/global decode CPU caps as complete-frame work. The permit is held only around
-    /// one synchronous codec operation (`append`/`finish`), never across network waits.
+    /// progressive codec 目前没有可信的 per-session working-set estimate，不能虚构安全数据后进入 weighted memory pool。
+    /// 它仍必须遵守与完整帧相同的 local/global decode CPU cap；permit 只覆盖一次同步 codec 操作（`append`/`finish`），绝不跨 network wait 持有。
     package func withProgressiveDecodePermits<Result>(
         priority: ImageRequestPriority,
         workEstimate: Int,
@@ -141,8 +139,7 @@ package struct FoveaDecodePermitController: Sendable {
         }
     }
 
-    /// H046 research path. The ordinary production path above remains free of clock reads and
-    /// recorder actor hops because DecodeStage does not supply a lifetime recorder.
+    /// H046 研究路径；普通生产路径不读取时钟，也不跳转 recorder actor，因为 DecodeStage 不提供 lifetime recorder。
     private func withMeasuredRasterPermits<Result>(
         bytes: Int,
         request: ImageRequest,

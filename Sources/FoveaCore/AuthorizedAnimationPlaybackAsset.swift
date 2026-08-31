@@ -5,14 +5,11 @@ package struct PreparedAnimationPlaybackAsset: Sendable {
     package let timeline: AnimationPlaybackTimeline
     package let codecFingerprint: String
     package let provider: any AnimationFrameProvider
-    /// Conservative upper bound for the sum of `DecodedImage.estimatedByteCost` across the full
-    /// prepared track under this request. `nil` means the preparer cannot prove such a bound.
+    /// 此请求完整 prepared track 上 `DecodedImage.estimatedByteCost` 总和的保守上界；nil 表示 preparer 无法证明该上界。
     package let wholeTrackDecodedByteCostUpperBound: Int?
-    /// Conservative upper bound for decoder/provider-owned payload, palette, checkpoint, or
-    /// equivalent retained bytes that remain alive with the prepared asset.
+    /// prepared asset 存活期间，由 decoder/provider 持有的 payload、palette、checkpoint 或等价保留字节的保守上界。
     package let wholeTrackProviderRetainedByteCostUpperBound: Int?
-    /// Conservative peak byte-cost upper bound for whole-track predecode, including provider-retained
-    /// and transient/materialization costs. Automatic admission requires all three bounds.
+    /// 整轨预解码峰值字节成本的保守上界，包含 provider 保留和 transient/materialization 成本；自动准入要求三个上界全部可证明。
     package let wholeTrackPredecodePeakByteCostUpperBound: Int?
 
     package init(
@@ -123,7 +120,7 @@ package struct AuthorizedAnimationPlaybackAsset: Sendable {
 }
 
 extension AnimationPlaybackRuntime {
-    /// Preserves the existing explicit strategy contract.
+    /// 保留既有显式策略契约，不让自动策略改变调用方已选择的语义。
     package func makeHandle(
         authorizedAsset asset: AuthorizedAnimationPlaybackAsset,
         request: ImageRequest,
@@ -150,9 +147,7 @@ extension AnimationPlaybackRuntime {
         )
     }
 
-    /// Resolves an optional automatic whole-track strategy only after decoder preparation has supplied
-    /// a conservative decoded-byte upper bound. Automatic selection is intentionally limited to the
-    /// playback shape that the AppKit compositor fast path can consume.
+    /// 仅在 decoder 准备阶段提供保守解码字节上界后，才解析可选的自动整轨策略；自动选择有意限制在 AppKit compositor 快路径可消费的播放形态。
     package func makeHandle(
         authorizedAsset asset: AuthorizedAnimationPlaybackAsset,
         request: ImageRequest,

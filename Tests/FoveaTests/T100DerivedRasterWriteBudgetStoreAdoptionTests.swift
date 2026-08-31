@@ -78,7 +78,7 @@ final class T100DerivedRasterWriteBudgetStoreAdoptionTests: XCTestCase {
                 )
                 XCTFail("invalid write-budget input must fail closed")
             } catch {
-                // Expected typed storage failure; no reservation may be published.
+                // 预期 typed storage failure；失败时不得发布任何 reservation。
             }
         }
         let reservedAfterInvalidInputs = await budget.reservedBytesForTesting()
@@ -107,7 +107,7 @@ final class T100DerivedRasterWriteBudgetStoreAdoptionTests: XCTestCase {
             _ = try await DerivedRasterWriteBudgetStore.open(root: root)
             XCTFail("corrupt persisted write-budget state must fail closed")
         } catch {
-            // Expected: bootstrap rejects schema/shape corruption.
+            // 预期路径：bootstrap 拒绝 schema/shape corruption。
         }
     }
 

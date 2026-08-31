@@ -61,8 +61,7 @@ final class SharedTaskTests: XCTestCase {
         await first.cancel()
         await second.cancel()
 
-        // A mismatched completion must not mark a still-running task as completed. The
-        // last real subscriber must therefore take the normal cancellation path.
+        // 不匹配的 completion 不能把仍在运行的 task 标为完成；最后一个真实 subscriber 因此必须走正常 cancellation 路径。
         let releaseGate = HandoffOperationGate()
         let releasable = await registry.subscribe(key: "task-id-stale-release") {
             try await releaseGate.run()

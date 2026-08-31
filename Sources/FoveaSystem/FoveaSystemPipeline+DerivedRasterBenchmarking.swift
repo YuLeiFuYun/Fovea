@@ -5,10 +5,9 @@ import FoveaPersistence
 import ImageCraftCore
 import ImageCraftImageIO
 
-/// Comparative-Lab-only configuration for the experimental derived-raster persistence path.
+/// 仅 Comparative Lab 使用的实验性 derived-raster persistence 配置。
 ///
-/// This SPI keeps the public default composition unchanged. Every benchmark run must record these
-/// values alongside its result; none of them is a release default or a performance claim.
+/// 此 SPI 不改变 public 默认 composition；每次 benchmark 必须把这些值与结果一起记录，它们都不是 release default 或 performance claim。
 @_spi(FoveaBenchmarking)
 public struct FoveaDerivedRasterBenchmarkConfiguration: Equatable, Sendable {
     public let profileID = "derived-raster-observed-v1"
@@ -72,9 +71,7 @@ public struct FoveaDerivedRasterBenchmarkConfiguration: Equatable, Sendable {
 }
 
 extension FoveaSystemPipeline {
-    /// Opens the same official system composition as `open`, with one explicitly configured
-    /// derived-raster store in the active storage generation. The default public entry point never
-    /// calls this SPI.
+    /// 打开与 `open` 相同的官方 system composition，但在当前 storage generation 中显式配置一个 derived-raster store；默认 public 入口绝不调用此 SPI。
     @_spi(FoveaBenchmarking)
     public static func openWithDerivedRasterForBenchmarking(
         cacheRoot: URL,

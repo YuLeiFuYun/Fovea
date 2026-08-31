@@ -3,10 +3,9 @@ import Darwin
 import Foundation
 import FoveaStorage
 
-/// Hot-path read index for immutable derived-raster records.
+/// 不可变 derived-raster record 的热路径 read index。
 ///
-/// Persistent mutations remain serialized by `DerivedRasterRecordStore`. During a mutation the
-/// index fails closed instead of exposing an old record while the durable manifest is changing.
+/// 持久化 mutation 仍由 `DerivedRasterRecordStore` 串行化；mutation 期间 index 失败关闭，避免 durable manifest 变化时暴露旧 record。
 package struct IndexedDerivedRasterRecord: Sendable {
     package let record: DerivedRasterRecord
     package let containerDigest: BlobDigest
@@ -144,9 +143,7 @@ package actor DerivedRasterRecordStore {
             throw AkashicError.invalidManifest
         }
         if header.schemaVersion < Self.currentSchemaVersion {
-            // Derived raster is package-internal ephemeral optimization state. Old schemas are
-            // deleted rather than migrated or retained; Akashic reconciliation then collects the
-            // now-unreferenced blobs.
+            // derived raster 是 package 内部临时优化状态；旧 schema 直接删除而不迁移/保留，随后由 Akashic reconciliation 回收失去引用的 blob。
             do {
                 try FileManager.default.removeItem(at: fileURL)
             } catch {

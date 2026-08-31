@@ -104,8 +104,7 @@ package struct AnimationPlaybackCursor: Sendable {
         activeAnchorNanoseconds = nil
     }
 
-    /// Returns the monotonic host-time anchor that makes wall-clock animation elapsed time
-    /// equal the cursor's active playback elapsed time. Paused wall time is therefore excluded.
+    /// 返回单调 host-time 锚点，使墙钟动画经过时间等于 cursor 的实际播放经过时间；暂停期间的墙钟时间不计入。
     package func effectivePlaybackStartNanosecondsForPresentation(
         at monotonicNanoseconds: UInt64
     ) throws -> UInt64? {

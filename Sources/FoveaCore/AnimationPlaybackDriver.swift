@@ -402,8 +402,7 @@ package actor AnimationPlaybackDriver {
         schedulingMode
     }
 
-    /// Returns the already-resident whole-track pixels without triggering provider work.
-    /// Platform presenters may use this only as an optional presentation optimization.
+    /// 返回已驻留的整轨像素，不触发 provider 工作；平台 presenter 只能把它作为可选的展示优化。
     package func fullyResidentFramesSnapshotForCompositor() async
         -> AnimationPlaybackResidentFramesSnapshot?
     {
@@ -411,8 +410,7 @@ package actor AnimationPlaybackDriver {
         return await coordinator.fullyResidentFramesSnapshotForCompositor()
     }
 
-    /// Returns an effective playback anchor in the production uptime clock used by Core Animation.
-    /// The anchor is shifted across pauses/seeks so Core Animation never catches up paused wall time.
+    /// 返回 Core Animation 使用的生产 uptime 时钟播放锚点；暂停或 seek 会移动锚点，避免恢复后追赶暂停期间的墙钟时间。
     package func systemPlaybackStartNanosecondsForPresentation() async -> UInt64? {
         guard clock is SystemAnimationPlaybackClock, hasStarted, !isCancelled, !hasFinished else {
             return nil

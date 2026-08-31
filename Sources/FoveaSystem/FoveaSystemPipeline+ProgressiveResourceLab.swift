@@ -4,7 +4,7 @@ import FoveaHTTP
 import ImageCraftImageIO
 
 extension FoveaSystemPipeline {
-    /// Package-only H013 construction seam. Ordinary public `open` remains unchanged.
+    /// 仅 package 内用于 H013 的构造 seam；普通 public `open` 保持不变。
     package static func openProgressiveResourceLab(
         cacheRoot: URL,
         configuration: PipelineConfiguration,

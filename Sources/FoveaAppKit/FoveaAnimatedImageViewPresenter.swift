@@ -98,10 +98,9 @@
             isPresenting = true
             lastFailureDescription = nil
 
-            // A view-bound AppKit display link intentionally does not fire while the view is detached.
-            // Defer modern external-tick startup until first visibility so runtime.start can still publish
-            // the immediate first frame without inventing a synthetic vsync. Legacy deadline scheduling
-            // keeps its established start-hidden/resume behavior on macOS 12-13.
+            // AppKit 的视图绑定 display link 在视图脱离层级时本就不会回调。现代外部 tick 因此延后到
+            // 首次可见再启动，让 runtime.start 仍能立即发布首帧，而不伪造合成 vsync；macOS 12-13
+            // 的旧 deadline 调度继续保留“隐藏启动、恢复后继续”的既有语义。
             let defersExternalStartup =
                 schedulingControl.usesExternalPresentationTicks
                 && presentationDriver != nil

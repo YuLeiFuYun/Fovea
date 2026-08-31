@@ -152,7 +152,7 @@ final class ImagePrefetchingTests: XCTestCase {
             _ = try await task.value
             XCTFail("cancelled prefetch must not return a successful aggregate")
         } catch is CancellationError {
-            // Expected parent cancellation boundary.
+            // 预期路径：父任务 cancellation boundary 向下传播。
         } catch let failure as PipelineFailure {
             XCTAssertEqual(failure.disposition, .cancelled)
         }
@@ -404,7 +404,7 @@ final class ImagePrefetchingTests: XCTestCase {
             _ = try await task.value
             XCTFail("cancelled prefetch must not return a successful aggregate")
         } catch is CancellationError {
-            // Expected parent cancellation boundary.
+            // 预期路径：父任务 cancellation boundary 向下传播。
         } catch let failure as PipelineFailure {
             XCTAssertEqual(failure.disposition, .cancelled)
         }

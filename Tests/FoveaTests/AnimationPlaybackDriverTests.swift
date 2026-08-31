@@ -376,8 +376,7 @@ final class AnimationPlaybackDriverTests: XCTestCase {
         let futureTick = await fixture.driver.tick(atPresentationNanoseconds: 100)
         XCTAssertEqual(futureTick, .advanced)
 
-        // CADisplayLink.targetTimestamp predicts a future presentation instant. Lifecycle events may
-        // therefore arrive while the monotonic clock is still behind the last sampled target.
+        // `CADisplayLink.targetTimestamp` 预测未来 presentation 时刻，因此 lifecycle event 到达时，单调时钟仍可能落后于最后采样的 target。
         try await fixture.driver.setVisible(false)
         try await fixture.driver.setVisible(true)
         let states = await stateRecorder.snapshot()

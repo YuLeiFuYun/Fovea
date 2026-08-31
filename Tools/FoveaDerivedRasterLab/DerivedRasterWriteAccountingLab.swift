@@ -5,11 +5,10 @@ import FoveaCore
 import FoveaPersistence
 import FoveaStorage
 
-/// Package-internal logical-write accounting for the default-off derived-raster store.
+/// package 内部用于默认关闭 derived-raster store 的 logical-write accounting。
 ///
-/// This deliberately measures application payload/metadata bytes written by a fresh sequence of
-/// unique publications below Akashic's checkpoint threshold. It does not claim physical NAND,
-/// filesystem-journal, directory, fsync, copy-on-write or device-energy bytes.
+/// 只测量 Akashic checkpoint 阈值以下一组 fresh unique publication 写入的 application payload/metadata 字节；
+/// 不声称等价于 physical NAND、filesystem journal、directory、fsync、copy-on-write 或 device-energy 字节。
 enum DerivedRasterWriteAccountingLab {
     private struct Options {
         let output: URL

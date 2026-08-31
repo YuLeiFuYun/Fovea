@@ -1,11 +1,9 @@
 import ImageCraftCore
 
-/// A fully resident, already-authorized animation track that a platform presenter may consume
-/// without requesting additional decoding or bypassing `AnimationFrameMemory` admission.
+/// 已完全驻留且完成授权的动画轨道；平台 presenter 可直接消费，而无需额外解码，也不能绕过 `AnimationFrameMemory` 准入。
 ///
-/// `pinLease` transfers these frame identities from the ordinary SIEVE region into the pinned region
-/// of the same animation-memory budget for exactly as long as this snapshot is retained. This keeps
-/// Core Animation's strong pixel references charged even if unrelated streaming work proceeds.
+/// `pinLease` 在 snapshot 被持有期间，把帧 identity 从普通 SIEVE 区转入同一预算的 pinned 区；
+/// 即使无关流式工作继续进行，Core Animation 强持有的像素引用仍会被正确计费。
 package struct AnimationPlaybackResidentFramesSnapshot: Sendable {
     package let timeline: AnimationPlaybackTimeline
     package let mode: AnimationPlaybackMode

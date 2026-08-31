@@ -235,7 +235,7 @@ struct FetchStageDiagnostics: Sendable {
     }
 }
 
-/// Owns the subscriber-side lifecycle for a shared fetch without owning retry or transport work.
+/// 只持有 shared fetch 的 subscriber 生命周期，不持有 retry 或 transport 工作。
 struct FetchSharedExecutionCoordinator: Sendable {
     typealias Operation =
         @Sendable (SharedTaskPriorityControl) async throws -> TimedTransportResponse

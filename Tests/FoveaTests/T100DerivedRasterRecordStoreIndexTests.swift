@@ -70,7 +70,7 @@ final class T100DerivedRasterRecordStoreIndexTests: XCTestCase {
             try await store.put(record)
             XCTFail("expected durable manifest write failure")
         } catch {
-            // Expected: beginMutation must roll back without publishing the candidate record.
+            // 预期路径：beginMutation 必须回滚，且不能发布 candidate record。
         }
         let indexed = store.record(
             for: record.artifactKeyDigest,

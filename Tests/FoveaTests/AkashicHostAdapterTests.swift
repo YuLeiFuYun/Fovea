@@ -30,8 +30,7 @@ final class AkashicHostAdapterTests: XCTestCase {
         XCTAssertTrue(publication.wasCreated)
         XCTAssertEqual(restored, data)
         XCTAssertNotNil(physicalID)
-        // The host contract is semantic identity and namespace privacy, not Akashic's private
-        // manifest encoding. Compact record formats may intentionally omit duplicate content keys.
+        // host 契约关注语义 identity 与 namespace privacy，而不是 Akashic 私有 manifest encoding；紧凑 record 格式可以有意省略重复 content key。
         XCTAssertFalse(manifestMetadata.contains(namespace))
     }
 

@@ -302,11 +302,9 @@ extension PipelineCache {
         memory.remove(key.renderedImageCacheKey)
     }
 
-    /// Memory-warning reclaim keeps only proven rendered hot state when the configured cache
-    /// explicitly supports Fovea's tiered refinement. Aliases are retained on that path: an alias
-    /// for an evicted probation entry is self-invalidating because the next lookup observes the
-    /// rendered-memory miss and removes it, while aliases for retained main entries preserve the
-    /// warm-hit path. Third-party caches fall back to the historical full purge.
+    /// memory warning 回收时，只有配置的 cache 明确支持 Fovea tiered refinement 才保留已证明的 rendered hot state。
+    /// 该路径保留 alias：probation 条目被驱逐后，alias 会在下次 rendered-memory miss 时自失效并删除；main 条目的 alias 则保留 warm-hit。
+    /// 第三方 cache 不具备这一语义时，回退到历史 full purge。
     func reclaimRenderedForWarning() async -> RenderedImageCacheRemovalSummary {
         let rendered: RenderedImageCacheRemovalSummary
         if let tiered = memory as? any TieredRenderedImageReclaiming {
