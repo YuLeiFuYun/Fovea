@@ -10,19 +10,21 @@ package struct FoveaAnimatedImage<Placeholder: View, Failure: View>: View {
     private let contentMode: ImageContentMode
     private let placeholder: () -> Placeholder
     private let failure: (String) -> Failure
-    @StateObject private var model = FoveaAnimatedImageModel()
+    @StateObject private var model: FoveaAnimatedImageModel
     @State private var isVisible = false
 
     package init(
         presentation: FoveaAnimatedImagePresentation,
         accessibility: FoveaImageAccessibility,
         contentMode: ImageContentMode = .fit,
+        model: FoveaAnimatedImageModel = FoveaAnimatedImageModel(),
         @ViewBuilder placeholder: @escaping () -> Placeholder,
         @ViewBuilder failure: @escaping (String) -> Failure
     ) {
         self.presentation = presentation
         self.accessibility = accessibility
         self.contentMode = contentMode
+        _model = StateObject(wrappedValue: model)
         self.placeholder = placeholder
         self.failure = failure
     }

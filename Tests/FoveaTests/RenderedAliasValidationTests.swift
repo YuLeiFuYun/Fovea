@@ -109,5 +109,13 @@ final class RenderedAliasValidationTests: XCTestCase {
         )
         XCTAssertEqual(accepted?.pixelWidth, image.pixelWidth)
         XCTAssertEqual(accepted?.pixelHeight, image.pixelHeight)
+
+        let benchmark = await cache.renderedImageForBenchmarking(
+            for: request,
+            generation: generation,
+            currentDate: { Date() }
+        )
+        XCTAssertEqual(benchmark.image?.pixelWidth, image.pixelWidth)
+        XCTAssertEqual(benchmark.image?.pixelHeight, image.pixelHeight)
     }
 }

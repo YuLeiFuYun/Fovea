@@ -2,7 +2,7 @@ import Foundation
 import FoveaCore
 import FoveaHTTP
 import FoveaPersistence
-import FoveaSystem
+@_spi(FoveaBenchmarking) import FoveaSystem
 import FoveaTesting
 import ImageCraftCore
 import XCTest
@@ -254,6 +254,46 @@ final class FoveaSystemPipelineTests: XCTestCase {
             XCTAssertEqual(failure.disposition, .terminal)
         }
         XCTAssertEqual(try Data(contentsOf: manifestURL), original)
+    }
+
+    func testDerivedRasterBenchmarkConfigurationClampsAndProjects_T00() {
+        let configuration = FoveaDerivedRasterBenchmarkConfiguration(
+            softTotalBytes: 0,
+            maximumBlobBytes: 0,
+            maximumWriteBytesPerWindow: 0,
+            writeBudgetWindowNanoseconds: 0,
+            maximumContainerToOriginalPermille: 0,
+            maximumCreationNanoseconds: 0,
+            estimatedPersistentReadOverheadNanoseconds: 17,
+            safetyMarginHits: -1,
+            maximumConcurrentCreations: 0,
+            maximumQueuedCreations: -1
+        )
+
+        XCTAssertEqual(configuration.profileID, "derived-raster-observed-v1")
+        XCTAssertEqual(configuration.softTotalBytes, 1)
+        XCTAssertEqual(configuration.maximumBlobBytes, 1)
+        XCTAssertEqual(configuration.maximumWriteBytesPerWindow, 1)
+        XCTAssertEqual(configuration.writeBudgetWindowNanoseconds, 1)
+        XCTAssertEqual(configuration.maximumContainerToOriginalPermille, 1)
+        XCTAssertEqual(configuration.safetyMarginHits, 0)
+        XCTAssertEqual(configuration.maximumConcurrentCreations, 1)
+        XCTAssertEqual(configuration.maximumQueuedCreations, 0)
+
+        let store = configuration.storeLimits
+        XCTAssertEqual(store.softTotalBytes, 1)
+        XCTAssertEqual(store.maximumBlobBytes, 1)
+        XCTAssertEqual(store.maximumWriteBytesPerWindow, 1)
+        XCTAssertEqual(store.writeBudgetWindowNanoseconds, 1)
+
+        let runtime = configuration.runtimeConfiguration
+        XCTAssertEqual(runtime.maximumContainerBytes, 1)
+        XCTAssertEqual(runtime.maximumContainerToOriginalPermille, 1)
+        XCTAssertEqual(runtime.maximumCreationNanoseconds, 1)
+        XCTAssertEqual(runtime.estimatedPersistentReadOverheadNanoseconds, 17)
+        XCTAssertEqual(runtime.safetyMarginHits, 0)
+        XCTAssertEqual(runtime.maximumConcurrentCreations, 1)
+        XCTAssertEqual(runtime.maximumQueuedCreations, 0)
     }
 
     func testSafeCompositionRootCreatesSinglePersistentGeneration_PIPE_PT_009() async throws {

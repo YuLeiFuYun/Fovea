@@ -4,6 +4,7 @@ import FoveaCore
 import FoveaHTTP
 import FoveaSwiftUI
 import ImageCraftCore
+import SwiftUI
 import XCTest
 
 @MainActor
@@ -22,6 +23,92 @@ final class SwiftUIAnimatedImageTests: XCTestCase {
         let afterRelease = await probe.values()
         XCTAssertEqual(afterRelease, [false, true])
         sequencer.cancel()
+    }
+
+    func testAnimatedViewRendersPreparedModelAcrossAccessibilityModes_T00() async throws {
+        guard #available(macOS 13.0, iOS 16.0, *) else { return }
+
+        let runtime = AnimationPlaybackRuntime(frameMemoryCostLimit: 16 * 1024)
+        let provider = SwiftUIStaticAnimationProvider(image: swiftUIImage(width: 6))
+        let handle = try await runtime.makeHandle(
+            namespace: SecurityNamespaceID("swiftui-rendered-animation"),
+            generation: NamespaceGeneration(0),
+            decodeKey: try XCTUnwrap(
+                AnimationDecodeKey(
+                    contentID: ContentID(data: Data("swiftui-rendered-animation".utf8)),
+                    target: TargetPixels(width: 8, height: 8),
+                    contentMode: .fit,
+                    colorPolicy: .convertToSRGB,
+                    codecFingerprint: "swiftui-rendered-test-v1",
+                    animationPolicyVersion: 1,
+                    timingPolicyVersion: 1,
+                    frameStrategy: .boundedFrameCache
+                )
+            ),
+            timeline: try AnimationPlaybackTimeline(
+                frameDurationsNanoseconds: [10, 10],
+                additionalRepeatCount: nil,
+                zeroDurationReplacementNanoseconds: 1,
+                timingPolicyVersion: 1
+            ),
+            playbackPolicy: AnimationPlaybackPolicy(requestedMode: .firstFrame),
+            reduceMotionEnabled: false,
+            provider: provider,
+            windowPolicy: AnimationFrameWindowPolicy(
+                normalFrameCount: 2,
+                warningFrameCount: 1
+            ),
+            clock: SwiftUIImmediateClock()
+        )
+        let presentation = FoveaAnimatedImagePresentation(animationHandle: handle)
+        let model = FoveaAnimatedImageModel()
+        model.present(presentation, initiallyVisible: true)
+        try await waitUntil("prepared SwiftUI animated model publishes its frame") {
+            model.imageForTesting?.pixelWidth == 6
+        }
+
+        let decorative = FoveaAnimatedImage(
+            presentation: presentation,
+            accessibility: .decorative,
+            contentMode: .fit,
+            model: model,
+            placeholder: { Text("placeholder") },
+            failure: { Text($0) }
+        )
+        let decorativeRenderer = ImageRenderer(
+            content: decorative.frame(width: 80, height: 80)
+        )
+        decorativeRenderer.proposedSize = ProposedViewSize(width: 80, height: 80)
+        XCTAssertNotNil(decorativeRenderer.cgImage)
+
+        let labeled = FoveaAnimatedImage(
+            presentation: presentation,
+            accessibility: .label(Text("动画图像")),
+            contentMode: .fill,
+            model: model,
+            placeholder: { EmptyView() },
+            failure: { _ in EmptyView() }
+        )
+        let labeledRenderer = ImageRenderer(content: labeled.frame(width: 80, height: 80))
+        labeledRenderer.proposedSize = ProposedViewSize(width: 80, height: 80)
+        XCTAssertNotNil(labeledRenderer.cgImage)
+
+        let emptyModel = FoveaAnimatedImageModel()
+        let empty = FoveaAnimatedImage(
+            presentation: presentation,
+            accessibility: .decorative,
+            model: emptyModel,
+            placeholder: { Text("empty") },
+            failure: { Text($0) }
+        )
+        let emptyRenderer = ImageRenderer(content: empty.frame(width: 80, height: 80))
+        emptyRenderer.proposedSize = ProposedViewSize(width: 80, height: 80)
+        XCTAssertNotNil(emptyRenderer.cgImage)
+
+        model.cancel(clearImage: true)
+        await runtime.cancelAll()
+        let providerCalls = await provider.callCount()
+        XCTAssertGreaterThan(providerCalls, 0)
     }
 
     func testSwiftUIModelDefersLiveDecodeUntilVisibleAndShowsLatest_W5_PT_107()
