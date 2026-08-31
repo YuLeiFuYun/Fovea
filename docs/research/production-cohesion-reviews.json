@@ -58,8 +58,8 @@
         "animation/live presentation handoff and effective visibility",
         "view accessibility, geometry policy and startup-mode translation"
       ],
-      "reviewedLineCount": 535,
-      "sha256": "427df10ef96c3f43eb87de3d2e8944f3dfc8550b6fb269bf8d956a1d6a49dda5",
+      "reviewedLineCount": 544,
+      "sha256": "a33d59682dfb948447c97ee65cd2d4be2f4f2b22e95639571c24fde11ab5a512",
       "splitTriggers": [
         "static load lifecycle can move without reading NSView/window state",
         "animation startup becomes independent of this view visibility contract",

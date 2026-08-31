@@ -46,22 +46,27 @@
         private var animationBenchmarkRefreshSampleHandlerStorage:
             FoveaAppKitAnimationRefreshSampleHandler?
 
+        @_spi(AnimationLifecycle)
         public override var isHidden: Bool {
             didSet { updateAnimationVisibility() }
         }
 
+        @_spi(AnimationLifecycle)
         public override var alphaValue: CGFloat {
             didSet { updateAnimationVisibility() }
         }
 
+        @_spi(AnimationLifecycle)
         public override var imageScaling: NSImageScaling {
             didSet { animationPresenter?.refreshForImageViewGeometryPolicyChange() }
         }
 
+        @_spi(AnimationLifecycle)
         public override var imageAlignment: NSImageAlignment {
             didSet { animationPresenter?.refreshForImageViewGeometryPolicyChange() }
         }
 
+        @_spi(AnimationLifecycle)
         public override var imageFrameStyle: NSImageView.FrameStyle {
             didSet { animationPresenter?.refreshForImageViewGeometryPolicyChange() }
         }
@@ -226,21 +231,25 @@
             }
         }
 
+        @_spi(AnimationLifecycle)
         public override func viewDidMoveToSuperview() {
             super.viewDidMoveToSuperview()
             updateAnimationVisibility()
         }
 
+        @_spi(AnimationLifecycle)
         public override func viewDidHide() {
             super.viewDidHide()
             updateAnimationVisibility()
         }
 
+        @_spi(AnimationLifecycle)
         public override func viewDidUnhide() {
             super.viewDidUnhide()
             updateAnimationVisibility()
         }
 
+        @_spi(AnimationLifecycle)
         public override func layout() {
             super.layout()
             animationPresenter?.refreshForLayoutChange()
