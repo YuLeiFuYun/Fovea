@@ -89,6 +89,8 @@ Comparative Lab 已以完整提交固定 Nuke 13.0.6 与 Kingfisher 8.11.0，并
 
 本轮不再把“成熟项目有 prefetch、Fovea 没有”停留在审计结论，而是将这一高频产品缺口收敛为 `FoveaPipeline.prefetch(_:maximumConcurrentRequests:)`。实现没有建立第二套 downloader、cache 或 permit pool：每个唯一请求仍走 `image(for:)`，因此继续受既有 request identity、namespace/auth、shared-task coalescing、动态优先级、HTTP/cache、decode/transform resource admission 与 cancellation fence 约束。
 
+首个 Fovea alpha 保留该实现与验证，但暂时维持 package-only：当前精确 public API ceiling 没有为新的 prefetch destination/result/error 表面预留增长额度，Workbench 也尚未依赖该入口。后续若要公开，必须单独完成 consumer fixture、兼容性/回滚与 DocC 预算复核；不得通过直接抬高预算让候选过门。
+
 ### 8.1 当前可执行契约
 
 Revision 36 的 prefetch 具有以下可机械验证的边界：

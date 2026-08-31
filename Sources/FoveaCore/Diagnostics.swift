@@ -10,7 +10,9 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
     case fetchStarted
     case fetchJoined
     case fetchCompleted
+    @_spi(DetailedDiagnostics)
     case fetchSubscriberReceived
+    @_spi(DetailedDiagnostics)
     case fetchSubscriberReleased
     case fetchRetryScheduled
     case fetchCancelled
@@ -36,6 +38,7 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
     case imagePropertiesReadCompleted
     case probeValidationCompleted
     case probeCompleted
+    @_spi(DetailedDiagnostics)
     case decodeResourceEstimateCompleted
     case decodeWorkingSetReserved
     case decodeAdmissionRejected
@@ -50,8 +53,11 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
     case decodeFailed
     case cacheReadFailed
     case cacheWriteFailed
+    @_spi(DetailedDiagnostics)
     case responseValidated
+    @_spi(DetailedDiagnostics)
     case responseBodyMaterialized
+    @_spi(DetailedDiagnostics)
     case progressiveFinalizationReady
     case responseAnomaly
     case namespaceRevoked

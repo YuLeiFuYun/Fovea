@@ -1,5 +1,5 @@
 import Foundation
-import FoveaCore
+@_spi(DetailedDiagnostics) import FoveaCore
 
 /// 生产诊断事件的采样策略。
 ///

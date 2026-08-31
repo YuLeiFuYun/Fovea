@@ -2,7 +2,7 @@ import Foundation
 import FoveaObservability
 import XCTest
 
-@testable import FoveaCore
+@_spi(DetailedDiagnostics) @testable import FoveaCore
 
 final class T100DiagnosticsVocabularyAdoptionTests: XCTestCase {
     func testAddedDiagnosticKindsRoundTripUnderSchema19_T100_AUTH_PT_008() throws {

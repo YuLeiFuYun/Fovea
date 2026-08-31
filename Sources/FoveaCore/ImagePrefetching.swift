@@ -1,14 +1,14 @@
 import Foundation
 
-/// 拒绝无法形成安全、可复用预取结果的请求。
-public enum ImagePrefetchError: Error, Equatable, Sendable {
+/// 包内预取候选拒绝无法形成安全、可复用结果的请求。
+package enum ImagePrefetchError: Error, Equatable, Sendable {
     case invalidMaximumConcurrentRequests
     case reusableOriginalRequiresCrossRequestReuse
     case responseNotReusable
 }
 
-/// 预取完成后希望保留的最低成本层级。
-public enum ImagePrefetchDestination: Sendable {
+/// 包内预取完成后希望保留的最低成本层级。
+package enum ImagePrefetchDestination: Sendable {
     /// 完整走现有图像管线，允许发布可复用的渲染内存结果。
     case renderedImage
     /// 只做传输、HTTP 校验和 bounded image probe/capability 校验，持久化原编码字节；
@@ -16,19 +16,19 @@ public enum ImagePrefetchDestination: Sendable {
     case validatedOriginal
 }
 
-/// 一批预取请求的聚合结果。
+/// 一批包内预取请求的聚合结果。
 ///
 /// 预取只返回计数，不把解码像素或单项错误对象带出批次边界。每个单项失败仍由
 /// `FoveaPipeline` 的既有诊断与错误语义记录；调用方可据此决定是否在真实可见请求中重试。
-public struct ImagePrefetchResult: Equatable, Sendable {
-    public let requestedCount: Int
-    public let uniqueRequestCount: Int
-    public let succeededCount: Int
-    public let failedCount: Int
-    public let cancelledCount: Int
+package struct ImagePrefetchResult: Equatable, Sendable {
+    package let requestedCount: Int
+    package let uniqueRequestCount: Int
+    package let succeededCount: Int
+    package let failedCount: Int
+    package let cancelledCount: Int
 
     /// 因稳定显示身份相同而在批次入口合并的请求数量。
-    public var duplicateCount: Int { requestedCount - uniqueRequestCount }
+    package var duplicateCount: Int { requestedCount - uniqueRequestCount }
 }
 
 private enum ImagePrefetchItemOutcome: Sendable {
@@ -73,7 +73,7 @@ private struct ImagePrefetchBatchState {
 }
 
 extension FoveaPipeline {
-    /// 以低优先级并发预热一批图像请求。
+    /// 以低优先级并发预热一批图像请求；首个 alpha 暂不把该控制面承诺为普通 public API。
     ///
     /// 该入口不建立第二套下载器、缓存或调度器。完整图像预取复用 `image(for:)`；
     /// 原编码预取复用同一 HTTP/cache/namespace 组件，并在持久化前执行 bounded probe 与
@@ -86,7 +86,7 @@ extension FoveaPipeline {
     /// - Returns: 去重后成功、失败与单项取消的聚合计数。
     /// - Throws: 非法并发上限，或父任务取消。
     @concurrent
-    public func prefetch(
+    package func prefetch(
         _ requests: [ImageRequest],
         destination: ImagePrefetchDestination = .renderedImage,
         maximumConcurrentRequests: Int = 4
