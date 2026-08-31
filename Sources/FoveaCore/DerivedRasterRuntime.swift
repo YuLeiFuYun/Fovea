@@ -413,23 +413,18 @@ package final class DerivedRasterRuntime: Sendable {
     }
 
     private static func reason(for rejection: DerivedRasterAdmissionRejection) -> String {
-        if rejection == .invalidArtifactIdentity { return "derived-raster-invalid-identity" }
-        if rejection == .unsupportedFormatForRender { return "derived-raster-format-unsupported" }
-        if rejection == .foregroundCreation { return "derived-raster-foreground-creation" }
-        if rejection == .inactiveNamespace { return "derived-raster-namespace-inactive" }
-        if rejection == .staleRepresentation { return "derived-raster-representation-stale" }
-        if rejection == .requiresRevalidation { return "derived-raster-revalidation-required" }
-        if rejection == .invalidMetrics { return "derived-raster-invalid-metrics" }
-        if rejection == .noReadSavings { return "derived-raster-no-read-savings" }
-        return budgetReason(for: rejection)
-    }
-
-    private static func budgetReason(for rejection: DerivedRasterAdmissionRejection) -> String {
         switch rejection {
+        case .invalidArtifactIdentity: "derived-raster-invalid-identity"
+        case .unsupportedFormatForRender: "derived-raster-format-unsupported"
+        case .foregroundCreation: "derived-raster-foreground-creation"
+        case .inactiveNamespace: "derived-raster-namespace-inactive"
+        case .staleRepresentation: "derived-raster-representation-stale"
+        case .requiresRevalidation: "derived-raster-revalidation-required"
+        case .invalidMetrics: "derived-raster-invalid-metrics"
+        case .noReadSavings: "derived-raster-no-read-savings"
         case .creationBudgetExceeded: "derived-raster-creation-budget"
         case .byteBudgetExceeded: "derived-raster-byte-budget"
         case .insufficientObservedReuse: "derived-raster-insufficient-observed-reuse"
-        default: preconditionFailure("Non-budget rejection reached budgetReason")
         }
     }
 

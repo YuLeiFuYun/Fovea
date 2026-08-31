@@ -428,32 +428,28 @@
         "docs/ARCHITECTURE.md",
         "docs/specifications/animation-policy.md",
         "docs/specifications/derived-raster-persistence-contract.md",
-        "scripts/analyze-architecture.py",
-        "Tests/FoveaTests/AnimationPlaybackDriverTests.swift",
+        "scripts/check-architecture-boundaries.py",
+        "scripts/check-structural-quality.py",
+        "scripts/structural_quality_support.py",
         "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
-        "Tests/FoveaTests/AnimationSystemIntegrationTests.swift",
-        "Tests/FoveaTests/AuthorizedAnimationPlaybackAssetTests.swift",
-        "Tests/FoveaTests/EncodedDataCoordinatorTests.swift",
-        "Tests/FoveaTests/SystemEncodedAnimationPlaybackTests.swift",
         "Tests/FoveaTests/DerivedRasterPipelineIntegrationTests.swift",
-        "Tests/FoveaTests/PluggableComponentTests.swift",
         "Tests/FoveaTests/MultipartJPEGLivePlaybackTests.swift",
-        "Tests/FoveaTests/SystemMultipartJPEGLivePlaybackTests.swift"
+        "Tests/FoveaTests/PluggableComponentTests.swift"
       ],
-      "fileSetSha256": "f887627beaf347cf94dd1712ccbe418647dd44b5d6cfba3dc996f078e131b5dd",
-      "maximumReviewedSourceShare": 0.62,
+      "fileSetSha256": "e491a5e7a46625327fcd7622e54ce8b3672de42bf29651a64cef2ae7aa9dbd74",
+      "maximumReviewedSourceShare": 0.623,
       "module": "FoveaCore",
-      "reason": "FoveaCore remains the Fovea-owned policy and orchestration layer for request identity, geometry, bounded fetch/decode execution, namespace lifecycle, shared work and diagnostics. The reviewed 81-file set contains separately factored static/progressive image orchestration, default-off derived raster support, deterministic decoder-neutral animation playback, and package-only live MJPEG transport/playback. The new authorized encoded animation seam preserves ContentID, exact request execution identity, selected representation identity and namespace generation across cache/network loading, decoder preparation and runtime registration; generation floors prevent post-revocation static or live registration races. FoveaCore still does not import platform UI or own an ImageIO animation implementation, and the public/default static image path remains unchanged. Extraction becomes mandatory before animation is an independently released public product surface or a new module can own these policies without importing FoveaCore back.",
+      "reason": "FoveaCore remains the Fovea-owned policy and orchestration layer for request identity, geometry, bounded fetch/decode execution, namespace lifecycle, shared work and diagnostics. The exact reviewed 95-file set has been stable since the 2026-08-31 source-sync checkpoint; the previous module record incorrectly retained an 81-file count and stale file-set digest. The current structural report measures source share at about 0.622, maximum function length 120 and maximum cyclomatic complexity 16. The files are already factored by static/progressive image orchestration, default-off derived raster support, decoder-neutral animation playback and package-only live MJPEG transport/playback, but those families still share FoveaCore-owned request/cache/namespace authorization types. Splitting one now would either create a back-import into FoveaCore or move shared authority merely to satisfy a file-count metric. Extraction remains mandatory when a policy family can move without that back-import, or when animation/derived artifacts become an independent public product surface.",
       "responsibilities": [
         "request, geometry, static decode and authorized animation execution identity",
         "pipeline orchestration, deadline scheduling and shared ordinary/live resource admission",
         "cache, transient handoff, namespace-generation, animation-frame, live-session and default-off derived-artifact coordination",
         "codec host conformance, progressive delivery, decoder-neutral animation preparation, MJPEG frame delivery, shared-work lifecycle and diagnostics"
       ],
-      "reviewedFileCount": 81,
+      "reviewedFileCount": 95,
       "splitTriggers": [
-        "the reviewed file set changes",
-        "source share exceeds the reviewed 0.62 ceiling",
+        "the reviewed 95-file set changes",
+        "source share exceeds the reviewed 0.623 ceiling",
         "animation or derived artifacts become public, default-enabled or independently released",
         "a stable policy family can move without importing FoveaCore back into the new module"
       ]

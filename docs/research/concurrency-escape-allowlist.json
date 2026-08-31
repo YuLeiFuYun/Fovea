@@ -65,6 +65,21 @@
       ]
     },
     {
+      "path": "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "RuntimeBlockingDecodeGate is a test-only cross-task barrier. Its entered/released state and all wait/signal transitions are serialized by one NSCondition, and the helper never escapes the test target.",
+      "requiredTokens": [
+        "RuntimeBlockingDecodeGate: @unchecked Sendable",
+        "private let condition = NSCondition()",
+        "condition.wait()",
+        "condition.broadcast()"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift"
+      ]
+    },
+    {
       "evidence": [
         "Tests/FoveaTests/AuthenticationRefreshTests.swift"
       ],
@@ -79,6 +94,37 @@
       ]
     },
     {
+      "path": "Tests/FoveaTests/DerivedRasterContainerTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 2,
+      "reason": "The derived-raster concurrency test uses two private wrappers only to cross task boundaries: ConcurrentCGImageBox publishes one immutable CGImage reference after construction, while ConcurrentDrawResult serializes its sole mutable failure slot with one NSLock. Neither wrapper is production code.",
+      "requiredTokens": [
+        "ConcurrentCGImageBox: @unchecked Sendable",
+        "let image: CGImage",
+        "ConcurrentDrawResult: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var storedFailure: String?"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/DerivedRasterContainerTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/FoveaSystemPipelineTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "PressureFallbackRenderedCache is a private test double for the synchronous RenderedImageCaching protocol. Its only mutable observation, removeAllCalls, is read and incremented under one NSLock; all remaining cache methods are stateless test behavior.",
+      "requiredTokens": [
+        "PressureFallbackRenderedCache: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var removeAllCalls = 0",
+        "removeAllCallCount"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/FoveaSystemPipelineTests.swift"
+      ]
+    },
+    {
       "evidence": [
         "Tests/FoveaTests/ImageDecoderTests.swift"
       ],
@@ -90,6 +136,21 @@
         "ContractTestPreparedDecoder",
         "private let lock = NSLock()",
         "func snapshot() -> Snapshot"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/MultipartJPEGLivePlaybackTests.swift"
+      ],
+      "expectedCount": 1,
+      "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/MultipartJPEGLivePlaybackTests.swift",
+      "reason": "The completion cancellation hook is synchronous and cannot await an actor. LiveSynchronousCounter contains one integer and every read or increment is serialized by one private NSLock; it exists only to prove idempotent terminal ownership in a single test file.",
+      "requiredTokens": [
+        "LiveSynchronousCounter: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "func increment()",
+        "var value: Int"
       ]
     },
     {
@@ -150,33 +211,49 @@
       ]
     },
     {
-      "evidence": [
-        "Tests/FoveaTests/URLSessionTransportTests.swift"
-      ],
-      "expectedCount": 1,
+      "path": "Tests/FoveaTests/ProgressiveResourceEnvelopeTests.swift",
       "kind": "unchecked-sendable",
-      "path": "Tests/FoveaTests/URLSessionTransportTests.swift",
-      "reason": "TransportProgressRecorder is a test-only callback recorder invoked by URLSession transport callbacks from unrelated executors. Its event kinds, cumulative byte counts and completion identity are read and mutated only under one private NSLock.",
+      "expectedCount": 2,
+      "reason": "The progressive resource-envelope test crosses task boundaries with two deterministic helpers. ProgressiveCompletionFlag protects its Boolean with NSLock, and ProgressiveFootprintObservationSequence keeps an immutable observation array while serializing its advancing index with NSLock.",
       "requiredTokens": [
-        "TransportProgressRecorder: @unchecked Sendable",
+        "ProgressiveCompletionFlag: @unchecked Sendable",
+        "ProgressiveFootprintObservationSequence: @unchecked Sendable",
         "private let lock = NSLock()",
-        "func record(_ event: TransportProgressEvent)",
-        "func snapshot() -> Snapshot"
+        "lock.withLock"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ProgressiveResourceEnvelopeTests.swift"
       ]
     },
     {
-      "evidence": [
-        "Tests/FoveaTests/MultipartJPEGLivePlaybackTests.swift"
-      ],
-      "expectedCount": 1,
+      "path": "Tests/FoveaTests/ResourceLimitTests.swift",
       "kind": "unchecked-sendable",
-      "path": "Tests/FoveaTests/MultipartJPEGLivePlaybackTests.swift",
-      "reason": "The completion cancellation hook is synchronous and cannot await an actor. LiveSynchronousCounter contains one integer and every read or increment is serialized by one private NSLock; it exists only to prove idempotent terminal ownership in a single test file.",
+      "expectedCount": 2,
+      "reason": "BlockingProgressiveCodec and its nested Session are test-only resource-admission probes. The codec serializes active/peak operation counters with NSLock; the session independently serializes byteCount/isClosed with NSLock before invoking the deterministic blocking operation.",
       "requiredTokens": [
-        "LiveSynchronousCounter: @unchecked Sendable",
-        "private let lock = NSLock()",
-        "func increment()",
-        "var value: Int"
+        "BlockingProgressiveCodec:",
+        "ProgressiveImageDecoding, @unchecked Sendable",
+        "private var activeOperations = 0",
+        "private final class Session: ImageProgressiveDecodeSession, @unchecked Sendable",
+        "private var isClosed = false"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ResourceLimitTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/SystemEncodedAnimationPlaybackTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "SystemBlockingDecodeGate is a private deterministic barrier used to prove system animation cancellation and ordering. Its entered/released flags and every wait/signal transition are serialized by one NSCondition and it is confined to the test target.",
+      "requiredTokens": [
+        "SystemBlockingDecodeGate: @unchecked Sendable",
+        "private let condition = NSCondition()",
+        "condition.wait()",
+        "condition.broadcast()"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/SystemEncodedAnimationPlaybackTests.swift"
       ]
     },
     {
@@ -193,8 +270,116 @@
         "func recordStart(_ request: URLRequest)",
         "func snapshot() -> Snapshot"
       ]
+    },
+    {
+      "path": "Tests/FoveaTests/T100ProgressivePreviewSessionOwnershipTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 3,
+      "reason": "The T100 progressive ownership fixture has three private Sendable test doubles. The codec publishes immutable descriptor/state references, its session serializes byteCount with NSLock, and T100ProgressiveSessionState serializes all lifecycle counters with its own NSLock. They exist only to observe ownership transitions.",
+      "requiredTokens": [
+        "T100TrackingProgressiveCodec:",
+        "private final class Session: ImageProgressiveDecodeSession, @unchecked Sendable",
+        "T100ProgressiveSessionState: @unchecked Sendable",
+        "private let lock = NSLock()"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/T100ProgressivePreviewSessionOwnershipTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/T100ResourceSpineAdoptionTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 3,
+      "reason": "The T100 resource-spine fixture uses three private Sendable test doubles. The codec holds immutable descriptor/state references, its session serializes byteCount under NSLock, and T100SpineProgressiveState serializes every lifecycle counter under NSLock. No helper escapes the test target.",
+      "requiredTokens": [
+        "T100SpineProgressiveCodec:",
+        "private final class Session: ImageProgressiveDecodeSession, @unchecked Sendable",
+        "T100SpineProgressiveState: @unchecked Sendable",
+        "private let lock = NSLock()"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/T100ResourceSpineAdoptionTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/T100URLSessionTransportProgressOnlyAdoptionTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 2,
+      "reason": "The T100 URLSession adoption test bridges Foundation callback threads with two private recorders. T100TransportProgressRecorder serializes event/completion observations with NSLock and T100CancellationProtocolState serializes the stop flag with a separate NSLock.",
+      "requiredTokens": [
+        "T100TransportProgressRecorder: @unchecked Sendable",
+        "T100CancellationProtocolState: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "func snapshot() -> Snapshot"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/T100URLSessionTransportProgressOnlyAdoptionTests.swift"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
+      ],
+      "expectedCount": 1,
+      "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/URLSessionTransportTests.swift",
+      "reason": "TransportProgressRecorder is a test-only callback recorder invoked by URLSession transport callbacks from unrelated executors. Its event kinds, cumulative byte counts and completion identity are read and mutated only under one private NSLock.",
+      "requiredTokens": [
+        "TransportProgressRecorder: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "func record(_ event: TransportProgressEvent)",
+        "func snapshot() -> Snapshot"
+      ]
+    },
+    {
+      "path": "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabSupport.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "StrictDispatchSleepState is a lab-only bridge between Task cancellation and a strict DispatchSourceTimer callback. One NSLock serializes timer, continuation and completed state; completion extracts both resources before cancelling/resuming outside the critical section, enforcing one terminal resume.",
+      "requiredTokens": [
+        "StrictDispatchSleepState: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var continuation: CheckedContinuation<Void, any Error>?",
+        "guard !completed else",
+        "timer?.cancel()"
+      ],
+      "evidence": [
+        "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabSupport.swift"
+      ]
+    },
+    {
+      "path": "Tools/FoveaDerivedRasterLab/DerivedRasterPixelSupport.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "PackedRGB24DirectChunkSource is a lab-only random-access provider. Its compressed surface is immutable, decoded chunks are fully materialized before publication, and one NSLock protects the only shared mutable cache identity/reference pair used by concurrent Core Graphics byte requests.",
+      "requiredTokens": [
+        "PackedRGB24DirectChunkSource: @unchecked Sendable",
+        "let surface: PackedRGB24CompressedSurface",
+        "let lock = NSLock()",
+        "var cachedChunkIndex: Int?",
+        "var cachedChunk: DecodedChunk?"
+      ],
+      "evidence": [
+        "Tools/FoveaDerivedRasterLab/DerivedRasterPixelSupport.swift"
+      ]
+    },
+    {
+      "path": "Tools/FoveaNetworkLab/ProgressiveResourceMechanismLab.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 3,
+      "reason": "The H013 network lab has three non-production callback bridges: the null rendered cache is stateless, ProgressiveResourceFixtureState serializes fixture bytes/chunk size with NSLock, and ProgressiveResourceProtocolDelivery serializes its weak owner and stopped flag with NSLock while Foundation invokes delivery across threads.",
+      "requiredTokens": [
+        "ProgressiveResourceNullRenderedCache: RenderedImageCaching",
+        "ProgressiveResourceFixtureState: @unchecked Sendable",
+        "ProgressiveResourceProtocolDelivery: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "lock.withLock"
+      ],
+      "evidence": [
+        "Tools/FoveaNetworkLab/ProgressiveResourceMechanismLab.swift"
+      ]
     }
   ],
-  "reviewedOn": "2026-08-05",
+  "reviewedOn": "2026-08-31",
   "schemaVersion": 1
 }

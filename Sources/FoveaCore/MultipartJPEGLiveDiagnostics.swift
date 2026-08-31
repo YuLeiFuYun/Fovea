@@ -81,39 +81,17 @@ package enum MultipartJPEGLiveDiagnostics {
 
     private static func reason(for error: MultipartJPEGStreamError) -> String {
         switch error {
-        case .invalidContentType, .invalidBoundary, .limitExceeded, .malformedBoundary,
-            .malformedHeaders:
-            framingReason(for: error)
-        case .missingContentLength, .invalidContentLength, .unsupportedPartContentType,
-            .invalidJPEGFrame, .unexpectedEnd, .trailingData:
-            payloadReason(for: error)
-        }
-    }
-
-    private static func framingReason(for error: MultipartJPEGStreamError) -> String {
-        switch error {
         case .invalidContentType: "mjpeg-invalid-content-type"
         case .invalidBoundary: "mjpeg-invalid-boundary"
         case .limitExceeded: "mjpeg-stream-limit-exceeded"
         case .malformedBoundary: "mjpeg-malformed-boundary"
         case .malformedHeaders: "mjpeg-malformed-headers"
-        case .missingContentLength, .invalidContentLength, .unsupportedPartContentType,
-            .invalidJPEGFrame, .unexpectedEnd, .trailingData:
-            preconditionFailure("non-framing multipart JPEG stream error")
-        }
-    }
-
-    private static func payloadReason(for error: MultipartJPEGStreamError) -> String {
-        switch error {
         case .missingContentLength: "mjpeg-missing-content-length"
         case .invalidContentLength: "mjpeg-invalid-content-length"
         case .unsupportedPartContentType: "mjpeg-unsupported-part-content-type"
         case .invalidJPEGFrame: "mjpeg-invalid-jpeg-frame"
         case .unexpectedEnd: "mjpeg-unexpected-end"
         case .trailingData: "mjpeg-trailing-data"
-        case .invalidContentType, .invalidBoundary, .limitExceeded, .malformedBoundary,
-            .malformedHeaders:
-            preconditionFailure("non-payload multipart JPEG stream error")
         }
     }
 }

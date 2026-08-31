@@ -41,17 +41,20 @@
         "Tests/FoveaTests/AnimationPlaybackCoordinatorTests.swift",
         "Tests/FoveaTests/AnimationPlaybackSessionTests.swift"
       ],
-      "expectedCount": 1,
+      "expectedCount": 2,
       "path": "Sources/FoveaCore/AnimationFrameMemory.swift",
-      "reason": "AnimationFrameMemory is the synchronous decoded-frame hot path shared by independent playback sessions. Its only mutable state is the private FoveaCompactSieveCache, whose slot graph, index, cost and SIEVE metadata are already linearized by one audited NSLock; this wrapper stores an immutable cost limit and delegates every read, insert and removal to that cache. Actor isolation would add a hop to each display tick and would not strengthen the underlying synchronization boundary.",
+      "reason": "AnimationFrameMemoryPinLease and AnimationFrameMemory are synchronous playback hot-path reference types. The lease publishes immutable frames/byteCost and serializes its one-shot releaseHandler with a private NSLock. AnimationFrameMemory serializes pinned entries, lease identities, external retained reservations, byte counters and all access to its SIEVE storage with its own private NSLock. Actor isolation would add display-tick hops without strengthening either already-linearized boundary.",
       "requiredTokens": [
+        "package final class AnimationFrameMemoryPinLease: @unchecked Sendable",
+        "private var releaseHandler: (@Sendable () -> Void)?",
+        "let handler: (@Sendable () -> Void)? = lock.withLock",
         "package final class AnimationFrameMemory: @unchecked Sendable",
-        "private let storage: FoveaCompactSieveCache<AnimationFrameMemoryKey, DecodedImage>",
-        "storage.value(for: key)",
-        "storage.insertReportingEvictions(",
-        "storage.removeAllAndReport {"
+        "private var pinnedEntries: [AnimationFrameMemoryKey: PinnedEntry] = [:]",
+        "private var pinLeases: [UUID: [AnimationFrameMemoryKey]] = [:]",
+        "private var externalRetainedReservations: [UUID: Int] = [:]",
+        "lock.withLock"
       ],
-      "type": "AnimationFrameMemory"
+      "type": "AnimationFrameMemoryPinLease + AnimationFrameMemory"
     },
     {
       "evidence": [
@@ -403,17 +406,20 @@
         "Tests/FoveaTests/AnimationSystemIntegrationTests.swift",
         "Tests/FoveaTests/FoveaSystemPipelineTests.swift"
       ],
-      "expectedCount": 1,
+      "expectedCount": 2,
       "path": "Sources/FoveaSystem/FoveaMemoryPressureMonitor.swift",
-      "reason": "FoveaLifecycleNotificationMonitor performs synchronous NotificationCenter registration before the system composition root returns, preventing an immediate background notification from being missed. Its opaque Objective-C token array is immutable after initialization, callbacks capture only the Sendable animation runtime weakly, and deinit is the sole token consumer; there is no concurrently mutable state to isolate with an actor or lock.",
+      "reason": "FoveaSystemOrderedEventExecutor and FoveaLifecycleNotificationMonitor bridge synchronous system callbacks into async runtime work. The executor protects tail/isClosed with one NSLock and serially chains Sendable Tasks; cancellation extracts the pending task before cancelling it. The lifecycle monitor stores immutable NotificationCenter tokens after synchronous registration, delegates ordering to that audited executor, captures the Sendable runtime weakly, and consumes tokens only in deinit. Neither type exposes unsynchronized mutable state.",
       "requiredTokens": [
+        "package final class FoveaSystemOrderedEventExecutor<Event: Sendable>: @unchecked Sendable",
+        "private var tail: Task<Void, Never>?",
+        "private var isClosed = false",
+        "package func cancelPending()",
         "package final class FoveaLifecycleNotificationMonitor: @unchecked Sendable",
         "private let tokens: [NSObjectProtocol]",
-        "deinit {",
-        "NotificationCenter.default.removeObserver(token)",
-        "[weak animationRuntime]"
+        "private let eventExecutor: FoveaSystemOrderedEventExecutor<Bool>",
+        "NotificationCenter.default.removeObserver(token)"
       ],
-      "type": "FoveaLifecycleNotificationMonitor"
+      "type": "FoveaSystemOrderedEventExecutor + FoveaLifecycleNotificationMonitor"
     }
   ],
   "reviewedOn": "2026-08-31",
