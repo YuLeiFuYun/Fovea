@@ -287,6 +287,7 @@ try:
         'clean_derived_data=not args.reuse_release_derived_data': "developer Workbench smoke must explicitly control Release cache reuse",
         'if not args.skip_release_build:': "Workbench verifier must make Release audit an explicit phase decision",
         'GENERATED_METADATA.unlink(missing_ok=True)': "Workbench verification must restore an originally absent metadata file",
+        'DOC_BUILD_SCHEMES = ("Fovea", "FoveaAdvanced")': "documentation build must cover only the public product schemes",
         'DOC_BUILD_TOTAL_TIMEOUT_SECONDS = 900': "documentation build must have a bounded total timeout",
         'DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = 180': "documentation build must have a bounded inactivity timeout",
         'run_documentation_build(': "documentation xcodebuild must stream progress to its retained log",
@@ -301,6 +302,8 @@ try:
             errors.append(message)
     if "resolve_relative(" in combined_source:
         errors.append("iOS verifier must not call an undefined resolve_relative helper")
+    if '"Fovea-Package"' in documentation_source:
+        errors.append("documentation build must not pull package-only lab targets into DocC")
     if re.search(
         r"completed = subprocess\.run\(\s*command,.*?documentation build failed",
         documentation_source,
