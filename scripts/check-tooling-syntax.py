@@ -79,6 +79,10 @@ if "-collect-test-diagnostics never" not in verify_script:
     errors.append(
         "iOS package verification must disable Xcode sysdiagnose collection and rely on bounded logs"
     )
+if "-only-testing:FoveaTests" not in verify_script:
+    errors.append(
+        "iOS package verification must limit the synthesized package scheme to FoveaTests"
+    )
 
 try:
     comparative_runner_path = ROOT / "scripts/run-comparative-simulator-lab.py"

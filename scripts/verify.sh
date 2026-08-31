@@ -167,6 +167,7 @@ if [ "${RUN_IOS_SIMULATOR:-1}" = "1" ]; then
         -scheme Fovea-Package \
         -destination "platform=iOS Simulator,id=$simulator_id" \
         -collect-test-diagnostics never \
+        -only-testing:FoveaTests \
         APPINTENTS_METADATA_PROCESSING_ENABLED=NO \
         test
     record_qualification_assurance ios-simulator-package-tests
