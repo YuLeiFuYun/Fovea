@@ -448,7 +448,7 @@ def verify_release_build(
         shutil.rmtree(release_derived, ignore_errors=True)
     phase = run_xcode_phase(
         "build", ["-configuration", "Release", "-derivedDataPath", str(release_derived), "build"],
-        env=env, retry_infrastructure_once=False,
+        env=env, retry_infrastructure_once=False, timeout_seconds=1_800,
     )
     app = release_derived / "Build/Products/Release-iphonesimulator/FoveaWorkbench.app"
     binary = app / "FoveaWorkbench"
