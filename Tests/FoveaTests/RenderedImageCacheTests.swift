@@ -71,6 +71,49 @@ final class RenderedImageCacheTests: XCTestCase {
         )
     }
 
+    func testMainCountGovernorDropsByteEvictedHotGhostsBeforeCapacityReturns_CACHE_PT_068()
+        throws
+    {
+        let cache = DefaultRenderedImageCache(costLimit: 100, probationCostLimit: 40)
+        let image = try makeImage()
+
+        // mainBase=60 and shardCount=1. Sixteen 3-cost identities fit both byte and count bounds.
+        for index in 0..<16 {
+            let key = makeKey(index)
+            cache.insert(image, for: key, cost: 3)
+            XCTAssertNotNil(cache.image(for: key))
+        }
+        XCTAssertEqual(cache.count, 16)
+
+        // Mark 0...11 hot in both main SIEVE and the identity governor. A 76-cost first-hit
+        // large resident leaves only 24 bytes for main, so main must evict eight identities:
+        // cold 12...15 first, then 0...3 after consuming their second chance. Without exact
+        // eviction feedback those four hot-but-gone identities remain hot ghosts in the governor.
+        for index in 0..<12 {
+            XCTAssertNotNil(cache.image(for: makeKey(index)))
+        }
+        cache.insert(image, for: makeKey(100), cost: 76)
+        XCTAssertEqual(cache.currentCost, 100)
+        XCTAssertEqual(cache.count, 9)
+
+        // The first small insert discards large probation and restores main to 60 bytes. Five
+        // promoted newcomers should therefore raise the real main count from eight to thirteen.
+        // A stale governor instead skips the hot ghosts and prematurely removes the first newcomer.
+        for index in 16..<21 {
+            let key = makeKey(index)
+            cache.insert(image, for: key, cost: 3)
+            XCTAssertNotNil(cache.image(for: key))
+        }
+
+        XCTAssertEqual(cache.count, 13)
+        for index in 4..<12 {
+            XCTAssertNotNil(cache.image(for: makeKey(index)))
+        }
+        for index in 16..<21 {
+            XCTAssertNotNil(cache.image(for: makeKey(index)))
+        }
+    }
+
     func testDefaultProbationRetainsWholeW2WarmMemoryWorkingSet_CACHE_PT_057() throws {
         let cache = DefaultRenderedImageCache(costLimit: 64 * 1024 * 1024)
         let image = try makeImage()

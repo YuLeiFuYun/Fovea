@@ -555,7 +555,7 @@ def main() -> int:
     adapter_evidence = imagecraft_adapter_study.get("evidence") or {}
     if (
         adapter_source.get("imageCraftWorkingTree")
-        != "d3fc33648a0aaf1bd26ecaa586c127c4653dab4c"
+        != "ba0554ff323651b4be96a288f3bcc820e14ecb3f"
         or adapter_source.get("sourcesUnchangedDuringRun") is not True
         or adapter_source.get("foveaImplementationFileCount") != 20
         or adapter_source.get("foveaImplementationUnchangedDuringRun") is not True

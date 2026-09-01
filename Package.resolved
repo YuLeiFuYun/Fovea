@@ -1,12 +1,12 @@
 {
-  "originHash" : "e6654da97447c8e400f7099fa9a91699961a8c5f6cecb869a359a528fa94d36a",
+  "originHash" : "a76743b584a82401d4440ea0846cd7ad913b25ae4e0ee6f0b3269ade0fdea385",
   "pins" : [
     {
       "identity" : "akashic",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/YuLeiFuYun/Akashic.git",
       "state" : {
-        "revision" : "2846d4715cc5917711ffa2f100ee310c2290de40"
+        "revision" : "0376b960ec8abe54f2d4a9d7d66e97f395215eaf"
       }
     },
     {

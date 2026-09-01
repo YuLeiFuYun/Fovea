@@ -364,7 +364,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
         discardLargeProbationLocked(main)
         if resident.cost <= mainBaseCostLimit {
             restoreMainBaseBudgetIfNeededLocked(main)
-            main.insert(resident, for: key, cost: resident.cost)
+            let report = main.insertReportingEvictions(resident, for: key, cost: resident.cost)
+            _ = applyMainEvictionReportLocked(report)
         } else {
             mainCountGovernor?.remove(key)
             placeResidentUsingBorrowedProbationBudgetLocked(
@@ -387,7 +388,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
                 main.remove(victim)
             }
         }
-        main.insert(resident, for: key, cost: resident.cost)
+        let report = main.insertReportingEvictions(resident, for: key, cost: resident.cost)
+        _ = applyMainEvictionReportLocked(report)
     }
 
     @discardableResult
@@ -397,7 +399,8 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
         guard expandedMainBudgetOwnerKey != nil || main.costLimit != mainBaseCostLimit else {
             return MemoryCacheRemovalSummary(itemCount: 0, costBytes: 0)
         }
-        let summary = main.updateCostLimit(mainBaseCostLimit)
+        let report = main.updateCostLimitReportingEvictions(mainBaseCostLimit)
+        let summary = applyMainEvictionReportLocked(report)
         expandedMainBudgetOwnerKey = nil
         return summary
     }
@@ -436,8 +439,11 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
         if currentMainCost > availableForMain {
             if availableForMain == 0 {
                 _ = main.removeAllAndReport()
+                _ = mainCountGovernor?.removeAllAndReport()
+                expandedMainBudgetOwnerKey = nil
             } else {
-                _ = main.updateCostLimit(availableForMain)
+                let report = main.updateCostLimitReportingEvictions(availableForMain)
+                _ = applyMainEvictionReportLocked(report)
             }
         }
         largeProbation.insert(resident, for: key, cost: resident.cost)
@@ -455,8 +461,22 @@ package final class DefaultRenderedImageCache: @unchecked Sendable, RenderedImag
         if main.costLimit != totalCostLimit {
             _ = main.updateCostLimit(totalCostLimit)
         }
-        main.insert(resident, for: key, cost: resident.cost)
+        let report = main.insertReportingEvictions(resident, for: key, cost: resident.cost)
+        _ = applyMainEvictionReportLocked(report)
         expandedMainBudgetOwnerKey = key
+    }
+
+    @discardableResult
+    private func applyMainEvictionReportLocked(
+        _ report: MemoryCacheEvictionReport<RenderedImageCacheKey>
+    ) -> MemoryCacheRemovalSummary {
+        for victim in report.evictedKeys {
+            mainCountGovernor?.remove(victim)
+            if expandedMainBudgetOwnerKey == victim {
+                expandedMainBudgetOwnerKey = nil
+            }
+        }
+        return report.summary
     }
 
     private func discardLargeProbationLocked(

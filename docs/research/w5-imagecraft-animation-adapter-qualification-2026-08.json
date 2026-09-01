@@ -61,7 +61,7 @@
   "productionPinReadiness": {
     "authorizationEvidence": {
       "adapterQualificationCapture": ".artifacts/qualification/w5-imagecraft-animation-adapter-current-contract/report.json",
-      "adapterQualificationCaptureSHA256": "f46b9003ea3a09fd0557ab013f1a96b28d6dc25372e3506e4aec85866c272e2b",
+      "adapterQualificationCaptureSHA256": "cbb83a77875f8027988d58490c59d6880936b2b3bb38748e5d71a527d7ac579e",
       "adapterQualificationImageCraftClean": true,
       "adapterQualificationSourcesUnchanged": true,
       "releaseReadinessSourceIdentitySHA256": "4cdbd83d4a350f838a3e4ec5fd48ef6664f6169e047f3d8dc2972f35f1696dcc",
@@ -145,12 +145,12 @@
   "reviewedOn": "2026-09-01",
   "schemaVersion": 1,
   "sourceIdentity": {
-    "akashicHeadCommit": "2846d4715cc5917711ffa2f100ee310c2290de40",
-    "akashicWorkingTree": "3597631d3dcdaaaa376edb1fd91ad890a82dd423",
-    "foveaHeadCommit": "d191790fbe26a6a0a22ce82d592ba6ccbdb6b6ad",
+    "akashicHeadCommit": "0376b960ec8abe54f2d4a9d7d66e97f395215eaf",
+    "akashicWorkingTree": "83161b3ab407aec5c3d87ee258f331cae627dc43",
+    "foveaHeadCommit": "71a843fe1539dcbc57c86fa3fe20b89a9be8d23c",
     "foveaImplementationFileCount": 20,
     "foveaImplementationUnchangedDuringRun": true,
-    "foveaWorkingTreeAtCapture": "fe505f394023e9767ef04c0ff4639a75846a7bb8",
+    "foveaWorkingTreeAtCapture": "367d1049048820a61bcd65e48cd883d6c61418a6",
     "imageCraftHeadCommit": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
     "imageCraftWorkingTree": "ba0554ff323651b4be96a288f3bcc820e14ecb3f",
     "sourcesUnchangedDuringRun": true
