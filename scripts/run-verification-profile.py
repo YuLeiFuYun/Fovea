@@ -979,7 +979,7 @@ def iteration_static_phases(impact: dict[str, object]) -> list[Phase]:
                     "python3",
                     "Tools/AnimationAdapterQualification/test_imagecraft_animation_adapter_qualification.py",
                 ),
-                120,
+                300,
             )
         )
     if any(
@@ -1188,7 +1188,7 @@ def static_phases(include_docs: bool) -> list[Phase]:
                 "python3",
                 "Tools/AnimationAdapterQualification/test_imagecraft_animation_adapter_qualification.py",
             ),
-            120,
+            300,
         ),
         Phase(
             "candidate-baseline-contract",

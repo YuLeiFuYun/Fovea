@@ -4,7 +4,8 @@
     "V2 isolated copied-source overlay extends qualification to automatic APNG, owned GIF, bounded subrect GIF replay and three-part whole-track cost accounting",
     "historical overlay qualification did not change production Fovea dependency pins; the current clean-candidate pin upgrade is authorized separately by productionPinReadiness",
     "adapter timing normalization remains explicit and caller-versioned",
-    "no physical-device timing, RSS, energy, thermal, publication, or release-readiness claim"
+    "no physical-device timing, RSS, energy, thermal, compiled-production-adapter, or Fovea release-readiness claim",
+    "current executable qualification regenerates its ignored capture from public exact ImageCraft/Akashic pins and validates immutable release-tag dereference; mutable sibling working trees and pre-existing .artifacts are not authority"
   ],
   "evidence": {
     "adapterFixtureSHA256": "841cd279684117cbd7de6a55ecc684879a5c33e15d5bd421f4b96c97f9c3b988",
@@ -46,11 +47,10 @@
     }
   },
   "nextGates": [
-    "publish the current ImageCraft animation API/runtime as an immutable revision after release-readiness checks",
-    "update Fovea production dependency to that exact revision and move the qualified adapter into compiled FoveaSystem source",
-    "rerun adapter qualification from the exact clean production pin, then run full Fovea release verification",
+    "move the already-qualified ImageCraft animation adapter into compiled FoveaSystem production source without widening the ordinary public API",
+    "rerun full Fovea release verification from the exact immutable candidate after the production adapter move or any other release-candidate change",
     "measure physical end-to-end startup plus steady-state presentation on the production pin; keep decoder startup and compositor steady-state costs separate",
-    "obtain supported physical-device energy/thermal evidence before energy claims"
+    "obtain supported physical-device memory, energy, thermal and reclamation evidence before corresponding claims"
   ],
   "pinUpgradeDiscovery": {
     "issue": "Fovea PipelineFailure+ImageCraft previously exhausted the ImageCraftError cases present at the old exact pin. Current ImageCraft adds animation error cases, causing the overlay to fail compilation before the adapter could build.",

@@ -51,7 +51,7 @@ def main() -> None:
         fail(f"unexpected adapter qualification artifacts: {sorted(extra)}")
 
     report = json.loads(report_path.read_text())
-    if report.get("schemaVersion") != 1 or report.get("studyID") != (
+    if report.get("schemaVersion") != 2 or report.get("studyID") != (
         "FOVEA-W5-IMAGECRAFT-ANIMATION-ADAPTER-OVERLAY-QUALIFICATION-V2"
     ):
         fail("adapter qualification identity mismatch")
@@ -128,16 +128,32 @@ def main() -> None:
             fail(f"adapter governing file identity mismatch: {name}")
 
     captured_sources = report.get("sourcesBefore") or {}
-    current_external_sources = {
-        "ImageCraft": runner.snapshot(ROOT.parent / "ImageCraft"),
-        "Akashic": runner.snapshot(ROOT.parent / "Akashic"),
-    }
-    for name, current in current_external_sources.items():
-        if current != captured_sources.get(name):
-            fail(f"adapter qualification no longer binds current {name} source")
-    current_fovea_head = runner.run(["git", "rev-parse", "HEAD"], ROOT).stdout.strip()
-    if current_fovea_head != (captured_sources.get("Fovea") or {}).get("headCommit"):
-        fail("adapter qualification Fovea HEAD changed")
+    if report.get("componentSourceMode") != "public-exact-pin-swiftpm-checkout":
+        fail("adapter qualification component source mode changed")
+    expected_bindings = runner.component_bindings()
+    observed_bindings = report.get("componentSourceBindings") or {}
+    if set(observed_bindings) != set(expected_bindings):
+        fail("adapter qualification component binding set changed")
+    for name, expected in expected_bindings.items():
+        observed = observed_bindings.get(name) or {}
+        for key, value in expected.items():
+            if observed.get(key) != value:
+                fail(f"adapter qualification {name} binding mismatch: {key}")
+        if observed.get("checkoutHead") != expected["revision"]:
+            fail(f"adapter qualification {name} checkout revision mismatch")
+        if observed.get("publicTagRevision") != expected["revision"]:
+            fail(f"adapter qualification {name} release tag revision mismatch")
+        source = captured_sources.get(name) or {}
+        if source.get("headCommit") != expected["revision"]:
+            fail(f"adapter qualification {name} source revision mismatch")
+        if source.get("statusShort") != []:
+            fail(f"adapter qualification {name} source must be clean")
+        if source.get("workingTree") != observed.get("checkoutTree"):
+            fail(f"adapter qualification {name} source tree mismatch")
+
+    current_fovea = runner.snapshot(ROOT)
+    if current_fovea != captured_sources.get("Fovea"):
+        fail("adapter qualification no longer binds current Fovea source")
     if runner.fovea_implementation_identity() != report.get("foveaImplementationBefore"):
         fail("adapter qualification Fovea implementation files changed")
     print(report_path)

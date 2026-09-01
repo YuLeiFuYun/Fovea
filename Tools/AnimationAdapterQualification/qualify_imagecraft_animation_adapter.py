@@ -13,9 +13,7 @@ import subprocess
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-WORKSPACE = ROOT.parent
-IMAGECRAFT = WORKSPACE / "ImageCraft"
-AKASHIC = WORKSPACE / "Akashic"
+PINS = ROOT / "docs/project-memory/component-pins.json"
 FIXTURE_DIR = pathlib.Path(__file__).resolve().parent
 DEFAULT_OUTPUT = ROOT / ".artifacts/qualification/w5-imagecraft-animation-adapter-v2-final"
 STABLE_WORK = pathlib.Path(tempfile.gettempdir()) / "fovea-imagecraft-animation-adapter-v2-work"
@@ -100,6 +98,104 @@ def snapshot(root: pathlib.Path) -> dict[str, object]:
     }
 
 
+def component_bindings() -> dict[str, dict[str, str]]:
+    document = json.loads(PINS.read_text())
+    components = document.get("components")
+    if not isinstance(components, dict):
+        raise RuntimeError("component pin registry has no components object")
+    bindings: dict[str, dict[str, str]] = {}
+    for name in ("ImageCraft", "Akashic"):
+        component = components.get(name)
+        if not isinstance(component, dict):
+            raise RuntimeError(f"component pin registry is missing {name}")
+        url = component.get("repositoryURL")
+        revision = component.get("revision")
+        release_tag = component.get("releaseTag")
+        if not isinstance(url, str) or not url.startswith("https://github.com/"):
+            raise RuntimeError(f"component {name} has no public HTTPS repository URL")
+        if not isinstance(revision, str) or re.fullmatch(r"[0-9a-f]{40}", revision) is None:
+            raise RuntimeError(f"component {name} has no exact revision")
+        if not isinstance(release_tag, str) or not release_tag:
+            raise RuntimeError(f"component {name} has no immutable release tag")
+        bindings[name] = {
+            "repositoryURL": url,
+            "revision": revision,
+            "releaseTag": release_tag,
+        }
+    return bindings
+
+
+def public_tag_revision(repository_url: str, release_tag: str) -> str:
+    result = run(
+        [
+            "git",
+            "ls-remote",
+            "--tags",
+            repository_url,
+            f"refs/tags/{release_tag}",
+            f"refs/tags/{release_tag}^{{}}",
+        ],
+        ROOT,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"failed to resolve public component tag {release_tag}: "
+            f"{result.stdout}{result.stderr}"
+        )
+    rows = {}
+    for line in result.stdout.splitlines():
+        fields = line.split("\t", 1)
+        if len(fields) == 2:
+            rows[fields[1]] = fields[0]
+    peeled = rows.get(f"refs/tags/{release_tag}^{{}}")
+    direct = rows.get(f"refs/tags/{release_tag}")
+    resolved = peeled or direct
+    if resolved is None or re.fullmatch(r"[0-9a-f]{40}", resolved) is None:
+        raise RuntimeError(f"public component tag is unavailable: {release_tag}")
+    return resolved
+
+
+def materialize_pinned_components() -> tuple[dict[str, pathlib.Path], dict[str, dict[str, str]]]:
+    bindings = component_bindings()
+    resolved = run(["xcrun", "swift", "package", "resolve"], ROOT, check=False)
+    if resolved.returncode != 0:
+        raise RuntimeError(
+            "failed to resolve exact public component pins:\n" + resolved.stdout + resolved.stderr
+        )
+
+    sources: dict[str, pathlib.Path] = {}
+    observed: dict[str, dict[str, str]] = {}
+    for name, binding in bindings.items():
+        checkout = ROOT / ".build/checkouts" / name
+        if not (checkout / ".git").exists():
+            raise RuntimeError(f"resolved component checkout is missing: {name}")
+        head = run(["git", "rev-parse", "HEAD"], checkout).stdout.strip()
+        status = run(["git", "status", "--short"], checkout).stdout.splitlines()
+        tree = run(["git", "rev-parse", "HEAD^{tree}"], checkout).stdout.strip()
+        remote_tag = public_tag_revision(binding["repositoryURL"], binding["releaseTag"])
+        if head != binding["revision"]:
+            raise RuntimeError(
+                f"resolved component revision mismatch for {name}: "
+                f"expected={binding['revision']} observed={head}"
+            )
+        if remote_tag != binding["revision"]:
+            raise RuntimeError(
+                f"public release tag drifted for {name}: "
+                f"tag={binding['releaseTag']} expected={binding['revision']} observed={remote_tag}"
+            )
+        if status:
+            raise RuntimeError(f"resolved component checkout is dirty: {name}: {status!r}")
+        sources[name] = checkout
+        observed[name] = {
+            **binding,
+            "checkoutHead": head,
+            "checkoutTree": tree,
+            "publicTagRevision": remote_tag,
+        }
+    return sources, observed
+
+
 def copy_package_source(
     source: pathlib.Path,
     destination: pathlib.Path,
@@ -172,11 +268,9 @@ def main() -> int:
         shutil.rmtree(output)
     output.mkdir(parents=True)
 
-    sources_before = {name: snapshot(path) for name, path in {
-        "Fovea": ROOT,
-        "ImageCraft": IMAGECRAFT,
-        "Akashic": AKASHIC,
-    }.items()}
+    component_sources, component_source_bindings = materialize_pinned_components()
+    source_roots = {"Fovea": ROOT, **component_sources}
+    sources_before = {name: snapshot(path) for name, path in source_roots.items()}
     fovea_implementation_before = fovea_implementation_identity()
     adapter_fixture = FIXTURE_DIR / "ImageCraftAnimationPlaybackPreparer.swift.fixture"
     test_fixture = FIXTURE_DIR / "ImageCraftAnimationPlaybackQualificationMain.swift.fixture"
@@ -227,10 +321,14 @@ def main() -> int:
             ("Package.swift", ".swift-format", "Sources", "Tests", "Tools", "Examples"),
         )
         copy_package_source(
-            IMAGECRAFT, overlay_imagecraft, ("Package.swift", "Sources", "Tests")
+            component_sources["ImageCraft"],
+            overlay_imagecraft,
+            ("Package.swift", "Sources", "Tests"),
         )
         copy_package_source(
-            AKASHIC, overlay_akashic, ("Package.swift", "Sources", "Tests")
+            component_sources["Akashic"],
+            overlay_akashic,
+            ("Package.swift", "Sources", "Tests"),
         )
         patch_fovea_package(overlay_fovea / "Package.swift")
         qualification_dir.mkdir(parents=True, exist_ok=True)
@@ -272,20 +370,18 @@ def main() -> int:
     format_log = output / "format.log"
     format_log.write_text(format_result.stdout + format_result.stderr)
 
-    sources_after = {name: snapshot(path) for name, path in {
-        "Fovea": ROOT,
-        "ImageCraft": IMAGECRAFT,
-        "Akashic": AKASHIC,
-    }.items()}
+    sources_after = {name: snapshot(path) for name, path in source_roots.items()}
     fovea_implementation_after = fovea_implementation_identity()
     report = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "studyID": "FOVEA-W5-IMAGECRAFT-ANIMATION-ADAPTER-OVERLAY-QUALIFICATION-V2",
         "generatedAtUTC": dt.datetime.now(dt.timezone.utc).isoformat(),
         "formalClaimEligible": False,
         "sourcesBefore": sources_before,
         "sourcesAfter": sources_after,
         "sourcesUnchangedDuringRun": sources_before == sources_after,
+        "componentSourceMode": "public-exact-pin-swiftpm-checkout",
+        "componentSourceBindings": component_source_bindings,
         "foveaImplementationBefore": fovea_implementation_before,
         "foveaImplementationAfter": fovea_implementation_after,
         "foveaImplementationUnchangedDuringRun": (
@@ -312,7 +408,8 @@ def main() -> int:
             "sha256": sha256(log),
         },
         "claimBoundary": [
-            "isolated local source-overlay qualification only",
+            "isolated source-overlay qualification from public exact component pins only",
+            "component source does not depend on mutable sibling repository working trees",
             "does not modify or publish the production Fovea ImageCraft pin",
             "does not establish physical-device timing, memory, energy, thermal, or release readiness",
             "adapter timing normalization remains explicit and caller-versioned",

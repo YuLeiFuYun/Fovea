@@ -85,7 +85,7 @@ jobs:
   verify:
     if: ${{ inputs.budget_approved && inputs.profile == 'full' }}
     runs-on: xcode-27
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - name: Checkout exact verified and base commits
         env:
