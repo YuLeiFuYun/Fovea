@@ -925,8 +925,7 @@
       "counterexample": "A custom Akashic release-mechanics wrapper observed failures in fault injection and resource-envelope validation, continued into the platform matrix, and returned zero because the last platform command passed.",
       "decision": "Every release orchestration entry point must enable fail-fast semantics or aggregate explicit per-gate statuses. Final-command success cannot overwrite earlier failures.",
       "evidencePaths": [
-        "scripts/verify-component-candidate-clean-copy.py",
-        "../Akashic/scripts/verify-release-readiness.sh"
+        "scripts/verify-component-candidate-clean-copy.py"
       ],
       "exitCondition": "All compound release entry points are machine-checked for fail-fast or explicit per-gate aggregation, with a regression that injects an early failure and requires a nonzero final result.",
       "id": "NEG-CACHE-RELEASE-GATE-NON-FAIL-FAST-001"
@@ -937,8 +936,9 @@
       "counterexample": "Manifest v2 stores UUID payloads and .manifest-entry-*.json incremental records in the same directory. The old resource probe counted both as blob bytes, reporting 130 blob files for a 64-object workload and inflating payload footprint by 26479 bytes.",
       "decision": "Resource schema 2 recognizes payload only when the filename is a UUID and classifies all sidecars, pointer files and locks as metadata. It records separate payload and metadata file/byte counts.",
       "evidencePaths": [
-        "../Akashic/Sources/AkashicResourceProbe/AkashicResourceProbe.swift",
-        "../Akashic/Tools/Resource/verify_local_resource_envelope.py"
+        "docs/research/akashic-fault-injection-evidence-2026-07.json",
+        "docs/adr/0014-domain-neutral-akashic-contract.md",
+        "docs/project-memory/component-pins.json"
       ],
       "exitCondition": "Resource schema 2 is replaced only by a newer version that retains exact payload-versus-metadata classification and passes retained mixed-layout regression fixtures.",
       "id": "NEG-AKASHIC-RESOURCE-SIDECAR-PAYLOAD-001"
@@ -949,9 +949,8 @@
       "counterexample": "After manifest-v2 persistence changes, durable replacement, blob staging and manifest publication all preserved direct kernel ENOSPC while maintaining recovery invariants. The old aggregate rejected the stronger and more direct error surface.",
       "decision": "Quota schema 2 requires all three cases to preserve errno 28 and fault aggregate V5 binds that evidence, while retaining old-state, cleanup and container-free-space invariants.",
       "evidencePaths": [
-        "../Akashic/Tools/Fault/verify_real_quota.py",
-        "../Akashic/Tools/Crash/verify_fault_injection_report.py",
-        "../Akashic/docs/FAULT_INJECTION.md"
+        "docs/research/akashic-fault-injection-evidence-2026-07.json",
+        "docs/project-memory/component-pins.json"
       ],
       "exitCondition": "A newer persistence implementation may revise the observed surface only after a versioned real-APFS matrix records the new behavior and preserves all recovery invariants.",
       "id": "NEG-AKASHIC-QUOTA-ERROR-SURFACE-FROZEN-001"
@@ -964,11 +963,7 @@
       "evidencePaths": [
         "scripts/verify-component-candidate-clean-copy.py",
         "scripts/verify-component-candidate-identity-negatives.py",
-        "docs/specifications/component-candidate-identity.md",
-        "../Akashic/Tools/Identity/capture_source_identity.py",
-        "../Akashic/Tools/Identity/materialize_clean_copy.py",
-        "../ImageCraft/Tools/Identity/capture_source_identity.py",
-        "../ImageCraft/Tools/Identity/materialize_clean_copy.py"
+        "docs/specifications/component-candidate-identity.md"
       ],
       "exitCondition": "A newer identity contract may replace v2 only if it preserves domain separation, complete independent enumeration, exact exclusion scoping, byte and executable-bit binding, non-execution of candidate identity tools, validated snapshot construction, post-build revalidation and all six retained negative cases.",
       "id": "NEG-COMPONENT-IDENTITY-MANIFEST-COMPLETENESS-001"
@@ -1180,11 +1175,8 @@
       "counterexample": "Fixed-order 24-frame GIF/APNG/JPEG-sequence runs produced large and unstable apparent advantages, including APNG sequence ratios near 0.52x, after earlier runs on the same code were near parity. Replacing the campaign with 18 retained samples, 9/9 pair alternation and a three-way selected-frame rotation moved the sequence ratios to 1.020x, 1.017x and 1.028x, proving the fixed-order result was cache and host-state contamination.",
       "decision": "Reject fixed-order animation benchmarks. Retain schema-2 reports with explicit measurement orders, balanced pair alternation, three-way rotation, raw samples, input identities and pixel digests.",
       "evidencePaths": [
-        "../ImageCraft/Sources/ImageCraftEvidence/AnimationPerformanceEvidence.swift",
-        "../ImageCraft/Tools/Performance/validate_animation_performance_evidence.py",
-        "../ImageCraft/.artifacts/performance/animation-initial/reports/balanced-gif-256-window8.json",
-        "../ImageCraft/.artifacts/performance/animation-initial/reports/balanced-apng-256-window8.json",
-        "../ImageCraft/.artifacts/performance/animation-initial/reports/balanced-jpeg-sequence-256-window8.json"
+        "docs/research/w5-animated-codec-study-2026-08.json",
+        "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json"
       ],
       "exitCondition": "None for fixed ordering. Future animation comparisons must remain balanced or randomized and retain the executed order in evidence.",
       "id": "NEG-W5-FIXED-ORDER-ANIMATION-BENCH-001"
@@ -1195,10 +1187,9 @@
       "counterexample": "ImageCraft integration-contract verification failed with root product set drift because every executable target becomes a package product. Keeping the separate target would have expanded the consumer-visible package surface for an evidence-only tool.",
       "decision": "Remove the extra executable target and route animation performance through the existing ImageCraftEvidence product. Evidence tooling must not create a second public executable product.",
       "evidencePaths": [
-        "../ImageCraft/Package.swift",
-        "../ImageCraft/Sources/ImageCraftEvidence/AnimationPerformanceEvidence.swift",
-        "../ImageCraft/Sources/ImageCraftEvidence/main.swift",
-        "../ImageCraft/scripts/verify-integration-contract.sh"
+        "docs/research/w5-animated-codec-study-2026-08.json",
+        "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json",
+        "docs/project-memory/component-pins.json"
       ],
       "exitCondition": "Reconsider only if the integration contract is intentionally versioned to publish a separate product for a consumer-facing purpose rather than benchmark convenience.",
       "id": "NEG-IMAGECRAFT-ANIMATION-LAB-PRODUCT-001"
@@ -1223,9 +1214,8 @@
       "counterexample": "The full-image path substantially improved repeated selected-frame latency but caused the APNG first-sequence experiment to rise from roughly 28 ms to roughly 59 ms for 24 frames. A single source-selection policy therefore did not dominate both random reuse and continuous-window endpoints.",
       "decision": "Use the full-image cache path for frame(at:) and the thumbnail/window path for frames(in:). Pixel digests between the two paths are tested equal.",
       "evidencePaths": [
-        "../ImageCraft/Sources/ImageCraftImageIO/ImageIOAnimationFrameProvider.swift",
-        "../ImageCraft/Sources/ImageCraftImageIO/ImageIOAnimationFrameRenderer.swift",
-        "../ImageCraft/Tests/ImageCraftImageIOTests/AnimatedImageDecoderTests.swift"
+        "docs/research/w5-animated-codec-study-2026-08.json",
+        "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json"
       ],
       "exitCondition": "Reconsider only with a bounded cache policy that improves both repeated-frame and continuous-window endpoints without increasing peak memory or reclaim latency.",
       "id": "NEG-IMAGECRAFT-ANIMATION-UNIVERSAL-FULL-IMAGE-FASTPATH-001"
@@ -1236,9 +1226,8 @@
       "counterexample": "After warming all full frames, GIF and JPEG-sequence 24-frame loops fell to about 0.43 ms and 0.19 ms, roughly 46x and 61x faster than the bounded ImageCraft window, but the baseline implicitly retains the entire decoded track and has no matched memory or reclaim budget.",
       "decision": "Keep unbounded all-frame cache as a diagnostic only. The primary continuous-window endpoint uses the same thumbnail/window policy and reports about 1.01x mechanism overhead.",
       "evidencePaths": [
-        "../ImageCraft/docs/PERFORMANCE.md",
-        "../ImageCraft/Sources/ImageCraftEvidence/AnimationPerformanceEvidence.swift",
-        "../ImageCraft/Tools/Performance/validate_animation_performance_evidence.py"
+        "docs/research/w5-animated-codec-study-2026-08.json",
+        "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json"
       ],
       "exitCondition": "It can become a primary endpoint only after both systems receive the same explicit decoded-byte budget, eviction policy, peak-memory accounting and reclaim-latency gate.",
       "id": "NEG-W5-UNBOUNDED-FULL-FRAME-CACHE-AS-WINDOW-BASELINE-001"
@@ -1810,10 +1799,7 @@
       "decision": "Adopt only persistent anchors that preserve later-state semantics: a full-canvas source frame is a current-frame anchor only when disposal is not previous; after a full-canvas background-disposal frame, the next frame may start from transparent canvas. Do not promote target-local YYImage blendFromIndex behavior into a persistent runtime anchor without an independent state proof. Current executable evidence is IMG_ANIM_PT_053-056; ImageCraft additionally enforces unique contiguous IMG_ANIM_PT identities in scripts/verify.sh.",
       "evidencePaths": [
         "docs/research/w5-apng-semantic-replay-2026-08.json",
-        "Tools/Performance/w5_yyimage_semantic_replay_oracle.py",
-        "../ImageCraft/Sources/ImageCraftImageIO/APNGOwnedStraightAlphaPlayback.swift",
-        "../ImageCraft/Tests/ImageCraftImageIOTests/APNGRawSubrectDecoderTests.swift",
-        "../ImageCraft/Tests/ImageCraftImageIOTests/AnimatedImageDecoderTests.swift"
+        "Tools/Performance/w5_yyimage_semantic_replay_oracle.py"
       ],
       "exitCondition": "Broaden the persistent reset rule only after exact-pixel random and multi-frame range tests plus source-bound composition semantics prove that the proposed anchor reconstructs every later pre-frame canvas without additional hidden state.",
       "id": "NEG-W5-APNG-SEMANTIC-RESET-OVERGENERALIZATION-001"
