@@ -43,9 +43,13 @@ def test_count(output: str) -> int:
     return max(counts, default=0)
 
 
-def xctest_terminal_success(output: str) -> bool:
+def latest_xctest_attempt(output: str) -> str:
     attempt_marker = "=== attempt "
-    latest_attempt = output[output.rfind(attempt_marker) :] if attempt_marker in output else output
+    return output[output.rfind(attempt_marker) :] if attempt_marker in output else output
+
+
+def xctest_terminal_success(output: str) -> bool:
+    latest_attempt = latest_xctest_attempt(output)
     terminal = re.search(
         r"Test Suite '(?:Selected tests|All tests)' passed at [^\n]+\.\n"
         r"\s*Executed [1-9][0-9]* tests?, with 0 failures \(0 unexpected\)",
@@ -60,6 +64,50 @@ def xctest_terminal_success(output: str) -> bool:
         "Test Suite 'All tests' failed",
     )
     return not any(marker in latest_attempt for marker in failure_markers)
+
+
+def xctest_terminal_failure(output: str) -> bool:
+    latest_attempt = latest_xctest_attempt(output)
+    return re.search(
+        r"Test Suite '(?:Selected tests|All tests)' failed at [^\n]+\.\n"
+        r"\s*Executed [1-9][0-9]* tests?, with [1-9][0-9]* failures? \([0-9]+ unexpected\)",
+        latest_attempt,
+    ) is not None
+
+
+def xctest_failure_summary(output: str) -> str:
+    latest_attempt = latest_xctest_attempt(output)
+    events = re.findall(
+        r"Test Case '-\[[^]]+ ([A-Za-z0-9_]+)\]' (started|passed|failed)",
+        latest_attempt,
+    )
+    started: list[str] = []
+    passed: list[str] = []
+    failed: list[str] = []
+    for method, event in events:
+        target = started if event == "started" else passed if event == "passed" else failed
+        if method not in target:
+            target.append(method)
+    incomplete = [method for method in started if method not in passed and method not in failed]
+    terminal_lines = [
+        line.strip()
+        for line in latest_attempt.splitlines()
+        if re.search(
+            r"Test Suite '(?:Selected tests|All tests|[^']+UITests(?:\.xctest)?)' failed|"
+            r"Executed [1-9][0-9]* tests?, with [1-9][0-9]* failures?",
+            line,
+        )
+    ]
+    parts = [
+        "XCTest failure summary:",
+        f"started={','.join(started) or 'none'}",
+        f"passed={','.join(passed) or 'none'}",
+        f"failed={','.join(failed) or 'none'}",
+        f"incomplete={','.join(incomplete) or 'none'}",
+    ]
+    if terminal_lines:
+        parts.append("terminal=" + " | ".join(terminal_lines[-4:]))
+    return "\n".join(parts)
 
 
 def ui_test_methods(source: Path) -> list[str]:
@@ -245,6 +293,7 @@ def monitor_xcode_process(
 ) -> tuple[int, bool, bool]:
     started_at = last_activity_at = time.monotonic()
     terminal_success_at: float | None = None
+    terminal_failure_at: float | None = None
     last_size = log.stat().st_size
     while True:
         if (return_code := process.poll()) is not None:
@@ -256,10 +305,16 @@ def monitor_xcode_process(
             last_size, last_activity_at = current_size, now
             if accept_terminal_test_success:
                 stream.flush()
-                if xctest_terminal_success(log.read_text(errors="replace")):
+                log_text = log.read_text(errors="replace")
+                if xctest_terminal_failure(log_text):
+                    terminal_failure_at = terminal_failure_at or now
+                    terminal_success_at = None
+                elif xctest_terminal_success(log_text):
                     terminal_success_at = terminal_success_at or now
+                    terminal_failure_at = None
                 else:
                     terminal_success_at = None
+                    terminal_failure_at = None
         if (
             terminal_success_at is not None
             and now - terminal_success_at >= terminal_exit_grace_seconds
@@ -271,6 +326,17 @@ def monitor_xcode_process(
             stream.flush()
             terminate_process_group(process)
             return 0, False, False
+        if (
+            terminal_failure_at is not None
+            and now - terminal_failure_at >= terminal_exit_grace_seconds
+        ):
+            stream.write(
+                "=== XCTest terminal failure observed; xcodebuild exit grace exceeded after "
+                f"{terminal_exit_grace_seconds} seconds ===\n"
+            )
+            stream.flush()
+            terminate_process_group(process)
+            return 1, False, False
         if inactivity_expired(last_activity_at, now, inactivity_timeout_seconds):
             stream.write(
                 "=== infrastructure stall: no log progress for "
@@ -335,6 +401,11 @@ def raise_phase_failure(
     inactivity_timeout_seconds: int | None,
 ) -> None:
     tail = "\n".join(attempt.output.splitlines()[-120:])
+    failure_summary = (
+        xctest_failure_summary(attempt.output) + "\n"
+        if xctest_terminal_failure(attempt.output)
+        else ""
+    )
     if attempt.stalled:
         raise RuntimeError(
             f"FoveaWorkbench {name} made no log progress for "
@@ -342,7 +413,7 @@ def raise_phase_failure(
         )
     if attempt.timed_out:
         raise RuntimeError(f"FoveaWorkbench {name} timed out after {timeout_seconds} seconds:\n{tail}")
-    raise RuntimeError(f"FoveaWorkbench {name} failed:\n{tail}")
+    raise RuntimeError(f"FoveaWorkbench {name} failed:\n{failure_summary}{tail}")
 
 
 def run_xcode_phase(

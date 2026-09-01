@@ -799,6 +799,31 @@ try:
             "XCTest terminal-success recovery must require a positive zero-failure aggregate from the latest attempt"
         )
 
+    terminal_failure = (
+        "=== attempt 2/2 simulator=test-device ===\n"
+        "Test Case '-[Suite testStable]' started.\n"
+        "Test Case '-[Suite testStable]' passed (1.0 seconds).\n"
+        "Test Case '-[Suite testInterrupted]' started.\n"
+        "Test Suite 'Selected tests' failed at 2026-09-01 00:00:00.000.\n"
+        "\t Executed 2 tests, with 1 failure (1 unexpected) in 2.000 seconds\n"
+    )
+    failure_summary = xcode_support.xctest_failure_summary(terminal_failure)
+    failure_attempt = xcode_support.PhaseAttempt(
+        command=["xcodebuild"], destination="test-device",
+        log=ROOT / ".artifacts/ios-example/tooling-terminal-failure.log",
+        return_code=1, output=terminal_failure, timed_out=False, stalled=False,
+    )
+    if (
+        not xcode_support.xctest_terminal_failure(terminal_failure)
+        or xcode_support.xctest_terminal_success(terminal_failure)
+        or "passed=testStable" not in failure_summary
+        or "incomplete=testInterrupted" not in failure_summary
+        or xcode_support.phase_is_retryable(failure_attempt)
+    ):
+        errors.append(
+            "XCTest terminal failure must remain non-retryable and preserve observed case state"
+        )
+
     with tempfile.TemporaryDirectory(prefix="fovea-xctest-exit-grace-") as directory:
         terminal_log = Path(directory) / "terminal.log"
         terminal_child = (
@@ -834,6 +859,43 @@ try:
     ):
         errors.append(
             "completed XCTest aggregate must bound a hung Xcode wrapper exit without weakening test failure handling"
+        )
+
+    with tempfile.TemporaryDirectory(prefix="fovea-xctest-failure-grace-") as directory:
+        failure_log = Path(directory) / "failure.log"
+        failure_child = (
+            "import sys,time; sys.stdout.write("
+            + repr(terminal_failure)
+            + "); sys.stdout.flush(); time.sleep(10)"
+        )
+        with failure_log.open("w") as stream:
+            failure_process = subprocess.Popen(
+                [sys.executable, "-c", failure_child],
+                text=True,
+                stdout=stream,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+            failure_code, failure_timeout, failure_stall = (
+                xcode_support.monitor_xcode_process(
+                    failure_process,
+                    failure_log,
+                    stream,
+                    timeout_seconds=5,
+                    inactivity_timeout_seconds=4,
+                    accept_terminal_test_success=True,
+                    terminal_exit_grace_seconds=1,
+                )
+            )
+        failure_text = failure_log.read_text()
+    if (
+        failure_code == 0
+        or failure_timeout
+        or failure_stall
+        or "XCTest terminal failure observed" not in failure_text
+    ):
+        errors.append(
+            "completed XCTest failure aggregate must bound a hung Xcode wrapper exit without becoming an infrastructure retry"
         )
 
     original_simulator = xcode_support.simulator
