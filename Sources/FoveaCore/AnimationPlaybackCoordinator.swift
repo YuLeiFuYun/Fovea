@@ -19,7 +19,16 @@ package struct AnimationProviderFrame: Sendable {
 /// 栅栏丢弃迟到结果，不永久关闭可恢复的 decoder session。
 package protocol AnimationFrameProvider: Sendable {
     func frames(in range: Range<Int>) async throws -> [AnimationProviderFrame]
+    /// 当前 decode plan 在 provider 内执行时的保守峰值字节成本；nil 表示 provider
+    /// 无法证明该上界，调用方不得从目标几何自行猜测。
+    func frameWindowPredecodePeakByteCostUpperBound(frameCount: Int) async -> Int?
     func cancel() async
+}
+
+extension AnimationFrameProvider {
+    package func frameWindowPredecodePeakByteCostUpperBound(frameCount: Int) async -> Int? {
+        nil
+    }
 }
 
 package enum AnimationPlaybackCoordinatorError: Error, Equatable, Sendable {
@@ -46,11 +55,11 @@ package actor AnimationPlaybackCoordinator {
     private let session: AnimationPlaybackSession
     private let provider: any AnimationFrameProvider
     private let decodePermits: AsyncPermitPool
-    private let automaticWholeTrackPredecodePeakPermits: AsyncPermitPool?
-    private let automaticWholeTrackDecodePermits: AsyncPermitPool?
+    private let sharedDecodeWorkingSetPermits: AsyncPermitPool?
+    private let sharedDecodePermits: AsyncPermitPool?
     private let automaticWholeTrackDecodedByteCostUpperBound: Int?
     private let automaticWholeTrackPredecodePeakByteCost: Int?
-    private let automaticWholeTrackPredecodePriority: ImageRequestPriority
+    private let decodePriority: ImageRequestPriority
     private var automaticWholeTrackPredecodeTask: Task<AnimationPlaybackOutput, any Error>?
     private var automaticWholeTrackHandoffSnapshot: AnimationPlaybackResidentFramesSnapshot?
     private var publicationGeneration: UInt64 = 0
@@ -60,11 +69,11 @@ package actor AnimationPlaybackCoordinator {
         session: AnimationPlaybackSession,
         provider: any AnimationFrameProvider,
         maximumQueuedAdvances: Int = 8,
-        automaticWholeTrackPredecodePeakPermits: AsyncPermitPool? = nil,
-        automaticWholeTrackDecodePermits: AsyncPermitPool? = nil,
+        sharedDecodeWorkingSetPermits: AsyncPermitPool? = nil,
+        sharedDecodePermits: AsyncPermitPool? = nil,
         automaticWholeTrackDecodedByteCostUpperBound: Int? = nil,
         automaticWholeTrackPredecodePeakByteCost: Int? = nil,
-        automaticWholeTrackPredecodePriority: ImageRequestPriority = .normal
+        decodePriority: ImageRequestPriority = .normal
     ) {
         self.session = session
         self.provider = provider
@@ -72,14 +81,13 @@ package actor AnimationPlaybackCoordinator {
             limit: 1,
             queueLimit: min(10_000, max(0, maximumQueuedAdvances))
         )
-        self.automaticWholeTrackPredecodePeakPermits =
-            automaticWholeTrackPredecodePeakPermits
-        self.automaticWholeTrackDecodePermits = automaticWholeTrackDecodePermits
+        self.sharedDecodeWorkingSetPermits = sharedDecodeWorkingSetPermits
+        self.sharedDecodePermits = sharedDecodePermits
         self.automaticWholeTrackDecodedByteCostUpperBound =
             automaticWholeTrackDecodedByteCostUpperBound
         self.automaticWholeTrackPredecodePeakByteCost =
             automaticWholeTrackPredecodePeakByteCost
-        self.automaticWholeTrackPredecodePriority = automaticWholeTrackPredecodePriority
+        self.decodePriority = decodePriority
     }
 
     package func start(at monotonicNanoseconds: UInt64) async throws {
@@ -210,22 +218,21 @@ package actor AnimationPlaybackCoordinator {
             await session.automaticWholeTrackAdmissionIsEnabled()
         try requireCurrentPublication(generation)
         if automaticWholeTrackAdmissionEnabled,
-            let automaticWholeTrackPredecodePeakPermits,
+            let sharedDecodeWorkingSetPermits,
             let automaticWholeTrackPredecodePeakByteCost
         {
             let task = Task<AnimationPlaybackOutput, any Error> { [weak self] in
-                let peakPermit = try await automaticWholeTrackPredecodePeakPermits.acquire(
+                let peakPermit = try await sharedDecodeWorkingSetPermits.acquire(
                     units: automaticWholeTrackPredecodePeakByteCost,
-                    priority: self?.automaticWholeTrackPredecodePriority ?? .normal,
+                    priority: self?.decodePriority ?? .normal,
                     workEstimate: work.decodePlan.frameCount
                 )
                 return try await peakPermit.withPermit {
                     guard let self else { throw CancellationError() }
                     try Task.checkCancellation()
-                    if let automaticWholeTrackDecodePermits = self.automaticWholeTrackDecodePermits
-                    {
-                        let decodePermit = try await automaticWholeTrackDecodePermits.acquire(
-                            priority: self.automaticWholeTrackPredecodePriority,
+                    if let sharedDecodePermits = self.sharedDecodePermits {
+                        let decodePermit = try await sharedDecodePermits.acquire(
+                            priority: self.decodePriority,
                             workEstimate: work.decodePlan.frameCount
                         )
                         return try await decodePermit.withPermit {
@@ -247,6 +254,67 @@ package actor AnimationPlaybackCoordinator {
             automaticWholeTrackPredecodeTask = task
             defer { automaticWholeTrackPredecodeTask = nil }
             return try await task.value
+        }
+        return try await decodeAndPublishWithSharedAdmission(
+            work: work,
+            existing: existing,
+            publicationGeneration: generation
+        )
+    }
+
+    /// 普通 bounded-window 与固定 predecode-all 也必须和静态图共享全局 decode-count
+    /// 容量。provider 能证明窗口峰值时，再共享 working-set 字节容量；未知成本保持
+    /// nil，不以目标像素几何伪造内存保证。自动整轨路径已在上层持有完整峰值许可，
+    /// 因而不会经过这里重复领取同一池。
+    private func decodeAndPublishWithSharedAdmission(
+        work: AnimationPlaybackWork,
+        existing: DecodedImage?,
+        publicationGeneration generation: UInt64
+    ) async throws -> AnimationPlaybackOutput {
+        let frameCount = work.decodePlan.frameCount
+        let peakByteCost =
+            await provider.frameWindowPredecodePeakByteCostUpperBound(frameCount: frameCount)
+        try Task.checkCancellation()
+        try requireCurrentPublication(generation)
+
+        if let peakByteCost, let sharedDecodeWorkingSetPermits {
+            let workingSetPermit = try await sharedDecodeWorkingSetPermits.acquire(
+                units: peakByteCost,
+                priority: decodePriority,
+                workEstimate: frameCount
+            )
+            return try await workingSetPermit.withPermit {
+                try await self.decodeAndPublishWithSharedDecodePermit(
+                    work: work,
+                    existing: existing,
+                    publicationGeneration: generation
+                )
+            }
+        }
+        return try await decodeAndPublishWithSharedDecodePermit(
+            work: work,
+            existing: existing,
+            publicationGeneration: generation
+        )
+    }
+
+    private func decodeAndPublishWithSharedDecodePermit(
+        work: AnimationPlaybackWork,
+        existing: DecodedImage?,
+        publicationGeneration generation: UInt64
+    ) async throws -> AnimationPlaybackOutput {
+        if let sharedDecodePermits {
+            let decodePermit = try await sharedDecodePermits.acquire(
+                priority: decodePriority,
+                workEstimate: work.decodePlan.frameCount
+            )
+            return try await decodePermit.withPermit {
+                try await self.decodeAndPublish(
+                    work: work,
+                    existing: existing,
+                    publicationGeneration: generation
+                )
+            }
         }
         return try await decodeAndPublish(
             work: work,

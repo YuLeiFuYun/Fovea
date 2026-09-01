@@ -117,8 +117,8 @@ package actor AnimationPlaybackRuntime {
     private let frameMemory: AnimationFrameMemory
     private let maximumDriverCount: Int
     private let automaticWholeTrackPredecodePeakCostLimit: Int
-    private let automaticWholeTrackPredecodePeakPermits: AsyncPermitPool
-    private let automaticWholeTrackDecodePermits: AsyncPermitPool?
+    private let sharedDecodeWorkingSetPermits: AsyncPermitPool
+    private let sharedDecodePermits: AsyncPermitPool?
     private var drivers: [UUID: AnimationPlaybackDriver] = [:]
     private var driverNamespaces: [UUID: SecurityNamespaceID] = [:]
     private var minimumActiveGenerations: [SecurityNamespaceID: NamespaceGeneration] = [:]
@@ -132,8 +132,8 @@ package actor AnimationPlaybackRuntime {
         frameMemoryCostLimit: Int,
         maximumDriverCount: Int = AnimationPlaybackRuntime.defaultMaximumDriverCount,
         automaticWholeTrackPredecodePeakCostLimit: Int? = nil,
-        automaticWholeTrackPredecodePeakPermits: AsyncPermitPool? = nil,
-        automaticWholeTrackDecodePermits: AsyncPermitPool? = nil
+        sharedDecodeWorkingSetPermits: AsyncPermitPool? = nil,
+        sharedDecodePermits: AsyncPermitPool? = nil
     ) {
         let normalizedFrameMemoryCostLimit = max(1, frameMemoryCostLimit)
         let normalizedDriverCount = min(100_000, max(1, maximumDriverCount))
@@ -144,13 +144,13 @@ package actor AnimationPlaybackRuntime {
         self.frameMemory = AnimationFrameMemory(costLimit: normalizedFrameMemoryCostLimit)
         self.maximumDriverCount = normalizedDriverCount
         self.automaticWholeTrackPredecodePeakCostLimit = normalizedPredecodePeakCostLimit
-        self.automaticWholeTrackPredecodePeakPermits =
-            automaticWholeTrackPredecodePeakPermits
+        self.sharedDecodeWorkingSetPermits =
+            sharedDecodeWorkingSetPermits
             ?? AsyncPermitPool(
                 limit: normalizedPredecodePeakCostLimit,
                 queueLimit: normalizedDriverCount
             )
-        self.automaticWholeTrackDecodePermits = automaticWholeTrackDecodePermits
+        self.sharedDecodePermits = sharedDecodePermits
     }
 
     package func retainLifetimeAnchor(_ anchor: any Sendable) {
@@ -223,7 +223,7 @@ package actor AnimationPlaybackRuntime {
         automaticWholeTrackDecodedByteCostUpperBound: Int? = nil,
         providerRetainedByteCost: Int? = nil,
         automaticWholeTrackPredecodePeakByteCost: Int? = nil,
-        automaticWholeTrackPredecodePriority: ImageRequestPriority = .normal,
+        decodePriority: ImageRequestPriority = .normal,
         clock: any AnimationPlaybackClock = SystemAnimationPlaybackClock()
     ) throws -> AnimationPlaybackHandle {
         try validateHandleRegistration(
@@ -249,18 +249,13 @@ package actor AnimationPlaybackRuntime {
             session: session,
             provider: provider,
             maximumQueuedAdvances: maximumQueuedAdvances,
-            automaticWholeTrackPredecodePeakPermits:
-                automaticWholeTrackPredecodePeakByteCost == nil
-                ? nil : automaticWholeTrackPredecodePeakPermits,
-            automaticWholeTrackDecodePermits:
-                automaticWholeTrackPredecodePeakByteCost == nil
-                ? nil : automaticWholeTrackDecodePermits,
+            sharedDecodeWorkingSetPermits: sharedDecodeWorkingSetPermits,
+            sharedDecodePermits: sharedDecodePermits,
             automaticWholeTrackDecodedByteCostUpperBound:
                 automaticWholeTrackDecodedByteCostUpperBound,
             automaticWholeTrackPredecodePeakByteCost:
                 automaticWholeTrackPredecodePeakByteCost,
-            automaticWholeTrackPredecodePriority:
-                automaticWholeTrackPredecodePriority
+            decodePriority: decodePriority
         )
         let driver = AnimationPlaybackDriver(coordinator: coordinator, clock: clock)
         let identifier = UUID()
@@ -544,10 +539,10 @@ package actor AnimationPlaybackRuntime {
         frameMemory.totalBudgetCostForTesting
     }
     package func automaticWholeTrackPredecodePeakUsedUnitsForTesting() async -> Int {
-        await automaticWholeTrackPredecodePeakPermits.usedUnits
+        await sharedDecodeWorkingSetPermits.usedUnits
     }
     package func automaticWholeTrackPredecodePeakQueuedCountForTesting() async -> Int {
-        await automaticWholeTrackPredecodePeakPermits.queuedCount()
+        await sharedDecodeWorkingSetPermits.queuedCount()
     }
     package func applicationIsActiveForTesting() -> Bool { applicationIsActive }
     package func memoryPressureForTesting() -> AnimationMemoryPressureLevel { memoryPressure }

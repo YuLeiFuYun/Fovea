@@ -194,8 +194,8 @@ public struct FoveaSystemPipeline: Sendable {
             ),
             automaticWholeTrackPredecodePeakCostLimit:
                 configuration.maximumDecodeWorkingSetBytes,
-            automaticWholeTrackPredecodePeakPermits: globalDecodeWorkingSetPermits,
-            automaticWholeTrackDecodePermits: globalDecodePermits
+            sharedDecodeWorkingSetPermits: globalDecodeWorkingSetPermits,
+            sharedDecodePermits: globalDecodePermits
         )
         let pipeline = FoveaPipeline(
             configuration: configuration,

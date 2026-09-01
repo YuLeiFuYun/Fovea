@@ -2,6 +2,42 @@ import Foundation
 import FoveaCore
 
 extension FoveaSystemPipeline {
+
+    /// 使用 Fovea 当前精确固定的 ImageCraft 动画解码器创建授权动画 handle。
+    ///
+    /// 调用方仍显式提供零时长替代与 timing policy 版本；其余解码、帧窗口和整轨成本
+    /// 由生产 ImageCraft adapter 提供，不再依赖资格化 fixture 注入。
+    package func makeImageCraftEncodedAnimationHandle(
+        for request: ImageRequest,
+        zeroDurationReplacementNanoseconds: UInt64,
+        timingPolicyVersion: UInt16,
+        animationPolicyVersion: UInt16,
+        frameStrategy: AnimationFrameStrategy,
+        playbackPolicy: AnimationPlaybackPolicy,
+        reduceMotionEnabled: Bool,
+        windowPolicy: AnimationFrameWindowPolicy,
+        maximumPredecodeAllFrameCount: Int = 0,
+        maximumQueuedAdvances: Int = 8,
+        clock: any AnimationPlaybackClock = SystemAnimationPlaybackClock()
+    ) async throws -> AnimationPlaybackHandle {
+        let preparer = ImageCraftAnimationPlaybackPreparer(
+            zeroDurationReplacementNanoseconds: zeroDurationReplacementNanoseconds,
+            timingPolicyVersion: timingPolicyVersion
+        )
+        return try await makeEncodedAnimationHandle(
+            for: request,
+            using: preparer,
+            animationPolicyVersion: animationPolicyVersion,
+            frameStrategy: frameStrategy,
+            playbackPolicy: playbackPolicy,
+            reduceMotionEnabled: reduceMotionEnabled,
+            windowPolicy: windowPolicy,
+            maximumPredecodeAllFrameCount: maximumPredecodeAllFrameCount,
+            maximumQueuedAdvances: maximumQueuedAdvances,
+            clock: clock
+        )
+    }
+
     /// 从普通 Fovea 请求创建 decoder-neutral 静态动画 handle。
     ///
     /// 加载阶段复用管线 ACL、授权、HTTP 缓存与 namespace generation；preparer 返回后再次

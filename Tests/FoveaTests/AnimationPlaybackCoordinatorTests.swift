@@ -260,10 +260,91 @@ final class AnimationPlaybackCoordinatorTests: XCTestCase {
         XCTAssertEqual(secondRanges, [0..<4, 1..<2])
     }
 
+    func testSharedDecodePermitSerializesDifferentCoordinators_W5_PT_207() async throws {
+        let sharedDecodePermits = AsyncPermitPool(limit: 1, queueLimit: 8)
+        let firstProvider = TestAnimationProvider(
+            image: makeImage(),
+            suspension: .firstCall
+        )
+        let secondProvider = TestAnimationProvider(image: makeImage())
+        let first = try makeFixture(
+            provider: firstProvider,
+            sharedDecodePermits: sharedDecodePermits
+        )
+        let second = try makeFixture(
+            provider: secondProvider,
+            sharedDecodePermits: sharedDecodePermits
+        )
+        try await first.coordinator.start(at: 0)
+        try await second.coordinator.start(at: 0)
+
+        let firstAdvance = Task { try await first.coordinator.advance(at: 0) }
+        try await waitUntil("first animation holds shared decode permit") {
+            await firstProvider.callCount() == 1
+        }
+        let secondAdvance = Task { try await second.coordinator.advance(at: 0) }
+        try await waitUntil("second animation waits for shared decode permit") {
+            await sharedDecodePermits.queuedCount() == 1
+        }
+        let secondCallsWhileBlocked = await secondProvider.callCount()
+        XCTAssertEqual(secondCallsWhileBlocked, 0)
+
+        await firstProvider.releaseSuspendedCall()
+        _ = try await firstAdvance.value
+        _ = try await secondAdvance.value
+        let secondCallsAfterRelease = await secondProvider.callCount()
+        XCTAssertEqual(secondCallsAfterRelease, 1)
+    }
+
+    func testProvenWindowPeakSharesWorkingSetAcrossCoordinators_W5_PT_208() async throws {
+        let sharedWorkingSetPermits = AsyncPermitPool(limit: 1_024, queueLimit: 8)
+        let sharedDecodePermits = AsyncPermitPool(limit: 2, queueLimit: 8)
+        let firstProvider = TestAnimationProvider(
+            image: makeImage(),
+            suspension: .firstCall,
+            windowPeakByteCostUpperBound: 1_024
+        )
+        let secondProvider = TestAnimationProvider(
+            image: makeImage(),
+            windowPeakByteCostUpperBound: 1_024
+        )
+        let first = try makeFixture(
+            provider: firstProvider,
+            sharedDecodeWorkingSetPermits: sharedWorkingSetPermits,
+            sharedDecodePermits: sharedDecodePermits
+        )
+        let second = try makeFixture(
+            provider: secondProvider,
+            sharedDecodeWorkingSetPermits: sharedWorkingSetPermits,
+            sharedDecodePermits: sharedDecodePermits
+        )
+        try await first.coordinator.start(at: 0)
+        try await second.coordinator.start(at: 0)
+
+        let firstAdvance = Task { try await first.coordinator.advance(at: 0) }
+        try await waitUntil("first animation holds shared working-set permit") {
+            await firstProvider.callCount() == 1
+        }
+        let secondAdvance = Task { try await second.coordinator.advance(at: 0) }
+        try await waitUntil("second animation waits for shared working-set permit") {
+            await sharedWorkingSetPermits.queuedCount() == 1
+        }
+        let secondCallsWhileWorkingSetBlocked = await secondProvider.callCount()
+        XCTAssertEqual(secondCallsWhileWorkingSetBlocked, 0)
+
+        await firstProvider.releaseSuspendedCall()
+        _ = try await firstAdvance.value
+        _ = try await secondAdvance.value
+        let secondCallsAfterWorkingSetRelease = await secondProvider.callCount()
+        XCTAssertEqual(secondCallsAfterWorkingSetRelease, 1)
+    }
+
     private func makeFixture(
         provider: TestAnimationProvider,
         frameCount: Int = 6,
-        memoryCostLimit: Int = 4_096
+        memoryCostLimit: Int = 4_096,
+        sharedDecodeWorkingSetPermits: AsyncPermitPool? = nil,
+        sharedDecodePermits: AsyncPermitPool? = nil
     ) throws -> (
         coordinator: AnimationPlaybackCoordinator,
         memory: AnimationFrameMemory
@@ -302,7 +383,9 @@ final class AnimationPlaybackCoordinatorTests: XCTestCase {
         return (
             AnimationPlaybackCoordinator(
                 session: session,
-                provider: provider
+                provider: provider,
+                sharedDecodeWorkingSetPermits: sharedDecodeWorkingSetPermits,
+                sharedDecodePermits: sharedDecodePermits
             ),
             memory
         )
@@ -344,6 +427,7 @@ private actor TestAnimationProvider: AnimationFrameProvider {
     private let image: DecodedImage
     private let resultMode: ResultMode
     private let suspension: Suspension
+    private let windowPeakByteCostUpperBound: Int?
     private var requestedRanges: [Range<Int>] = []
     private var suspendedContinuation: CheckedContinuation<Void, Never>?
     private var cancellationCount = 0
@@ -352,11 +436,13 @@ private actor TestAnimationProvider: AnimationFrameProvider {
     init(
         image: DecodedImage,
         resultMode: ResultMode = .valid,
-        suspension: Suspension = .none
+        suspension: Suspension = .none,
+        windowPeakByteCostUpperBound: Int? = nil
     ) {
         self.image = image
         self.resultMode = resultMode
         self.suspension = suspension
+        self.windowPeakByteCostUpperBound = windowPeakByteCostUpperBound
     }
 
     func frames(in range: Range<Int>) async throws -> [AnimationProviderFrame] {
@@ -389,6 +475,11 @@ private actor TestAnimationProvider: AnimationFrameProvider {
         cancellationCount += 1
         suspendedContinuation?.resume()
         suspendedContinuation = nil
+    }
+
+    func frameWindowPredecodePeakByteCostUpperBound(frameCount: Int) -> Int? {
+        guard frameCount > 0 else { return nil }
+        return windowPeakByteCostUpperBound
     }
 
     func releaseSuspendedCall() {

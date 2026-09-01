@@ -210,8 +210,7 @@ extension AnimationPlaybackRuntime {
                 automaticWholeTrackDecodedByteCostUpperBound: automaticCosts.decoded,
                 providerRetainedByteCost: providerRetainedByteCost,
                 automaticWholeTrackPredecodePeakByteCost: automaticCosts.peak,
-                automaticWholeTrackPredecodePriority:
-                    automaticCosts.peak == nil ? .normal : request.priority,
+                decodePriority: request.priority,
                 clock: clock
             )
         } catch {

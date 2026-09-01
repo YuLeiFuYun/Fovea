@@ -97,15 +97,16 @@
         "Tests/FoveaTests/SystemEncodedAnimationPlaybackTests.swift"
       ],
       "path": "Sources/FoveaCore/AnimationPlaybackRuntime.swift",
-      "reason": "AnimationPlaybackRuntime is the composition and registry actor for animation playback owned by one pipeline: it validates authorized handle registration, creates drivers over shared frame memory, tracks live MJPEG sessions, propagates application/memory-pressure state, cancels by identifier or namespace, and participates in namespace revocation. The handle values are thin capabilities into this exact registry.",
+      "reason": "AnimationPlaybackRuntime is the composition and registry actor for animation playback owned by one pipeline: it validates authorized handle registration, creates drivers over shared frame memory and shared decode concurrency/working-set admission, tracks live MJPEG sessions, propagates application/memory-pressure state, cancels by identifier or namespace, and participates in namespace revocation. The handle values are thin capabilities into this exact registry.",
       "responsibilities": [
         "authorized animation handle construction and registration",
         "shared frame-memory and frame-strategy coordination",
+        "shared decode concurrency and working-set admission",
         "finite-driver and live-session registry lifecycle",
         "application activity, memory pressure and namespace-revocation propagation"
       ],
-      "reviewedLineCount": 594,
-      "sha256": "de4f1f2e437585cc45277b8437aca4c84da5f2a7d8908beec6f3f370d4cec44e",
+      "reviewedLineCount": 589,
+      "sha256": "41d0d12b0a04e663d99d821e7b25277cd66e8aa6b14ed1f33126060cad612cd4",
       "splitTriggers": [
         "live and finite playback no longer share runtime budgets or namespace cancellation",
         "frame-memory strategy becomes an independently released service",

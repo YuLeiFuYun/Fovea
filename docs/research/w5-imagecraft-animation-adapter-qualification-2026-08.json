@@ -4,7 +4,7 @@
     "V2 isolated copied-source overlay extends qualification to automatic APNG, owned GIF, bounded subrect GIF replay and three-part whole-track cost accounting",
     "historical overlay qualification did not change production Fovea dependency pins; the current clean-candidate pin upgrade is authorized separately by productionPinReadiness",
     "adapter timing normalization remains explicit and caller-versioned",
-    "no physical-device timing, RSS, energy, thermal, compiled-production-adapter, or Fovea release-readiness claim",
+    "no physical-device timing, RSS, energy, thermal, or Fovea release-readiness claim",
     "current executable qualification regenerates its ignored capture from public exact ImageCraft/Akashic pins and validates immutable release-tag dereference; mutable sibling working trees and pre-existing .artifacts are not authority"
   ],
   "evidence": {
@@ -47,36 +47,36 @@
     }
   },
   "nextGates": [
-    "move the already-qualified ImageCraft animation adapter into compiled FoveaSystem production source without widening the ordinary public API",
-    "rerun full Fovea release verification from the exact immutable candidate after the production adapter move or any other release-candidate change",
+    "keep the compiled production ImageCraft animation adapter covered by targeted integration and premerge verification while feature development continues",
+    "run the maximal Fovea qualification exactly once after functionality is frozen and immediately before the final release candidate is published",
     "measure physical end-to-end startup plus steady-state presentation on the production pin; keep decoder startup and compositor steady-state costs separate",
     "obtain supported physical-device memory, energy, thermal and reclamation evidence before corresponding claims"
   ],
   "pinUpgradeDiscovery": {
     "issue": "Fovea PipelineFailure+ImageCraft previously exhausted the ImageCraftError cases present at the old exact pin. Current ImageCraft adds animation error cases, causing the overlay to fail compilation before the adapter could build.",
     "oldPinRegression": "PipelineFailureTests 13/13 passed after the forward-compatible default was added.",
-    "productionPinStill": "3b7f7ef212acfa42a022d7cd0bfad73c0cd2d252",
+    "productionPinStill": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
     "resolution": "Replace the top-level exhaustive dependency-enum switch with explicit Equatable classification for adopted cases and a final unexpectedImageCraftFailure fallback. This avoids both the old-pin unreachable-default warning and the current-pin non-exhaustive-switch error under warnings-as-errors. Old production-pin PipelineFailureTests remain 13/13 and the iOS15 warnings-as-errors FoveaUIKit build passes; the current ImageCraft overlay also compiles warnings-as-errors."
   },
   "productionPinReadiness": {
     "authorizationEvidence": {
-      "adapterQualificationCapture": ".artifacts/qualification/w5-imagecraft-animation-adapter-v8-alpha7-prepin/report.json",
-      "adapterQualificationCaptureSHA256": "f655bc00eb04cf604fa8db70f3640db988e715d29c05d2d803d464a281246ca9",
+      "adapterQualificationCapture": ".artifacts/qualification/w5-imagecraft-animation-adapter-current-contract/report.json",
+      "adapterQualificationCaptureSHA256": "f46b9003ea3a09fd0557ab013f1a96b28d6dc25372e3506e4aec85866c272e2b",
       "adapterQualificationImageCraftClean": true,
       "adapterQualificationSourcesUnchanged": true,
       "releaseReadinessSourceIdentitySHA256": "4cdbd83d4a350f838a3e4ec5fd48ef6664f6169e047f3d8dc2972f35f1696dcc",
-      "releaseTag": "0.1.0-alpha.7",
+      "releaseTag": "0.1.0-alpha.8",
       "remoteBranch": "main",
-      "remoteRevision": "3b7f7ef212acfa42a022d7cd0bfad73c0cd2d252"
+      "remoteRevision": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e"
     },
     "authorizationRule": "Production ImageCraft pin may not move to the animation candidate until the candidate bytes are published as an immutable Git revision and the adapter qualification is rerun against that exact clean revision.",
-    "currentProductionRevision": "3b7f7ef212acfa42a022d7cd0bfad73c0cd2d252",
+    "currentProductionRevision": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
     "pinUpgradeAuthorized": true,
-    "publishedImmutableCandidateRevision": "3b7f7ef212acfa42a022d7cd0bfad73c0cd2d252",
+    "publishedImmutableCandidateRevision": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
     "qualificationSourceIsClean": true,
-    "qualifiedCandidateHeadCommit": "3b7f7ef212acfa42a022d7cd0bfad73c0cd2d252",
+    "qualifiedCandidateHeadCommit": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
     "qualifiedCandidateIncludesWorkingTreeChanges": false,
-    "qualifiedCandidateWorkingTree": "d3fc33648a0aaf1bd26ecaa586c127c4653dab4c",
+    "qualifiedCandidateWorkingTree": "ba0554ff323651b4be96a288f3bcc820e14ecb3f",
     "requiredBeforeAuthorization": [
       "publish candidate animation API/runtime as immutable ImageCraft Git revision",
       "rerun ImageCraft release readiness from the published revision",
@@ -142,17 +142,17 @@
     "timelineQualificationTest": "W5_ADAPTER_PT_002",
     "warningsAsErrorsOverlayExecutablePassed": true
   },
-  "reviewedOn": "2026-08-31",
+  "reviewedOn": "2026-09-01",
   "schemaVersion": 1,
   "sourceIdentity": {
     "akashicHeadCommit": "2846d4715cc5917711ffa2f100ee310c2290de40",
     "akashicWorkingTree": "3597631d3dcdaaaa376edb1fd91ad890a82dd423",
-    "foveaHeadCommit": "69a025cd33a31f2ed78ee8ba3f9c6af411069b4c",
+    "foveaHeadCommit": "d191790fbe26a6a0a22ce82d592ba6ccbdb6b6ad",
     "foveaImplementationFileCount": 20,
     "foveaImplementationUnchangedDuringRun": true,
-    "foveaWorkingTreeAtCapture": "79985f2bd91f54a7d625bd044831f72ded5384dc",
-    "imageCraftHeadCommit": "3b7f7ef212acfa42a022d7cd0bfad73c0cd2d252",
-    "imageCraftWorkingTree": "d3fc33648a0aaf1bd26ecaa586c127c4653dab4c",
+    "foveaWorkingTreeAtCapture": "fe505f394023e9767ef04c0ff4639a75846a7bb8",
+    "imageCraftHeadCommit": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
+    "imageCraftWorkingTree": "ba0554ff323651b4be96a288f3bcc820e14ecb3f",
     "sourcesUnchangedDuringRun": true
   },
   "status": "historical-v1-contract-retained-current-clean-requalified-production-pin-authorized",

@@ -3,9 +3,61 @@ import Foundation
 import FoveaCore
 import FoveaSystem
 import ImageCraftCore
+import ImageIO
+import UniformTypeIdentifiers
 import XCTest
 
 final class SystemEncodedAnimationPlaybackTests: XCTestCase {
+    func testSystemUsesProductionImageCraftAnimationAdapter_W5_PT_206() async throws {
+        let system = try await makeSystem()
+        let request = try makeRequest(path: "imagecraft-gif")
+        let handle = try await system.makeImageCraftEncodedAnimationHandle(
+            for: request,
+            zeroDurationReplacementNanoseconds: 10_000_000,
+            timingPolicyVersion: 1,
+            animationPolicyVersion: 1,
+            frameStrategy: .boundedFrameCache,
+            playbackPolicy: AnimationPlaybackPolicy(requestedMode: .normal),
+            reduceMotionEnabled: false,
+            windowPolicy: AnimationFrameWindowPolicy(normalFrameCount: 2, warningFrameCount: 1),
+            clock: SystemEncodedAnimationClock()
+        )
+        let recorder = SystemEncodedAnimationRecorder()
+        try await handle.start { output in
+            await recorder.record(output)
+        }
+        try await waitUntil("production ImageCraft animation publishes") {
+            await recorder.count >= 1
+        }
+        let driverCount = await system.animationRuntime.registeredDriverCount()
+        XCTAssertEqual(driverCount, 1)
+        await handle.cancel()
+        let remainingDriverCount = await system.animationRuntime.registeredDriverCount()
+        XCTAssertEqual(remainingDriverCount, 0)
+        await system.invalidateAndCancel()
+    }
+
+    func testProductionImageCraftAdapterPublishesWindowPeakCost_W5_PT_209() async throws {
+        let system = try await makeSystem()
+        let request = try makeRequest(path: "imagecraft-owned-gif")
+        let preparer = ImageCraftAnimationPlaybackPreparer(
+            zeroDurationReplacementNanoseconds: 10_000_000,
+            timingPolicyVersion: 1
+        )
+        let asset = try await system.pipeline.prepareAuthorizedAnimationPlayback(
+            for: request,
+            using: preparer
+        )
+
+        let peakByteCost =
+            await asset.provider.frameWindowPredecodePeakByteCostUpperBound(frameCount: 2)
+        XCTAssertNotNil(peakByteCost)
+        XCTAssertGreaterThan(peakByteCost ?? 0, 0)
+
+        await asset.provider.cancel()
+        await system.invalidateAndCancel()
+    }
+
     func testSystemCreatesAuthorizedEncodedAnimationHandle_W5_PT_118() async throws {
         let system = try await makeSystem()
         let request = try makeRequest(path: "success")
@@ -981,6 +1033,11 @@ private struct SystemEncodedAnimationClock: AnimationPlaybackClock {
 
 private final class SystemEncodedAnimationURLProtocol: URLProtocol {
     static let body = Data("authorized-encoded-animation-body".utf8)
+    static let imageCraftGIFBody = Data(
+        base64Encoded: "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA"
+            + "h+QQBAAAAACwAAAAAAQABAAACAUQAOw=="
+    )!
+    static let imageCraftOwnedGIFBody = makeSystemEncodedOwnedGIF()
 
     override class func canInit(with request: URLRequest) -> Bool {
         request.url?.host == "system-animation.example.test"
@@ -993,18 +1050,31 @@ private final class SystemEncodedAnimationURLProtocol: URLProtocol {
             client?.urlProtocol(self, didFailWithError: URLError(.badURL))
             return
         }
+        let encodedBody: Data
+        let contentType: String
+        switch url.path {
+        case "/imagecraft-gif":
+            encodedBody = Self.imageCraftGIFBody
+            contentType = "image/gif"
+        case "/imagecraft-owned-gif":
+            encodedBody = Self.imageCraftOwnedGIFBody
+            contentType = "image/gif"
+        default:
+            encodedBody = Self.body
+            contentType = "image/png"
+        }
         let response = HTTPURLResponse(
             url: url,
             statusCode: 200,
             httpVersion: "HTTP/1.1",
             headerFields: [
-                "Content-Type": "image/png",
-                "Content-Length": String(Self.body.count),
+                "Content-Type": contentType,
+                "Content-Length": String(encodedBody.count),
                 "Cache-Control": "no-store",
             ]
         )!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: Self.body)
+        client?.urlProtocol(self, didLoad: encodedBody)
         client?.urlProtocolDidFinishLoading(self)
     }
 
@@ -1031,4 +1101,60 @@ private func makeSystemEncodedAnimationImage() -> DecodedImage {
         intent: .defaultIntent
     )!
     return DecodedImage(cgImage: image)
+}
+
+private func makeSystemEncodedOwnedGIF() -> Data {
+    let data = NSMutableData()
+    let destination = CGImageDestinationCreateWithData(
+        data,
+        UTType.gif.identifier as CFString,
+        2,
+        nil
+    )!
+    CGImageDestinationSetProperties(
+        destination,
+        [kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFLoopCount: 3]] as CFDictionary
+    )
+    for (image, delay) in [
+        (makeSystemEncodedSolidImage(red: 255, blue: 0), 0.1),
+        (makeSystemEncodedSolidImage(red: 0, blue: 255), 0.2),
+    ] {
+        CGImageDestinationAddImage(
+            destination,
+            image,
+            [
+                kCGImagePropertyGIFDictionary: [
+                    kCGImagePropertyGIFDelayTime: delay,
+                    kCGImagePropertyGIFUnclampedDelayTime: delay,
+                ]
+            ] as CFDictionary
+        )
+    }
+    precondition(CGImageDestinationFinalize(destination))
+    return data as Data
+}
+
+private func makeSystemEncodedSolidImage(red: UInt8, blue: UInt8) -> CGImage {
+    let width = 4
+    let height = 4
+    let bytesPerRow = width * 4
+    var bytes: [UInt8] = []
+    bytes.reserveCapacity(bytesPerRow * height)
+    for _ in 0..<(width * height) {
+        bytes.append(contentsOf: [red, 0, blue, 255])
+    }
+    let provider = CGDataProvider(data: Data(bytes) as CFData)!
+    return CGImage(
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bitsPerPixel: 32,
+        bytesPerRow: bytesPerRow,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+        provider: provider,
+        decode: nil,
+        shouldInterpolate: false,
+        intent: .defaultIntent
+    )!
 }

@@ -475,7 +475,7 @@ final class AnimationPlaybackRuntimeTests: XCTestCase {
             automaticWholeTrackDecodedByteCostUpperBound: 128,
             providerRetainedByteCost: 0,
             automaticWholeTrackPredecodePeakByteCost: 128,
-            automaticWholeTrackPredecodePriority: .normal
+            decodePriority: .normal
         )
         let low = try await makePredecodeLoopingHandle(
             runtime: runtime,
@@ -484,7 +484,7 @@ final class AnimationPlaybackRuntimeTests: XCTestCase {
             automaticWholeTrackDecodedByteCostUpperBound: 128,
             providerRetainedByteCost: 0,
             automaticWholeTrackPredecodePeakByteCost: 128,
-            automaticWholeTrackPredecodePriority: .low
+            decodePriority: .low
         )
         let high = try await makePredecodeLoopingHandle(
             runtime: runtime,
@@ -493,7 +493,7 @@ final class AnimationPlaybackRuntimeTests: XCTestCase {
             automaticWholeTrackDecodedByteCostUpperBound: 128,
             providerRetainedByteCost: 0,
             automaticWholeTrackPredecodePeakByteCost: 128,
-            automaticWholeTrackPredecodePriority: .userInitiated
+            decodePriority: .userInitiated
         )
 
         let blockerStart = Task {
@@ -580,8 +580,8 @@ final class AnimationPlaybackRuntimeTests: XCTestCase {
         let runtime = AnimationPlaybackRuntime(
             frameMemoryCostLimit: 512,
             automaticWholeTrackPredecodePeakCostLimit: 4_096,
-            automaticWholeTrackPredecodePeakPermits: globalWorkingSet,
-            automaticWholeTrackDecodePermits: globalDecode
+            sharedDecodeWorkingSetPermits: globalWorkingSet,
+            sharedDecodePermits: globalDecode
         )
         let provider = RuntimeTestAnimationProvider(image: makeRuntimeImage())
         let handle = try await makePredecodeLoopingHandle(
@@ -642,8 +642,8 @@ final class AnimationPlaybackRuntimeTests: XCTestCase {
         let runtime = AnimationPlaybackRuntime(
             frameMemoryCostLimit: 512,
             automaticWholeTrackPredecodePeakCostLimit: 4_096,
-            automaticWholeTrackPredecodePeakPermits: globalWorkingSet,
-            automaticWholeTrackDecodePermits: globalDecode
+            sharedDecodeWorkingSetPermits: globalWorkingSet,
+            sharedDecodePermits: globalDecode
         )
         let provider = RuntimeTestAnimationProvider(image: makeRuntimeImage())
         let handle = try await makePredecodeLoopingHandle(
@@ -1227,7 +1227,7 @@ final class AnimationPlaybackRuntimeTests: XCTestCase {
         automaticWholeTrackDecodedByteCostUpperBound: Int? = nil,
         providerRetainedByteCost: Int? = nil,
         automaticWholeTrackPredecodePeakByteCost: Int? = nil,
-        automaticWholeTrackPredecodePriority: ImageRequestPriority = .normal
+        decodePriority: ImageRequestPriority = .normal
     ) async throws -> AnimationPlaybackHandle {
         let decodeKey = try XCTUnwrap(
             AnimationDecodeKey(
@@ -1263,8 +1263,8 @@ final class AnimationPlaybackRuntimeTests: XCTestCase {
                 providerRetainedByteCost,
             automaticWholeTrackPredecodePeakByteCost:
                 automaticWholeTrackPredecodePeakByteCost,
-            automaticWholeTrackPredecodePriority:
-                automaticWholeTrackPredecodePriority,
+            decodePriority:
+                decodePriority,
             clock: RuntimeConstantClock()
         )
     }
