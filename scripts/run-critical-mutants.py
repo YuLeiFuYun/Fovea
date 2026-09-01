@@ -970,7 +970,7 @@ def mutant_060(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/FetchStageDiagnostics.swift",
         "    func recordCompleted(",
-        "/// Owns the subscriber-side lifecycle for a shared fetch",
+        "struct FetchSharedExecutionCoordinator: Sendable {",
         "                redirectCount: network?.redirectCount,\n",
         "                redirectCount: nil,\n",
     )
@@ -1032,7 +1032,7 @@ def mutant_067(root: Path) -> None:
     replace_in_section(
         root / "Sources/FoveaCore/FoveaPipeline+Operations.swift",
         "    public func purgeMemoryCache() async -> Int {",
-        "    /// Comparative-Lab-only full in-memory cache reset.",
+        "    public func purgeMemoryStateForBenchmarking() async {",
         "                byteCount: removed.costBytes,\n",
         "                byteCount: removed.itemCount,\n",
     )
