@@ -607,15 +607,70 @@ def mutant_030(root: Path) -> None:
 
 
 def write_component_contract_test(
-    root: Path, component: str, filename: str, source: str
+    root: Path,
+    component: str,
+    filename: str,
+    source: str,
+    test_target: str = "AkashicCoreTests",
 ) -> None:
     checkout = (root / ".build/checkouts" / component).resolve()
-    target = (checkout / "Tests/AkashicCoreTests" / filename).resolve()
+    target = (checkout / "Tests" / test_target / filename).resolve()
     target.relative_to(checkout)
     if target.exists():
         raise RuntimeError(f"component contract test collision: {target}")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(source)
+
+
+def prepare_mutant_025_test(root: Path) -> None:
+    write_component_contract_test(
+        root,
+        "Akashic",
+        "FoveaMutationManifestContractTests.swift",
+        """import AkashicCore
+import Foundation
+import XCTest
+
+@testable import AkashicDisk
+
+final class FoveaMutationManifestContractTests: XCTestCase {
+    func testManifestSemanticValidatorRejectsMismatchedKey() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fovea-mutant-manifest-\\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let store = try await FileBlobStore.open(root: root)
+        let partition = try CachePartitionID.derive(
+            domain: "fovea-mutant-manifest-v1",
+            material: Data("partition".utf8)
+        )
+        let payload = Data("payload".utf8)
+        let digest = BlobDigest.sha256(of: payload)
+        let entry = FileBlobStore.Entry(
+            physicalID: PhysicalBlobID(),
+            partition: partition,
+            digest: digest,
+            byteCount: payload.count,
+            lastAccess: Date()
+        )
+        let validKey = FileBlobStoreIdentity.manifestKey(
+            digest: digest,
+            partition: partition
+        )
+        let zeroKey = String(repeating: "0", count: 64)
+        let invalidKey = validKey == zeroKey ? String(repeating: "1", count: 64) : zeroKey
+        let manifest = FileBlobStore.Manifest(
+            generation: 1,
+            entries: [invalidKey: entry]
+        )
+
+        let isValid = await store.isValidManifest(manifest)
+        XCTAssertFalse(isValid)
+    }
+}
+""",
+        test_target="AkashicDiskTests",
+    )
 
 
 def prepare_mutant_031_test(root: Path) -> None:
@@ -1391,7 +1446,15 @@ MUTANTS = [
     Mutant("AIQA-MUT-022", "Create a separate DecodeKey registry for every subscriber.", "Sources/FoveaCore/DecodeStage.swift", "DecodeSharingTests/testSameDecodeKeyExecutesProbeAndDecodeOnce_SCHED_PT_002", mutant_022),
     Mutant("AIQA-MUT-023", "Delete overwritten 304 metadata instead of restoring it after cancellation.", "Sources/FoveaCore/PipelineCache.swift", "CacheRefreshTransactionTests/testCancellationAfterSameVariantRefreshRestoresPreviousRecord_CACHE_PT_039", mutant_023),
     Mutant("AIQA-MUT-024", "Allow memory-cache cost addition to overflow before eviction.", "component://Akashic/Sources/AkashicMemory/MemoryCache.swift", "MemoryCacheTests/testCostAccountingCannotOverflowPastLimit_RES_PT_001", mutant_024),
-    Mutant("AIQA-MUT-025", "Accept semantically corrupt OriginalEncoded manifests.", "component://Akashic/Sources/AkashicDisk/FileBlobStoreMaintenance.swift", "ManifestSemanticValidationTests/testOriginalManifestSemanticCorruptionFailsClosedWithoutRewrite_SEC_CASE_030", mutant_025),
+    Mutant(
+        "AIQA-MUT-025",
+        "Accept semantically corrupt OriginalEncoded manifests.",
+        "component://Akashic/Sources/AkashicDisk/FileBlobStoreMaintenance.swift",
+        "FoveaMutationManifestContractTests/testManifestSemanticValidatorRejectsMismatchedKey",
+        mutant_025,
+        test_package="Akashic",
+        prepare_test=prepare_mutant_025_test,
+    ),
     Mutant("AIQA-MUT-026", "Accept semantically corrupt representation manifests.", "Sources/FoveaPersistence/RepresentationRecordStore.swift", "ManifestSemanticValidationTests/testRepresentationManifestSemanticCorruptionFailsClosedWithoutRewrite_SEC_CASE_030", mutant_026),
     Mutant("AIQA-MUT-027", "Accept an invalid runtime representation record.", "Sources/FoveaPersistence/RepresentationRecordStore.swift", "ManifestSemanticValidationTests/testRecordStoreRejectsInvalidRuntimeRecordWithoutMutation_SEC_CASE_030", mutant_027),
     Mutant("AIQA-MUT-028", "Ignore malformed or conflicting Content-Length values.", "Sources/FoveaHTTP/URLSessionTransport.swift", "URLSessionTransportTests/testMalformedOrConflictingContentLengthFailsClosed_HTTP_CONF_CONTENT_LENGTH_001", mutant_028),
