@@ -71,7 +71,7 @@ final class ImageCodecConformanceTests: XCTestCase {
             }
             checked += 1
         }
-        XCTAssertEqual(checked, 2_304)
+        XCTAssertEqual(checked, 3_072)
     }
 
     func testAdvertisedFormatsProbeDeterministically_ICT_003() throws {

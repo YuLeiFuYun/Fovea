@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFORMANCE = ROOT / "ConformanceKits"
 MATRIX = CONFORMANCE / "current-contracts.json"
 SUPPORT = CONFORMANCE / "_support.py"
-EXPECTED_IMAGECRAFT_REVISION = "736d0fb75e9e128642ce418ad984ce5151b1f324"
-EXPECTED_AKASHIC_REVISION = "2715f23d50b5a17b7328be41608eaf1b1c99b0d6"
+EXPECTED_IMAGECRAFT_REVISION = "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e"
+EXPECTED_AKASHIC_REVISION = "0376b960ec8abe54f2d4a9d7d66e97f395215eaf"
 FORBIDDEN_SOURCE = (
     "FIXTURE_TRACE",
     "FoveaTesting",
@@ -335,7 +335,7 @@ def validate_codec(support_source: str) -> int:
     validate_sources([harness, fixture_source, factory_source])
     harness_source = harness.read_text()
     for marker in (
-        "2_304",
+        "3_072",
         "ImageDecodeResourceEstimate.conservativeMaximum",
         ".encodedBytesExceeded",
         ".unsupportedFormat",

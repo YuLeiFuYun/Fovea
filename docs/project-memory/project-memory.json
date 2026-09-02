@@ -8,16 +8,16 @@
   "capabilityGaps": [
     {
       "id": "GAP-PROGRESSIVE",
-      "status": "release-claim-blocking-for-capability",
-      "summary": "Strict progressive-generation value semantics and model checks exist, but production progressive JPEG events, incremental budgeting, UI promotion and W4 comparative evidence are not implemented.",
+      "status": "local-production-lifecycle-implemented-formal-w4-device-evidence-pending",
+      "summary": "Production progressive JPEG events, bounded incremental preparation, shared-transport ownership, final full-body fallback and UIKit/SwiftUI promotion are implemented locally. Clean preregistered W4 comparative runs, physical-device presentation/resource tails and release qualification remain pending.",
       "workloads": [
         "W4"
       ]
     },
     {
       "id": "GAP-ANIMATED",
-      "status": "release-claim-blocking-for-capability",
-      "summary": "Animated track and frame-timing contract vocabulary exists, but GIF/APNG/WebP scheduling, disposal/blend, bounded frame cache, playback and W5 evidence are not implemented.",
+      "status": "production-imagecraft-alpha8-adapter-integrated-workload-capability-gap-formal-physical-release-evidence-pending",
+      "summary": "Fovea current develop exactly pins public ImageCraft 0.1.0-alpha.8 at c16a868f1a1c0ed6b1a916ad082f762969ac5a7e and compiles ImageCraftAnimationPlaybackPreparer into FoveaSystem. The production integration reuses Fovea authorization/identity/cancellation, maps request geometry/color and caller-versioned timing into ImageCraft GIF/APNG preparation, propagates frame-window and whole-track resource estimates, and composes them with host-global animation admission. Local adapter/system qualification is green, but W5 intentionally remains a workload capability gap until its complete held-out corpus, same-semantics comparator/claim family, stable physical-iOS timing-memory-energy-thermal evidence and protected release qualification are closed. Broad animated WebP/HEIF/AVIF/HDR coverage remains separately incomplete, and no global performance claim is permitted.",
       "workloads": [
         "W5"
       ]
@@ -33,7 +33,7 @@
     {
       "id": "GAP-BROAD-FORMATS",
       "status": "explicit-capability-gap",
-      "summary": "The ImageIO reference adapter remains limited to PNG/JPEG/GIF complete primary frames; broad animated/exotic formats, HDR outputs and hostile corpus coverage remain incomplete.",
+      "summary": "The ImageIO animation backend now covers GIF/APNG and pre-split JPEG sequences. Animated WebP/HEIF/AVIF, HDR animated output, broad hostile corpora and cross-backend conformance remain incomplete.",
       "workloads": [
         "W5",
         "W9"
@@ -221,7 +221,7 @@
     {
       "id": "EVID-CURRENT-PUBLIC-COMPONENTS-SWIFT64",
       "status": "completed-current-public-xcode27-ci-green-required-checks",
-      "summary": "ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 (0.1.0-alpha.5) are the only supported public MIT component revisions. Both are green under required xcode-27 core checks; Fovea resolves only these exact revisions."
+      "summary": "Fovea resolves ImageCraft 736d0fb75e9e128642ce418ad984ce5151b1f324 (an exact public commit after 0.1.0-alpha.5) and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 (0.1.0-alpha.5) as its only production component pins. Existing composition evidence applies to those pinned static/progressive and persistence surfaces; the local unpublished ImageCraft animation candidate is not consumed by Fovea."
     },
     {
       "id": "EVID-CACHE-LAB-V3-HOT20-LOCAL",
@@ -257,6 +257,218 @@
       "id": "EVID-W7-V8-PREPARATION-BARRIER-DIAGNOSTIC",
       "status": "completed-dirty-diagnostic-clean-calibration-pending",
       "summary": "V8 closes a /w7/shared response-delivery gate before constructing all 512 shared loads, while allowing native request creation and enrollment, then releases it before the cancellation delay. Four tree-bound dirty-source runs on iOS 27.0 build 24A5355p each recorded eight actual waiters, exactly sixteen shared origins and zero hard failures. Clean six-comparator calibration remains pending."
+    },
+    {
+      "id": "P7-BOUNDED-CANCELLATION-HANDOFF-001",
+      "phase": "P7",
+      "status": "implemented-local-bounded-policy-and-instrumentation-formal-calibration-pending",
+      "summary": "Cancellation handoff now continues an observed transport only when Content-Length makes the remaining bytes known and the remainder is no larger than min(target RGBA surface bytes, transport memory threshold). Each retry response resets its byte counter, non-identity content encodings and unknown-length observed transfers fail closed, and transports without progress observation retain the prior compatibility behavior. ComparativeLab separates post-cancellation bytes for completed and abandoned requests. The 495-test root suite and FoveaComparatorBench generic iOS Simulator build pass. Dirty-source W7 cancellation calibration, stable-device resource tails and release claims remain pending."
+    },
+    {
+      "id": "EVID-W2-ORDINARY-IMAGE-DERIVED-RASTER-2026-08",
+      "status": "completed-dirty-directional-mechanism-evidence-no-release-claim",
+      "summary": "Ordinary-image W2 now separates adapter return, full pixel materialization and display-ready latency. Seven-image exact-pixel experiments support per-artifact derived formats and reject a global format or unconditional first-hit persistence. A 42-process nearest-integer aspect-fit A/B was rejected: direct decode median regressed 1.4 percent, cached-image materialization regressed 2.1 percent, and target-level direction was unstable. ImageCraft implementation version 4 remains authoritative; no performance or default-cache claim is permitted from dirty local evidence."
+    },
+    {
+      "id": "EVID-DERIVED-RASTER-CONTRACT-LOCAL",
+      "phase": "P7",
+      "status": "completed-local-opt-in-byte-and-durable-logical-write-budgets-default-disabled",
+      "summary": "Fovea has a package-internal, default-off derived-raster path between rendered memory and authoritative original-encoded reuse. It creates only after reusable warm-disk original decode, never on network first display. The Akashic-backed derived store owns alias-aware global physical-byte accounting above the blob layer: shared physical containers are charged once; eviction removes all aliases before the victim blob; successful hits receive an in-memory second chance without a Fovea alias-manifest write; open reconciles missing targets and crash leftovers; normal post-blob publication failures attempt eager orphan cleanup. A separate durable fixed-window logical write gate now reserves candidate-container plus exact projected full Fovea alias-manifest bytes before blob staging, survives reopen, treats later uncertain failure conservatively as charged, and cannot be refreshed by a caller artifact timestamp or backward clock movement. The strict DerivedRaster suite includes PT040-PT045 for capacity, alias deduplication, recency, durable logical-write accounting, reopen/clock rollback and pipeline diagnostics. Public/default composition remains off; clean W2/W11, physical write-amplification calibration, fixed-window burst qualification, large-store reopen cost, device energy/thermal/reclaim-tail evidence and policy comparison remain pending."
+    },
+    {
+      "id": "EVID-WARM-MEMORY-IDENTITY-DIGEST-CACHE-2026-08",
+      "phase": "P7",
+      "status": "completed-local-directional-no-release-claim",
+      "summary": "ImageRequest now computes namespace and fetch-base SHA-256 identities once during validated construction and preserves them through retarget and reprioritize. Three 500-iteration Release blocks reduced warm-memory image(for:) from roughly 48-51 microseconds to 17-19 microseconds after the earlier namespace cache, and fixed-identity authorization from about 31.8 microseconds to 0.04-0.08 microseconds. Five diagnostic W2 simulator blocks show adapter median about 0.244 ms versus the prior 0.261 ms, while Apple display-ready remains materially faster. This is local directional evidence, not a release ranking."
+    },
+    {
+      "id": "EVID-W11-NONOWNER-PROGRESSIVE-FINALIZATION-2026-08",
+      "phase": "P7",
+      "status": "completed-local-correctness-fix",
+      "summary": "A same-source multi-target event-stream test exposed one transport owner completing while a non-owner subscriber waited forever on a progressive finalization that never observed transport progress. Response completion now closes only an unobserved empty finalization and falls back to the ordinary full-body probe/decode path; the owner still validates and reuses prepared state. Adapter integration completes both targets with one transport, and progressive, decode-sharing and full root suites pass."
+    },
+    {
+      "id": "EVID-IMAGECRAFT-ANIMATION-FOUNDATION-2026-08",
+      "phase": "P7",
+      "status": "completed-local-codec-foundation-fovea-live-mjpeg-and-player-integration-gif-apng-pin-pending",
+      "summary": "ImageCraft local unpublished animation candidate source identity 7d0a1d3cc1b7e64eef11372582dbd67ff6d26bb0186d75dfca0c3528c454f37f (265 files) adds a separate public ImageAnimationDecoding contract and ImageIO backend for GIF, APNG and pre-split complete JPEG sequences. IMG_ANIM_PT_001-026 are continuous: 18 decoder tests plus one actual-row-stride budget test and seven Core invariant tests cover exact rational timing, loop, frame rect/disposal/blend, on-demand frame/window decode, cancellation, strict Codable, format allowlists, APNG CRC/type/order/default-image semantics, GIF structural and interactive/text rejection, cumulative JPEG-sequence metadata, and logical-plus-actual decoded-byte gates. The 101-test root suite, warnings-as-errors Release build, public API/integration/source-identity gates, clean-copy replay, external macOS/iOS Simulator/iOS device consumer, repository platform matrix, independent oracles and retained/progressive corpus reproducibility pass. Relative to 0.1.0-alpha.5 the public API delta is 105 added, 0 removed and 0 changed. Existing codec-only performance studies remain dirty local directional evidence only. Fovea has the player/runtime and live MJPEG system path but still pins ImageCraft 736d0fb75e9e128642ce418ad984ce5151b1f324; GIF/APNG loading requires a published fixed animation revision and freshness/authorization integration."
+    },
+    {
+      "id": "EVID-FOVEA-MJPEG-FRAMER-2026-08",
+      "phase": "P7",
+      "status": "completed-package-internal-urlsession-decode-runtime-and-platform-integration",
+      "summary": "FoveaHTTP strict multipart/x-mixed-replace framing is connected to URLSession through a progress-only transport capability with per-chunk hard-limit checks, incremental SHA-256, one-chunk delegate backpressure and no complete live-body staging. Complete JPEG parts reuse ordinary DecodeStage limits, target geometry, color policy, working-set permits, authorization and namespace generation. Latest-only playback, shared fetch admission, runtime lifecycle/critical-pressure control, namespace cancellation, Reduce Motion, diagnostics and UIKit/AppKit/SwiftUI presentation are covered within W5_PT_001-124. Generation floors reject stale live registration after revocation. The 660-test root suite, warnings-as-errors Release, generic iOS Simulator/device builds, CacheLab, loopback and both conformance kits pass on the current local source."
+    },
+    {
+      "id": "EVID-FOVEA-ANIMATION-PLAYBACK-CORE-2026-08",
+      "phase": "P7",
+      "status": "completed-local-package-internal-authorized-preparation-player-runtime-platform-and-live-mjpeg-system",
+      "summary": "Fovea implements package-internal decoder-neutral animated playback with exact monotonic timeline/loop cursor, dropped-frame accounting, overlapping pause reasons, seek/cancellation, actual-byte SIEVE frame memory, bounded wrap-aware windows, independent clocks, absolute deadlines, lifecycle control and generation-fenced publication. The authorized encoded seam binds cache/network bytes to ContentID, exact request execution, selected representation and namespace generation, revalidates after decoder preparation, and cancels providers on every failed ownership transfer. Prepared assets additionally bind ImageRequest.renderAliasIdentity, covering target pixels, content mode, geometry policy, color policy and execution identity, so a provider prepared for one render request cannot be relabeled by another. Persistent generation floors reject stale static/live registration. W5_PT_001-124, 660 root tests, warnings-as-errors Release, generic iOS Simulator/device builds, current ComparativeLab, CacheLab, loopback and both conformance kits pass. Fovea still pins ImageCraft 736d0fb75e9e128642ce418ad984ce5151b1f324; a real GIF/APNG preparer remains unwired and non-public/default."
+    },
+    {
+      "id": "EVID-FOVEA-MJPEG-LIVE-SYSTEM-2026-08",
+      "phase": "P7",
+      "status": "completed-dirty-local-package-internal-end-to-end",
+      "summary": "The official system composition can create a namespace-bound live MJPEG handle that preserves request credentials and network policy, shares the ordinary fetch concurrency/queue budget, consumes progress-only URLSession bytes without staging the complete long-lived body, parses strict Content-Length JPEG parts, decodes through the ordinary codec and working-set gates, and registers with the animation runtime. Finite success, failure, unstarted cancellation, queue rejection, system invalidation, namespace revocation, offscreen/background, critical pressure, Reduce Motion and UIKit/AppKit/SwiftUI replacement are deterministic. No public/default API or physical-device claim follows. Current macOS root tests and Release plus generic iOS Simulator/device Release builds pass."
+    },
+    {
+      "id": "EVID-FOVEA-MJPEG-MECHANISM-2026-08",
+      "phase": "P7",
+      "status": "completed-dirty-local-synthetic-directional-no-product-claim",
+      "summary": "Six independent process blocks and 48 order-balanced synthetic trials compare the live latest-only single encoded slot with an intentionally decode-every/full-burst baseline. Every accepted trial decodes exactly 2 versus 120 frames, drops 118 superseded frames, retains 1/120 of the baseline encoded queue bytes, and ends at source index 119 with identical final pixels. Paired elapsed ratio median is 0.0404x, p95 0.0924x and maximum 0.1348x. The work is synthetic SHA-256 CPU work, the baseline is not memory-equivalent, and no codec/network/device/product ranking is permitted."
+    },
+    {
+      "id": "EVID-FOVEA-BACKGROUND-ACTIVITY-STABILITY-2026-08",
+      "phase": "P7",
+      "status": "completed-local-deterministic-test-oracles-no-performance-claim",
+      "summary": "Derived-raster tests no longer infer detached utility-task completion from fixed two-to-eight-second polling windows. The coordinator exposes monotonic scheduled/terminal activity and a cancellation-aware quiescence wait; pipeline tests capture a baseline, prove registration and await the registered cohort. Progressive shared-subscriber tests now validate bufferingNewest(1) coalescing rather than exact all-generation delivery. The 24 affected tests pass under a host where individual 48 MP derived creations required roughly 20-24 seconds. The subsequent smart profile escalated to full premerge and passed formatting, governance, CacheLab, 645 strict root tests, loopback networking, warnings-as-errors Release, PersistentStoreProvider conformance and ImageCodec conformance. This is scheduler-contended correctness and qualification evidence, not a latency target."
+    },
+    {
+      "id": "EVID-FOVEA-AUTHORIZED-ENCODED-ANIMATION-SEAM-2026-08",
+      "phase": "P7",
+      "status": "completed-package-internal-decoder-neutral-system-seam-no-concrete-imagecraft-adapter",
+      "summary": "W5_PT_110-124 establish a package-only authorized encoded animation transaction. Network and reusable-cache results carry immutable ContentID, namespace generation, fetch-base, exact request-execution and optional selected-representation digests. Cache reads and network materialization recheck generation; decoder preparation is followed by ACL, authorization, request-identity and generation revalidation; failed transfer cancels the provider. Runtime generation floors reject stale static/live registration. W5_PT_124 additionally proves that the same encoded source and request execution cannot reuse a provider prepared for a different target/content-mode/geometry/color render identity. The 45-test affected matrix, 660-test root suite, warnings-as-errors Release, generic iOS Simulator/device builds, current ComparativeLab, CacheLab, loopback and both conformance kits pass."
+    },
+    {
+      "id": "EVID-FOVEA-CANDIDATE-BASELINE-VERIFICATION-2026-08",
+      "phase": "P7",
+      "status": "completed-local-iteration-acceleration-full-release-authority-unchanged",
+      "summary": "Fovea verification can capture an ignored single-link baseline file containing the current HEAD and immutable Git working-tree tree object. Subsequent iteration impact is computed between that tree and the current tree, including tracked changes, untracked files and deletes. HEAD drift, malformed/missing tree objects, path escape, symlinks, hard links and non-ignored destinations fail closed. On the current long-lived dirty tree, a six-file benchmark/docs/tooling delta completed eight iteration phases in 5.3 seconds; the earlier zero-delta plan contained only the sensitive-material check. This is one local workflow observation, not a general speedup claim. The final frozen candidate still ran full root, Release, iOS, ComparativeLab, CacheLab, loopback and conformance qualification. Heavy premerge/release profiles also run a serial capacity preflight before any parallel static or build work; this was added after a 715 MiB free-space counterexample caused an otherwise valid qualification to fail at loopback output after CacheLab had completed."
+    },
+    {
+      "id": "EVID-ANIMATION-SPECIALIZED-COMPARATOR-REGISTRY-2026-08",
+      "phase": "P7",
+      "status": "completed-source-audit-and-preregistration-no-comparator-or-product-claim",
+      "summary": "A role- and format-specific registry records 11 animation-related comparators and eight bounded feature candidates. Gifu, FLAnimatedImage and APNGKit form the next P0 adapter sequence; AnimatedImage and YYImage are P1 source/player references; SwiftyGif is a P2 lifecycle falsifier. A nine-mechanism by eleven-system source-audit matrix makes request identity, display deadlines, actual-byte memory, pressure recovery, subrect composition, partial metadata, lifecycle fences, Reduce Motion and live MJPEG gaps explicit without assigning aggregate scores. The mechanism plan preregisters timing, pressure, lifecycle and APNG partial-composition roles, fixture families, physical-device rules and adoption gates. Display target deadlines, adaptive windows and partial composition remain experiments; formats, encoding, sprite sheets, video and vector runtimes are deferred or excluded. No third-party runtime dependency or performance claim follows."
+    },
+    {
+      "id": "EVID-FOVEA-VERIFICATION-ESCALATION-HARDENING-2026-08",
+      "phase": "P0",
+      "status": "completed-local-source-bound-run-scoped-smart-verified",
+      "summary": "Verification impact routing applies escalation rules to the current effective profile, so an iteration request with unknown input continues through smart to premerge instead of stopping early. Repository Tool products, performance labs and capture scripts are explicitly classified as tooling/benchmark inputs, and every animation registry governance file selects its coupled validator. The exclusive schema-3 smart run 20260806T060153.388539Z-23894 at HEAD 9137539f6222 / tree d7abaff9304b completed 26 phases in 364.749 seconds with sourceUnchangedDuringRun=true: 660/660 root tests, CacheLab 7/7, HTTP and loopback labs, metadata sanitizer, persistent-store provider 5/5 and ImageCodec 6/6 passed. All retained phase-log byte counts and SHA-256 values were independently rechecked with no mismatch. This is local dirty-candidate evidence only and does not replace release, clean-copy, hosted or physical-device qualification."
+    },
+    {
+      "id": "EVID-FOVEA-VERIFICATION-RUN-ISOLATION-2026-08",
+      "phase": "P0",
+      "status": "completed-local-single-writer-run-scoped-digest-bound",
+      "summary": "Verification profiles now fail immediately when another profile owns the repository lock. Each accepted execution writes impact, phase logs and report into a unique run directory; schema 3 binds every log path, byte count and SHA-256, checks containment and digest stability before publication, and copies the retained report atomically to latest.json. The lock contention main path, lock reacquisition, run-directory log routing, report write-back and retained/latest byte identity are covered by the tooling contract. This prevents recurrence of the observed concurrent 645/660 shared-log collision; it does not make local evidence equivalent to protected hosted qualification."
+    },
+    {
+      "id": "EVID-FOVEA-W5-ANIMATED-CODEC-SOURCE-BOUND-2026-08",
+      "phase": "P7",
+      "status": "completed-local-dirty-source-bound-codec-only-directional-no-product-claim",
+      "summary": "The schema-2 W5 codec capture binds Fovea HEAD 9137539f6222 / working tree 3692eb6cf7b6 and the dirty unpublished ImageCraft animation candidate HEAD 04e153795b80 / working tree 58f513143581, while SDWebImage 2de3a496eaf6 and PINRemoteImage c0d5cfa1947f remain clean exact comparators. Source and fixture identities are equal before and after six balanced blocks. Thirty-six reports and thirty-six RGBA sidecars form a 72-artifact byte-count/SHA-256 inventory under manifest SHA-256 447406b9a8ff. ImageCraft and PINRemoteImage are exact-pixel eligible; SDWebImage differs by at most two channel levels. Directionally, ImageCraft/PIN ratios are GIF prepare 0.709, selected frame 0.126, 24-frame window 0.978; APNG prepare 2.161, selected frame 0.372, 24-frame window 1.245. Identity, RGBA and source-after tampering fail in an executable synthetic contract. This supersedes schema-1 timing values but does not publish ImageCraft, implement the Fovea adapter, establish player/device performance or activate a product claim."
+    },
+    {
+      "id": "EVID-FOVEA-W5-APNG-COMPOSITION-ADJUDICATION-2026-08",
+      "phase": "P7",
+      "status": "completed-local-source-system-and-mechanism-bound-correctness-plus-resource-gap-no-product-claim",
+      "summary": "The expanded W5 APNG composition capture binds Fovea HEAD 9137539f6222 / working tree b5a263d27409, dirty ImageCraft HEAD 04e153795b80 / working tree 58f513143581, clean APNGKit 341383f61000 and Delegate ec3014ca2621, plus macOS 27.0 build 26A5388g, Xcode 27.0 build 27A5228h and ImageIO 3.3.0 / bundle 2847. Source, fixture, system-comparator and mechanism-file identities remained unchanged. Sixty retained report/RGBA artifacts cover full-canvas none/background/previous plus three true subrect cases. ImageCraft matches Apple ImageIO on every frame; APNGKit matches all subrect cases but remains non-exact on later full-canvas none/previous frames. The bound source audit and runtime bytes show the current ImageCraft layer parses rect/disposal/blend metadata but directly materializes full-canvas frames through ImageIO, with no explicit checkpoint state. True-subrect decoded/subrect byte ratios are 2.667x, 200x and 1.998x. This proves local composition correctness and simultaneously fails the subrect-checkpoint resource gate; no product, internal ImageIO peak-memory or physical-device claim follows."
+    },
+    {
+      "id": "EVID-FOVEA-W5-IMAGECRAFT-SUBRECT-RESOURCE-AUDIT-2026-08",
+      "phase": "P7",
+      "status": "completed-local-current-mechanism-full-canvas-materialization-checkpoint-gate-failed",
+      "summary": "A source-bound audit of ImageCraft AnimatedImageTypes, APNGAnimationInspector, ImageIOAnimationFrameProvider and ImageIOAnimationFrameRenderer records exact file digests and executable semantic observations. The inspector publishes subrect/disposal/blend descriptors, but single-frame and window APIs pass each requested index to ImageIO and return complete composed frames; no explicit checkpoint state is present in the inspected provider/renderer. Runtime evidence on 75x75, 1x1 and 10x6 subrect fixtures returns full-canvas RGBA with decoded/subrect byte ratios 2.667x, 200x and 1.998x while remaining pixel-exact against Apple ImageIO. The current mechanism therefore satisfies correctness but not the preregistered lower-byte/checkpoint/bounded-replay gate."
+    },
+    {
+      "id": "EVID-W5-APNG-PUBLIC-MAC-MECHANISM",
+      "status": "completed-local-directional-nonrelease",
+      "summary": "Current ImageCraft public APNG routes are source-bound on a physical Mac with exact pixels, zero reverse mismatches and cancellation fencing for owned and fallback roles. The result is directional only and explicitly rejects global Pareto-dominance claims."
+    },
+    {
+      "id": "EVID-DERIVED-RASTER-ALIAS-AWARE-BUDGET-2026-08",
+      "phase": "P7",
+      "status": "completed-local-mechanism-and-regression-evidence-default-disabled",
+      "summary": "Exact comparator-source audit found an eviction-ownership split: the pinned Akashic FileBlobStore may trim after physical publish while the Fovea alias is published later. Fovea now gives Akashic one-blob commit headroom and performs physical-reference-deduplicated eviction at the alias layer, removing aliases before bytes and using a runtime second-chance bit. Nuke, Kingfisher and SDWebImage source comparisons plus SIEVE/Seer/Midas primary research are recorded in docs/research/derived-raster-cache-policy-2026-08-08.md. This closes the local persistent-byte mechanism gap, not a production/default or comparator-performance claim."
+    },
+    {
+      "id": "EVID-DERIVED-RASTER-DURABLE-WRITE-BUDGET-2026-08",
+      "phase": "P7",
+      "status": "completed-local-logical-write-admission-mechanism-default-disabled",
+      "summary": "P7 now has a restart-durable fixed-window logical write admission gate at the derived persistence authority. Before any blob staging it charges candidate container bytes plus the exact projected full Fovea alias-manifest rewrite; an exhausted window leaves no derived blob or alias. Reservations survive reopen, are retained conservatively after uncertain failed publication, corrupt/future budget metadata fails closed, backward clock movement cannot refresh the window, and caller artifact timestamps cannot advance it. The real pipeline emits derived-raster-global-write-budget when publication is rejected. PT043-PT048 cover these boundaries. This is a deterministic logical write floor/control, not a physical SSD-byte oracle: budget-control metadata, Akashic metadata, filesystem allocation/fsync/directory effects, eviction and recovery writes still require measurement."
+    },
+    {
+      "id": "EVID-WORKFLOW-ROLLED-BACK-ACTION-LIVENESS-2026-08",
+      "phase": "P0",
+      "status": "completed-workflow-bundle-reusable-fix-and-real-fovea-recovery",
+      "summary": "A real workflow submit timeout exposed a liveness defect: resume durably rolled back an uncommitted FileTransaction but left the old action active, so retrying the non-reusable action ID deadlocked on a ROLLED_BACK journal. workflow-bundle now invalidates any active action whose journal is durably ROLLED_BACK, including the second-crash window after rollback and before controller-state cleanup, while leaving the DAG task pending for a fresh action ID. Immediate and previously persisted rollback regressions pass; Fovea recovered the real stale act-7480dbd2e5 state, generated a fresh action and completed the Workbench task. The workflow-bundle development gate passed 655/655 with 20 refinement sites and 1362 interaction obligations. This is workflow control-plane evidence, not product release evidence."
+    },
+    {
+      "id": "EVID-WORKBENCH-LIFECYCLE-AND-VISUAL-2026-08",
+      "phase": "P0",
+      "status": "completed-local-project-lifecycle-and-simulator-unit-matrix",
+      "summary": "FoveaWorkbench.xcodeproj was regenerated from project.yml with XcodeGen 2.46.0 rather than hand-edited; DesignSystem and WorkbenchVisualSystemTests membership is present and generic iOS Simulator build-for-testing succeeded for the app and declared test targets. The remaining unexplained LiveNetwork user labels were localized to Chinese. The local-media generator now explicitly requests 1280-pixel Wikimedia derivatives; two undersized bundled real assets were replaced with provenance-preserving 1280x602 and 1280x620 metadata-sanitized derivatives. Static visual source audit reports localization=0, layout=0 and asset findings=0 across 29 bundled real assets. WorkbenchVisualSystemTests passed 6/6 on iPhone 17e and 6/6 on iPad Pro 11-inch M5 simulators. These are project/build/static/unit visual-contract results, not subjective screenshot-quality or physical-device evidence."
+    },
+    {
+      "id": "EVID-CODEC-HOST-OUTPUT-CONTRACT-2026-08",
+      "phase": "P2",
+      "status": "completed-local-host-boundary-hardening-progressive-peak-open",
+      "summary": "Against exact Fovea ImageCraft pin 736d0fb75ec612082817ff782d25cb638cb8469e, hostile type-correct fake codecs proved Fovea previously trusted returned pixels after validating descriptor/probe/resource declarations. The accepted fix adds host postconditions before publication: complete-frame output must remain within DecodeLimits and requested target, actual CGImage resident bytes must fit the admitted working-set bytes, and decoded source-profile fact must match the validated probe; progressive previews must remain within limits/target and the configured returned-image resident hard cap. CODEC-PT-012..017 are current-required and traceability is 454/454. DecodeStage was refactored to a 453-line orchestrator plus two cohesive sub-500 helpers while preserving permit order and reason codes. The finite model now includes progressiveFormats coupling and complete/progressive output postconditions. Progressive pre-decode transient peak admission remains open because the exact ImageProgressiveDecodeSession contract has no per-session/generation resource envelope. AVIF/JPEG XL remain unsupported by the exact PNG/JPEG/GIF format identity contract and require ImageCraftCore version evolution before honest integration."
+    },
+    {
+      "id": "EVID-FOVEA-CURRENT-ROOT-2026-08-08",
+      "phase": "P0",
+      "status": "completed-local-current-revision31-dirty-candidate-no-release-claim",
+      "summary": "The current dirty revision-31 Fovea candidate passes python3 scripts/run-swift-strict.py test with 756/756 XCTest cases and zero failures; after repairing the W5_PT_175 actor-reentrancy cancellation race, three consecutive full-root runs each pass 756/756. Documentation checks pass for 82 Markdown files / 335 explicit test definitions; test traceability is 455/455 implemented with zero missing; tooling syntax, codec finite model and mathematical proof obligations pass. This is not a release certificate: the full Release package remains blocked by an existing user-immutable FoveaAnimationMacLab product, global Swift-format remains blocked by an existing immutable animation-compositor source, physical-device and protected-hosted evidence remain open, and workflow final candidate verification/review is still required."
+    },
+    {
+      "id": "EVID-ANIMATION-CANCEL-REENTRANCY-LINEARIZABILITY-2026-08",
+      "phase": "P7",
+      "status": "completed-local-production-liveness-repair-root-stress-and-controller-verified",
+      "summary": "Two full-root runs hung at W5_PT_175 while isolated execution passed, revealing a scheduling-sensitive actor-reentrancy defect. AnimationPlaybackCoordinator.produce captured publicationGeneration then awaited cross-actor session state; cancel could interleave before automaticWholeTrackPredecodeTask existed, advance generation, find nothing to cancel, and stale produce could resume and create new weighted predecode work after cancellation. W5_PT_205 converts this into a fast 64-delay schedule-search falsifier; old code failed at delay=17 by calling the cancelled second provider once. The repair revalidates !isCancelled and captured publication generation after the cached-frame await and again after automatic-admission await, before task creation. Fixed code passes W5_PT_175, W5_PT_205, AnimationPlaybackRuntimeTests 24/24, three consecutive root runs 756/756, and workflow controller independent task verification. Swift actors remain reentrant; this is post-await invariant revalidation, not a non-reentrant executor workaround."
+    },
+    {
+      "id": "EVID-REV32-OWNED-QUALITY-ATTRIBUTION-2026-08-09",
+      "phase": "P0",
+      "status": "completed-local-owned-quality-zero-controller-root-green-candidate-readiness-blocked",
+      "summary": "Revision 32 separates whole-worktree candidate authority from maintainability blame. The conservative candidate and quality baselines bind the same migration-time Git HEAD tree. Eight complexity violations on COMMITTED transaction-owned paths were refactored without raising thresholds; post-refactor transaction-attributed quality is 0 violations / score 0 while raw analysis intentionally retains 207 unattributed violations across 245 unowned changed source paths. The codec/animation and derived tasks each pass independent controller root swift test at 756/756. Before the final continuity patch candidate projection was 372 changed / 98 traced / 332 untraced / 58 stale; final merge reporting must recompute and remain fail-closed while untraced reviewable paths exist. Full Xcode documentation build is separately blocked by an AppKit dependency-scan failure in FoveaAnimationMacLab-product."
+    },
+    {
+      "id": "EVID-REV33-REV34-LIFECYCLE-ORACLE-DETERMINISM-2026-08-09",
+      "phase": "P7",
+      "status": "completed-local-test-oracle-determinism-controller-root-green-no-production-change",
+      "summary": "Revision 32 frozen verification exposed a PT175 setup race: fixed Task.yield counts did not prove the second animation start had entered the weighted permit queue before cancellation. Revision 33 now waits for the mechanical queued-permit count, keeps invalidRegistration disallowed, passes PT175 20/20, AnimationPlaybackRuntimeTests 24/24, three strict roots at 756/756 and controller root 756/756. The subsequent continuity controller run exposed the same class of assumption in live MJPEG PT079; revision 34 replaced fixed-yield setup in PT079/PT080/PT099 with snapshotForTesting predicates for hidden coalescing, paused restoration and critical-pressure dropping. Targeted 3/3, live selection 19/19, ten stress repetitions, local strict root 756/756 and controller root 756/756 pass. Revisions 33/34 changed no production source. Candidate untraced-path authority and the separate DocC/AppKit environment blocker remain open."
+    },
+    {
+      "id": "EVID-H004-AKASHIC-GLOBAL-UNASSIGNED-COST-2026-08",
+      "status": "completed-current-worktree-local-integration-directional-performance-formal-publication-pending",
+      "summary": "The W2 nine-image warm-memory regression was traced to Akashic static per-shard SIEVE budgets leaking Swift hash skew into effective global capacity, not to Fovea probation sizing. Current Akashic replaces static capacity ownership with a lock-free global unassigned-cost pool while preserving single-shard SIEVE hot paths, with CT-043/044 covering skew and cross-shard spare reuse. The same final Akashic tree now also includes compact incremental-manifest record v2 and passes scripts/verify.sh with structure, 63 Swift Testing cases, Debug/Release warnings-as-errors, positive/negative consumers, the unchanged 140-symbol public API and stable Git-free source identity 5d31cc1800940332f4fc0928869747721885315006597148b6564b99feb07c45 across 88 files; AkashicMemory retains the iOS 15 deployment contract. With Fovea edited to this unpublished Akashic source, the full Fovea suite passes 830/830 and CACHE_PT_057 previously passed 10/10 fresh-process hash seeds versus 3/5 failures on the old implementation. A post-refactor five-block CacheLab memory calibration has zero Fovea correctness, inferior, inconclusive or 20%-dominance failures; directional LRU ratios are about 1.298x hot-scan throughput, 1.624x lower hot p99, 3.257x concurrent throughput and 2.583x lower concurrent p99. These CacheLab numbers remain host/edited-dependency mechanism evidence only; the historical formal V4 remains bound to published Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 and current production pins are unchanged."
+    },
+    {
+      "id": "EVID-H005-STATIC-DETACH-RECOVERY-2026-08",
+      "status": "completed-current-worktree-contract-resource-effectiveness-pending",
+      "summary": "UIKit/AppKit static-image window lifecycle now has an explicit in-flight-only recovery contract. Completed successful pixels remain displayed across detach without reload or long-lived loader retention. An in-flight static subscription loses publication authority and is cancelled on detach, retains only a lightweight restart recipe, and restarts on reattach. Explicit cancel, reuse, animation/live replacement and terminal loader cancellation clear recovery state; same-identity explicit retry remains legal after loader cancellation. H005_PT_001-004 plus existing AppKit image-view tests pass 10/10, the current latest-source edited integration passes 830/830, and FoveaUIKit builds for the iOS 15 deployment floor. W1 detach-duration/reuse-probability, abandoned/restart bytes, footprint, hitch and any bounded grace policy remain empirical work."
+    },
+    {
+      "id": "EVID-H046-DECODE-PERMIT-LIFETIME-2026-08",
+      "status": "completed-current-worktree-instrumentation-materiality-pending",
+      "summary": "Fovea now has a package-only, default-off decode permit lifetime recorder for local working-set, global working-set, local CPU and global CPU acquisition/hold intervals, including upstream-held-while-waiting and byte-time. H046_PT_001 causally blocks each downstream pool and proves the current four-layer order can hold an upstream permit while waiting for the next resource; the test is included in the current 830/830 latest-source edited root suite. This is structural/materiality instrumentation only: working-set permits are budget tokens rather than proof of resident RSS, so no composite multi-resource scheduler is justified until W1/W4/W7/W12 workload evidence shows material endpoint cost."
+    },
+    {
+      "id": "EVID-H009-BODY-CREDIT-NEGATIVE-2026-08",
+      "status": "completed-local-negative-result-production-default-unchanged",
+      "summary": "A package-only 1/2/4 URLSession body-credit controller and Release mechanism lab were built without changing the ordinary public API. Three final reports give median-of-medians 3.760 ms at credit 1, 3.793 ms at credit 2 and 3.786 ms at credit 4; widening therefore has no stable latency benefit, while every window observed up to a 4 MiB callback/outstanding peak despite the 256 KiB application threshold. Production remains the direct one-callback suspend/resume path and bypasses the controller entirely. The current latest-source local integration with the verified edited Akashic tree passes 830/830; production Akashic pin publication remains a separate blocker."
+    },
+    {
+      "id": "EVID-H006-CANCELLATION-BOUNDARY-NEGATIVE-2026-08",
+      "status": "completed-local-attribution-no-production-change-physical-confirmation-pending",
+      "summary": "W1 cancellation accounting is source-traced end to end: postCancellationBytes counts deterministic-origin delivery beginning after BenchmarkOrigin.markCancellation and before URLProtocol.stopLoading acknowledgement, not bytes accepted by Fovea's body accumulator. The ComparativeLab Fovea adapter defaults to TransportReusePolicy.taskLocal, so this W1 path bypasses FetchStage.executeShared and SharedTaskRegistry release/tombstones; those shared-registry actor hops are not a causal W1 target. URLSessionTransport's production cancellation handler directly cancels the URLSessionTask and unregisters the event route; an explicit suspend-before-cancel candidate was tested and reverted because it did not produce a stable Pareto improvement. The lock-based SubscriptionResultRelay A/B was also rejected, and a package-only direct progressive-producer handle causally proved synchronous propagation to the real task-local transport handler but was worse in three interleaved runs per arm from one installed binary/sourceTreeDigest 68bd0f1bec3d542051dda42985183417f2925a850b272139f0b62dbdf0bf5056: median acknowledgement p95 22.778 ms direct vs 9.306 ms legacy, post-cancel bytes 1159445 vs 864756, completed-after-cancel bytes 999436 vs 831988 and abandoned bytes 131072 vs 98304. Its report is .artifacts/performance/h006-direct-producer-ab/report.json SHA-256 55a63614e85b743a793d4ef4e511689480cbbd93ea60adee84e0999589debfc1. Production cancellation remains unchanged. Reopen deterministic app-layer tuning only if real W1/W6 network tracing identifies material app-owned time before URLSessionTask.cancel; simulator evidence remains directional and physical-device confirmation is open."
+    },
+    {
+      "id": "EVID-H007-W1-FOOTPRINT-OWNER-ATTRIBUTION-2026-08",
+      "status": "completed-five-block-directional-cache-dominant-quiet-host-and-physical-pending",
+      "summary": "H007 now has opt-in ComparativeLab runtime wiring for the preregistered w1-footprint-owner-attribution-v1 2x2 fresh-process matrix without changing ordinary W1 behavior. A pre-measurement WI-10 smoke proved adapter-wide cancelAll destroyed Fovea's cache before WF-004, so AMEND-001 was recorded before measured blocks: attribution mode cancels benchmark-owned cell/consumer work and defers adapter teardown until after the owner intervention. The final directional Simulator campaign at .artifacts/performance/h007-w1-footprint-owner/fovea-amend1-5block-directional-v1 completes five randomized measured blocks with zero hitch across all cells. At 1000 ms, median cache-associated process-footprint release is 22,429,696 B versus 0 B UI-associated, joint release is 24,051,736 B and interaction is 4,685,824 B; Fovea renderedMemoryPurged reports median 18,078,656 logical bytes. The physical/logical difference remains allocator/shared-backing coupling rather than cache-owned pages. The immutable report binds run sourceTreeDigest 95e45e2be1770700056d54ab1a7c8f9ac7b6172107773531217208b1af6b0cd0, contract SHA256 8a35ca35e83002df1d42f25a147e5dd333e492e9b987c93fd7d2dfe645a6caf1 and analysis SHA256 c36a0e9d6f5de36849c3e670c4cec001835000ba163af5b25a6cc2cca24a83da. Claim-bearing host execution was attempted twice and failed closed because ImageLoadingQualityLab reference-host calibration was concurrently building and host CPU/disk quiet thresholds were not met; therefore the five-block result is mechanism guidance only, not a formal memory ranking or permission to retune H004."
+    },
+    {
+      "id": "EVID-W5-IMAGECRAFT-ADAPTER-V7-CURRENT-2026-08",
+      "status": "completed-current-local-overlay-qualification-formal-device-and-publication-pending",
+      "summary": "Final local W5 adapter qualification v7 is the manifest-final rebind for the current integrated source set after H009/H006 and Akashic compact-manifest v2. Akashic Git-free verified source identity is 5d31cc1800940332f4fc0928869747721885315006597148b6564b99feb07c45; ImageCraft working tree is f0a2c8b5273b27a76fe78fc41f55cab8a5512d17. W5_ADAPTER_PT_001-008 all pass; swift-format strict and warnings-as-errors qualification returnCode are 0; full sources and the selected Fovea animation implementation identities are unchanged before/after; productionPackageModified=false and productionImageCraftPinChanged=false. The external artifact .artifacts/qualification/w5-imagecraft-animation-adapter-v7-manifest-final/report.json is authoritative for exact Git working-tree identities and its own digest, avoiding a self-referential Fovea tracked-tree hash. formalClaimEligible remains false. Publication/pinning plus physical iOS deadline, memory, energy, thermal and reclamation gates remain open."
+    },
+    {
+      "id": "EVID-AKASHIC-COMPACT-MANIFEST-V2-2026-08",
+      "status": "completed-current-worktree-local-verified-logical-write-amplification-physical-io-pending",
+      "summary": "Akashic current source already used per-key incremental manifest records, so the historical 3.8033x flat-manifest premise was stale: before this refinement the current 64 x 4 KiB resource probe was 1.101196x. Compact record schema v2 removes the duplicate filename key from create records, stores raw partition/SHA256 bytes with short coding keys, keeps legacy v1 create/tombstone replay, fails future schemas closed, and stores a 32-byte key verifier only for tombstones so filename rename cannot transfer deletion authority. CT045-049 cover legacy replay, compact size/filename binding, future schema and tombstone non-resurrection/tamper. Metadata writes for 64 x 4 KiB fell from 26,528 B to 12,897 B (-51.4%), logical write amplification to 1.049198x; 32 x 64 KiB is 1.003098x and 8 x 1 MiB is 1.000201x. Retained resource gates cap them at 1.06x/1.005x/1.001x. Final Akashic scripts/verify.sh passes 63 tests, 140 public symbols and Git-free source identity 5d31cc1800940332f4fc0928869747721885315006597148b6564b99feb07c45. Fovea latest-source edited integration passes 830/830. These are logical-byte/local-process claims only; physical NAND writes, energy, power-loss and publication/pin qualification remain open."
     }
   ],
   "currentState": {
@@ -284,14 +496,14 @@
     ],
     "actionsBudgetGovernance": {
       "checker": "scripts/check-actions-budget-governance.py",
-      "nextHostedAction": "none-until-explicit-budget-restoration",
+      "nextHostedAction": "final-candidate-local-qualification-then-identity-then-full",
       "policy": "docs/governance/github-actions-budget-policy.md",
       "remoteWorkflows": {
-        "Diagnostic Workbench Product Patterns": "disabled_manually-branch-deleted",
+        "Diagnostic Workbench Product Patterns": "disabled_manually",
         "Fovea Live Network Lab": "disabled_manually",
-        "Fovea Verification": "disabled_manually"
+        "Fovea Verification": "active"
       },
-      "status": "active-budget-exhausted-hosted-runs-prohibited"
+      "status": "verification-active-budget-balance-unobservable-explicit-approval-required"
     },
     "activeRoadmapFrontier": [
       "P0",
@@ -318,15 +530,15 @@
     "akashicConformanceStatus": "30-obligations-22-component-local-2-partial-6-planned-host-ct022-ct026-open",
     "akashicContractStatus": "adr-0014-accepted-independent-three-product-local-implementation",
     "akashicDiskStatus": "independent-local-41-tests-3-full-volume-3-quota-11-exact-process-crash-3-round-78-random-sigkill-12-process-generation-contention-6-platform-3-resource-clean-copy-passed-nonrelease",
-    "akashicFaultInjectionArtifactSHA256": "b2966b616dd49221b4a05c26cc9686e8cd8fcc1f5a100c3ce2a9d62f11bd1be5",
-    "akashicFaultInjectionStatus": "v5-passed-syscall8-permission1-switch11-random78-full3-quota3-current-alpha5-source",
-    "akashicFoveaIntegrationStatus": "public-alpha5-clean-copy-478-of-478-cachelab-v4-trusted-clean-source-passed",
+    "akashicFaultInjectionArtifactSHA256": "dd234c535d509e10bce902bb29bcf9bce6a38459135369988fcc385d01c78a8d",
+    "akashicFaultInjectionStatus": "v5-passed-syscall10-permission1-switch11-random78-full3-quota3-dirty-local-combined-evidence",
+    "akashicFoveaIntegrationStatus": "public-alpha7-exact-pin-production-eviction-report-integrated-historical-cachelab-v4-alpha5-bound-current-performance-physical-requalification-pending",
     "akashicGenerationContentionArtifactSHA256": "f5f46b2392df4e584f0cc9c46b52e56087580a33cd36708fe3b64330cb562f49",
-    "akashicIndependentPackageStatus": "public-alpha5-84-file-release-readiness-v5-ci-green-tagged-physical-qualification-pending",
+    "akashicIndependentPackageStatus": "public-alpha7-ci-green-tagged-dynamic-unassigned-budget-eviction-report-physical-qualification-pending",
     "akashicLocalResourceEnvelopeStatus": "schema2-three-of-three-passed-payload-metadata-separated-current-alpha5-source",
     "akashicNeutralContractADR": "docs/adr/0014-domain-neutral-akashic-contract.md",
     "akashicNeutralContractStatus": "adr-0014-accepted",
-    "akashicPinnedCommit": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
+    "akashicPinnedCommit": "0376b960ec8abe54f2d4a9d7d66e97f395215eaf",
     "akashicPlatformMatrixArtifactSHA256": "d14677a678d6349390ef12d4c392bc2c003c2adb6b31688cc8bcb070ffa10d5a",
     "akashicRealAPFSQuotaArtifactSHA256": "19c215ac52b6cfd8d5c5c6ffce3f065e5128c73e7cf91b80234c83e7a1428d4d",
     "akashicRealAPFSQuotaStatus": "3-real-quota-cases-passed-all-kernel-enospc-current-alpha5-source",
@@ -342,13 +554,15 @@
     "bTierRetainedComparators": [
       "AlamofireImage 4.4.0"
     ],
-    "cacheLabStatus": "v4-local-formal-thirteen-of-thirteen-dominance-public-pin-trusted-clean-source-best-claim-eligible-hosted-fovea-ci-pending",
+    "cacheLabStatus": "v4-historical-alpha5-thirteen-of-thirteen-dominance-current-alpha7-rebind-required-no-current-performance-claim",
     "canonicalActionPlan": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
     "codecConformanceKitStatus": "in-repository-package-internal-baseline-cross-repository-neutral-kit-pending",
-    "codecContractStatus": "implemented-local-package-internal-imageio-reference-only",
+    "codecContractStatus": "implemented-local-host-postcondition-hardened-imageio-reference-only-progressive-predecode-peak-open",
     "codecContractVersion": 1,
     "codecDefaultSelectionPermitted": false,
-    "componentCleanCopyStatus": "passed-akashic-alpha5-public-https-exact-revision-478-tests-no-sibling-required",
+    "codecFormatExtensibilityStatus": "exact-pin-png-jpeg-gif-only-avif-jpegxl-require-imagecraftcore-contract-version-evolution",
+    "codecOutputAuthorityStatus": "complete-frame-host-validates-limits-target-resident-bytes-and-source-profile-progressive-validates-limits-target-resident-hard-cap",
+    "componentCleanCopyStatus": "historical-alpha5-clean-copy-passed-current-alpha8-alpha7-final-release-qualification-pending",
     "componentPins": "docs/project-memory/component-pins.json",
     "criticalMutationHarnessStatus": "exact-component-checkouts-representative-4-killed-application-audit-101-of-101-full-protected-ci-pending",
     "crossPlatformMechanismAudit": {
@@ -382,7 +596,17 @@
     "decodeResourceCompositionModel": "docs/research/decode-resource-composition-model.json",
     "decodeResourceCompositionStatus": "four-retained-cases-passed-lifecycle-ledgers-and-device-calibration-pending",
     "decodeResourceContractStatus": "single-scalar-max-composition-not-proven-complete-live-set-audit-active",
+    "decodeStageStructuralStatus": "orchestrator-453-lines-no-longer-requires-oversized-file-cohesion-exception",
     "defaultCodecBackend": "ImageIO",
+    "derivedRasterCompleteContainerEvidence": {
+      "claimScope": "dirty-local-single-host-directional-only",
+      "heroAkashicReadSpeedupMedian": 6.7,
+      "realPhotoAkashicReadSpeedupMedian": 2.829,
+      "realPhotoContainerToOriginalByteRatioMedian": 1.185,
+      "targetCount": 21
+    },
+    "derivedRasterContractStatus": "package-internal-opt-in-alias-aware-byte-and-durable-logical-write-budgets-default-disabled",
+    "derivedRasterPersistenceContract": "docs/specifications/derived-raster-persistence-contract.md",
     "directExternalComparators": [
       "Apple URLSession + URLCache + ImageIO (platform build)",
       "Apple AsyncImage (paired SwiftUI surface)",
@@ -404,7 +628,7 @@
       "status": "watchdog-verified-bounded-host-environment-failure-final-report-pending",
       "totalTimeoutSeconds": 900
     },
-    "externalComponentIntegrationStatus": "imagecraft-alpha4-akashic-alpha5-public-ci-green-exact-current-pins-clean-copy-passed",
+    "externalComponentIntegrationStatus": "imagecraft-alpha8-akashic-alpha7-public-ci-green-exact-current-pins-production-adapters-integrated-release-qualification-pending",
     "externalComponentValidation": {
       "akashicRevision": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
       "cleanCopyArtifactSHA256": "a6b4815a0a230d842b057211cb9db65ffb913f7dd3654dff3729dd691a689492",
@@ -412,25 +636,59 @@
       "cleanCopySourceDigest": "a8e2da06e42d5e6d35398e839f04e8bfcb3b0003fef0c4f02147be37cb0034f2",
       "hostTestsPerScenario": 478,
       "imageCraftRevision": "bc93b8df0337d7a57779b53106dd744ad97b095e",
-      "status": "imagecraft-alpha5-clean-composition-simulator-host-and-portable-source-copy-qualified-public-ci-pending"
+      "status": "historical-alpha5-clean-composition-artifact-retained-not-authority-for-current-alpha8-alpha7-pins"
     },
     "finalATierHeadlessAggregateStatus": "current-clean-source-functional-30-spec-complete-performance-host-quiescence-blocked",
     "finalSwiftUISurfaceAggregateStatus": "current-clean-source-30-run-structural-complete-performance-host-quiescence-blocked",
     "foveaCompositeStoreContentionArtifactSHA256": "1855b08a6cf1efe4fa82268347909842b16f20e69f0e4ece5a9ba2294362fff6",
     "fullAcceptedWorkloadRange": "W1-W15",
+    "imageCraftAnimationCandidateContractTestCount": 26,
+    "imageCraftAnimationCandidatePublicAPIDelta": "105-added-0-removed-0-changed-vs-0.1.0-alpha.5",
+    "imageCraftAnimationCandidateRootTestCount": 101,
+    "imageCraftAnimationCandidateSourceFileCount": 265,
+    "imageCraftAnimationCandidateSourceIdentity": "7d0a1d3cc1b7e64eef11372582dbd67ff6d26bb0186d75dfca0c3528c454f37f",
+    "imageCraftAnimationCandidateStatus": "published-alpha8-production-imagecraft-animation-preparer-integrated-local-admission-qualified-physical-ios-release-evidence-pending",
+    "imageCraftAspectFitNearestIntegerCandidate": "rejected-42-process-21-target-ab-decode-median-plus1.4-percent-materialization-plus2.1-percent-implementation4-retained",
     "imageCraftGovernanceArtifacts": [
       "docs/project-memory/component-pins.json",
       "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
       "https://github.com/YuLeiFuYun/ImageCraft/actions"
     ],
     "imageCraftGovernanceStatus": "public-mit-ci-green-alpha-tagged-exact-pin-required-check-device-pending",
-    "imageCraftIndependentPackageStatus": "public-current-source-ci-green-alpha-tagged-exact-fovea-pin-physical-device-pending",
+    "imageCraftIndependentPackageStatus": "public-alpha8-ci-green-tagged-exact-fovea-pin-animation-window-cost-contract-physical-device-pending",
     "imageCraftJPEGMarkerScanEvidence": "../ImageCraft/Evidence/Experiments/jpeg-marker-scan-ab-2026-07-31.json",
     "imageCraftJPEGMarkerScanEvidenceSHA256": "d00753208ed7b04954f0e7df9d030c2dc0704eac97b5cfc05f47374b34c65f88",
     "imageCraftJPEGMarkerScanStatus": "interleaved-ab-588-samples-6-paths-paired-median-improvement-8.9-to-16.9-percent",
-    "imageCraftPinnedCommit": "bc93b8df0337d7a57779b53106dd744ad97b095e",
+    "imageCraftPinnedCommit": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
     "imageIOCodecCapabilities": "PNG-JPEG-GIF-complete-primary-frame-SDR-CGImage-operation-boundary-cancellation",
     "independentCodecStatus": "external-development-not-integrated",
+    "latestATierFunctionalDiagnostic": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
+    "latestATierFunctionalDiagnosticClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+    "latestATierFunctionalDiagnosticSHA256": "d170973c5625de7c7909520a2e027fbec9c33e5188ce9f8665755ce78285d7e2",
+    "latestATierFunctionalDiagnosticSourceCommit": "5a836c43566ae6915b85790fed358b35d134db6a",
+    "latestATierFunctionalDiagnosticSourceTreeDigest": "98130cdbbf00739fe9f618638df4b3ae7def02ef5611b0c7c421edaa6394a8e5",
+    "latestAnimationCadenceExperimentStatus": "default-off-exact-boundary-gcd-integer-fps-request-wired-ios15-workbench-build-passed-device-ab-pending",
+    "latestAnimationCadenceExperimentTests": [
+      "W5_PT_138",
+      "W5_PT_139",
+      "W5_PT_140",
+      "W5_PT_141",
+      "W5_DEVICE_PT_002-planned-physical"
+    ],
+    "latestAnimationCancellationLinearizabilityStatus": "w5-pt-175-plus-w5-pt-205-actor-postawait-generation-revalidation-fixed-root-stress-green",
+    "latestAnimationCancellationRaceFalsifier": "old-code-w5-pt-205-failed-delay-17-second-provider-called-after-cancel-fixed-64-delays-zero-provider-calls-one-cancel-zero-used-zero-queued",
+    "latestAnimationCancellationReentrancyAudit": "docs/research/animation-cancellation-reentrancy-audit-2026-08-08.md",
+    "latestAnimationCancellationReentrancyAuditSHA256": "8d27504de30a2960f66c0eeefc89d80fdf27901445a26caf0ae8977146ff20ec",
+    "latestAnimationComparativeLabArtifact": ".artifacts/comparators/verification-local.json",
+    "latestAnimationComparativeLabStatus": "passed-local-contract-adapters-2-external-false-ios-false-current-source",
+    "latestAnimationFoveaCoreFileSetSHA256": "f887627beaf347cf94dd1712ccbe418647dd44b5d6cfba3dc996f078e131b5dd",
+    "latestAnimationFoveaCoreReviewedFileCount": 81,
+    "latestAnimationPlaybackCoreStatus": "package-internal-authorized-encoded-preparation-player-runtime-uikit-appkit-swiftui-live-mjpeg-and-linearizable-postawait-cancellation-system-passed-real-imagecraft-fixed-revision-and-device-runtime-evidence-pending",
+    "latestAnimationPlaybackFocusedTestCount": 124,
+    "latestAuthorizedEncodedAnimationContractRange": "W5_PT_110-124",
+    "latestAuthorizedEncodedAnimationStatus": "content-request-variant-namespace-generation-and-render-request-bound-system-seam-passed-no-real-imagecraft-adapter",
+    "latestAuthorizedEncodedAnimationSystemTestCount": 4,
+    "latestBackgroundActivityTestOracleStatus": "derived-raster-monotonic-activity-fence-and-progressive-buffering-newest-contract-passed-under-host-contention",
     "latestCacheLabAnalysis": ".artifacts/cache-lab/formal-analysis.json",
     "latestCacheLabBestClaimEligible": true,
     "latestCacheLabFormalAnalysisSHA256": "5a694305d2bd98ea8647910509143cb56b1885a2a5f688ae333e76e9c5127d6f",
@@ -441,13 +699,70 @@
     "latestCacheLabRunCount": 20,
     "latestCacheLabStatisticalGatePassed": true,
     "latestCacheLabTrustedCleanSource": true,
+    "latestCodecBoundaryAudit": "docs/research/codec-boundary-audit-2026-08-08.md",
+    "latestCodecBoundaryAuditSHA256": "da5254ea25e6bfebaa4fc3a226ebd7c1c07077908c529e148807f1410f7823da",
+    "latestCodecContractModelStatus": "capability-2304-progressive-format-2-generation-262144-resource-49-complete-output-60-progressive-output-30-timing-25-errors-0",
     "latestComparativePlanCanonicalSHA256": "078206a957e4a44e4b5126543011d61a2746384ce6f87e693cee67c6ab5df8d3",
     "latestComparatorVerificationArtifact": ".artifacts/comparators/verification.json",
     "latestComparatorVerificationArtifactSHA256": "9524865ef507ed78df5a98a8b73ce2ac3324873442e0a7386ec2252ebfc7a98a",
     "latestComparatorVerificationStatus": "passed-complete-external-and-ios-seven-adapters-zero-local-warnings-17-support-tests",
+    "latestDerivedRasterCachePolicyStudy": "docs/research/derived-raster-cache-policy-2026-08-08.md",
+    "latestDerivedRasterCachePolicyStudySHA256": "1d0c9ed5c9c17dac956a9574f9e9bebc7cc96fa6cb15f36d0d2d394e057df2f4",
+    "latestDerivedRasterStrictTestCount": 47,
+    "latestDerivedRasterWriteBudgetStatus": "restart-durable-fixed-window-logical-floor-before-blob-staging-physical-calibration-pending",
+    "latestDocumentationGateStatus": "83-markdown-335-explicit-test-definitions-static-passed",
+    "latestFinalGovernancePremergeElapsedSeconds": 66.5,
+    "latestFinalGovernancePremergePhaseCount": 41,
     "latestFiveLibrarySimulatorAggregateHistorical": ".artifacts/comparative-simulator-lab/calibration-report-full.json",
-    "latestRootReleaseBuildStatus": "passed-local",
-    "latestRootSwiftTestCount": 478,
+    "latestGlobalSwiftFormatStatus": "blocked-environment-existing-user-immutable-animation-compositor-source-long-line-do-not-clear-flags",
+    "latestIOS15FullTestProductBuildElapsedSeconds": 8.18,
+    "latestIOS15FullTestProductBuildStatus": "passed-current-appkit-refresh-observer-and-driver-start-anchor-tree-warnings-as-errors-only-xcode-beta-xctest-deployment-linker-warning",
+    "latestIOS15FullTestStrictBuildStatus": "passed-warnings-as-errors-current-source-clean-xcode-beta-xctest-linker-version-warning-only",
+    "latestIOS15UIKitBuildStatus": "passed-no-source-warnings-arm64-apple-ios15-simulator",
+    "latestIOS16TestProductBuildStatus": "passed-linked-arm64-apple-ios16-simulator-xcode-beta-xctest17-link-warning-only",
+    "latestIterationVerificationArtifact": ".artifacts/verification/runs/20260807T072600.818429Z-29111/report.json",
+    "latestIterationVerificationStatus": "passed-77-file-candidate-delta-16-phases-including-semantic-replay-oracle",
+    "latestLoopbackNetworkArtifact": ".artifacts/loopback-network/network-lab.json",
+    "latestLoopbackNetworkStatus": "passed-current-dirty-candidate",
+    "latestMJPEGLiveSystemStatus": "package-internal-end-to-end-passed-shared-fetch-admission-namespace-revoke-critical-pressure-reduce-motion-uikit-appkit-revision34-lifecycle-oracles-state-gated",
+    "latestMJPEGMechanismAggregate": ".artifacts/performance/w5-mjpeg-mechanism-final-v2/aggregate.json",
+    "latestMJPEGMechanismEvidence": "six-process-blocks-48-trials-correct-median-ratio-0.0404-directional-synthetic-only",
+    "latestMacOS12AppKitStrictBuildStatus": "passed-foveaappkit-target-warnings-as-errors-with-macos12-deployment-floor-and-macos14-availability-guard",
+    "latestNamespaceGenerationFloorStatus": "static-and-live-stale-registration-rejected-after-revoke",
+    "latestNegativeResultsSHA256": "81b49e9cbe64cc5ad0f4b7520f037a6e181944541b9a38edbe1d95610ce49fe7",
+    "latestOrdinaryImageDerivedRasterStatus": "local-opt-in-byte-and-durable-logical-write-budgets-passed-clean-w2-w11-physical-write-device-pending",
+    "latestOrdinaryImageDerivedRasterStudy": "docs/research/ordinary-image-derived-raster-study-2026-08.json",
+    "latestOrdinaryImageDerivedRasterStudySHA256": "ef98e1f57c040dee57d15c602588f800d4cf761e3dd149798b9784a14811d7f9",
+    "latestPostW5ProductPremergeRouterBaseline": ".artifacts/verification/candidate-baselines/post-w5-product-premerge-router.json",
+    "latestPostW5ProductPremergeRouterBaselineTree": "98a3f80d7d04b79330465c72a42769c26bae63f7",
+    "latestPremergePhaseCoverageStatus": "passed-final-41-of-41-zero-failures-post-router-governance-delta; product-premerge-42-of-42-also-green",
+    "latestPremergeVerificationArtifact": ".artifacts/verification/runs/20260807T072857.740603Z-31421/report.json",
+    "latestPremergeVerificationDurationSeconds": 66.5,
+    "latestPremergeVerificationElapsedSeconds": 66.5,
+    "latestPremergeVerificationStatus": "passed-final-requested-premerge-effective-premerge-one-doc-delta-semantic-oracle-registered; prior-42-phase-product-premerge-remains-green",
+    "latestPremergeVerifiedTree": "current-candidate-before-final-report-pointer-only-memory-update",
+    "latestProductPremergeVerificationArtifact": ".artifacts/verification/runs/20260807T070511.515311Z-24454/report.json",
+    "latestProductPremergeVerificationElapsedSeconds": 1001.824,
+    "latestProductPremergeVerificationPhaseCount": 42,
+    "latestReleaseBuildCommand": "python3 scripts/run-swift-strict.py build -c release",
+    "latestReleaseBuildElapsedSeconds": 43.59,
+    "latestReleaseBuildStatus": "passed-swift64-warnings-as-errors-release",
+    "latestRootIOSComparatorBuildStatus": "passed-generic-ios-simulator-and-device-current-authorized-encoded-animation-render-identity-source",
+    "latestRootReleaseBuildElapsedSeconds": 125.28,
+    "latestRootReleaseBuildStatus": "blocked-environment-existing-user-immutable-fovea-animation-mac-lab-product-link-output-after-476-of-485-no-code-compile-failure-claim",
+    "latestRootStrictStressSeconds": [
+      21.014,
+      20.218,
+      21.824
+    ],
+    "latestRootStrictStressStatus": "three-consecutive-root-runs-756-of-756-zero-failures-each",
+    "latestRootStrictTestCommand": "python3 scripts/run-swift-strict.py test",
+    "latestRootStrictTestCount": 756,
+    "latestRootStrictTestElapsedSeconds": 21.824,
+    "latestRootStrictTestStatus": "passed-current-revision31-candidate-756-of-756-zero-failures-swift64-warnings-as-errors",
+    "latestRootSwiftTestCount": 756,
+    "latestRootTestCount": 756,
+    "latestRootTestStatus": "passed-current-revision34-test-oracle-controller-verification-756-of-756-zero-failures-final-frozen-candidate-verification-pending",
     "latestSimulatorAggregate": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
     "latestSimulatorAggregateRunCount": 30,
     "latestSimulatorAggregateTrust": "current-clean-source-functional-contract-only-no-performance-ranking",
@@ -466,9 +781,181 @@
       16.69
     ],
     "latestSimulatorHostPreflightStatus": "rejected-host-not-quiescent-functional-diagnostics-completed-separately",
+    "latestSpecializedAnimationLibraryRegistryStatus": "source-audited-libraries-11-feature-candidates-8-no-runtime-dependencies-or-performance-claims",
+    "latestSpecializedAnimationMechanismMatrix": "docs/research/animated-image-mechanism-matrix-2026-08.json",
+    "latestSpecializedAnimationPlayerPlan": "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+    "latestSwiftToolchainManifestAlignment": "passed-14-manifests-swift-tools-6.4-including-apng-composition-oracle-lab",
+    "latestSwiftUISurfaceClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+    "latestSwiftUISurfaceFunctionalDiagnostic": ".artifacts/swiftui-functional-diagnostics/current/calibration-report.json",
+    "latestSwiftUISurfaceFunctionalDiagnosticSHA256": "c62e0103948f6e1de942e4c9913fff48301ae9ccb49983ba9ba597a68ad65935",
+    "latestSwiftUISurfaceHardFailures": 0,
+    "latestSwiftUISurfacePairedBlockCount": 5,
+    "latestSwiftUISurfaceRunCount": 30,
+    "latestSwiftUISurfaceSourceCommit": "2decb76b320ee6ddcb782f430fbba043366d4e2b",
+    "latestSwiftUISurfaceSourceTreeDigest": "cdba6ecb0a9f4a3a7f5f7d36ab2c3f16eb2217460aa13274874991b766862a83",
+    "latestTraceabilityStatus": "455-of-455-implemented-zero-missing",
+    "latestUIKitAnimationPresentationSchedulingBoundary": "No superiority claim: AppKit remains automatic-deadline and stable-device timing, missed-deadline, offscreen-work, energy and thermal comparisons are pending.",
+    "latestUIKitAnimationPresentationSchedulingStatus": "local-cadisplaylink-targettimestamp-monotonic-newest-only-single-slot-lifecycle-and-dormant-gated-first-frame-immediate-pressure-recoverable-ios15-production-build-ios16-test-product-build-physical-evidence-pending",
+    "latestUIKitAnimationPresentationSchedulingTests": [
+      "W5_PT_127",
+      "W5_PT_128",
+      "W5_PT_129",
+      "W5_PT_130",
+      "W5_PT_131",
+      "W5_PT_132"
+    ],
+    "latestVerificationCandidateBaselineIterationDurationSeconds": 36.6,
+    "latestVerificationCandidateBaselineIterationPhaseCount": 16,
+    "latestVerificationCandidateBaselineStatus": "immutable-git-working-tree-baseline-passed-tracked-untracked-delete-head-drift-and-path-safety-contract",
+    "latestVerificationCapacityPreflightStatus": "serial-premerge-release-minimum-free-space-gate-passed-default-2-gib",
+    "latestW3FailurePatternStable": true,
+    "latestW3RepeatSummary": ".artifacts/comparative-functional-diagnostics/w3-repeats/summary.json",
+    "latestW3RepeatSummarySHA256": "97e8b9cdfc15da71a78fc918f9bb7a0c6b4bc4206cc6cce5392cc1cc4c9d9d9f",
+    "latestW3RepetitionsPerComparator": 3,
+    "latestW5APNGConsolidatedArtifact": ".artifacts/w5-player-timing/simulator/20260807T084837Z/manifest.json",
+    "latestW5APNGConsolidatedArtifactSHA256": "53ff1f81cf6deb73faa68adeb9720e235d42eced472813b14b9c4c59d3a16176",
+    "latestW5APNGConsolidatedSourceTree": "3b587209c7314a74f5845e44154e95a57f734e379df583acd2634db45bce8d77",
+    "latestW5APNGConsolidatedStatus": "fovea-player-only-plus-sdwebimage-pinremoteimage-apngkit-all-61-60-app-bundle-digest-bound-no-ranking",
+    "latestW5APNGExternalComparatorArtifact": ".artifacts/w5-player-timing/simulator/20260807T084837Z/manifest.json",
+    "latestW5APNGFoveaPlayerOnlyArtifact": ".artifacts/w5-player-timing/simulator/20260807T084837Z/manifest.json",
+    "latestW5APNGKitArtifact": ".artifacts/w5-player-timing/simulator/20260807T084837Z/manifest.json",
+    "latestW5APNGPlayerComparatorStatus": "apng-variable-delay-60-encoded-native-apngkit-sdwebimage-pinremoteimage-plus-fovea-player-only-all-61-observations-60-transitions-structural-simulator-no-ranking",
+    "latestW5AnimatedImageComparatorStatus": "exact-0.2.4-ios16-variable-delay-not-comparable-semantic-timeline-uniform-50ms-61-observations-60-transitions-structural-calibrated-no-ranking",
+    "latestW5AnimatedImageUniformArtifact": ".artifacts/w5-player-timing/simulator/20260807T050901Z/manifest.json",
+    "latestW5AnimatedImageVariableSemanticArtifact": ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+    "latestW5AppKitCallbackTimingCounterexampleArtifact": ".artifacts/performance/w5-appkit-callback-timing-physical-v1/manifest.json",
+    "latestW5AppKitCallbackTimingCounterexampleArtifactSHA256": "c9e36aad85e550d7e81ad432cee5ea56d4ed3702e04dafee2a9ae83fa833db97",
+    "latestW5AppKitCompositorAdoptionStudy": "docs/research/w5-appkit-predecode-compositor-adoption-2026-08.json",
+    "latestW5AppKitCompositorAdoptionStudySHA256": "07906c8cea6e2a2d90904a15fb7256c68e5b73c7664e91b108fc5c8a026ef83d",
+    "latestW5AppKitDisplayRefreshBoundary": "package-scoped-target-counters-and-common-refresh-observer; macos12-13-deadline-fallback; one-host-refresh-sampled-committed-frame-timing-only; no-hardware-scanout-energy-thermal-memory-cross-player-or-global-pareto-claim; stable-physical-ios-still-blocked",
+    "latestW5AppKitDisplayRefreshStatus": "macos14-plus-targettimestamp-external-ticks-lifecycle-clamp-common-refresh-ab-start-anchored-fixed-six-pairs-directional-green-energy-ios-pending",
+    "latestW5AppKitDisplayRefreshTests": [
+      "W5_PT_142",
+      "W5_PT_143",
+      "W5_PT_144",
+      "W5_PT_145",
+      "W5_PT_146",
+      "W5_PT_147",
+      "W5_PT_148"
+    ],
+    "latestW5AppKitFirstObservationNormalizedRefreshArtifact": ".artifacts/performance/w5-appkit-refresh-timing-physical-v1-first-observation-normalized/manifest.json",
+    "latestW5AppKitFirstObservationNormalizedRefreshArtifactSHA256": "8aafd2973b985776ddf5780458202907e6d1549df2bd14435af471367d24b106",
+    "latestW5AppKitPhysicalMechanismArtifact": ".artifacts/performance/w5-appkit-display-link-physical-v1/manifest.json",
+    "latestW5AppKitPhysicalMechanismArtifactSHA256": "9635941e1d22fbed8f8e734c1c2137bc4a3b78660b503d8ac1c8f12c3a0110df",
+    "latestW5AppKitPhysicalMechanismExecutableSHA256": "a9afc9e6be7f258bbeaa1ca58f418522decf54087b676588b235ef2f78ce984b",
+    "latestW5AppKitPhysicalMechanismSourceTree": "150f4bef647eb9076b6d21a467def356d0b0dfeb58c0e2c5b4d466ab10c44528",
+    "latestW5AppKitPhysicalMechanismStatus": "passed-release-fixed-six-no-retry-source-unchanged-hidden-target-and-provider-zero-growth-resume-and-cancel-green-formal-claim-ineligible",
+    "latestW5AppKitPhysicalMechanismStudy": "docs/research/w5-appkit-display-link-physical-2026-08.json",
+    "latestW5AppKitPhysicalStudy": "docs/research/w5-appkit-refresh-timing-physical-2026-08.json",
+    "latestW5AppKitPreClampCounterexample": ".artifacts/performance/w5-appkit-display-link-preclamp-counterexample-v1/summary.json",
+    "latestW5AppKitPreClampCounterexampleSHA256": "1097d6ba82d2079ffeff0a3ad787e54051dedc1b32101106d6caec497241a882",
+    "latestW5AppKitRefreshAllPairsDirectionalNonRegression": true,
+    "latestW5AppKitRefreshDeadlineMedianAnchoredP95Nanoseconds": 75461355,
+    "latestW5AppKitRefreshDeadlineTotalSkippedSourceFrames": 82,
+    "latestW5AppKitRefreshExternalMedianAnchoredP95Nanoseconds": 14102375,
+    "latestW5AppKitRefreshExternalTotalSkippedSourceFrames": 0,
+    "latestW5AppKitRefreshObservedMedianIntervalNanoseconds": 16666625,
+    "latestW5AppKitRefreshTimingArtifact": ".artifacts/performance/w5-appkit-refresh-timing-physical-v1/manifest.json",
+    "latestW5AppKitRefreshTimingArtifactSHA256": "aa5e241c294a03816df364ed1cd44c3b6f0f73c2c6a00fb5aa4612a11b2a4e59",
+    "latestW5AppKitRefreshTimingExecutableSHA256": "a5494cd61834aee0adade108904d3985b9bda52a3727a9125976889098ca8a84",
+    "latestW5AppKitRefreshTimingPairCount": 6,
+    "latestW5AppKitRefreshTimingSourceTree": "7c4870ddb7c49fcc53c15d9d9e276159be8952976c0c978e5f39a0ca7591dcb2",
+    "latestW5AppKitRefreshTimingStatus": "passed-release-fixed-six-pairs-no-retry-source-unchanged-common-refresh-coordinate-start-anchored-directional-green-formal-release-claim-ineligible",
+    "latestW5AutomaticWholeTrackResidentAccountingStatus": "known-provider-retained-charged-for-all-handle-strategies-automatic-upgrade-requires-decoded-provider-peak-pt188-through-195",
+    "latestW5FLAnimatedImageComparatorStatus": "exact-1.0.17-ios15-historical-warm-variable-and-uniform-61-60-current-fresh-isolated-variable-count0-or1-progression0-not-comparable",
+    "latestW5FLAnimatedImageCurrentBoundaryArtifact": ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+    "latestW5FLAnimatedImageFreshSimulatorPolicy": "do-not-retry-until-success-preserve-count0-or1-progression0-as-explicit-gap",
+    "latestW5FLAnimatedImageFreshSimulatorStatus": "not-comparable-fresh-simulator-instability-public-cache-prewarm-and-public-visibility-retrigger-failed-and-reverted",
+    "latestW5FLAnimatedImageUniformArtifact": ".artifacts/w5-player-timing/simulator/20260807T053409Z/manifest.json",
+    "latestW5FLAnimatedImageVariableArtifact": ".artifacts/w5-player-timing/simulator/20260807T053303Z/manifest.json",
+    "latestW5FLAnimatedImageWarmControlArtifact": ".artifacts/w5-player-timing/simulator/20260807T075127Z/manifest.json",
+    "latestW5FoveaFullAnimationIntegratedTestStatus": "756/756-zero-failures-revision34-test-oracle-controller-verified-final-frozen-candidate-verification-pending",
+    "latestW5GIFConsolidatedArtifact": ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+    "latestW5GIFConsolidatedArtifactSHA256": "54e28f46938af1fdc95eaa686f1b82af6ef6d63d793fc318db7c6917f007697d",
+    "latestW5GIFConsolidatedSourceTree": "3b587209c7314a74f5845e44154e95a57f734e379df583acd2634db45bce8d77",
+    "latestW5GIFConsolidatedStatus": "five-calibrated-61-60-fl-fresh-instability-explicit-animatedimage-semantic-gap-explicit-app-bundle-digest-bound-no-ranking",
+    "latestW5GifDurationNormalizationStatus": "shared-gif-centisecond-normalization-removes-float32-imageio-nanosecond-noise-without-hiding-semantic-clamps-COMP_PT_038",
+    "latestW5GifuComparatorStatus": "exact-672a8d4-swift6-manifest-ios16-custom-public-GIFAnimatable-view-variable-and-uniform-61-observations-60-transitions-structural-calibrated-no-ranking",
+    "latestW5GifuUniformArtifact": ".artifacts/w5-player-timing/simulator/20260807T054821Z/manifest.json",
+    "latestW5GifuVariableArtifact": ".artifacts/w5-player-timing/simulator/20260807T081734Z/manifest.json",
+    "latestW5ImageCraftAdapterQualificationArtifact": ".artifacts/qualification/w5-imagecraft-animation-adapter-v3-hotpath-rebind/report.json",
+    "latestW5ImageCraftAdapterQualificationArtifactSHA256": "bdb9e8a24a795d1eafc67fa1f44613b08770b9a489227e6caac671253d13f734",
+    "latestW5ImageCraftAdapterQualificationFoveaWorkingTree": "10abcfd66718bbc92bd7727e33b35ebbd89920cb",
+    "latestW5ImageCraftAdapterQualificationImageCraftWorkingTree": "f0a2c8b5273b27a76fe78fc41f55cab8a5512d17",
+    "latestW5ImageCraftAdapterQualificationLogSHA256": "9f49dfa223e604f10a88283aa43d55276d831863a440a0f26c06f707afa99e1d",
+    "latestW5ImageCraftAdapterQualificationStatus": "v3-hotpath-rebind-pt001-through-008-current-imagecraft-f0a2-three-cost-provider-lifetime-accounting-automatic-apng-owned-gif-subrect-fallback-production-pin-unchanged",
+    "latestW5ImageCraftAdapterQualificationTests": [
+      "W5_ADAPTER_PT_001",
+      "W5_ADAPTER_PT_002",
+      "W5_ADAPTER_PT_003",
+      "W5_ADAPTER_PT_004",
+      "W5_ADAPTER_PT_005",
+      "W5_ADAPTER_PT_006",
+      "W5_ADAPTER_PT_007",
+      "W5_ADAPTER_PT_008"
+    ],
+    "latestW5ImageCraftProductionPinReadiness": "blocked-unpublished-working-tree-candidate-pin-upgrade-authorization-false",
+    "latestW5ImageCraftProductionPinReadinessChecker": "scripts/check-imagecraft-animation-pin-readiness.py",
+    "latestW5ImageCraftSemanticReplayStatus": "dirty-unpublished-owned-apng-plus-owned-gif-bounded-replay-hotpath-optimized-imageio-126-core-16-release-green-physical-mac-directional-selected-and-sequential-faster-than-direct-retained-formal-device-claim-pending",
+    "latestW5ImageCraftSemanticReplayWorkingTree": "f0a2c8b5273b27a76fe78fc41f55cab8a5512d17",
+    "latestW5ImageCraftOwnedHotpathArtifact": ".artifacts/performance/w5-apng-owned-optimized-directional-20260810/report.json",
+    "latestW5ImageCraftOwnedHotpathArtifactSHA256": "edcc1ec29925229d7e2bb9a68c406abefff55c2a33d53a9a349637af0f74bddd",
+    "latestW5ImageCraftOwnedHotpathStatus": "physical-mac-directional-200-iterations-prepare-1.0033x-selected-0.8504x-sequential-0.3911x-direct-retained-exact-pixels-reverse-access-cancellation-formal-claim-false",
+    "latestW5OwnedGIFDirectionalPerformance": "people-motion-24f-owned-prepare-plus-24frames-median-15.979938ms-direct-imageio-1.266291ms-not-decoder-speedup-first-owned-77.95ms-to-current-minus79.5pct",
+    "latestW5PhysicalIOSDeviceAvailability": "xctrace-listed-one-iphone-offline-on-2026-08-07; no stable-device timing-memory-offscreen-energy-thermal-run-performed",
+    "latestW5PhysicalIOSGateStatus": "blocked-local-device-offline-no-physical-claim",
+    "latestW5PresentationOracleBoundary": "Simulator results remain provisional/no-ranking; every final run binds current source identity, rebuilt app bundle identity and per-comparator simulator isolation. Fovea W5 input is synthetic-decoded-frames so startup is not comparable; AnimatedImage 0.2.4 is not variable-delay timeline-equivalent; FLAnimatedImage current fresh-isolated Simulator playback is unstable and therefore not comparable. Stable physical-device timing, memory, offscreen-work, energy and thermal evidence plus a published production encoded-native ImageCraft adapter remain pending.",
+    "latestW5PresentationOracleStatus": "current-digest-bound-gif-five-calibrated-two-explicit-gaps-apng-four-calibrated-physical-ranking-pending",
+    "latestW5PresentationOracleTests": [
+      "COMP_PT_025",
+      "COMP_PT_026",
+      "COMP_PT_027",
+      "COMP_PT_028",
+      "COMP_PT_029",
+      "COMP_PT_030",
+      "COMP_PT_031",
+      "COMP_PT_032",
+      "COMP_PT_033",
+      "COMP_PT_034",
+      "COMP_PT_035",
+      "COMP_PT_036",
+      "COMP_PT_037",
+      "COMP_PT_038",
+      "COMP_PT_039"
+    ],
+    "latestW5QualificationRebindCounterexampleArtifact": ".artifacts/verification/runs/20260807T105127.242660Z-35193/report.json",
+    "latestW5QualificationRebindCounterexampleStatus": "smart-verification-failed-closed-when-package-implementation-binding-changed-then-overlay-requalified-current-tree",
+    "latestW5ReleaseFoveaAdvancedSHA256": "89604b495ef778b1d4583d65dcc82943056f48f80cd5bea904b9b3f7e3b85fc2",
+    "latestW5ReleaseFoveaSHA256": "d91606b5664916e3f54dbde972a8c05b2fa4ba229d2761c415eb643dd0efad8e",
+    "latestW5SemanticReplayVerificationPhase": "w5-apng-semantic-replay-oracle",
+    "latestW5SimulatorComparatorIsolation": "shutdown-boot-between-comparators-v1-same-registered-udid-and-runtime-build",
+    "latestW5SimulatorCrossComparatorCounterexample": "flanimatedimage-count-zero-after-four-sequential-apps-same-built-app-61-of-60-alone",
+    "latestW5SimulatorRecoveryContainerStatus": "fixed-reinstall-reacquires-data-container-before-result-wait",
+    "latestW5SimulatorRecoveryCounterexampleArtifact": ".artifacts/w5-player-timing/simulator/20260807T074143Z/kingfisher-gif_variable_delay_60-101-late-after-reinstall.json",
+    "latestW5SimulatorRecoveryCounterexampleArtifactSHA256": "a9078402afdc96b36f419253fbaed3ae522491bc20fb68591eb65ecba1d58708",
+    "latestW5SimulatorRunnerAppIdentityStatus": "bundle-tree-digest-plus-executable-sha256-bound-per-comparator-selection-mode-explicit",
+    "latestW5TestIdentityStatus": "w5-function-identifiers-unique-through-144-registry-validator-enforced",
+    "latestW5UniformMechanismComparatorArtifact": ".artifacts/w5-player-timing/simulator/20260807T050943Z/manifest.json",
+    "latestW5VerificationRouterStatus": "semantic-replay-simulator-runner-appkit-display-link-callback-timing-refresh-timing-and-pin-readiness-contracts-registered-in-iteration-premerge-release",
+    "latestW5YYImageSemanticReplayArtifact": ".artifacts/performance/w5-yyimage-semantic-replay-v1/report.json",
+    "latestW5YYImageSemanticReplayArtifactSHA256": "67bf131256fa7ae400834b9c64260ce267ca96759fee987390355b204ff74095",
+    "latestW5YYImageSemanticReplayCanonicalSHA256": "1504983de00db7d958c94ba069ad3effef42aa30c77dd56ebc2907c1da229f8c",
+    "latestW5YYImageSemanticReplayStatus": "exact-yyimage-1.0.4-source-bound-semantic-replay-oracle-13-model-tests-4-source-oracle-tests-imagecraft-runtime-candidate-implemented-no-device-claim",
+    "latestW5YYImageSemanticReplayStudy": "docs/research/w5-apng-semantic-replay-2026-08.json",
+    "latestW7V7ClaimScope": "simulator-structural-contract-only-no-performance-ranking",
+    "latestW7V7FoveaHardFailures": 0,
+    "latestW7V7FunctionalDiagnostic": ".artifacts/w7-functional-diagnostics/current/calibration-report-a-tier-headless.json",
+    "latestW7V7FunctionalDiagnosticSHA256": "4215c1a5cc561de370180a13e41f7754fa6718a41fa60594eca756cfd9aa2eba",
+    "latestW7V7NukeFailureStability": "background-probe-bypass-bound-3-of-3-thirty-one-newer-starts",
+    "latestW7V7RepeatSummary": ".artifacts/w7-functional-diagnostics/repeats/summary.json",
+    "latestW7V7RepeatSummarySHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3",
+    "latestW7V7SDWebImageFinding": "single-flight-origin-request-bound-1-of-3-seventeenth-pre-service-transport",
+    "latestW7V7SourceCommit": "a81cf5e7aa8be0e23fb16cfa360672b5895464f1",
+    "latestW7V7SourceTreeDigest": "0fd9829ef1a1f62f412536187769fb6a588e7443db0415c3740c9cff2d6828be",
     "longHorizonRoadmap": "docs/project-memory/long-horizon-roadmap.json",
     "longHorizonRoadmapID": "FOVEA-LONG-HORIZON-ROADMAP-V1",
     "nextActionDirection": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
+    "ordinaryImageDerivedCacheFuturePlan": "Benchmarks/ComparativeLab/ordinary-image-derived-cache-plan.json",
     "pluggableImageStackPlan": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
     "pluggableStackBaseline": ".artifacts/pluggable-stack/baseline.json",
     "pluggableStackBaselineSourceIdentitySHA256": "94fa7a76dee3063c5757931143629d83f028e06f04bdd330b1945ec830330179",
@@ -709,7 +1196,7 @@
     "simulatorRuntimeValidation": "passed-live-device-process-path-23E254a",
     "simulatorSupportTestStatus": "passed-17-tests-resolved-only-six-app-builds-and-runtime-probes",
     "simulatorW2CurrentAttempt": "current-clean-source-functional-cold-warm-disk-warm-memory-passed-performance-host-quiescence-pending",
-    "sourceState": "clean-committed-public-main-local-evidence-protected-ci-pending",
+    "sourceState": "clean-committed-develop-current-alpha8-alpha7-pins-final-release-candidate-preparation-no-release-claim",
     "swift64Adoption": {
       "adopted": [
         "tools-6.4",
@@ -735,13 +1222,13 @@
       "componentReleases": {
         "Akashic": {
           "ci": "passed-xcode27-main",
-          "commit": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
-          "tag": "0.1.0-alpha.5"
+          "commit": "0376b960ec8abe54f2d4a9d7d66e97f395215eaf",
+          "tag": "0.1.0-alpha.7"
         },
         "ImageCraft": {
           "ci": "passed-xcode27-main",
-          "commit": "bc93b8df0337d7a57779b53106dd744ad97b095e",
-          "tag": "0.1.0-alpha.5"
+          "commit": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
+          "tag": "0.1.0-alpha.8"
         }
       },
       "deferred": [
@@ -752,7 +1239,7 @@
         "manual-specialization-and-forced-inline"
       ],
       "deploymentBaseline": "iOS-15-macOS-12-unchanged",
-      "hostedCI": "fovea-eleventh-root-dual-identity-green-full-verify-failed-actions-budget-exhausted-next-candidate-local-only",
+      "hostedCI": "fovea-verification-active-6cf-identity-green-full-workbench-ui-failed-final-candidate-requalification-pending-budget-balance-unobservable",
       "localTests": {
         "Akashic": 41,
         "CacheLab": 7,
@@ -783,37 +1270,45 @@
     "swiftUISimulatorInstallNormalization": "symmetric-ditto-noextattr-xattr-clear-post-resource-ad-hoc-sign-deep-strict-verify",
     "swiftUISimulatorInstallStaging": ".artifacts/asyncimage-lab/InstallStaging",
     "swiftUISimulatorStagingStatus": "apple-asyncimage-and-fovea-built-installed-and-30-run-structural-diagnostic-passed-performance-host-gated",
+    "w11SharedResponseProgressiveFinalization": "nonowner-unobserved-finalization-closes-to-full-body-fallback-one-transport-tests-green",
     "w2NetworkOriginStatus": "shared-real-loopback-http-nwlistener-all-headless-and-swiftui-surfaces",
     "w7V6Status": "archived-calibration-observable-bound-invalid",
     "w7V7Status": "current-clean-source-six-comparator-structural-complete-performance-formal-pending",
+    "warmMemoryIdentityDigestCache": {
+      "appleW2DisplayReadyMedianMilliseconds": 0.4506,
+      "claimScope": "dirty-local-and-diagnostic-simulator-no-ranking",
+      "fixedIdentityAuthorizationMicroseconds": "0.04-0.08",
+      "foveaW2DisplayReadyMedianMilliseconds": 1.1505,
+      "releaseEventsForMedianMicroseconds": "39-40",
+      "releaseImageForMedianMicroseconds": "17-19",
+      "w2AdapterMedianMilliseconds": 0.2441
+    },
+    "workbenchProjectLifecycleStatus": "xcodegen-2.46.0-regenerated-project-generic-ios-simulator-build-for-testing-passed",
+    "workbenchVisualStaticAuditStatus": "localization-0-layout-0-asset-findings-0-29-bundled-real-assets",
+    "workbenchVisualUnitMatrixStatus": "iphone17e-6-of-6-ipad-pro-11-m5-6-of-6",
+    "workflowBundleRecoveryStatus": "rolled-back-active-action-invalidation-implemented-real-fovea-recovery-validated-full-development-gate-655-of-655-passed",
     "workloadRegistry": "Benchmarks/workload-registry.json",
-    "latestATierFunctionalDiagnostic": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
-    "latestATierFunctionalDiagnosticSHA256": "d170973c5625de7c7909520a2e027fbec9c33e5188ce9f8665755ce78285d7e2",
-    "latestATierFunctionalDiagnosticSourceCommit": "5a836c43566ae6915b85790fed358b35d134db6a",
-    "latestATierFunctionalDiagnosticSourceTreeDigest": "98130cdbbf00739fe9f618638df4b3ae7def02ef5611b0c7c421edaa6394a8e5",
-    "latestATierFunctionalDiagnosticClaimScope": "simulator-structural-contract-only-no-performance-ranking",
-    "latestW3RepeatSummary": ".artifacts/comparative-functional-diagnostics/w3-repeats/summary.json",
-    "latestW3RepeatSummarySHA256": "97e8b9cdfc15da71a78fc918f9bb7a0c6b4bc4206cc6cce5392cc1cc4c9d9d9f",
-    "latestW3RepetitionsPerComparator": 3,
-    "latestW3FailurePatternStable": true,
-    "latestW7V7FunctionalDiagnostic": ".artifacts/w7-functional-diagnostics/current/calibration-report-a-tier-headless.json",
-    "latestW7V7FunctionalDiagnosticSHA256": "4215c1a5cc561de370180a13e41f7754fa6718a41fa60594eca756cfd9aa2eba",
-    "latestW7V7SourceCommit": "a81cf5e7aa8be0e23fb16cfa360672b5895464f1",
-    "latestW7V7SourceTreeDigest": "0fd9829ef1a1f62f412536187769fb6a588e7443db0415c3740c9cff2d6828be",
-    "latestW7V7ClaimScope": "simulator-structural-contract-only-no-performance-ranking",
-    "latestW7V7FoveaHardFailures": 0,
-    "latestW7V7NukeFailureStability": "background-probe-bypass-bound-3-of-3-thirty-one-newer-starts",
-    "latestW7V7SDWebImageFinding": "single-flight-origin-request-bound-1-of-3-seventeenth-pre-service-transport",
-    "latestW7V7RepeatSummary": ".artifacts/w7-functional-diagnostics/repeats/summary.json",
-    "latestW7V7RepeatSummarySHA256": "9f340cbf6b87ed43d850a0a830e6d4cad2d4d8958c50df17cc6e1b5f69f010d3",
-    "latestSwiftUISurfaceFunctionalDiagnostic": ".artifacts/swiftui-functional-diagnostics/current/calibration-report.json",
-    "latestSwiftUISurfaceFunctionalDiagnosticSHA256": "c62e0103948f6e1de942e4c9913fff48301ae9ccb49983ba9ba597a68ad65935",
-    "latestSwiftUISurfaceSourceCommit": "2decb76b320ee6ddcb782f430fbba043366d4e2b",
-    "latestSwiftUISurfaceSourceTreeDigest": "cdba6ecb0a9f4a3a7f5f7d36ab2c3f16eb2217460aa13274874991b766862a83",
-    "latestSwiftUISurfaceClaimScope": "simulator-structural-contract-only-no-performance-ranking",
-    "latestSwiftUISurfacePairedBlockCount": 5,
-    "latestSwiftUISurfaceRunCount": 30,
-    "latestSwiftUISurfaceHardFailures": 0
+    "latestRevision32ControllerRootTestStatus": "two-independent-controller-swift-test-runs-756-of-756-zero-failures-each-codec-animation-38.492001s-derived-40.749932s",
+    "latestRevision32OwnedQualityStatus": "transaction-attributed-zero-violations-score0-raw207-score526-unattributed207-unowned-source-drift245-global-regressions-indeterminate",
+    "latestRevision32QualityRefactorStatus": "decodeAndPublish9-imageCraftFailure8-progressiveConsume10-completeModel4-progressiveModel4-derivedReason10-akashicTrim2-recordValidation8-no-threshold-change",
+    "latestCandidateAuthorityEpochStatus": "legacy-git-head-conservative-candidate-and-quality-baselines-head-9137539f6222-baseline-6af249741057-precontinuity-372-changed-98-traced-332-untraced-58-stale",
+    "latestCandidateAuthorityMergeReadinessStatus": "blocked-untraced-reviewable-parallel-work-final-report-must-recompute-after-continuity-patch",
+    "latestQualityAttributionAudit": "docs/research/quality-attribution-revision32-2026-08-08.md",
+    "latestDocumentationBuildStatus": "blocked-local-xcode-documentation-build-foveaanimationmaclab-appkit-dependency-scan-exit65-root-swift-tests-green-no-source-failure-inference",
+    "workflowBundleCandidateAuthorityStatus": "legacy-candidate-quality-epoch-plus-transaction-owned-quality-attribution-targeted-regressions-and-nonpytest-authority-gates-green-latest-full-development-gate-host-pressure-pending",
+    "latestDocumentationStaticGateStatus": "83-markdown-335-explicit-test-definitions-passed-current-revision32-continuity",
+    "latestPT175OracleDeterminismStatus": "revision33-mechanical-queued-permit-observation-20-of-20-pt175-stress-three-root-756-of-756-controller-green-no-production-change",
+    "latestPT175OracleStrictRootSeconds": [
+      21.738,
+      22.333,
+      22.375
+    ],
+    "latestMJPEGLifecycleOracleDeterminismStatus": "revision34-pt079-pt080-pt099-snapshot-state-gated-targeted-3-of-3-live-19-of-19-ten-stress-root-756-of-756-controller-green-no-production-change",
+    "latestMJPEGLifecycleStressRuns": 10,
+    "latestRevision34StrictRootTestCount": 756,
+    "latestRevision34StrictRootElapsedSeconds": 21.572,
+    "latestRevision34ControllerRootTestCount": 756,
+    "latestRevision34ControllerCommandElapsedSeconds": 29.141015
   },
   "mandatoryTaskProtocol": {
     "afterWork": [
@@ -861,8 +1356,8 @@
     {
       "id": "OPEN-CACHE-V4-FULL-FORMAL-TRUSTED-REBIND",
       "priority": 1,
-      "status": "pending-published-akashic-exact-fovea-pin-clean-trusted-ci",
-      "summary": "The V4 local full-formal gate is complete. Publish the measured Akashic candidate, update Fovea to that exact revision, and repeat from clean protected trusted CI before any release certificate or production sharded-cache switch."
+      "status": "historical-alpha5-formal-complete-current-alpha7-new-campaign-and-protected-evidence-pending",
+      "summary": "CacheLab V4 remains valid historical evidence for the exact Akashic alpha.5 implementation it measured: the local twenty-block gate passed all 13 applicable comparisons. Fovea now pins Akashic alpha.7, whose dynamic unassigned-budget and eviction-report behavior is a different implementation. Do not rebind V4 results by revision substitution; run a new clean formal campaign on alpha.7 and protected Fovea evidence before any current-stack performance certificate."
     },
     {
       "id": "OPEN-W4-W15-PLANS",
@@ -879,20 +1374,20 @@
     {
       "id": "OPEN-A-TIER-COMPARATOR-INTEGRATION",
       "priority": 0,
-      "status": "in-progress-v8-preregistered-clean-performance-physical-pending",
-      "summary": "All seven A-tier integrations build. V8 corrects the W7 shared-burst preparation boundary before any new clean-source matrix is interpreted. W1-W3 and paired SwiftUI structural evidence remain; quiet-host performance, clean V8 six-headless calibration and physical-device evidence are pending. External semantic gaps remain explicit."
+      "status": "in-progress-current-digest-bound-structural-coverage-complete-explicit-gaps-physical-ranking-pending",
+      "summary": "All original A-tier integrations build. Final digest-bound W5 GIF structural evidence has Fovea player-only, Kingfisher, SDWebImage, PINRemoteImage and Gifu at 61/60, with FLAnimatedImage fresh-isolated instability and AnimatedImage variable-delay semantic mismatch explicitly not comparable. Final APNG sibling evidence has Fovea player-only plus encoded-native SDWebImage, PINRemoteImage and APNGKit at 61/60. Every final simulator result binds rebuilt app identity and per-comparator isolation; simulator values remain non-ranking. Further comparator expansion is conditional only on a concrete gap from production-pin or stable-device evidence. Clean stable-device timing, memory, offscreen-work, energy and thermal evidence remain pending."
     },
     {
       "id": "OPEN-CODEC-CONFORMANCE-KIT",
       "priority": 1,
-      "status": "implemented-v1-self-hosted-real-backend-evidence-pending",
-      "summary": "ImageCodec conformance v1 is the sole current contract kit and passes in an independent consumer against the ImageIO reference fixture. Remaining work is a real independent codec backend, hostile-corpus/fuzz/sanitizer evidence, and Fovea shadow/canary qualification."
+      "status": "implemented-v1-host-output-postconditions-model-and-hostile-tests-second-real-backend-pending",
+      "summary": "ImageCodec v1 remains the sole current codec kit and passes its independent ImageIO consumer. Fovea now adds host-owned returned-pixel postconditions with current-required CODEC-PT-012..017 and an executable model that covers progressive-format coupling plus complete/progressive output contracts. Remaining work is a real independent codec backend, ImageCraftCore format/version evolution for non-PNG/JPEG/GIF identities, progressive pre-decode peak resource envelopes, hostile corpus/fuzz/sanitizer evidence, shadow/canary qualification and physical-device resource evidence."
     },
     {
       "id": "OPEN-INDEPENDENT-CODEC-ADAPTER",
       "priority": 2,
-      "status": "blocked-external-codec",
-      "summary": "After the independent codec has bounded probe and reference still decode, implement an opt-in Fovea adapter and run the unchanged conformance, hostile-corpus, differential, resource and lifecycle gates."
+      "status": "blocked-imagecraftcore-format-contract-and-external-codec",
+      "summary": "A second backend cannot be honestly integrated for AVIF/JPEG XL by registry alone because the exact Fovea ImageCraft pin represents only PNG/JPEG/GIF. First evolve and version ImageCraftCore format/capability/resource contracts, including progressive pre-decode resource semantics where needed; then implement the opt-in adapter and run unchanged conformance, hostile-corpus, differential, resource and lifecycle gates."
     },
     {
       "id": "OPEN-CODEC-DEFAULT-EVIDENCE",
@@ -903,32 +1398,26 @@
     {
       "id": "OPEN-IMAGECRAFT-PHYSICAL-INTEGRATION",
       "priority": 1,
-      "status": "current-exact-pin-public-ci-green-device-evidence-pending",
-      "summary": "Fovea consumes ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) as the only supported revision. Clean premerge, both conformance kits, Release, CacheLab, loopback, macOS root tests, iOS Simulator 485/485, five-relaunch progressive host evidence 10/10, and git-archive portable replay (root 484/484, Release, rebuilt-comparator CacheLab 7/7) pass; public CI, production streaming integration and physical-device resource/presentation evidence remain open. Full verification-profile portability is separately blocked by Git/generated-artifact assumptions."
+      "status": "imagecraft-alpha8-pinned-production-animation-adapter-integrated-physical-ios-and-release-evidence-pending",
+      "summary": "Fovea now pins public ImageCraft 0.1.0-alpha.8 at c16a868f1a1c0ed6b1a916ad082f762969ac5a7e and compiles a production ImageCraftAnimationPlaybackPreparer into FoveaSystem. The adapter maps authorized encoded bytes, request geometry/color and caller-versioned timing policy into ImageCraft, propagates bounded frame-window/whole-track cost estimates, and composes them with Fovea global admission. Local adapter/system qualification is green. Stable physical-iOS timing, memory, energy, thermal/reclamation evidence, comparative player A/B and protected Fovea release qualification remain mandatory."
     },
     {
       "id": "OPEN-AKASHIC-INDEPENDENT-PACKAGE",
       "priority": 1,
-      "status": "current-exact-pin-public-ci-green-fault-rebind-powerloss-device-pending",
-      "summary": "Fovea consumes Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 as the only supported revision. Public xcode-27 CI, current clean-copy integration, CacheLab V4, fault and resource evidence pass; physical power-loss and stable-device evidence remain open."
+      "status": "current-public-alpha7-pinned-host-integrated-physical-and-current-performance-evidence-pending",
+      "summary": "Akashic 0.1.0-alpha.7 at 0376b960ec8abe54f2d4a9d7d66e97f395215eaf is public, required-core CI green and is Fovea's exact production pin. Fovea consumes its dynamic global-unassigned memory budget and exact eviction reporting, including host rendered-cache residency synchronization. Historical CacheLab V4 formal performance remains bound to the older alpha.5 implementation and is not transferred to alpha.7. Physical power-loss, stable-device resource evidence and a current-implementation formal performance campaign remain open."
     },
     {
       "id": "OPEN-DECODE-RESOURCE-CONTRACT-AUDIT",
       "priority": 0,
-      "status": "imageio-lifetime-ledger-passed-heldout-and-device-pending",
-      "summary": "The four-case composition model and seven-phase ImageIO lifetime ledger pass. The audit retains five unresolved gaps covering prepared-state accumulation, framework-private memory, output transfer, alias/branch composition and cancellation reclaim; held-out backend and real-device calibration remain required before second-codec production admission."
+      "status": "complete-frame-host-postconditions-passed-progressive-predecode-peak-heldout-and-device-pending",
+      "summary": "Complete-frame admission still requires the backend resource estimate to be a conservative total peak for the probe/request, and Fovea now independently rejects returned pixels that exceed DecodeLimits, target geometry, admitted resident bytes or validated source-profile facts. Progressive previews gain post-return limits/target/resident checks, but the exact ImageCraft session contract exposes no pre-decode per-session/generation peak envelope; transient codec scratch therefore remains unbounded by the host before append executes. Held-out backend, allocator/VM tracing and real-device calibration remain required."
     },
     {
       "id": "OPEN-AKASHIC-PHYSICAL-RESOURCE-EVIDENCE",
       "priority": 1,
-      "status": "partial-local-process-envelope-device-and-fault-program-pending",
-      "summary": "Three retained macOS workloads now report peak process RSS, sampled file descriptors, exact logical payload/read bytes, manifest rewrite bytes, final footprint and reopen latency under local bounds. Stable physical-device I/O and energy, ENOSPC, short-write, permission-transition, wrong-owner and power-loss/kill-at-random evidence remain required."
-    },
-    {
-      "id": "OPEN-AKASHIC-MANIFEST-WRITE-AMPLIFICATION",
-      "priority": 1,
-      "status": "retained-small-object-counterexample-design-investigation-pending",
-      "summary": "The local resource envelope shows object-count-sensitive flat-manifest rewriting: 64 x 4 KiB produces about 3.8033x total logical write upper bound, versus about 1.0016x for 8 x 1 MiB. Investigate batching, segmented manifests or append/checkpoint designs without weakening process-crash, bounded recovery, future-schema or partition guarantees."
+      "status": "partial-local-process-and-logical-write-envelope-device-physical-io-and-fault-program-pending",
+      "summary": "Three retained macOS workloads report peak process RSS, sampled file descriptors, exact logical payload/read bytes, incremental-manifest metadata writes, final footprint and reopen latency under local bounds. Compact record v2 now holds retained logical-write amplification at <=1.06x for 64 x 4 KiB, <=1.005x for 32 x 64 KiB and <=1.001x for 8 x 1 MiB, with current samples about 1.0492x/1.00310x/1.00020x. These are application-layer logical bytes, not physical NAND accounting. Stable physical-device I/O and energy plus power-loss/kill-at-random evidence remain required."
     },
     {
       "id": "OPEN-QUALIFIED-COMPOSITION-SEAMS",
@@ -939,17 +1428,41 @@
     {
       "id": "OPEN-SWIFT64-THREE-REPOSITORY-ADOPTION",
       "priority": 0,
-      "status": "current-components-green-fovea-local-candidate-actions-budget-blocked",
-      "summary": "Fovea, ImageCraft and Akashic use Swift 6.4 under Xcode 27. Component CI is green and the Fovea local candidate is active; the remaining hosted run is blocked by the GitHub Actions budget."
+      "status": "current-components-green-fovea-protected-full-workbench-ui-failure-final-candidate-pending",
+      "summary": "Fovea, ImageCraft and Akashic use Swift 6.4 under Xcode 27. ImageCraft alpha.8 and Akashic alpha.7 are public, main-CI green and pinned by Fovea. Fovea Verification is active; 6cf identity passed but full verification failed in a hosted Workbench UI shard. Final-candidate local qualification plus fresh identity/full evidence remain open; account budget balance is currently unobservable, not known exhausted."
     },
     {
       "id": "OPEN-FOVEA-PUBLICATION",
       "priority": 0,
-      "status": "blocked-actions-budget-exhausted-local-qualification-in-progress",
-      "summary": "Fovea remains private and untagged. Hosted workflows are disabled after the Actions budget was exhausted. Static gates, 101 mutation applications, the adaptive warmup 20/20 replay and the complete 476/476 host suite pass. Final DocC, Workbench and Simulator evidence remain blocked by the unhealthy local Xcode/CoreSimulator host; remaining non-Simulator release, sanitizer and component compatibility gates continue locally."
+      "status": "blocked-protected-full-workbench-ui-failure-final-candidate-requalification-required",
+      "summary": "Fovea public main exists at f4b320b7f995bc565f0ca5ef053a5cd5bfb3a3c7 and 0.1.0-alpha.1 is still absent. Candidate 6cf6175c3c47de64fa9d60341de7e5cd71cd29b7 passed exact local qualification and hosted identity run 33501353676, but hosted full run 33505961407 failed twice in Workbench ui-tests-core-shard-1. Exact local qualification plus two extra shard reproductions were green, so the failure remains hosted-only; d191790f adds terminal XCTest failure capture so the next hosted failure cannot be misclassified after a 240-second wrapper stall. Current develop includes that diagnostic fix plus ImageCraft alpha.8/Akashic alpha.7 production integration. The final candidate must first synchronize current-state docs, pass exact local qualification, then obtain fresh identity and full protected verification before main/tag publication. GitHub Actions verification is active; remaining account budget is not observable with the current token."
+    },
+    {
+      "id": "OPEN-IOS15-TEST-TARGET-COMPATIBILITY",
+      "priority": 2,
+      "status": "completed-source-compatible",
+      "summary": "The complete FoveaTests product now compiles for arm64-apple-ios15.0-simulator. Test-only timing helpers use monotonic uptime nanoseconds plus Task.sleep(nanoseconds:) rather than iOS 16-only Duration factories/Task.sleep(for:), and ProgressivePresentationHostTests owns its UIWindow per test so the prior Swift 6.4 synchronous tearDown actor-isolation warnings are eliminated. macOS root tests pass 672/672. The current Xcode beta XCTest dylibs are built for iOS 17 and still emit linker deployment-version warnings; this is recorded as a toolchain warning, not a Fovea source blocker."
+    },
+    {
+      "id": "OPEN-DERIVED-RASTER-WRITE-BUDGET-AND-QUALIFICATION",
+      "priority": 1,
+      "status": "durable-logical-write-budget-and-alias-aware-byte-budget-implemented-physical-calibration-clean-comparison-and-device-qualification-pending",
+      "summary": "P7 has alias-aware physical-byte eviction plus a restart-durable fixed-window logical write gate that reserves candidate-container plus projected full Fovea alias-manifest bytes before blob staging; budget rejection diagnostics report the actual logical charge rather than payload-only bytes. Remaining work is empirical/policy-level: calibrate logical reservations against total physical write amplification including control/Akashic/filesystem writes, qualify or replace fixed-window boundary bursts, measure large-store reconciliation, run clean W2/W11 against locked A-tier comparators, compare second-chance versus LRU/SIEVE-style policies, and collect physical-device memory/energy/thermal/reclaim-tail evidence."
+    },
+    {
+      "id": "OPEN-CURRENT-LOCAL-STRUCTURAL-AND-IMMUTABLE-ARTIFACT-BLOCKERS",
+      "priority": 1,
+      "status": "decode-stage-and-animation-cancel-liveness-fixed-animation-structural-and-immutable-release-format-blockers-remain",
+      "summary": "This round removed the DecodeStage oversized-file exception and repaired the reproduced W5_PT_175 actor-reentrancy cancellation liveness defect with W5_PT_205 plus 3x root stress. A later frozen-candidate PT175 invalidRegistration was separately diagnosed as a test-setup race and revision 33 now mechanically observes weighted-permit queue admission before cancellation; revision 34 similarly replaces fixed-yield assumptions in PT079/PT080/PT099 with live-MJPEG snapshot state. No production source changed in those oracle repairs. Remaining structural failures are separate: FoveaAnimatedImageViewPresenter ~823 lines, AnimationPlaybackDriver ~504, AnimationPlaybackRuntime ~576, FoveaCore module file-count/source-share debt, and existing AnimationFrameMemory unchecked-Sendable exceptions. Separately, full package Release linking cannot overwrite the existing user-immutable .build/out/Products/Release/FoveaAnimationMacLab, and global Swift-format cannot edit the existing user-immutable Tools/FoveaAnimationCompositorLab/main.swift line. Do not clear immutable flags or weaken gates; re-run after the owning work/environment resolves them."
+    },
+    {
+      "id": "OPEN-CURRENT-CANDIDATE-UNTRACED-PARALLEL-WORK",
+      "priority": 0,
+      "status": "historical-t00-snapshot-no-longer-current-clean-committed-develop-final-authority-requalification-pending",
+      "summary": "The T00 91-path ownership gap described an earlier dirty candidate snapshot and must not be projected onto later bytes. Current develop is a clean committed history with exact public component pins, but that does not retroactively convert the old T00 artifact into current authority evidence. The final release candidate must establish fresh source identity/qualification from its exact commit; historical T00 ownership findings remain evidence for that old snapshot only."
     }
   ],
-  "reviewedOn": "2026-08-03",
+  "reviewedOn": "2026-09-02",
   "schemaVersion": 1,
   "standingRequirements": [
     {

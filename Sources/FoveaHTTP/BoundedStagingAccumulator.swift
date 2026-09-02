@@ -153,7 +153,7 @@ package final class BoundedStagingAccumulator {
             storage = .memory(memory)
         }
         guard storage.byteCount == count else { throw TransportError.incompleteBody }
-        let digestHex = digest.finalize().map { String(format: "%02x", $0) }.joined()
+        let digestHex = httpLowercaseHexString(digest.finalize())
         return StagedBody(
             storage: storage,
             verifiedDigest: TransportBodyDigest(hex: digestHex),

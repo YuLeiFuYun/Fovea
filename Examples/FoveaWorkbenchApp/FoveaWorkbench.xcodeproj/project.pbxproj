@@ -8,26 +8,19 @@
 
 /* Begin PBXBuildFile section */
 		06E7670F71086D8E3068921B /* FoveaWorkbenchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D1ED97DE8479CFB01C2120B /* FoveaWorkbenchUITests.swift */; };
-		0D58017108B1293D22338EAE /* local-023-camera-desk-computer-notepad-life-unsplash-jpg-01c8c31015.jpg in Resources */ = {isa = PBXBuildFile; fileRef = EDB600F9AF31C94F8412B9F5 /* local-023-camera-desk-computer-notepad-life-unsplash-jpg-01c8c31015.jpg */; };
-		0FBB28F107E7EC4DCC5E1046 /* local-013-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 35C73A8409935BF9856B2AF0 /* local-013-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d.jpg */; };
 		11D32503CF1C64D185F8693F /* WorkbenchFeedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 099CD9309113C438519C5C51 /* WorkbenchFeedItem.swift */; };
 		1215653D61831A936A98000A /* EcologicalAtlasLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85575D09E3546708DA28799 /* EcologicalAtlasLibraryView.swift */; };
-		125A13966F0E1A9E11525C23 /* local-019-brown-line-train-crossing-chicago-river-2-jpg-0a17bbd87d.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 819923D362377C200D413667 /* local-019-brown-line-train-crossing-chicago-river-2-jpg-0a17bbd87d.jpg */; };
 		13DBA77F0D00FDC25C286138 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C128428401063456CA0E3229 /* Assets.xcassets */; };
 		1B7F0F8C5EC7C7148E3CABA0 /* WorkbenchRemoteAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208D3D257B858D8B1E7B950F /* WorkbenchRemoteAsset.swift */; };
-		208FC27587C796CE0C5234E6 /* local-018-august-2006-bicycle-rental-in-stockholm-3-jpg-111e267349.jpg in Resources */ = {isa = PBXBuildFile; fileRef = BAFEDF781881B2A104688701 /* local-018-august-2006-bicycle-rental-in-stockholm-3-jpg-111e267349.jpg */; };
 		228776D649C34CC62C9FF52A /* WorkbenchAppModel+Prefetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53EBA8745A60E741E6827671 /* WorkbenchAppModel+Prefetch.swift */; };
-		245AA5DD0955AE74DD94CAC3 /* local-001-fog-descending-on-a-pine-forest-unsplash-jpg-0d278baca4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F81A22808E53B9A9EB29A9CD /* local-001-fog-descending-on-a-pine-forest-unsplash-jpg-0d278baca4.jpg */; };
 		285DB0E8F5E93792325B1D83 /* WorkbenchDesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387B23450FCE50F57F7294A7 /* WorkbenchDesignSystem.swift */; };
 		30B7AEFB7DFDCAFEDE47A384 /* WorkbenchExperiencePattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD8926365BE533A4CFE66557 /* WorkbenchExperiencePattern.swift */; };
 		32D90EE17AB8817CFCD56A9A /* ScenarioCatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8109A27B5BDD607079C09A8 /* ScenarioCatalogView.swift */; };
-		37E2C7430E78392CEBF2DF96 /* local-022-computer-motherboard-13-jpg-012d087158.jpg in Resources */ = {isa = PBXBuildFile; fileRef = ACA53BA2F18A8347CB9D539F /* local-022-computer-motherboard-13-jpg-012d087158.jpg */; };
 		3DBB097F8C3CF615365B13E1 /* ProductAndImageLabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441511F5FAF416890ACF53BE /* ProductAndImageLabs.swift */; };
 		41456A8BBC18BBDC9D199835 /* WorkbenchZoomableAssetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF08D7A356E28F6D25D58AB9 /* WorkbenchZoomableAssetView.swift */; };
 		4329A689ABFAC9E370E5E077 /* ecological-atlas.json in Resources */ = {isa = PBXBuildFile; fileRef = E167D12C4C16DB3F1C96F4F3 /* ecological-atlas.json */; };
 		448360084D170BFD22722D70 /* WorkbenchEvidenceExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B799CFC336934C1B0D3EF42 /* WorkbenchEvidenceExport.swift */; };
 		46635A156DD66CED98322472 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AADE7DF6483715108F06340B /* PrivacyInfo.xcprivacy */; };
-		4A282C2C7C023B0E57167B86 /* local-026-autumn-rosehip-berries-in-bia-ystok-forest-jpg-037296a444.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 91A0C50B0FF0F34617245485 /* local-026-autumn-rosehip-berries-in-bia-ystok-forest-jpg-037296a444.jpg */; };
 		4B8BFEF26E8A34B3B51C2EBC /* WorkbenchRemoteAssetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E00BEFAC145BCE8CF593A61 /* WorkbenchRemoteAssetViews.swift */; };
 		4D0C105BE049FC3BE25D1658 /* FailureMatrixLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEAD66995F43EBD8931D95D7 /* FailureMatrixLabView.swift */; };
 		4E1D6B056A8ED17F3001B309 /* FeedContentViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F03493928753A06C236224F /* FeedContentViews.swift */; };
@@ -38,12 +31,8 @@
 		57143E8023767E9B0DC75C92 /* FeedStressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6BDEF6A0BEEAB03F7CC7D3 /* FeedStressView.swift */; };
 		59D7C1826F1CD100D5B57AA8 /* WorkbenchErrorDescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D01EB829AFA0B0EAE225ECF /* WorkbenchErrorDescription.swift */; };
 		5C3CA687CDF84BD5599CF555 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DAE5331C849FAEE29530571 /* DiagnosticsView.swift */; };
-		5C4631200A8A8D584D876288 /* local-025-antonello-da-messina-portrait-of-a-man-il-condottiere--07e3973b95.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6617EA02559381EE5E623CF7 /* local-025-antonello-da-messina-portrait-of-a-man-il-condottiere--07e3973b95.jpg */; };
 		5FEFFA25C7B4B8E7BA714022 /* UIKitFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A63B04D330FD4556CF1B9D9 /* UIKitFeedView.swift */; };
 		5FFEF9E053C2D9C854FE35BD /* WorkbenchLabComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F167F09D7A5FA794943A75D6 /* WorkbenchLabComponents.swift */; };
-		6376F98838948ED2EA2CC50D /* local-028-vegan-food-in-madrid-2016-jpg-1631accbda.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3B3FFBE1A33FA3424E45FDE2 /* local-028-vegan-food-in-madrid-2016-jpg-1631accbda.jpg */; };
-		649AC7BB929633FAAA3D8E11 /* local-000-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781.png in Resources */ = {isa = PBXBuildFile; fileRef = EFE8109E0F68B76A4172DE07 /* local-000-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781.png */; };
-		65B50F67FBB37237AB2BC674 /* local-020-bodrum-kalesi-ve-yelkenliler-2015-jpg-08f73e720b.jpg in Resources */ = {isa = PBXBuildFile; fileRef = D801068DAEDE92D72CA4CDB3 /* local-020-bodrum-kalesi-ve-yelkenliler-2015-jpg-08f73e720b.jpg */; };
 		672E7C40F7E54FA615ECF22C /* FoveaWorkbenchIPadUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137F02540E5C177C09A84116 /* FoveaWorkbenchIPadUITests.swift */; };
 		67641A9648D9B2485A07876F /* workbench-media-catalog.json in Resources */ = {isa = PBXBuildFile; fileRef = CB7A9FFD73453C1B070C87FB /* workbench-media-catalog.json */; };
 		68DEB684C353A3DDB7858992 /* EcologicalStoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1028F60046BFDF2332AAA2 /* EcologicalStoryView.swift */; };
@@ -55,37 +44,25 @@
 		7B6243BC74CBEEF2E77FC82F /* WorkbenchBundledImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C65B3D04AD735EB61B0D7B8C /* WorkbenchBundledImageCache.swift */; };
 		7DC9D61E3CC65C0CAF9B08E7 /* WorkbenchPrefetchPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2801BFD8EEC32103ECCEDD2B /* WorkbenchPrefetchPlanner.swift */; };
 		8035F3A07D78300CE8FC6E01 /* WorkbenchPatternSurfaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E008C3398E6C8D61F37221 /* WorkbenchPatternSurfaces.swift */; };
-		816E0C2588C918020725804C /* local-012-abstract-landscape-in-reds-large-painting-on-canvas-in-1fe5712d3d.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 97F79C781766686CEDFD129D /* local-012-abstract-landscape-in-reds-large-painting-on-canvas-in-1fe5712d3d.jpg */; };
 		8223800A022618C1F70E50C2 /* ConcurrencyLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EC04415A722A51D4EEF51D7 /* ConcurrencyLabView.swift */; };
 		8507DC8F87C4EB344AE6B338 /* WorkbenchPipelineFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7275AC595F286F1D0953541A /* WorkbenchPipelineFactory.swift */; };
-		851997141728589E5A54824B /* local-006-arthur-a-smith-covered-bridge-interior-jpg-06a43dfdd9.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3BA9501ECD14F57B799E6B4F /* local-006-arthur-a-smith-covered-bridge-interior-jpg-06a43dfdd9.jpg */; };
-		8579501657BED889AFDE21A9 /* local-021-20220410-florin-sign-and-ij-digraph-on-dutch-typewrite-0368d9ffc0.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3EFD72C26FC014D92B9CC21C /* local-021-20220410-florin-sign-and-ij-digraph-on-dutch-typewrite-0368d9ffc0.jpg */; };
 		859B977AEF9372E069CCAD10 /* WorkbenchSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8368BF138B5562DE6E80D10F /* WorkbenchSettingsView.swift */; };
-		8B6B0C141C4050144C9F2C04 /* local-016-full-moon-in-sagittarius-jpg-096ec15693.jpg in Resources */ = {isa = PBXBuildFile; fileRef = D973ABE1B503C2755B5D17DE /* local-016-full-moon-in-sagittarius-jpg-096ec15693.jpg */; };
-		8CA48A4B43C9F19CC2F3DB68 /* local-027-fruits-in-bowl-oranges-lime-apples-1-jpg-1261dbe849.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 26FA8FDAFC54148636D5E5AB /* local-027-fruits-in-bowl-oranges-lime-apples-1-jpg-1261dbe849.jpg */; };
 		8D4104BF381C9729E8387A05 /* WorkbenchExperimentRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63FAB9FEEB4287AF6045B959 /* WorkbenchExperimentRunner.swift */; };
 		932A3C265B8A50DC1B2BAC28 /* EcologicalAtlasComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E06E3056E93C548760B8A848 /* EcologicalAtlasComponents.swift */; };
 		9D903868D3C467BFEE7CAF18 /* WorkbenchPrefetchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B158856A2FD0E98E36001353 /* WorkbenchPrefetchCoordinator.swift */; };
-		9FE5A038E80AEE2CA58C8848 /* local-004-flower-in-guingamp-5-jpg-0e620a1b3f.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 29978DF64F38689781DF8F80 /* local-004-flower-in-guingamp-5-jpg-0e620a1b3f.jpg */; };
 		A39537BBB265B6EEF4633800 /* FoveaWorkbenchNavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A9C08459A49435ABAEE221D /* FoveaWorkbenchNavigationUITests.swift */; };
 		A95638768C1B0E2D423BE854 /* EcologicalAtlas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B50C49D5CEB08620CE0ED54 /* EcologicalAtlas.swift */; };
-		AC1CAE2B7DCB756CA75A09A9 /* local-003-apple-flower-dissected-jpg-08da56450c.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 32502A8826DC3AC688DE679D /* local-003-apple-flower-dissected-jpg-08da56450c.jpg */; };
-		ADAD050462D9CA3C55D4A001 /* local-007-cityscape-of-taipei-taiwan-20151221-jpg-055363cd88.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6422ABA8119B7FAAAE55DD6E /* local-007-cityscape-of-taipei-taiwan-20151221-jpg-055363cd88.jpg */; };
-		B15EBF0696934C182985022D /* local-024-judith-leyster-self-portrait-c-1630-nga-37003-jpg-1b167db6e1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 70E05BE8D072B06F04227EFF /* local-024-judith-leyster-self-portrait-c-1630-nga-37003-jpg-1b167db6e1.jpg */; };
 		B4894A47623A2817D9B98C61 /* EcologicalMethodologyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B452CC250780F90B4CD5282 /* EcologicalMethodologyView.swift */; };
 		B85D48733A97A5D912F838A5 /* FoveaWorkbenchIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD32032CCA1DBD3DCA1A591 /* FoveaWorkbenchIntegrationTests.swift */; };
 		BADF1A18E1E7BC78C3D08995 /* Fovea in Frameworks */ = {isa = PBXBuildFile; productRef = 2CDD9C0D381CEEB96F8EDB9C /* Fovea */; };
 		BCCA5B7F0FD8C6B30A7D8D80 /* DemoURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA85AA0BDBFDC9E0F2F58ADA /* DemoURLProtocol.swift */; };
-		C12A755F618F102F2F2B6AF7 /* local-011-cat-in-quebec-city-jpg-167723d6cf.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 60538A0B099F383B0860A323 /* local-011-cat-in-quebec-city-jpg-167723d6cf.jpg */; };
-		C1DB8A634A197D755D2C2F96 /* local-015-flaming-star-nebula-ic-405-png-11c3c5b390.png in Resources */ = {isa = PBXBuildFile; fileRef = 7E19E139A550AC20B842C70C /* local-015-flaming-star-nebula-ic-405-png-11c3c5b390.png */; };
 		C5FECD011769666C0624DF76 /* EcologicalStoryMediaSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3480CB060D9736E2750E072 /* EcologicalStoryMediaSurface.swift */; };
+		C75F989D00B0666B09B442F8 /* AnimationPhysicalPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3349D09BFA6E7183F5FE1CA4 /* AnimationPhysicalPresentationTests.swift */; };
 		C83BC6DF38F2A5AB11F1F0FD /* WorkbenchPerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4110073F0FD5B63A508F333C /* WorkbenchPerformanceMonitor.swift */; };
 		C9A5B78BA31F8D372C0C51BC /* WorkbenchScenarioCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CCD26B6986218377FEC3926 /* WorkbenchScenarioCatalog.swift */; };
 		CB05369EA9885CB08530D23E /* WorkbenchNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6851097AF47EB1FF2995D2F4 /* WorkbenchNetworkMonitor.swift */; };
-		CB73122D2C3E2A1709D2C254 /* local-002-golfarone-waterfall-villa-minozzo-in-2024-02-jpg-0f7c961d1e.jpg in Resources */ = {isa = PBXBuildFile; fileRef = B067744C5A86ADCBE5A8ECBF /* local-002-golfarone-waterfall-villa-minozzo-in-2024-02-jpg-0f7c961d1e.jpg */; };
 		CC8FA34BF061D0A92B3AD239 /* WorkbenchEvidenceBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42B4F240BCA92FBBF3A9EE8E /* WorkbenchEvidenceBundle.swift */; };
 		CDDD044C14E354F710C04CE0 /* WorkbenchStorageMaintenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4411C53B1C9E4DD5A3D9A4DB /* WorkbenchStorageMaintenance.swift */; };
-		CFC6E325DFE0B2183D0B7CE0 /* local-008-bridge-in-forest-21158992109-jpg-165bd12127.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 58FC52D51546F026F383F941 /* local-008-bridge-in-forest-21158992109-jpg-165bd12127.jpg */; };
 		D842B01F18B52BD8F1ACCCF8 /* WorkbenchDiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D7A950798C044795447EAA /* WorkbenchDiscoverView.swift */; };
 		DA191CB7EF42A1880B4F4EB6 /* WorkbenchBuildMetadata.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DC3A2AC3BD051BF7D26A51 /* WorkbenchBuildMetadata.generated.swift */; };
 		DE075DB829D133BD102138BE /* WorkbenchTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADA845FD9CF49EA38291291 /* WorkbenchTestSupport.swift */; };
@@ -93,20 +70,16 @@
 		E2F3CA65314F80A709173513 /* WorkbenchRunRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DF47C38E3F50B361B9BB738 /* WorkbenchRunRecord.swift */; };
 		E51DF5238E64A974D9C2CECF /* FoveaWorkbenchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21EB3E5D9A5BA013BDDB72E1 /* FoveaWorkbenchApp.swift */; };
 		E56ED753FB304CAEF37AD654 /* WorkbenchScenarioStudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48E71D81EFFE2916DC0DB741 /* WorkbenchScenarioStudioView.swift */; };
-		E65726FC0CE6ED5B8537AA77 /* local-005-flowers-in-tokyo-jpg-0c0ce9192b.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 62142630708B42281F4A764C /* local-005-flowers-in-tokyo-jpg-0c0ce9192b.jpg */; };
 		E66CA0C5EF1819CBF53EDF54 /* ExperimentRunsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B97F4B830C090D50587D6B0 /* ExperimentRunsView.swift */; };
 		E8D41933E9A06EA6427F497E /* WorkbenchButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140388A793EA5453E202F92F /* WorkbenchButtonStyles.swift */; };
 		E911E6A68BDC37F0B1D716CD /* WorkbenchLaunchState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6E815840A39CA5EDB8054DF /* WorkbenchLaunchState.swift */; };
-		E920A2241EFFC7C0017BC943 /* local-017-far-side-of-the-moon-close-up-for-lunar-crater-radio-t-08164f4e1e.png in Resources */ = {isa = PBXBuildFile; fileRef = 72AB819FF08EAC28905ACCCD /* local-017-far-side-of-the-moon-close-up-for-lunar-crater-radio-t-08164f4e1e.png */; };
 		E96BC5C8BF2247BB402B6186 /* WorkbenchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99683ABE0510EAA5ADF52750 /* WorkbenchRootView.swift */; };
 		E9C89AB5DC8E02A3B1005CBC /* WorkbenchPerformanceSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C80B5ABDAB2310C0EF1980 /* WorkbenchPerformanceSnapshot.swift */; };
 		ED21EC164AFF4E386700D9D4 /* FoveaWorkbenchVisualTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D51C8361255E14170F2EA /* FoveaWorkbenchVisualTests.swift */; };
 		ED5B8347B876170C0287F272 /* WorkbenchImageSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = A878E3B6518F6B6C806495DF /* WorkbenchImageSurface.swift */; };
 		EF97D9715593EB6FB294F0FC /* CacheIdentityLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76AFD05A128297D5FBC7341B /* CacheIdentityLabView.swift */; };
-		F18D0687B8538EBB1EE28D0D /* local-014-landscape-with-a-village-in-the-distance-met-dp145939--20d156fcdb.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DE2287CD1812DFA144F1FA22 /* local-014-landscape-with-a-village-in-the-distance-met-dp145939--20d156fcdb.jpg */; };
+		F274D582E5EA70F76F0E9D54 /* LocalMedia in Resources */ = {isa = PBXBuildFile; fileRef = 558BADC25D7784A70B8042D9 /* LocalMedia */; };
 		F559D7AA685BF5B04FD18000 /* WorkbenchConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE971BD24E0F864C4AA73028 /* WorkbenchConfiguration.swift */; };
-		F91E7BC05CB6798261F05BFA /* local-010-common-bluebottle-butterfly-33174063801-jpg-03c5c44d0f.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C3A29372167E4C1FAA5774C2 /* local-010-common-bluebottle-butterfly-33174063801-jpg-03c5c44d0f.jpg */; };
-		FD32B9537886A266B9FED83F /* local-009-butterfly-enjoying-with-nature-jpg-17c5abc374.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 08B15D2098AA55D1FF088FAF /* local-009-butterfly-enjoying-with-nature-jpg-17c5abc374.jpg */; };
 		FE208940EE7697616C36C703 /* WorkbenchRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97F061825871CF8B0F7D0880 /* WorkbenchRequestFactory.swift */; };
 /* End PBXBuildFile section */
 
@@ -138,7 +111,6 @@
 		0207D45D236D8EC9D99A7951 /* WorkbenchDiagnosticsSink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchDiagnosticsSink.swift; sourceTree = "<group>"; };
 		0223879CA55ADD837F71F41E /* FoveaWorkbenchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoveaWorkbenchTests.swift; sourceTree = "<group>"; };
 		06DC3A2AC3BD051BF7D26A51 /* WorkbenchBuildMetadata.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchBuildMetadata.generated.swift; sourceTree = "<group>"; };
-		08B15D2098AA55D1FF088FAF /* local-009-butterfly-enjoying-with-nature-jpg-17c5abc374.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-009-butterfly-enjoying-with-nature-jpg-17c5abc374.jpg"; sourceTree = "<group>"; };
 		099CD9309113C438519C5C51 /* WorkbenchFeedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchFeedItem.swift; sourceTree = "<group>"; };
 		0A63B04D330FD4556CF1B9D9 /* UIKitFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitFeedView.swift; sourceTree = "<group>"; };
 		0A9C08459A49435ABAEE221D /* FoveaWorkbenchNavigationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoveaWorkbenchNavigationUITests.swift; sourceTree = "<group>"; };
@@ -150,22 +122,16 @@
 		1B6BDEF6A0BEEAB03F7CC7D3 /* FeedStressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedStressView.swift; sourceTree = "<group>"; };
 		208D3D257B858D8B1E7B950F /* WorkbenchRemoteAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchRemoteAsset.swift; sourceTree = "<group>"; };
 		21EB3E5D9A5BA013BDDB72E1 /* FoveaWorkbenchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoveaWorkbenchApp.swift; sourceTree = "<group>"; };
-		26FA8FDAFC54148636D5E5AB /* local-027-fruits-in-bowl-oranges-lime-apples-1-jpg-1261dbe849.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-027-fruits-in-bowl-oranges-lime-apples-1-jpg-1261dbe849.jpg"; sourceTree = "<group>"; };
 		2801BFD8EEC32103ECCEDD2B /* WorkbenchPrefetchPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchPrefetchPlanner.swift; sourceTree = "<group>"; };
 		283839B0CA392ECEFC19D5A9 /* FoveaWorkbenchLiveTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FoveaWorkbenchLiveTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		29978DF64F38689781DF8F80 /* local-004-flower-in-guingamp-5-jpg-0e620a1b3f.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-004-flower-in-guingamp-5-jpg-0e620a1b3f.jpg"; sourceTree = "<group>"; };
 		2B799CFC336934C1B0D3EF42 /* WorkbenchEvidenceExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchEvidenceExport.swift; sourceTree = "<group>"; };
 		2DAE5331C849FAEE29530571 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
 		2DB8F0D1A6FB9180C7F16E48 /* Fovea */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fovea; path = ../..; sourceTree = SOURCE_ROOT; };
-		32502A8826DC3AC688DE679D /* local-003-apple-flower-dissected-jpg-08da56450c.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-003-apple-flower-dissected-jpg-08da56450c.jpg"; sourceTree = "<group>"; };
 		32E03621650720B8B6B386A8 /* FoveaWorkbenchTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FoveaWorkbenchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		35C73A8409935BF9856B2AF0 /* local-013-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-013-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d.jpg"; sourceTree = "<group>"; };
+		3349D09BFA6E7183F5FE1CA4 /* AnimationPhysicalPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationPhysicalPresentationTests.swift; sourceTree = "<group>"; };
 		387B23450FCE50F57F7294A7 /* WorkbenchDesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchDesignSystem.swift; sourceTree = "<group>"; };
-		3B3FFBE1A33FA3424E45FDE2 /* local-028-vegan-food-in-madrid-2016-jpg-1631accbda.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-028-vegan-food-in-madrid-2016-jpg-1631accbda.jpg"; sourceTree = "<group>"; };
 		3B452CC250780F90B4CD5282 /* EcologicalMethodologyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcologicalMethodologyView.swift; sourceTree = "<group>"; };
-		3BA9501ECD14F57B799E6B4F /* local-006-arthur-a-smith-covered-bridge-interior-jpg-06a43dfdd9.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-006-arthur-a-smith-covered-bridge-interior-jpg-06a43dfdd9.jpg"; sourceTree = "<group>"; };
 		3CCD26B6986218377FEC3926 /* WorkbenchScenarioCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchScenarioCatalog.swift; sourceTree = "<group>"; };
-		3EFD72C26FC014D92B9CC21C /* local-021-20220410-florin-sign-and-ij-digraph-on-dutch-typewrite-0368d9ffc0.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-021-20220410-florin-sign-and-ij-digraph-on-dutch-typewrite-0368d9ffc0.jpg"; sourceTree = "<group>"; };
 		4110073F0FD5B63A508F333C /* WorkbenchPerformanceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchPerformanceMonitor.swift; sourceTree = "<group>"; };
 		42B4F240BCA92FBBF3A9EE8E /* WorkbenchEvidenceBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchEvidenceBundle.swift; sourceTree = "<group>"; };
 		4411C53B1C9E4DD5A3D9A4DB /* WorkbenchStorageMaintenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchStorageMaintenance.swift; sourceTree = "<group>"; };
@@ -176,30 +142,20 @@
 		501D51C8361255E14170F2EA /* FoveaWorkbenchVisualTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoveaWorkbenchVisualTests.swift; sourceTree = "<group>"; };
 		50D5E7D8E3AD1011CA832890 /* WorkbenchVisualSystemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchVisualSystemTests.swift; sourceTree = "<group>"; };
 		53EBA8745A60E741E6827671 /* WorkbenchAppModel+Prefetch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkbenchAppModel+Prefetch.swift"; sourceTree = "<group>"; };
-		58FC52D51546F026F383F941 /* local-008-bridge-in-forest-21158992109-jpg-165bd12127.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-008-bridge-in-forest-21158992109-jpg-165bd12127.jpg"; sourceTree = "<group>"; };
-		60538A0B099F383B0860A323 /* local-011-cat-in-quebec-city-jpg-167723d6cf.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-011-cat-in-quebec-city-jpg-167723d6cf.jpg"; sourceTree = "<group>"; };
-		62142630708B42281F4A764C /* local-005-flowers-in-tokyo-jpg-0c0ce9192b.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-005-flowers-in-tokyo-jpg-0c0ce9192b.jpg"; sourceTree = "<group>"; };
+		558BADC25D7784A70B8042D9 /* LocalMedia */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LocalMedia; path = FoveaWorkbench/Resources/LocalMedia; sourceTree = SOURCE_ROOT; };
 		637A5ECCFC5FC21FE9D20D03 /* EcologicalAtlasHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcologicalAtlasHomeView.swift; sourceTree = "<group>"; };
 		63FAB9FEEB4287AF6045B959 /* WorkbenchExperimentRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchExperimentRunner.swift; sourceTree = "<group>"; };
-		6422ABA8119B7FAAAE55DD6E /* local-007-cityscape-of-taipei-taiwan-20151221-jpg-055363cd88.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-007-cityscape-of-taipei-taiwan-20151221-jpg-055363cd88.jpg"; sourceTree = "<group>"; };
-		6617EA02559381EE5E623CF7 /* local-025-antonello-da-messina-portrait-of-a-man-il-condottiere--07e3973b95.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-025-antonello-da-messina-portrait-of-a-man-il-condottiere--07e3973b95.jpg"; sourceTree = "<group>"; };
 		6851097AF47EB1FF2995D2F4 /* WorkbenchNetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchNetworkMonitor.swift; sourceTree = "<group>"; };
 		6B50C49D5CEB08620CE0ED54 /* EcologicalAtlas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcologicalAtlas.swift; sourceTree = "<group>"; };
 		6D1ED97DE8479CFB01C2120B /* FoveaWorkbenchUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoveaWorkbenchUITests.swift; sourceTree = "<group>"; };
-		70E05BE8D072B06F04227EFF /* local-024-judith-leyster-self-portrait-c-1630-nga-37003-jpg-1b167db6e1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-024-judith-leyster-self-portrait-c-1630-nga-37003-jpg-1b167db6e1.jpg"; sourceTree = "<group>"; };
 		7275AC595F286F1D0953541A /* WorkbenchPipelineFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchPipelineFactory.swift; sourceTree = "<group>"; };
-		72AB819FF08EAC28905ACCCD /* local-017-far-side-of-the-moon-close-up-for-lunar-crater-radio-t-08164f4e1e.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "local-017-far-side-of-the-moon-close-up-for-lunar-crater-radio-t-08164f4e1e.png"; sourceTree = "<group>"; };
 		76AFD05A128297D5FBC7341B /* CacheIdentityLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheIdentityLabView.swift; sourceTree = "<group>"; };
 		7DF47C38E3F50B361B9BB738 /* WorkbenchRunRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchRunRecord.swift; sourceTree = "<group>"; };
-		7E19E139A550AC20B842C70C /* local-015-flaming-star-nebula-ic-405-png-11c3c5b390.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "local-015-flaming-star-nebula-ic-405-png-11c3c5b390.png"; sourceTree = "<group>"; };
-		819923D362377C200D413667 /* local-019-brown-line-train-crossing-chicago-river-2-jpg-0a17bbd87d.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-019-brown-line-train-crossing-chicago-river-2-jpg-0a17bbd87d.jpg"; sourceTree = "<group>"; };
 		8368BF138B5562DE6E80D10F /* WorkbenchSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchSettingsView.swift; sourceTree = "<group>"; };
 		8E00BEFAC145BCE8CF593A61 /* WorkbenchRemoteAssetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchRemoteAssetViews.swift; sourceTree = "<group>"; };
 		8EC04415A722A51D4EEF51D7 /* ConcurrencyLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrencyLabView.swift; sourceTree = "<group>"; };
-		91A0C50B0FF0F34617245485 /* local-026-autumn-rosehip-berries-in-bia-ystok-forest-jpg-037296a444.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-026-autumn-rosehip-berries-in-bia-ystok-forest-jpg-037296a444.jpg"; sourceTree = "<group>"; };
 		92D7A950798C044795447EAA /* WorkbenchDiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchDiscoverView.swift; sourceTree = "<group>"; };
 		97F061825871CF8B0F7D0880 /* WorkbenchRequestFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchRequestFactory.swift; sourceTree = "<group>"; };
-		97F79C781766686CEDFD129D /* local-012-abstract-landscape-in-reds-large-painting-on-canvas-in-1fe5712d3d.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-012-abstract-landscape-in-reds-large-painting-on-canvas-in-1fe5712d3d.jpg"; sourceTree = "<group>"; };
 		99683ABE0510EAA5ADF52750 /* WorkbenchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchRootView.swift; sourceTree = "<group>"; };
 		9AB2C521F6ED34BAF5A5DED9 /* WorkbenchLab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchLab.swift; sourceTree = "<group>"; };
 		9B97F4B830C090D50587D6B0 /* ExperimentRunsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentRunsView.swift; sourceTree = "<group>"; };
@@ -208,16 +164,12 @@
 		A878E3B6518F6B6C806495DF /* WorkbenchImageSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchImageSurface.swift; sourceTree = "<group>"; };
 		AA85AA0BDBFDC9E0F2F58ADA /* DemoURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoURLProtocol.swift; sourceTree = "<group>"; };
 		AADE7DF6483715108F06340B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		ACA53BA2F18A8347CB9D539F /* local-022-computer-motherboard-13-jpg-012d087158.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-022-computer-motherboard-13-jpg-012d087158.jpg"; sourceTree = "<group>"; };
 		AE971BD24E0F864C4AA73028 /* WorkbenchConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchConfiguration.swift; sourceTree = "<group>"; };
-		B067744C5A86ADCBE5A8ECBF /* local-002-golfarone-waterfall-villa-minozzo-in-2024-02-jpg-0f7c961d1e.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-002-golfarone-waterfall-villa-minozzo-in-2024-02-jpg-0f7c961d1e.jpg"; sourceTree = "<group>"; };
 		B0E008C3398E6C8D61F37221 /* WorkbenchPatternSurfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchPatternSurfaces.swift; sourceTree = "<group>"; };
 		B158856A2FD0E98E36001353 /* WorkbenchPrefetchCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchPrefetchCoordinator.swift; sourceTree = "<group>"; };
-		BAFEDF781881B2A104688701 /* local-018-august-2006-bicycle-rental-in-stockholm-3-jpg-111e267349.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-018-august-2006-bicycle-rental-in-stockholm-3-jpg-111e267349.jpg"; sourceTree = "<group>"; };
 		BD8926365BE533A4CFE66557 /* WorkbenchExperiencePattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchExperiencePattern.swift; sourceTree = "<group>"; };
 		BF08D7A356E28F6D25D58AB9 /* WorkbenchZoomableAssetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchZoomableAssetView.swift; sourceTree = "<group>"; };
 		C128428401063456CA0E3229 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		C3A29372167E4C1FAA5774C2 /* local-010-common-bluebottle-butterfly-33174063801-jpg-03c5c44d0f.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-010-common-bluebottle-butterfly-33174063801-jpg-03c5c44d0f.jpg"; sourceTree = "<group>"; };
 		C620E36031FECC1E20BBDDD0 /* AuthenticationLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationLabView.swift; sourceTree = "<group>"; };
 		C65B3D04AD735EB61B0D7B8C /* WorkbenchBundledImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchBundledImageCache.swift; sourceTree = "<group>"; };
 		C6E815840A39CA5EDB8054DF /* WorkbenchLaunchState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchLaunchState.swift; sourceTree = "<group>"; };
@@ -225,19 +177,13 @@
 		CDD32032CCA1DBD3DCA1A591 /* FoveaWorkbenchIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoveaWorkbenchIntegrationTests.swift; sourceTree = "<group>"; };
 		CFBED788846F89DA9BE34F55 /* FoveaWorkbenchLiveNetworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoveaWorkbenchLiveNetworkTests.swift; sourceTree = "<group>"; };
 		D3480CB060D9736E2750E072 /* EcologicalStoryMediaSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcologicalStoryMediaSurface.swift; sourceTree = "<group>"; };
-		D801068DAEDE92D72CA4CDB3 /* local-020-bodrum-kalesi-ve-yelkenliler-2015-jpg-08f73e720b.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-020-bodrum-kalesi-ve-yelkenliler-2015-jpg-08f73e720b.jpg"; sourceTree = "<group>"; };
 		D8109A27B5BDD607079C09A8 /* ScenarioCatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenarioCatalogView.swift; sourceTree = "<group>"; };
-		D973ABE1B503C2755B5D17DE /* local-016-full-moon-in-sagittarius-jpg-096ec15693.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-016-full-moon-in-sagittarius-jpg-096ec15693.jpg"; sourceTree = "<group>"; };
-		DE2287CD1812DFA144F1FA22 /* local-014-landscape-with-a-village-in-the-distance-met-dp145939--20d156fcdb.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-014-landscape-with-a-village-in-the-distance-met-dp145939--20d156fcdb.jpg"; sourceTree = "<group>"; };
 		E06E3056E93C548760B8A848 /* EcologicalAtlasComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcologicalAtlasComponents.swift; sourceTree = "<group>"; };
 		E167D12C4C16DB3F1C96F4F3 /* ecological-atlas.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "ecological-atlas.json"; sourceTree = "<group>"; };
 		E563F661B3E2551A86E5493D /* FoveaWorkbenchUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FoveaWorkbenchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E7C80B5ABDAB2310C0EF1980 /* WorkbenchPerformanceSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchPerformanceSnapshot.swift; sourceTree = "<group>"; };
-		EDB600F9AF31C94F8412B9F5 /* local-023-camera-desk-computer-notepad-life-unsplash-jpg-01c8c31015.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-023-camera-desk-computer-notepad-life-unsplash-jpg-01c8c31015.jpg"; sourceTree = "<group>"; };
 		EEAD66995F43EBD8931D95D7 /* FailureMatrixLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailureMatrixLabView.swift; sourceTree = "<group>"; };
-		EFE8109E0F68B76A4172DE07 /* local-000-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "local-000-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781.png"; sourceTree = "<group>"; };
 		F167F09D7A5FA794943A75D6 /* WorkbenchLabComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchLabComponents.swift; sourceTree = "<group>"; };
-		F81A22808E53B9A9EB29A9CD /* local-001-fog-descending-on-a-pine-forest-unsplash-jpg-0d278baca4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "local-001-fog-descending-on-a-pine-forest-unsplash-jpg-0d278baca4.jpg"; sourceTree = "<group>"; };
 		F85575D09E3546708DA28799 /* EcologicalAtlasLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcologicalAtlasLibraryView.swift; sourceTree = "<group>"; };
 		FA67F2C8B081E1D876B89936 /* LiveNetworkLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNetworkLabView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -254,42 +200,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		133F7BA57D37A987AC32FF61 /* LocalMedia */ = {
-			isa = PBXGroup;
-			children = (
-				EFE8109E0F68B76A4172DE07 /* local-000-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781.png */,
-				F81A22808E53B9A9EB29A9CD /* local-001-fog-descending-on-a-pine-forest-unsplash-jpg-0d278baca4.jpg */,
-				B067744C5A86ADCBE5A8ECBF /* local-002-golfarone-waterfall-villa-minozzo-in-2024-02-jpg-0f7c961d1e.jpg */,
-				32502A8826DC3AC688DE679D /* local-003-apple-flower-dissected-jpg-08da56450c.jpg */,
-				29978DF64F38689781DF8F80 /* local-004-flower-in-guingamp-5-jpg-0e620a1b3f.jpg */,
-				62142630708B42281F4A764C /* local-005-flowers-in-tokyo-jpg-0c0ce9192b.jpg */,
-				3BA9501ECD14F57B799E6B4F /* local-006-arthur-a-smith-covered-bridge-interior-jpg-06a43dfdd9.jpg */,
-				6422ABA8119B7FAAAE55DD6E /* local-007-cityscape-of-taipei-taiwan-20151221-jpg-055363cd88.jpg */,
-				58FC52D51546F026F383F941 /* local-008-bridge-in-forest-21158992109-jpg-165bd12127.jpg */,
-				08B15D2098AA55D1FF088FAF /* local-009-butterfly-enjoying-with-nature-jpg-17c5abc374.jpg */,
-				C3A29372167E4C1FAA5774C2 /* local-010-common-bluebottle-butterfly-33174063801-jpg-03c5c44d0f.jpg */,
-				60538A0B099F383B0860A323 /* local-011-cat-in-quebec-city-jpg-167723d6cf.jpg */,
-				97F79C781766686CEDFD129D /* local-012-abstract-landscape-in-reds-large-painting-on-canvas-in-1fe5712d3d.jpg */,
-				35C73A8409935BF9856B2AF0 /* local-013-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d.jpg */,
-				DE2287CD1812DFA144F1FA22 /* local-014-landscape-with-a-village-in-the-distance-met-dp145939--20d156fcdb.jpg */,
-				7E19E139A550AC20B842C70C /* local-015-flaming-star-nebula-ic-405-png-11c3c5b390.png */,
-				D973ABE1B503C2755B5D17DE /* local-016-full-moon-in-sagittarius-jpg-096ec15693.jpg */,
-				72AB819FF08EAC28905ACCCD /* local-017-far-side-of-the-moon-close-up-for-lunar-crater-radio-t-08164f4e1e.png */,
-				BAFEDF781881B2A104688701 /* local-018-august-2006-bicycle-rental-in-stockholm-3-jpg-111e267349.jpg */,
-				819923D362377C200D413667 /* local-019-brown-line-train-crossing-chicago-river-2-jpg-0a17bbd87d.jpg */,
-				D801068DAEDE92D72CA4CDB3 /* local-020-bodrum-kalesi-ve-yelkenliler-2015-jpg-08f73e720b.jpg */,
-				3EFD72C26FC014D92B9CC21C /* local-021-20220410-florin-sign-and-ij-digraph-on-dutch-typewrite-0368d9ffc0.jpg */,
-				ACA53BA2F18A8347CB9D539F /* local-022-computer-motherboard-13-jpg-012d087158.jpg */,
-				EDB600F9AF31C94F8412B9F5 /* local-023-camera-desk-computer-notepad-life-unsplash-jpg-01c8c31015.jpg */,
-				70E05BE8D072B06F04227EFF /* local-024-judith-leyster-self-portrait-c-1630-nga-37003-jpg-1b167db6e1.jpg */,
-				6617EA02559381EE5E623CF7 /* local-025-antonello-da-messina-portrait-of-a-man-il-condottiere--07e3973b95.jpg */,
-				91A0C50B0FF0F34617245485 /* local-026-autumn-rosehip-berries-in-bia-ystok-forest-jpg-037296a444.jpg */,
-				26FA8FDAFC54148636D5E5AB /* local-027-fruits-in-bowl-oranges-lime-apples-1-jpg-1261dbe849.jpg */,
-				3B3FFBE1A33FA3424E45FDE2 /* local-028-vegan-food-in-madrid-2016-jpg-1631accbda.jpg */,
-			);
-			path = LocalMedia;
-			sourceTree = "<group>";
-		};
 		482D8E7747BD1E35E0D70FA2 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -374,6 +284,7 @@
 		B4A1EF856C98492A716D91FF /* FoveaWorkbenchTests */ = {
 			isa = PBXGroup;
 			children = (
+				3349D09BFA6E7183F5FE1CA4 /* AnimationPhysicalPresentationTests.swift */,
 				CDD32032CCA1DBD3DCA1A591 /* FoveaWorkbenchIntegrationTests.swift */,
 				0223879CA55ADD837F71F41E /* FoveaWorkbenchTests.swift */,
 				4ADA845FD9CF49EA38291291 /* WorkbenchTestSupport.swift */,
@@ -421,9 +332,9 @@
 			children = (
 				C128428401063456CA0E3229 /* Assets.xcassets */,
 				E167D12C4C16DB3F1C96F4F3 /* ecological-atlas.json */,
+				558BADC25D7784A70B8042D9 /* LocalMedia */,
 				AADE7DF6483715108F06340B /* PrivacyInfo.xcprivacy */,
 				CB7A9FFD73453C1B070C87FB /* workbench-media-catalog.json */,
-				133F7BA57D37A987AC32FF61 /* LocalMedia */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -591,37 +502,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				13DBA77F0D00FDC25C286138 /* Assets.xcassets in Resources */,
+				F274D582E5EA70F76F0E9D54 /* LocalMedia in Resources */,
 				46635A156DD66CED98322472 /* PrivacyInfo.xcprivacy in Resources */,
 				4329A689ABFAC9E370E5E077 /* ecological-atlas.json in Resources */,
-				649AC7BB929633FAAA3D8E11 /* local-000-a-view-of-the-taunus-mountain-range-during-fog-3-png-0cbecba781.png in Resources */,
-				245AA5DD0955AE74DD94CAC3 /* local-001-fog-descending-on-a-pine-forest-unsplash-jpg-0d278baca4.jpg in Resources */,
-				CB73122D2C3E2A1709D2C254 /* local-002-golfarone-waterfall-villa-minozzo-in-2024-02-jpg-0f7c961d1e.jpg in Resources */,
-				AC1CAE2B7DCB756CA75A09A9 /* local-003-apple-flower-dissected-jpg-08da56450c.jpg in Resources */,
-				9FE5A038E80AEE2CA58C8848 /* local-004-flower-in-guingamp-5-jpg-0e620a1b3f.jpg in Resources */,
-				E65726FC0CE6ED5B8537AA77 /* local-005-flowers-in-tokyo-jpg-0c0ce9192b.jpg in Resources */,
-				851997141728589E5A54824B /* local-006-arthur-a-smith-covered-bridge-interior-jpg-06a43dfdd9.jpg in Resources */,
-				ADAD050462D9CA3C55D4A001 /* local-007-cityscape-of-taipei-taiwan-20151221-jpg-055363cd88.jpg in Resources */,
-				CFC6E325DFE0B2183D0B7CE0 /* local-008-bridge-in-forest-21158992109-jpg-165bd12127.jpg in Resources */,
-				FD32B9537886A266B9FED83F /* local-009-butterfly-enjoying-with-nature-jpg-17c5abc374.jpg in Resources */,
-				F91E7BC05CB6798261F05BFA /* local-010-common-bluebottle-butterfly-33174063801-jpg-03c5c44d0f.jpg in Resources */,
-				C12A755F618F102F2F2B6AF7 /* local-011-cat-in-quebec-city-jpg-167723d6cf.jpg in Resources */,
-				816E0C2588C918020725804C /* local-012-abstract-landscape-in-reds-large-painting-on-canvas-in-1fe5712d3d.jpg in Resources */,
-				0FBB28F107E7EC4DCC5E1046 /* local-013-aichi-prefectural-ceramic-museum-2018-033-jpg-0741419b2d.jpg in Resources */,
-				F18D0687B8538EBB1EE28D0D /* local-014-landscape-with-a-village-in-the-distance-met-dp145939--20d156fcdb.jpg in Resources */,
-				C1DB8A634A197D755D2C2F96 /* local-015-flaming-star-nebula-ic-405-png-11c3c5b390.png in Resources */,
-				8B6B0C141C4050144C9F2C04 /* local-016-full-moon-in-sagittarius-jpg-096ec15693.jpg in Resources */,
-				E920A2241EFFC7C0017BC943 /* local-017-far-side-of-the-moon-close-up-for-lunar-crater-radio-t-08164f4e1e.png in Resources */,
-				208FC27587C796CE0C5234E6 /* local-018-august-2006-bicycle-rental-in-stockholm-3-jpg-111e267349.jpg in Resources */,
-				125A13966F0E1A9E11525C23 /* local-019-brown-line-train-crossing-chicago-river-2-jpg-0a17bbd87d.jpg in Resources */,
-				65B50F67FBB37237AB2BC674 /* local-020-bodrum-kalesi-ve-yelkenliler-2015-jpg-08f73e720b.jpg in Resources */,
-				8579501657BED889AFDE21A9 /* local-021-20220410-florin-sign-and-ij-digraph-on-dutch-typewrite-0368d9ffc0.jpg in Resources */,
-				37E2C7430E78392CEBF2DF96 /* local-022-computer-motherboard-13-jpg-012d087158.jpg in Resources */,
-				0D58017108B1293D22338EAE /* local-023-camera-desk-computer-notepad-life-unsplash-jpg-01c8c31015.jpg in Resources */,
-				B15EBF0696934C182985022D /* local-024-judith-leyster-self-portrait-c-1630-nga-37003-jpg-1b167db6e1.jpg in Resources */,
-				5C4631200A8A8D584D876288 /* local-025-antonello-da-messina-portrait-of-a-man-il-condottiere--07e3973b95.jpg in Resources */,
-				4A282C2C7C023B0E57167B86 /* local-026-autumn-rosehip-berries-in-bia-ystok-forest-jpg-037296a444.jpg in Resources */,
-				8CA48A4B43C9F19CC2F3DB68 /* local-027-fruits-in-bowl-oranges-lime-apples-1-jpg-1261dbe849.jpg in Resources */,
-				6376F98838948ED2EA2CC50D /* local-028-vegan-food-in-madrid-2016-jpg-1631accbda.jpg in Resources */,
 				67641A9648D9B2485A07876F /* workbench-media-catalog.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -633,6 +516,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C75F989D00B0666B09B442F8 /* AnimationPhysicalPresentationTests.swift in Sources */,
 				B85D48733A97A5D912F838A5 /* FoveaWorkbenchIntegrationTests.swift in Sources */,
 				522C8CAD407BA6C88626C64A /* FoveaWorkbenchTests.swift in Sources */,
 				DE075DB829D133BD102138BE /* WorkbenchTestSupport.swift in Sources */,

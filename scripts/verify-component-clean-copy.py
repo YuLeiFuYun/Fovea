@@ -17,7 +17,9 @@ PINS = ROOT / "docs/project-memory/component-pins.json"
 ARTIFACT = ROOT / ".artifacts/external-components/clean-copy.json"
 LOG = ROOT / ".artifacts/external-components/swift-test.log"
 COPY_PATHS = ("Sources", "Tests", "Tools", "Examples/FoveaGalleryDemo")
-EXPECTED_TEST_COUNT = 478
+EXPECTED_XCTEST_COUNT = 933
+EXPECTED_SWIFT_TESTING_COUNT = 3
+EXPECTED_TEST_COUNT = EXPECTED_XCTEST_COUNT + EXPECTED_SWIFT_TESTING_COUNT
 
 
 def run(command: list[str], *, cwd: Path, env: dict[str, str], timeout: int = 900) -> subprocess.CompletedProcess[str]:
@@ -102,10 +104,25 @@ def main() -> int:
             ]
             if owned_warnings:
                 raise RuntimeError("clean-copy emitted Fovea-owned warnings: " + repr(owned_warnings))
-            counts = [int(value) for value in re.findall(r"Executed (\d+) tests", test.stdout)]
-            count = max(counts, default=0)
-            if count != EXPECTED_TEST_COUNT:
-                raise RuntimeError(f"clean-copy test count drifted: expected={EXPECTED_TEST_COUNT} observed={count}")
+            xctest_counts = [
+                int(value) for value in re.findall(r"Executed (\d+) tests", test.stdout)
+            ]
+            swift_testing_counts = [
+                int(value)
+                for value in re.findall(r"Test run with (\d+) tests? in \d+ suites? passed", test.stdout)
+            ]
+            xctest_count = max(xctest_counts, default=0)
+            swift_testing_count = max(swift_testing_counts, default=0)
+            count = xctest_count + swift_testing_count
+            expected_breakdown = (EXPECTED_XCTEST_COUNT, EXPECTED_SWIFT_TESTING_COUNT)
+            observed_breakdown = (xctest_count, swift_testing_count)
+            if count != EXPECTED_TEST_COUNT or observed_breakdown != expected_breakdown:
+                raise RuntimeError(
+                    "clean-copy test count drifted: "
+                    f"expected={EXPECTED_TEST_COUNT} "
+                    f"(xctest={EXPECTED_XCTEST_COUNT}, swift-testing={EXPECTED_SWIFT_TESTING_COUNT}) "
+                    f"observed={count} (xctest={xctest_count}, swift-testing={swift_testing_count})"
+                )
     except (OSError, ValueError, KeyError, json.JSONDecodeError, RuntimeError, subprocess.TimeoutExpired) as error:
         print(str(error))
         return 1
@@ -114,6 +131,10 @@ def main() -> int:
         "schemaVersion": 1,
         "status": "passed",
         "testCount": EXPECTED_TEST_COUNT,
+        "testBreakdown": {
+            "xctest": EXPECTED_XCTEST_COUNT,
+            "swiftTesting": EXPECTED_SWIFT_TESTING_COUNT,
+        },
         "sourceDigest": source_digest,
         "components": {
             identity: {"repositoryURL": value[0], "revision": value[1]}
@@ -126,7 +147,9 @@ def main() -> int:
     ARTIFACT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     print(
         "External component clean copy passed: "
-        f"tests={EXPECTED_TEST_COUNT} source={source_digest[:12]}"
+        f"tests={EXPECTED_TEST_COUNT} "
+        f"xctest={EXPECTED_XCTEST_COUNT} swift-testing={EXPECTED_SWIFT_TESTING_COUNT} "
+        f"source={source_digest[:12]}"
     )
     return 0
 

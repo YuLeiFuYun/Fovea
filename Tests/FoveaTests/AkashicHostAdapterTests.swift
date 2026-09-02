@@ -25,10 +25,12 @@ final class AkashicHostAdapterTests: XCTestCase {
             .map { String(decoding: $0, as: UTF8.self) }
             .joined(separator: "\n")
 
+        let physicalID = await store.physicalID(contentID: contentID, namespace: namespace)
         XCTAssertEqual(publication.byteCount, data.count)
         XCTAssertTrue(publication.wasCreated)
         XCTAssertEqual(restored, data)
-        XCTAssertTrue(manifestMetadata.contains(contentID))
+        XCTAssertNotNil(physicalID)
+        // host 契约关注语义 identity 与 namespace privacy，而不是 Akashic 私有 manifest encoding；紧凑 record 格式可以有意省略重复 content key。
         XCTAssertFalse(manifestMetadata.contains(namespace))
     }
 

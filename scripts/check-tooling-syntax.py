@@ -38,6 +38,20 @@ for path in sorted((ROOT / "scripts").glob("*.sh")):
             f"shell syntax error in {path.relative_to(ROOT)}: {result.stdout.strip()}"
         )
 
+sandbox_regression = subprocess.run(
+    [sys.executable, str(ROOT / "scripts/test-component-candidate-sandbox.py")],
+    cwd=ROOT,
+    text=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    check=False,
+)
+if sandbox_regression.returncode != 0:
+    errors.append(
+        "component candidate sandbox regression failed: "
+        + sandbox_regression.stdout.strip()
+    )
+
 mutation_runner = (ROOT / "scripts/run-critical-mutants.py").read_text()
 for removed_prefix in (
     "Sources/ImageCraftCore/",
@@ -66,6 +80,14 @@ if "-collect-test-diagnostics never" not in verify_script:
         "iOS package verification must disable Xcode sysdiagnose collection and rely on bounded logs"
     )
 
+mac_lab_main = (ROOT / "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift").read_text()
+mac_lab_support = (ROOT / "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabSupport.swift").read_text()
+if not mac_lab_main.startswith("#if os(macOS)\n") or "FoveaAnimationMacLabUnsupported" not in mac_lab_main:
+    errors.append(
+        "FoveaAnimationMacLab main must keep its AppKit implementation macOS-only with an explicit unsupported-platform entry point"
+    )
+if not mac_lab_support.startswith("#if os(macOS)\n") or not mac_lab_support.rstrip().endswith("#endif"):
+    errors.append("FoveaAnimationMacLab support must remain guarded to macOS")
 try:
     comparative_runner_path = ROOT / "scripts/run-comparative-simulator-lab.py"
     comparative_spec = importlib.util.spec_from_file_location(
@@ -273,6 +295,7 @@ try:
         'clean_derived_data=not args.reuse_release_derived_data': "developer Workbench smoke must explicitly control Release cache reuse",
         'if not args.skip_release_build:': "Workbench verifier must make Release audit an explicit phase decision",
         'GENERATED_METADATA.unlink(missing_ok=True)': "Workbench verification must restore an originally absent metadata file",
+        'DOC_BUILD_SCHEMES = ("Fovea", "FoveaAdvanced")': "documentation build must cover only the public product schemes",
         'DOC_BUILD_TOTAL_TIMEOUT_SECONDS = 900': "documentation build must have a bounded total timeout",
         'DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = 180': "documentation build must have a bounded inactivity timeout",
         'run_documentation_build(': "documentation xcodebuild must stream progress to its retained log",
@@ -285,8 +308,13 @@ try:
     for fragment, message in source_requirements.items():
         if fragment not in combined_source:
             errors.append(message)
+    decoded_strings = xcode_support.decode_strings_output(b"\xf8--ui-testing")
+    if "--ui-testing" not in decoded_strings:
+        errors.append("Release strings decoding must preserve ASCII routing tokens after invalid UTF-8")
     if "resolve_relative(" in combined_source:
         errors.append("iOS verifier must not call an undefined resolve_relative helper")
+    if '"Fovea-Package"' in documentation_source:
+        errors.append("documentation build must not pull package-only lab targets into DocC")
     if re.search(
         r"completed = subprocess\.run\(\s*command,.*?documentation build failed",
         documentation_source,
@@ -750,6 +778,129 @@ try:
     ):
         errors.append("simulator discovery must preserve both failures after bounded recovery")
 
+    terminal_success = (
+        "Test Suite 'Selected tests' passed at 2026-08-31 00:00:00.000.\n"
+        "\t Executed 2 tests, with 0 failures (0 unexpected) in 1.000 seconds\n"
+    )
+    retry_terminal_success = (
+        "=== attempt 1/2 simulator=test-device ===\n"
+        "** TEST FAILED **\n"
+        "=== attempt 2/2 simulator=test-device ===\n"
+        + terminal_success
+    )
+    if (
+        not xcode_support.xctest_terminal_success(terminal_success)
+        or not xcode_support.xctest_terminal_success(retry_terminal_success)
+        or xcode_support.xctest_terminal_success(
+            terminal_success.replace("2 tests", "0 tests")
+        )
+        or xcode_support.xctest_terminal_success(
+            terminal_success + "** TEST FAILED **\n"
+        )
+    ):
+        errors.append(
+            "XCTest terminal-success recovery must require a positive zero-failure aggregate from the latest attempt"
+        )
+
+    terminal_failure = (
+        "=== attempt 2/2 simulator=test-device ===\n"
+        "Test Case '-[Suite testStable]' started.\n"
+        "Test Case '-[Suite testStable]' passed (1.0 seconds).\n"
+        "Test Case '-[Suite testInterrupted]' started.\n"
+        "Test Suite 'Selected tests' failed at 2026-09-01 00:00:00.000.\n"
+        "\t Executed 2 tests, with 1 failure (1 unexpected) in 2.000 seconds\n"
+    )
+    failure_summary = xcode_support.xctest_failure_summary(terminal_failure)
+    failure_attempt = xcode_support.PhaseAttempt(
+        command=["xcodebuild"], destination="test-device",
+        log=ROOT / ".artifacts/ios-example/tooling-terminal-failure.log",
+        return_code=1, output=terminal_failure, timed_out=False, stalled=False,
+    )
+    if (
+        not xcode_support.xctest_terminal_failure(terminal_failure)
+        or xcode_support.xctest_terminal_success(terminal_failure)
+        or "passed=testStable" not in failure_summary
+        or "incomplete=testInterrupted" not in failure_summary
+        or xcode_support.phase_is_retryable(failure_attempt)
+    ):
+        errors.append(
+            "XCTest terminal failure must remain non-retryable and preserve observed case state"
+        )
+
+    with tempfile.TemporaryDirectory(prefix="fovea-xctest-exit-grace-") as directory:
+        terminal_log = Path(directory) / "terminal.log"
+        terminal_child = (
+            "import sys,time; sys.stdout.write("
+            + repr(terminal_success)
+            + "); sys.stdout.flush(); time.sleep(10)"
+        )
+        with terminal_log.open("w") as stream:
+            terminal_process = subprocess.Popen(
+                [sys.executable, "-c", terminal_child],
+                text=True,
+                stdout=stream,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+            terminal_code, terminal_timeout, terminal_stall = (
+                xcode_support.monitor_xcode_process(
+                    terminal_process,
+                    terminal_log,
+                    stream,
+                    timeout_seconds=5,
+                    inactivity_timeout_seconds=4,
+                    accept_terminal_test_success=True,
+                    terminal_exit_grace_seconds=1,
+                )
+            )
+        terminal_text = terminal_log.read_text()
+    if (
+        terminal_code != 0
+        or terminal_timeout
+        or terminal_stall
+        or "XCTest terminal success observed" not in terminal_text
+    ):
+        errors.append(
+            "completed XCTest aggregate must bound a hung Xcode wrapper exit without weakening test failure handling"
+        )
+
+    with tempfile.TemporaryDirectory(prefix="fovea-xctest-failure-grace-") as directory:
+        failure_log = Path(directory) / "failure.log"
+        failure_child = (
+            "import sys,time; sys.stdout.write("
+            + repr(terminal_failure)
+            + "); sys.stdout.flush(); time.sleep(10)"
+        )
+        with failure_log.open("w") as stream:
+            failure_process = subprocess.Popen(
+                [sys.executable, "-c", failure_child],
+                text=True,
+                stdout=stream,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+            failure_code, failure_timeout, failure_stall = (
+                xcode_support.monitor_xcode_process(
+                    failure_process,
+                    failure_log,
+                    stream,
+                    timeout_seconds=5,
+                    inactivity_timeout_seconds=4,
+                    accept_terminal_test_success=True,
+                    terminal_exit_grace_seconds=1,
+                )
+            )
+        failure_text = failure_log.read_text()
+    if (
+        failure_code == 0
+        or failure_timeout
+        or failure_stall
+        or "XCTest terminal failure observed" not in failure_text
+    ):
+        errors.append(
+            "completed XCTest failure aggregate must bound a hung Xcode wrapper exit without becoming an infrastructure retry"
+        )
+
     original_simulator = xcode_support.simulator
     original_ensure_booted = xcode_support.ensure_simulator_booted
     original_execute_attempt = xcode_support.execute_xcode_attempt
@@ -941,6 +1092,362 @@ try:
     sys.modules[profile_spec.name] = profile_module
     profile_spec.loader.exec_module(profile_module)
 
+    animated_registry_paths = [
+        "Benchmarks/ComparativeLab/animated-image-plan.json",
+        "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+        "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+        "Benchmarks/ComparativeLab/apng-tile-checkpoint-plan.json",
+        "Benchmarks/ComparativeLab/apng-compressed-checkpoint-plan.json",
+        "docs/research/animated-image-library-registry-2026-08.json",
+        "docs/research/animated-image-mechanism-matrix-2026-08.json",
+        "docs/research/animated-image-source-audit-2026-08.md",
+        "scripts/check-animated-image-library-registry.py",
+    ]
+    for governed_path in animated_registry_paths:
+        governed_impact = profile_module.classify([governed_path])
+        governed_effective, governed_phases, governed_reasons = profile_module.phase_plan(
+            "iteration", governed_impact
+        )
+        if (
+            governed_effective != "iteration"
+            or governed_reasons
+            or "animated-image-library-registry"
+            not in {phase.name for phase in governed_phases}
+        ):
+            errors.append(
+                f"animation registry governance path does not select its validator: {governed_path}"
+            )
+
+    w5_identity_paths = [
+        "Benchmarks/ComparativeLab/AnimatedCodecLabPackage/Package.swift",
+        "Benchmarks/ComparativeLab/AnimatedCodecLabPackage/Sources/W5AnimatedCodecLab/Models.swift",
+        "Tools/Performance/capture_w5_animated_codec.py",
+        "Tools/Performance/validate_w5_animated_codec.py",
+        "Tools/Performance/test_w5_animated_codec_identity.py",
+    ]
+    w5_identity_impact = profile_module.classify(w5_identity_paths)
+    w5_identity_effective, w5_identity_phases, w5_identity_reasons = (
+        profile_module.phase_plan("iteration", w5_identity_impact)
+    )
+    if (
+        w5_identity_effective != "iteration"
+        or w5_identity_reasons
+        or "w5-animated-codec-identity-contract"
+        not in {phase.name for phase in w5_identity_phases}
+    ):
+        errors.append(
+            "W5 animated codec governance changes must select the source-identity contract"
+        )
+
+    apng_oracle_paths = [
+        "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/Package.swift",
+        "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/Package.resolved",
+        "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/Sources/W5APNGCompositionOracleLab/W5APNGCompositionOracleLabMain.swift",
+        "Tools/Performance/capture_w5_apng_composition_oracle.py",
+        "Tools/Performance/validate_w5_apng_composition_oracle.py",
+        "Tools/Performance/test_w5_apng_composition_oracle.py",
+    ]
+    apng_oracle_impact = profile_module.classify(apng_oracle_paths)
+    apng_oracle_effective, apng_oracle_phases, apng_oracle_reasons = (
+        profile_module.phase_plan("iteration", apng_oracle_impact)
+    )
+    if (
+        apng_oracle_effective != "iteration"
+        or apng_oracle_reasons
+        or "w5-apng-composition-oracle-contract"
+        not in {phase.name for phase in apng_oracle_phases}
+    ):
+        errors.append(
+            "W5 APNG composition governance changes must select the oracle tamper contract"
+        )
+
+    apng_reference_paths = [
+        "Tools/Performance/w5_apng_reference.py",
+        "Tools/Performance/capture_w5_apng_reference.py",
+        "Tools/Performance/validate_w5_apng_reference.py",
+        "Tools/Performance/test_w5_apng_reference.py",
+        "Tools/Performance/test_w5_apng_reference_capture.py",
+    ]
+    apng_reference_impact = profile_module.classify(apng_reference_paths)
+    apng_reference_effective, apng_reference_phases, apng_reference_reasons = (
+        profile_module.phase_plan("iteration", apng_reference_impact)
+    )
+    apng_reference_phase_names = {phase.name for phase in apng_reference_phases}
+    if (
+        apng_reference_effective != "iteration"
+        or apng_reference_reasons
+        or not {
+            "w5-apng-reference-core",
+            "w5-apng-reference-capture-contract",
+        }.issubset(apng_reference_phase_names)
+    ):
+        errors.append(
+            "W5 owned APNG reference changes must select core and capture contracts"
+        )
+
+    apng_checkpoint_paths = [
+        "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+        "Tools/Performance/w5_apng_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_checkpoint_model.py",
+        "Tools/Performance/capture_w5_apng_checkpoint_model.py",
+        "Tools/Performance/validate_w5_apng_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_checkpoint_capture.py",
+    ]
+    apng_checkpoint_impact = profile_module.classify(apng_checkpoint_paths)
+    (
+        apng_checkpoint_effective,
+        apng_checkpoint_phases,
+        apng_checkpoint_reasons,
+    ) = profile_module.phase_plan("iteration", apng_checkpoint_impact)
+    apng_checkpoint_phase_names = {phase.name for phase in apng_checkpoint_phases}
+    if (
+        apng_checkpoint_effective != "iteration"
+        or apng_checkpoint_reasons
+        or not {
+            "w5-apng-checkpoint-model-core",
+            "w5-apng-checkpoint-capture-contract",
+        }.issubset(apng_checkpoint_phase_names)
+    ):
+        errors.append(
+            "W5 APNG checkpoint changes must select model and capture contracts"
+        )
+
+    apng_tile_checkpoint_paths = [
+        "Benchmarks/ComparativeLab/apng-tile-checkpoint-plan.json",
+        "Tools/Performance/w5_apng_tile_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_tile_checkpoint_model.py",
+        "Tools/Performance/capture_w5_apng_tile_checkpoint_model.py",
+        "Tools/Performance/validate_w5_apng_tile_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_tile_checkpoint_capture.py",
+    ]
+    apng_tile_checkpoint_impact = profile_module.classify(
+        apng_tile_checkpoint_paths
+    )
+    (
+        apng_tile_checkpoint_effective,
+        apng_tile_checkpoint_phases,
+        apng_tile_checkpoint_reasons,
+    ) = profile_module.phase_plan("iteration", apng_tile_checkpoint_impact)
+    apng_tile_checkpoint_phase_names = {
+        phase.name for phase in apng_tile_checkpoint_phases
+    }
+    if (
+        apng_tile_checkpoint_effective != "iteration"
+        or apng_tile_checkpoint_reasons
+        or not {
+            "w5-apng-tile-checkpoint-model-core",
+            "w5-apng-tile-checkpoint-capture-contract",
+        }.issubset(apng_tile_checkpoint_phase_names)
+    ):
+        errors.append(
+            "W5 APNG tile checkpoint changes must select model and capture contracts"
+        )
+
+    apng_compressed_checkpoint_paths = [
+        "Benchmarks/ComparativeLab/apng-compressed-checkpoint-plan.json",
+        "Tools/Performance/w5_apng_compressed_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_compressed_checkpoint_model.py",
+        "Tools/Performance/capture_w5_apng_compressed_checkpoint_model.py",
+        "Tools/Performance/validate_w5_apng_compressed_checkpoint_model.py",
+        "Tools/Performance/test_w5_apng_compressed_checkpoint_capture.py",
+    ]
+    apng_compressed_checkpoint_impact = profile_module.classify(
+        apng_compressed_checkpoint_paths
+    )
+    (
+        apng_compressed_checkpoint_effective,
+        apng_compressed_checkpoint_phases,
+        apng_compressed_checkpoint_reasons,
+    ) = profile_module.phase_plan("iteration", apng_compressed_checkpoint_impact)
+    apng_compressed_checkpoint_phase_names = {
+        phase.name for phase in apng_compressed_checkpoint_phases
+    }
+    if (
+        apng_compressed_checkpoint_effective != "iteration"
+        or apng_compressed_checkpoint_reasons
+        or not {
+            "w5-apng-compressed-checkpoint-model-core",
+            "w5-apng-compressed-checkpoint-capture-contract",
+        }.issubset(apng_compressed_checkpoint_phase_names)
+    ):
+        errors.append(
+            "W5 APNG compressed checkpoint changes must select model and capture contracts"
+        )
+
+    apng_compressed_interop_paths = [
+        "Tools/Performance/capture_w5_apng_compressed_checkpoint_interop.py",
+        "Tools/Performance/validate_w5_apng_compressed_checkpoint_interop.py",
+        "Tools/Performance/test_w5_apng_compressed_checkpoint_interop.py",
+    ]
+    apng_compressed_interop_impact = profile_module.classify(
+        apng_compressed_interop_paths
+    )
+    (
+        apng_compressed_interop_effective,
+        apng_compressed_interop_phases,
+        apng_compressed_interop_reasons,
+    ) = profile_module.phase_plan("iteration", apng_compressed_interop_impact)
+    if (
+        apng_compressed_interop_effective != "iteration"
+        or apng_compressed_interop_reasons
+        or "w5-apng-compressed-checkpoint-interop-contract"
+        not in {phase.name for phase in apng_compressed_interop_phases}
+    ):
+        errors.append(
+            "W5 APNG compressed checkpoint interop changes must select the binary interop contract"
+        )
+
+    apng_owned_swift_paths = [
+        "Tools/Performance/capture_w5_apng_owned_swift_playback.py",
+        "Tools/Performance/validate_w5_apng_owned_swift_playback.py",
+        "Tools/Performance/test_w5_apng_owned_swift_playback.py",
+    ]
+    apng_owned_swift_impact = profile_module.classify(apng_owned_swift_paths)
+    (
+        apng_owned_swift_effective,
+        apng_owned_swift_phases,
+        apng_owned_swift_reasons,
+    ) = profile_module.phase_plan("iteration", apng_owned_swift_impact)
+    if (
+        apng_owned_swift_effective != "iteration"
+        or apng_owned_swift_reasons
+        or "w5-apng-owned-swift-playback-contract"
+        not in {phase.name for phase in apng_owned_swift_phases}
+    ):
+        errors.append(
+            "W5 APNG owned Swift playback changes must select the retained-binary oracle contract"
+        )
+
+    apng_public_decoder_paths = [
+        "Tools/Performance/capture_w5_apng_public_decoder_playback.py",
+        "Tools/Performance/validate_w5_apng_public_decoder_playback.py",
+        "Tools/Performance/test_w5_apng_public_decoder_playback.py",
+    ]
+    apng_public_decoder_impact = profile_module.classify(apng_public_decoder_paths)
+    (
+        apng_public_decoder_effective,
+        apng_public_decoder_phases,
+        apng_public_decoder_reasons,
+    ) = profile_module.phase_plan("iteration", apng_public_decoder_impact)
+    if (
+        apng_public_decoder_effective != "iteration"
+        or apng_public_decoder_reasons
+        or "w5-apng-public-decoder-playback-contract"
+        not in {phase.name for phase in apng_public_decoder_phases}
+    ):
+        errors.append(
+            "W5 APNG public decoder playback changes must select the retained-binary public route contract"
+        )
+
+    apng_public_mac_performance_paths = [
+        "Tools/Performance/capture_w5_apng_public_decoder_mac_performance.py",
+        "Tools/Performance/validate_w5_apng_public_decoder_mac_performance.py",
+        "Tools/Performance/test_w5_apng_public_decoder_mac_performance.py",
+    ]
+    apng_public_mac_performance_impact = profile_module.classify(
+        apng_public_mac_performance_paths
+    )
+    (
+        apng_public_mac_performance_effective,
+        apng_public_mac_performance_phases,
+        apng_public_mac_performance_reasons,
+    ) = profile_module.phase_plan("iteration", apng_public_mac_performance_impact)
+    if (
+        apng_public_mac_performance_effective != "iteration"
+        or apng_public_mac_performance_reasons
+        or "w5-apng-public-decoder-mac-performance-contract"
+        not in {phase.name for phase in apng_public_mac_performance_phases}
+    ):
+        errors.append(
+            "W5 APNG public decoder Mac performance changes must select the reduced source-bound contract"
+        )
+
+    apng_cache_divergence_paths = [
+        "Tools/Performance/capture_w5_apng_imageio_cache_divergence.py",
+        "Tools/Performance/validate_w5_apng_imageio_cache_divergence.py",
+        "Tools/Performance/test_w5_apng_imageio_cache_divergence.py",
+    ]
+    apng_cache_divergence_impact = profile_module.classify(
+        apng_cache_divergence_paths
+    )
+    (
+        apng_cache_divergence_effective,
+        apng_cache_divergence_phases,
+        apng_cache_divergence_reasons,
+    ) = profile_module.phase_plan("iteration", apng_cache_divergence_impact)
+    if (
+        apng_cache_divergence_effective != "iteration"
+        or apng_cache_divergence_reasons
+        or "w5-apng-imageio-cache-divergence-contract"
+        not in {phase.name for phase in apng_cache_divergence_phases}
+    ):
+        errors.append(
+            "W5 APNG ImageIO cache divergence changes must select the historical retained-binary contract"
+        )
+
+    uikit_api_paths = [
+        "Sources/FoveaUIKit/FoveaImageView.swift",
+        "Sources/FoveaUIKit/FoveaAnimatedImageViewPresenter.swift",
+        "Sources/FoveaUIKit/FoveaAnimationDisplayLinkDriver.swift",
+        "Sources/FoveaUIKit/FoveaAnimationPresentationDiagnostics.swift",
+        "scripts/check-foveauikit-api-budget.py",
+        "docs/public-api-budget.json",
+    ]
+    uikit_api_impact = profile_module.classify(uikit_api_paths)
+    uikit_api_effective, uikit_api_phases, uikit_api_reasons = profile_module.phase_plan(
+        "iteration", uikit_api_impact
+    )
+    if (
+        uikit_api_effective != "iteration"
+        or uikit_api_reasons
+        or "foveauikit-api-budget" not in {phase.name for phase in uikit_api_phases}
+    ):
+        errors.append(
+            "FoveaUIKit source/API budget changes must select the focused symbol-graph API gate"
+        )
+
+    adapter_qualification_paths = [
+        "Tools/AnimationAdapterQualification/qualify_imagecraft_animation_adapter.py",
+        "Tools/AnimationAdapterQualification/validate_imagecraft_animation_adapter_qualification.py",
+        "Tools/AnimationAdapterQualification/test_imagecraft_animation_adapter_qualification.py",
+        "Tools/AnimationAdapterQualification/ImageCraftAnimationPlaybackPreparer.swift.fixture",
+        "Tools/AnimationAdapterQualification/ImageCraftAnimationPlaybackQualificationMain.swift.fixture",
+        "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json",
+    ]
+    adapter_qualification_impact = profile_module.classify(adapter_qualification_paths)
+    (
+        adapter_qualification_effective,
+        adapter_qualification_phases,
+        adapter_qualification_reasons,
+    ) = profile_module.phase_plan("iteration", adapter_qualification_impact)
+    if (
+        adapter_qualification_effective != "iteration"
+        or adapter_qualification_reasons
+        or "w5-imagecraft-animation-adapter-contract"
+        not in {phase.name for phase in adapter_qualification_phases}
+        or "animated-image-library-registry"
+        not in {phase.name for phase in adapter_qualification_phases}
+    ):
+        errors.append(
+            "W5 ImageCraft animation adapter changes must select the retained overlay contract and registry gate"
+        )
+
+    tool_impact = profile_module.classify(
+        [
+            "Tools/FoveaNetworkLab/MJPEGMechanismLab.swift",
+            "Tools/Performance/capture_mjpeg_mechanism.py",
+            "scripts/capture-mjpeg-mechanism-evidence.sh",
+        ]
+    )
+    if (
+        tool_impact["unknownFiles"]
+        or "unknown" in tool_impact["categories"]
+        or "unknown-tooling" in tool_impact["categories"]
+        or "tooling" not in tool_impact["categories"]
+        or "benchmark" not in tool_impact["categories"]
+    ):
+        errors.append("named lab and capture tooling must remain explicitly classified")
+
     test_impact = profile_module.classify(
         ["Tests/FoveaTests/StagingAndStorageTests.swift"]
     )
@@ -966,6 +1473,27 @@ try:
         or "root-tests" not in {phase.name for phase in unknown_phases}
     ):
         errors.append("unknown verification inputs must fail closed by escalating to premerge")
+
+    iteration_unknown_effective, iteration_unknown_phases, iteration_unknown_reasons = (
+        profile_module.phase_plan("iteration", unknown_impact)
+    )
+    if (
+        iteration_unknown_effective != "premerge"
+        or not any(
+            "iteration change requires broader smart verification" in reason
+            for reason in iteration_unknown_reasons
+        )
+        or not any(
+            "unknown change path escalated to premerge" in reason
+            for reason in iteration_unknown_reasons
+        )
+        or "verification-capacity"
+        not in {phase.name for phase in iteration_unknown_phases}
+        or "root-tests" not in {phase.name for phase in iteration_unknown_phases}
+    ):
+        errors.append(
+            "iteration verification must continue escalating unknown inputs through premerge"
+        )
 
     deleted_impact = profile_module.classify(
         ["Tests/FoveaTests/RemovedVerificationContractTests.swift"]
@@ -1084,32 +1612,69 @@ try:
         or not all(character in "0123456789abcdef" for character in source.working_tree)
     ):
         errors.append("verification source state must bind canonical Git commit and tree identities")
-    with tempfile.TemporaryDirectory(prefix="fovea-profile-report-contract-") as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix="fovea-profile-report-contract-", dir=ROOT / ".artifacts"
+    ) as temporary:
         original_artifacts = profile_module.ARTIFACTS
+        original_run_artifacts = profile_module._RUN_ARTIFACTS
         profile_module.ARTIFACTS = Path(temporary)
+        profile_module.reset_run_artifacts()
+        first_lock: int | None = None
         try:
+            first_lock = profile_module.acquire_verification_lock()
+            try:
+                profile_module.acquire_verification_lock()
+            except RuntimeError as error:
+                if "already running" not in str(error):
+                    errors.append("verification lock contention must retain its ownership reason")
+            else:
+                errors.append("verification profile lock must reject a concurrent owner")
+            profile_module.release_verification_lock(first_lock)
+            first_lock = None
+            replacement_lock = profile_module.acquire_verification_lock()
+            profile_module.release_verification_lock(replacement_lock)
+
+            run_artifacts = profile_module.create_run_artifacts()
+            phase_result = profile_module.run_phase(
+                profile_module.Phase("synthetic", ("/usr/bin/printf", "synthetic-output\n"), 5),
+                os.environ.copy(),
+            )
             report_path = profile_module.write_report(
                 "smart",
                 "smart",
                 "synthetic-base",
                 {"changedFiles": [], "categories": [], "unknownFiles": [], "testFilters": [], "modelScripts": []},
                 [],
-                [profile_module.PhaseResult("synthetic", ["true"], 0, 0.0, "synthetic.log")],
+                [phase_result],
                 0.0,
                 source,
                 source,
             )
             report_payload = json.loads(report_path.read_text())
+            latest_payload = json.loads((profile_module.ARTIFACTS / "latest.json").read_text())
+            phase_log_sha256 = profile_module.file_sha256(run_artifacts / "synthetic.log")
         finally:
+            if first_lock is not None:
+                profile_module.release_verification_lock(first_lock)
+            profile_module.reset_run_artifacts()
             profile_module.ARTIFACTS = original_artifacts
+            profile_module._RUN_ARTIFACTS = original_run_artifacts
     if (
-        report_payload.get("schemaVersion") != 2
+        report_payload.get("schemaVersion") != 3
+        or report_payload.get("runID") != run_artifacts.name
+        or report_path != run_artifacts / "report.json"
+        or report_payload != latest_payload
+        or phase_result.log != str((run_artifacts / "synthetic.log").relative_to(ROOT))
+        or report_payload["phases"][0].get("logByteCount") != len("synthetic-output\n")
+        or report_payload["phases"][0].get("logSha256") != phase_log_sha256
         or report_payload.get("headCommit") != source.head_commit
         or report_payload.get("verifiedTree") != source.working_tree
         or report_payload.get("sourceUnchangedDuringRun") is not True
         or report_payload.get("status") != "passed"
     ):
-        errors.append("verification report must bind an unchanged source state")
+        errors.append(
+            "verification reports and phase logs must be source-bound within one non-overwriting run directory"
+        )
 
     codec_seam_impact = profile_module.classify(
         ["Sources/FoveaCore/DecodeStage.swift"]
@@ -1231,8 +1796,20 @@ try:
             "codec runner must verify a backend that is also the contract package",
         'xctest_summary':
             "all cross-repository runners must verify actual XCTest execution counts",
-        '"schemaVersion": 2':
-            "verification reports must use the source-bound schema",
+        '"schemaVersion": 3':
+            "verification reports must use the run-scoped source-bound schema",
+        'fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)':
+            "verification profiles must reject concurrent artifact writers",
+        'ARTIFACTS / "runs" / verification_run_id()':
+            "verification logs and reports must use immutable run directories",
+        'atomic_write_json(latest, report)':
+            "latest verification evidence must be an atomic copy of the run report",
+        '"logSha256": file_sha256(ROOT / item.log)':
+            "verification reports must bind each retained phase log digest",
+        'validate_report_artifacts(report)':
+            "verification reports must verify retained log containment and digests before publication",
+        'latest.read_bytes() != path.read_bytes()':
+            "latest verification evidence must match the retained run report byte for byte",
         'sourceUnchangedDuringRun':
             "verification reports must reject source changes during a run",
         'working_tree_identity()':

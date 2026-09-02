@@ -1,0 +1,171 @@
+{
+  "admission": {
+    "automaticWholeTrackRuntimeAdmission": {
+      "callerMaximumDecodedByteCostMeaning": "decoded-frame bound only",
+      "failClosedFallback": "boundedFrameCache",
+      "globalDecodeAdmission": "automatic animation predecode shares FoveaSystem decode-concurrency and decode-working-set permit pools with static decode",
+      "implemented": true,
+      "predecodePeakRule": "predecode peak must cover decoded + provider-retained steady state and fit the shared decode-working-set limit",
+      "requiresPredecodePeakByteUpperBound": true,
+      "requiresProviderRetainedByteUpperBound": true,
+      "requiresResidentDecodedByteUpperBound": true,
+      "residentBudgetRule": "resident decoded bytes + long-lived provider-retained bytes must fit the shared AnimationFrameMemory resident budget after non-evictable pins/reservations; known provider-retained bytes remain charged even if automatic selection falls back to boundedFrameCache"
+    },
+    "eligibleFrameStrategy": "predecodeAll",
+    "requiredClock": "SystemAnimationPlaybackClock",
+    "requiredMemoryPressure": "normal",
+    "requiredPlaybackMode": "normal",
+    "requiresInfiniteRepeat": true,
+    "requiresNoBenchmarkHooks": true,
+    "requiresUniformPixelDimensions": true,
+    "requiresWholeTrackResident": true,
+    "supportedImageAlignment": "alignCenter",
+    "supportedImageFrameStyle": "none",
+    "supportedImageScaling": "scaleProportionallyDown"
+  },
+  "claimBoundary": [
+    "physical evidence is internal Fovea AppKit presentation evidence on the retained physical Mac, not a third-party or cross-platform ranking",
+    "ScreenCaptureKit observes composited window updates, not raw panel scanout, and can under-sample short source frames",
+    "/usr/bin/time -l CPU time, cycles, instructions, context switches and RSS are process-resource proxies, not total-system energy",
+    "the retained physical A/B begins after the same predecode-all provider work; it does not measure decoder preparation/startup or automatic-admission overhead",
+    "automatic whole-track selection is now implemented fail-closed in Fovea runtime, but the production Package.swift still pins an ImageCraft revision without the current public animation API; the current decoder adapter remains source-overlay qualification rather than an ordinary production URL/APNG/GIF entry",
+    "owned ImageCraft cost bounds are conservative model bytes, not process RSS; provider-retained accounting models owned retained payload/palette/checkpoint bytes and does not claim exact allocator/object overhead",
+    "no total-energy, thermal, universal GIF/APNG throughput, or global Pareto claim"
+  ],
+  "formalClaimEligible": true,
+  "formalClaimScope": "The formal physical claim remains the already-retained AppKit presentation-only compositor A/B on fully resident predecodeAll tracks. Later automatic-admission, lifecycle re-offload, and decoder-adapter work is deterministic/overlay evidence and is not retroactively included in the physical claim.",
+  "mechanism": {
+    "clockContract": "CA beginTime uses the Core playback cursor effective presentation anchor (current monotonic host time minus active playback elapsed), not the original wall-clock start unconditionally. Paused/background time is therefore excluded; seek/restart receive a fresh phase-consistent anchor.",
+    "inheritedImageCompatibility": "NSImageView.image remains populated; the compositor child layer supplies changing visual contents without clearing inherited image state",
+    "lastFrameSentinel": "animation values append frame 0 at keyTime 1.0 so the final source frame owns its complete [start,1.0) interval before repeat",
+    "name": "resident predecode-all CAKeyframeAnimation contents offload",
+    "pixelOwnership": "compositor snapshots pin already-resident DecodedImage values in AnimationFrameMemory; pins remain charged until the snapshot is released",
+    "providerOwnership": "Whenever a prepared asset can prove long-lived provider payload/palette/checkpoint byte cost, that cost is reserved by handle identity in the same AnimationFrameMemory resident budget for fixed, bounded, and predecodeAll strategies. Automatic whole-track upgrade additionally requires decoded-resident and predecode-peak proofs. Reservation release occurs only after provider cancellation; critical frame purge does not pretend a still-live provider has been freed.",
+    "reoffload": {
+      "applicationActive": "active resume revalidates resident snapshot and effective anchor",
+      "criticalPressure": "critical purges resident frames; after normal pressure the next real playback tick refills under normal admission and the one-shot whole-track handoff re-enters the compositor",
+      "explicitPause": "resume revalidates resident snapshot and effective anchor",
+      "geometryOrFrameStyle": "unsupported geometry/frame style tears down; restoration revalidates and re-offloads. Eligibility is checked again after awaits to close MainActor reentrancy.",
+      "initiallyHidden": "animation start is deferred until first visibility; PT_183 proves the first visible start can enter the compositor without a separate deferred-upgrade state machine",
+      "restart": "restart uses a new effective anchor and re-offloads resident frames",
+      "seek": "seek reanchors and re-offloads resident frames without provider decode",
+      "visibility": "visible resume revalidates resident snapshot and effective anchor",
+      "warningPressure": "warning invalidates compositor; normal pressure revalidates without provider decode when frames remain resident"
+    },
+    "summary": "When an eligible whole track is resident, AppKit installs a discrete contents CAKeyframeAnimation on a child layer and pauses its view display link while Core Animation owns source-frame presentation. Eligibility loss tears down the compositor; when eligibility returns, the current product can revalidate and re-offload without re-decoding resident frames."
+  },
+  "physicalResourceEvidence": {
+    "artifact": ".artifacts/performance/w5-appkit-predecode-compositor-resource-proxy-physical-v1/manifest.json",
+    "candidateToBaselineCPURatio": 0.2068965517241379,
+    "candidateToBaselineContextSwitchesRatio": 0.17793078456242073,
+    "candidateToBaselineCyclesRatio": 0.29304100423259993,
+    "candidateToBaselineInstructionsRatio": 0.5632706329158345,
+    "candidateToBaselineMaximumRSSRatio": 1.0056348610067618,
+    "interpretation": "On the retained nonintrusive physical-Mac endpoint, app-process CPU was about 4.83x lower and cycles about 3.41x lower for the compositor candidate. These are process-resource proxies, not system energy.",
+    "manifestSHA256": "7be259d8f2f1b31e71cba4efa2ee0c65141e308ffdb7f49a358caf0243053440",
+    "pairCount": 3
+  },
+  "physicalTimingEvidence": {
+    "artifact": ".artifacts/performance/w5-appkit-predecode-compositor-screen-timing-physical-v1/manifest.json",
+    "baselineMedianP95AbsoluteTimingErrorNanoseconds": 13110021.0,
+    "baselineTotalObservedSkippedSourceFrames": 39,
+    "candidateMedianP95AbsoluteTimingErrorNanoseconds": 10425270.5,
+    "candidateP95NoWorseAllPairs": true,
+    "candidateToBaselineMedianP95Ratio": 0.7952138673156969,
+    "candidateTotalObservedSkippedSourceFrames": 0,
+    "candidateZeroSourceSkipsAllPairs": true,
+    "inheritedImageRetainedAllPairs": true,
+    "manifestSHA256": "57890e1df505e9966f0bcc3f37bc4786ba87dcbe556b3e3cd2a5a1b56ae40124",
+    "pairCount": 6,
+    "providerWorkMatchedAllPairs": true
+  },
+  "productDecision": {
+    "adoptPresentationMechanism": true,
+    "nextProductObligation": "Publish an immutable ImageCraft revision containing the qualified animation API/runtime, move Fovea to that exact pin, compile the qualified adapter into FoveaSystem, rerun clean-pin integration, then measure end-to-end physical startup plus steady-state presentation rather than reopening local AppKit setter/timer micro-tuning.",
+    "productionEncodedAnimationAdapterCompiled": false,
+    "reason": "The presentation mechanism passed the retained physical timing/source-progression and process-resource gates. Runtime automatic admission now requires three explicit cost bounds and accounts long-lived provider state in the shared resident budget. Publication remains blocked only at the production ImageCraft pin/adapter seam, not by the AppKit presentation mechanism itself.",
+    "runtimeAutomaticWholeTrackAdmissionImplemented": true
+  },
+  "reviewedOn": "2026-08-08",
+  "schemaVersion": 2,
+  "status": "presentation-adopted-runtime-automatic-admission-implemented-production-decoder-adapter-unpublished",
+  "studyID": "FOVEA-W5-APPKIT-PREDECODE-COMPOSITOR-ADOPTION-2026-08",
+  "verification": {
+    "adapterQualification": {
+      "artifact": ".artifacts/qualification/w5-imagecraft-animation-adapter-v2-final/report.json",
+      "artifactSHA256": "fafc7a0e92ba95a5f6587ad5bbcfba8dc36128fcd7a517adf4014b7715c8b00f",
+      "record": "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json",
+      "tamperContractPassed": true,
+      "tests": [
+        "W5_ADAPTER_PT_001",
+        "W5_ADAPTER_PT_002",
+        "W5_ADAPTER_PT_003",
+        "W5_ADAPTER_PT_004",
+        "W5_ADAPTER_PT_005",
+        "W5_ADAPTER_PT_006",
+        "W5_ADAPTER_PT_007",
+        "W5_ADAPTER_PT_008"
+      ],
+      "validatorPassed": true
+    },
+    "focusedSuites": [
+      {
+        "executed": 26,
+        "failures": 0,
+        "suite": "AppKitAnimatedPresenterTests"
+      },
+      {
+        "executed": 12,
+        "failures": 0,
+        "suite": "AnimationFrameMemoryTests"
+      },
+      {
+        "executed": 22,
+        "failures": 0,
+        "suite": "AnimationPlaybackRuntimeTests"
+      },
+      {
+        "executed": 17,
+        "failures": 0,
+        "suite": "SystemEncodedAnimationPlaybackTests"
+      },
+      {
+        "executed": 6,
+        "failures": 0,
+        "suite": "AuthorizedAnimationPlaybackAssetTests"
+      }
+    ],
+    "foveaFullSuite": {
+      "executed": 731,
+      "failures": 0
+    },
+    "foveaUIKitAPIBudget": "default=12/12 spi=35 expectedSPI=16",
+    "newCoverage": [
+      "W5_PT_183",
+      "W5_PT_184",
+      "W5_PT_185",
+      "W5_PT_186",
+      "W5_PT_187",
+      "W5_PT_188",
+      "W5_PT_189",
+      "W5_PT_190",
+      "W5_PT_191",
+      "W5_PT_192",
+      "W5_PT_193",
+      "W5_PT_194",
+      "W5_PT_195"
+    ],
+    "releaseBuilds": [
+      {
+        "path": "/tmp/fovea-provider-final-release/out/Products/Release/libFovea.a",
+        "product": "Fovea",
+        "sha256": "d91606b5664916e3f54dbde972a8c05b2fa4ba229d2761c415eb643dd0efad8e"
+      },
+      {
+        "path": "/tmp/fovea-provider-final-release/out/Products/Release/libFoveaAdvanced.a",
+        "product": "FoveaAdvanced",
+        "sha256": "89604b495ef778b1d4583d65dcc82943056f48f80cd5bea904b9b3f7e3b85fc2"
+      }
+    ]
+  }
+}

@@ -761,9 +761,9 @@ Core 的真实表示不是 `UIImage`。`DecodedImage` 必须明确 pixel size、
 
 ### 10.7 动画图像
 
-动画属于 Phase 2/Experimental，不阻塞 Phase 0a。`ImageDecodeTrackMode.animatedSequence` 与 `ImageFrameTiming` 只冻结能力词汇和无溢出时间值；当前生产 `FoveaPipeline` 仍不会枚举动画轨道、调度 frame clock 或播放动画。
+动画仍属于 Phase 2/Experimental，不阻塞 Phase 0a，也不进入 public/default 静态图片路径。FoveaCore 已具备 package-internal decoder-neutral player/runtime、独立 actual-byte frame cache、受控 decode window、绝对 deadline、可见性/后台/Reduce Motion 策略，以及 UIKit/AppKit/SwiftUI presentation。官方 live MJPEG 系统链复用普通 fetch admission 与 JPEG DecodeStage。
 
-真正实现使用独立 animation asset、frame cache 和 cost model，默认采用受控 decode window，不把所有帧无界解码进内存。track selection、frame timing、loop、disposal/blend、可见性、后台和 Reduce Motion 策略见 `docs/specifications/animation-policy.md`。
+静态编码动画新增 package-only 授权 preparation seam：网络或 reusable cache 的原编码资产携带 ContentID、完整 request-execution、可选 Vary representation 和 namespace generation；具体 decoder preparation 后必须再次复核 ACL、授权、请求身份和 generation，再由 runtime 以 generation floor 防止撤销后的迟到注册。该 seam 尚未连接真实 ImageCraft GIF/APNG decoder，因为 Fovea 仍固定旧 ImageCraft revision；因此不能宣称 GIF/APNG 已成为产品加载能力。完整策略见 `docs/specifications/animation-policy.md`。
 
 ### 10.8 渐进代次
 

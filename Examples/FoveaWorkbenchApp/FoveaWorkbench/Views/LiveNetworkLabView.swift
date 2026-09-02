@@ -123,7 +123,7 @@ struct LiveNetworkLabView: View {
     }
 
     private var serviceProbe: some View {
-        WorkbenchSectionCard(title: "多 Origin 服务探针") {
+        WorkbenchSectionCard(title: "多源站服务探针") {
             WorkbenchScenarioPicker(
                 title: "网络目标",
                 scenarios: lab.scenarios,
@@ -164,7 +164,7 @@ struct LiveNetworkLabView: View {
     private var networkEvidence: some View {
         WorkbenchSectionCard(title: "当前会话网络摘要") {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 10)], spacing: 10) {
-                metric("Fetch", eventCount(.fetchStarted))
+                metric("请求", eventCount(.fetchStarted))
                 metric("共享", eventCount(.fetchJoined))
                 metric("完成", eventCount(.fetchCompleted))
                 metric("重定向异常", redirectOrAnomalyCount)

@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "studyID": "FOVEA-W5-APPKIT-RESOURCE-PROXY-PHYSICAL-2026-08",
+  "reviewedOn": "2026-08-07",
+  "status": "physical-mac-fixed-six-pairs-resource-tradeoff-observed-energy-still-blocked",
+  "formalEnergyClaimEligible": false,
+  "claimBoundary": [
+    "process rusage proxy only; CPU time/cycles/instructions/context switches are not energy",
+    "deadline control has no extra display observer; external uses only production display link",
+    "six fixed 10-second pairs, alternating order, no retry-until-success",
+    "coarse ProcessInfo thermal state is not temperature/energy evidence",
+    "one host and synthetic Fovea animation workload only"
+  ],
+  "energyToolingBlocker": {
+    "artifact": ".artifacts/performance/w5-appkit-energy-tooling-probe-v1/summary.json",
+    "artifactSHA256": "811ada7b75cd39f69c0ec079d6e3f4d1ab68c973a5a4f5a41226adf8e29a225c",
+    "powerProfiler": "unsupported on macOS according to xctrace probe",
+    "powermetrics": "requires superuser; passwordless sudo unavailable"
+  },
+  "artifact": {
+    "manifest": ".artifacts/performance/w5-appkit-resource-proxy-physical-v1/manifest.json",
+    "manifestSHA256": "0c577ef31c7db4911654e1922b4599ebf2698b4c7f808ab298b5377d23a90b14",
+    "status": "passed-fixed-six-pairs-no-retry",
+    "sourceTreeDigest": "4937edcbc9d0629a128b2caf5bf1bcaf52be47d5d18c61b44c1d2e9c50cd65a9",
+    "sourceUnchangedDuringCapture": true,
+    "executableSHA256": "8b52c5548f0fae00740e721997a5b43826272ef6ca723aff2d5cc94405e9d645"
+  },
+  "aggregates": {
+    "deadline": {
+      "cyclesElapsed": [
+        370902120,
+        339875219,
+        333454824,
+        355324152,
+        322038719,
+        358307851
+      ],
+      "instructionsRetired": [
+        433449307,
+        419223743,
+        429352677,
+        422340356,
+        429721450,
+        406498868
+      ],
+      "medianCyclesElapsed": 347599685.5,
+      "medianInstructionsRetired": 425846516.5,
+      "medianMaximumResidentSetBytes": 42532864.0,
+      "medianPeakMemoryFootprintBytes": 10019656.0,
+      "medianProviderFrameCount": 128.0,
+      "medianTotalCPUSeconds": 0.14,
+      "medianTotalContextSwitches": 1420.5,
+      "providerFrameCounts": [
+        124,
+        135,
+        125,
+        126,
+        132,
+        130
+      ],
+      "thermalTransitions": [
+        "nominal->nominal",
+        "nominal->nominal",
+        "nominal->nominal",
+        "nominal->nominal",
+        "nominal->nominal",
+        "nominal->nominal"
+      ],
+      "totalCPUSeconds": [
+        0.14,
+        0.15,
+        0.11,
+        0.16,
+        0.14,
+        0.14
+      ],
+      "totalContextSwitches": [
+        1480,
+        1361,
+        1494,
+        1485,
+        1327,
+        1345
+      ],
+      "validRunCount": 6
+    },
+    "external": {
+      "cyclesElapsed": [
+        1033293146,
+        1228007554,
+        1553021546,
+        1072939333,
+        1641903799,
+        1481971956
+      ],
+      "instructionsRetired": [
+        1000364373,
+        978972009,
+        990967610,
+        1000675951,
+        1011085371,
+        1007620767
+      ],
+      "medianCyclesElapsed": 1354989755.0,
+      "medianInstructionsRetired": 1000520162.0,
+      "medianMaximumResidentSetBytes": 42655744.0,
+      "medianPeakMemoryFootprintBytes": 10167112.0,
+      "medianProviderFrameCount": 132.0,
+      "medianTotalCPUSeconds": 0.55,
+      "medianTotalContextSwitches": 8144.0,
+      "providerFrameCounts": [
+        131,
+        132,
+        132,
+        220,
+        132,
+        136
+      ],
+      "thermalTransitions": [
+        "nominal->nominal",
+        "nominal->nominal",
+        "nominal->nominal",
+        "nominal->nominal",
+        "nominal->nominal",
+        "nominal->nominal"
+      ],
+      "totalCPUSeconds": [
+        0.32999999999999996,
+        0.46,
+        0.68,
+        0.36,
+        0.74,
+        0.64
+      ],
+      "totalContextSwitches": [
+        6160,
+        7601,
+        8729,
+        6579,
+        9992,
+        8687
+      ],
+      "validRunCount": 6
+    }
+  },
+  "medianPairedRatios": {
+    "externalToDeadlineContextSwitchRatio": 5.713784110234718,
+    "externalToDeadlineCyclesRatio": 3.874571382639413,
+    "externalToDeadlineInstructionsRatio": 2.3440436165388405,
+    "externalToDeadlineMaximumRSSRatio": 1.0032711550987368,
+    "externalToDeadlineTotalCPURatio": 3.819047619047619
+  },
+  "pairwiseDirection": {
+    "externalCPUHigherAllPairs": true,
+    "externalCyclesHigherAllPairs": true,
+    "externalInstructionsHigherAllPairs": true,
+    "externalContextSwitchesHigherAllPairs": true,
+    "maximumRSSNearParityAllPairs": true
+  },
+  "thermalObservation": {
+    "external": [
+      "nominal->nominal",
+      "nominal->nominal",
+      "nominal->nominal",
+      "nominal->nominal",
+      "nominal->nominal",
+      "nominal->nominal"
+    ],
+    "automaticDeadline": [
+      "nominal->nominal",
+      "nominal->nominal",
+      "nominal->nominal",
+      "nominal->nominal",
+      "nominal->nominal",
+      "nominal->nominal"
+    ],
+    "interpretation": "all nominal-to-nominal; too coarse and short to establish thermal non-inferiority"
+  },
+  "interpretation": {
+    "supported": "The targetTimestamp path has a consistent process-resource proxy cost on this workload: median paired ratios are about 3.82x CPU time, 3.87x cycles, 2.34x retired instructions and 5.71x context switches, while maximum RSS is near parity.",
+    "combinedWithTiming": "The same host/timeline separately shows much lower refresh-sampled anchored p95 timing error and zero skipped source frames for targetTimestamp. Together the studies establish a timing-versus-process-resource tradeoff, not Pareto dominance.",
+    "notSupported": "No joule/energy, battery, temperature, system-wide power, third-party, physical-iOS, or global Pareto conclusion."
+  },
+  "nextGates": [
+    "audit and reduce automatic-deadline timing jitter before accepting high-frequency display-link overhead as necessary",
+    "evaluate a bounded hybrid/refresh-near-deadline scheduler only if it preserves current timing while materially reducing rusage proxies",
+    "obtain a supported real energy endpoint before energy/Pareto claims"
+  ]
+}

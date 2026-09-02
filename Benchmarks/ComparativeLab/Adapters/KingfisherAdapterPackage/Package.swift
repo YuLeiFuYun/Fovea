@@ -18,7 +18,11 @@ let package = Package(
                 .product(name: "ComparativeLabCore", package: "FoveaComparativeLab"),
                 .product(name: "Kingfisher", package: "Kingfisher"),
             ]
-        )
+        ),
+        .testTarget(
+            name: "KingfisherComparatorAdapterTests",
+            dependencies: ["KingfisherComparatorAdapter"]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

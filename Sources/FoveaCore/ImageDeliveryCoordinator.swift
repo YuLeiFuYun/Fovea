@@ -196,6 +196,58 @@ final class ImageDeliveryCoordinator: Sendable {
         )
     }
 
+    /// 发布已由版本化派生容器验证的最终 RenderKey 像素，不重复执行 transform。
+    func publishDerivedRaster(
+        _ loaded: DerivedRasterLoadedImage,
+        request: ImageRequest,
+        generation: NamespaceGeneration
+    ) async throws -> DecodedImage {
+        let key = loaded.key
+        guard key.namespaceFingerprint == request.storageNamespaceFingerprint,
+            key.namespaceGeneration == generation,
+            key.renderKey
+                == renderKey(
+                    contentID: key.renderKey.decodeKey.contentID,
+                    request: request
+                ),
+            DerivedRasterArtifactValidator.outputGeometryIsCompatible(
+                width: loaded.image.pixelWidth,
+                height: loaded.image.pixelHeight,
+                key: key
+            )
+        else {
+            throw PipelineFailure(
+                category: .cacheRead,
+                stage: .cacheLookup,
+                disposition: .cacheDegraded,
+                reasonCode: "derived-raster-identity-mismatch"
+            )
+        }
+        try Task.checkCancellation()
+        // derived output 只留在有界 compressed-hot tier，不复制进 rendered cache：返回的 CGImage 是 display-lazy，
+        // 若在此额外持有会增加 alias/fence 工作，并按完整解码像素驻留错误高估内存。
+        try await requireActive(generation, for: request.namespace)
+        return loaded.image
+    }
+
+    func renderKey(contentID: ContentID, request: ImageRequest) -> RenderKey {
+        let decode = DecodeKey(
+            contentID: contentID,
+            targetWidth: request.target.width,
+            targetHeight: request.target.height,
+            contentMode: request.contentMode,
+            geometryPolicyFingerprint: request.geometryPolicyFingerprint,
+            colorPolicy: request.colorPolicy,
+            codecContractVersion: decodeStage.codecDescriptor.contractVersion,
+            codecFingerprint: decodeStage.codecDescriptor.cacheFingerprint
+        )
+        return RenderKey(
+            decodeKey: decode,
+            transformerFingerprint: transformStage.fingerprint,
+            renderVersion: 1
+        )
+    }
+
     /// 在读取原编码文件前尝试直接复用已渲染内存项。
     /// RepresentationRecord 已持有经过验证的 ContentID，因此无需先读取磁盘来重算摘要。
     func renderedImageIfPresent(
@@ -353,29 +405,152 @@ final class ImageDeliveryCoordinator: Sendable {
         request: ImageRequest,
         generation: NamespaceGeneration
     ) -> ScopedRenderKey {
-        let decode = DecodeKey(
-            contentID: contentID,
-            targetWidth: request.target.width,
-            targetHeight: request.target.height,
-            contentMode: request.contentMode,
-            geometryPolicyFingerprint: request.geometryPolicyFingerprint,
-            colorPolicy: request.colorPolicy,
-            codecContractVersion: decodeStage.codecDescriptor.contractVersion,
-            codecFingerprint: decodeStage.codecDescriptor.cacheFingerprint
-        )
-        return ScopedRenderKey(
+        ScopedRenderKey(
             namespace: request.namespace,
             generation: generation,
-            renderKey: RenderKey(
-                decodeKey: decode,
-                transformerFingerprint: transformStage.fingerprint,
-                renderVersion: 1
-            )
+            renderKey: renderKey(contentID: contentID, request: request)
         )
     }
 
     private static func pixelCount(width: Int, height: Int) -> Int {
         let (result, overflow) = width.multipliedReportingOverflow(by: height)
         return overflow ? Int.max : result
+    }
+}
+
+/// 完成 transient transport-verified handoff 边界：先确认图像字节可信，只有 namespace/cancellation fence 仍成立后才持久化 reusable original。
+struct TransportVerifiedHandoffDelivery: Sendable {
+    let cache: PipelineCache
+    let fetchStage: FetchStage
+    let responseProcessor: HTTPImageResponseProcessor
+    let delivery: ImageDeliveryCoordinator
+    let namespaceRegistry: NamespaceRegistry
+    let diagnostics: any DiagnosticsSink
+
+    func deliver(
+        _ handoff: TransportVerifiedEncodedHandoffEntry,
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?
+    ) async throws -> DecodedImage {
+        await diagnostics.record(
+            DiagnosticEvent(
+                kind: .originalEncodedHit,
+                keyDigest: handoff.variantKeyDigest(for: request),
+                byteCount: handoff.byteCount,
+                reason: "transport-verified-handoff"
+            )
+        )
+        let data = try await materializedData(handoff, request: request, generation: generation)
+        let image = try await decodedImage(
+            data,
+            handoff: handoff,
+            request: request,
+            generation: generation
+        )
+        return try await publish(
+            image,
+            data: data,
+            handoff: handoff,
+            request: request,
+            generation: generation,
+            onFullQualityPreview: onFullQualityPreview
+        )
+    }
+
+    private func materializedData(
+        _ handoff: TransportVerifiedEncodedHandoffEntry,
+        request: ImageRequest,
+        generation: NamespaceGeneration
+    ) async throws -> Data {
+        do {
+            return try handoff.materializedData()
+        } catch {
+            await cache.removeTransportVerifiedHandoff(for: request, generation: generation)
+            throw PipelineFailure(
+                category: .cacheRead,
+                stage: .cacheLookup,
+                disposition: .cacheDegraded,
+                reasonCode: "transport-handoff-body-unavailable"
+            )
+        }
+    }
+
+    private func decodedImage(
+        _ data: Data,
+        handoff: TransportVerifiedEncodedHandoffEntry,
+        request: ImageRequest,
+        generation: NamespaceGeneration
+    ) async throws -> DecodedImage {
+        do {
+            return try await delivery.imageFromReusableData(
+                data: data,
+                request: request,
+                generation: generation,
+                representation: nil,
+                keyDigest: handoff.variantKeyDigest(for: request)
+            )
+        } catch let failure as PipelineFailure {
+            await invalidateIfEncodedBytesProvenInvalid(
+                failure,
+                request: request,
+                generation: generation
+            )
+            throw failure
+        } catch is CancellationError {
+            // subscriber 取消只说明该订阅终止，并不能证明 encoded bytes 无效。
+            throw CancellationError()
+        } catch {
+            await cache.removeTransportVerifiedHandoff(for: request, generation: generation)
+            throw error
+        }
+    }
+
+    private func invalidateIfEncodedBytesProvenInvalid(
+        _ failure: PipelineFailure,
+        request: ImageRequest,
+        generation: NamespaceGeneration
+    ) async {
+        guard failure.disposition != .cancelled,
+            failure.stage == .probe || failure.stage == .decode
+        else { return }
+        await cache.removeTransportVerifiedHandoff(for: request, generation: generation)
+        await fetchStage.invalidateCompletionHandoff(for: request, conditionalRecord: nil)
+    }
+
+    private func publish(
+        _ image: DecodedImage,
+        data: Data,
+        handoff: TransportVerifiedEncodedHandoffEntry,
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?
+    ) async throws -> DecodedImage {
+        try Task.checkCancellation()
+        try await requireActive(generation, request: request)
+        if let onFullQualityPreview {
+            try await onFullQualityPreview(image)
+            await Task.yield()
+        }
+        try await responseProcessor.persistTransportVerifiedHandoff(
+            handoff,
+            data: data,
+            request: request,
+            generation: generation
+        )
+        await cache.removeTransportVerifiedHandoff(for: request, generation: generation)
+        return image
+    }
+
+    private func requireActive(
+        _ generation: NamespaceGeneration,
+        request: ImageRequest
+    ) async throws {
+        guard
+            await namespaceRegistry.isActive(
+                generation,
+                for: request.storageNamespaceFingerprint
+            )
+        else { throw PipelineFailure.namespaceRevoked }
     }
 }

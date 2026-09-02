@@ -23,6 +23,10 @@ PROJECT_TEMP_SUBDIRECTORIES = (
     "FoveaBenchmarkArtifacts",
     "fovea-transport-handoff",
 )
+PROJECT_TEMP_PREFIXES = (
+    "fovea-t100-",
+    "t100-",
+)
 
 
 @dataclass(frozen=True)
@@ -75,6 +79,11 @@ def _scheme_regex(pattern: str) -> str:
     return "#" + json.dumps(pattern, ensure_ascii=False)
 
 
+def _regex_literal(value: str) -> str:
+    # Seatbelt's regex dialect treats an escaped '-' as a literal backslash plus '-'.
+    return re.escape(value).replace("\\-", "-")
+
+
 def render_profile(layout: SandboxLayout) -> str:
     """Render a deny-write/deny-network profile with narrow Swift toolchain exceptions."""
 
@@ -100,6 +109,14 @@ def render_profile(layout: SandboxLayout) -> str:
     lines.extend(
         f"(allow file-write* (subpath {_scheme_string(layout.user_temp / name)}))"
         for name in PROJECT_TEMP_SUBDIRECTORIES
+    )
+    lines.extend(
+        "(allow file-write* (regex "
+        + _scheme_regex(
+            rf"^{user_temp_pattern}/{_regex_literal(prefix)}[^/]+(/.*)?$"
+        )
+        + "))"
+        for prefix in PROJECT_TEMP_PREFIXES
     )
     lines.extend(
         [

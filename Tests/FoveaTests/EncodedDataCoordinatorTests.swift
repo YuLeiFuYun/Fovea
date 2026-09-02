@@ -1,9 +1,13 @@
+import AkashicCore
 import AkashicDisk
 import Foundation
 import FoveaCore
 import FoveaHTTP
 import FoveaPersistence
+import FoveaStorage
+import FoveaTesting
 import ImageCraftCore
+import ImageCraftImageIO
 import XCTest
 
 final class EncodedDataCoordinatorTests: XCTestCase {
@@ -32,6 +36,137 @@ final class EncodedDataCoordinatorTests: XCTestCase {
             $0.event.kind == .originalEncodedHit
         }
         XCTAssertTrue(hitRecorded)
+    }
+
+    func testAuthorizedNetworkDataBindsContentAndGeneration_W5_PT_110() async throws {
+        let body = try makePNG(red: 110)
+        let (pipeline, transport, _, _) = try await makePipeline(stubs: [
+            .init(
+                statusCode: 200,
+                headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+                body: body
+            )
+        ])
+        let request = try makeRequest(path: "authorized-network")
+
+        let result = try await pipeline.authorizedEncodedData(for: request)
+
+        XCTAssertEqual(result.data, body)
+        XCTAssertEqual(result.contentID, ContentID(data: body))
+        XCTAssertEqual(result.namespace, request.namespace)
+        XCTAssertEqual(result.generation, NamespaceGeneration(0))
+        XCTAssertEqual(result.baseKeyDigest, request.fetchBaseDigest)
+        XCTAssertEqual(result.requestExecutionKeyDigest, request.fetchExecutionKey.digestHex)
+        XCTAssertNil(result.representationKeyDigest)
+        XCTAssertEqual(result.origin, .network)
+        let requestCount = await transport.capturedRequests().count
+        XCTAssertEqual(requestCount, 1)
+    }
+
+    func testAuthorizedCacheDataBindsSelectedRepresentation_W5_PT_111() async throws {
+        let body = try makePNG(red: 111)
+        let (pipeline, transport, _, records) = try await makePipeline(stubs: [
+            .init(
+                statusCode: 200,
+                headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+                body: body
+            )
+        ])
+        let request = try makeRequest(path: "authorized-cache")
+
+        _ = try await pipeline.image(for: request)
+        let storedRecord = await records.record(for: request.fetchVariantKey.digestHex)
+        let record = try XCTUnwrap(storedRecord)
+        let result = try await pipeline.authorizedEncodedData(for: request)
+
+        XCTAssertEqual(result.data, body)
+        XCTAssertEqual(result.contentID, ContentID(data: body))
+        XCTAssertEqual(result.namespace, request.namespace)
+        XCTAssertEqual(result.generation, NamespaceGeneration(record.namespaceGeneration))
+        XCTAssertEqual(result.baseKeyDigest, record.baseKeyDigest)
+        XCTAssertEqual(result.requestExecutionKeyDigest, request.fetchExecutionKey.digestHex)
+        XCTAssertEqual(result.representationKeyDigest, record.variantKeyDigest)
+        XCTAssertEqual(result.origin, .reusableCache)
+        let requestCount = await transport.capturedRequests().count
+        XCTAssertEqual(requestCount, 1)
+    }
+
+    func testAuthorizedDataGenerationAdvancesAfterNamespaceRevocation_W5_PT_112() async throws {
+        let firstBody = try makePNG(red: 112)
+        let secondBody = try makePNG(red: 113)
+        let (pipeline, transport, _, _) = try await makePipeline(stubs: [
+            .init(
+                statusCode: 200,
+                headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+                body: firstBody
+            ),
+            .init(
+                statusCode: 200,
+                headers: ["Content-Type": "image/png", "Cache-Control": "no-store"],
+                body: secondBody
+            ),
+        ])
+        let request = try makeRequest(path: "authorized-revocation")
+
+        let first = try await pipeline.authorizedEncodedData(for: request)
+        try await pipeline.revoke(namespace: request.namespace)
+        let second = try await pipeline.authorizedEncodedData(for: request)
+
+        XCTAssertEqual(first.generation, NamespaceGeneration(0))
+        XCTAssertEqual(second.generation, NamespaceGeneration(1))
+        XCTAssertEqual(first.contentID, ContentID(data: firstBody))
+        XCTAssertEqual(second.contentID, ContentID(data: secondBody))
+        XCTAssertNotEqual(first.contentID, second.contentID)
+        let requestCount = await transport.capturedRequests().count
+        XCTAssertEqual(requestCount, 2)
+    }
+
+    func testAuthorizedCacheReadFailsWhenNamespaceIsRevokedInFlight_W5_PT_113() async throws {
+        let body = try makePNG(red: 114)
+        let request = try makeRequest(path: "authorized-inflight-revocation")
+        let record = makeRepresentationRecord(
+            namespace: request.namespace.value,
+            namespaceGeneration: 0,
+            baseKeyDigest: request.fetchBaseDigest,
+            variantKeyDigest: request.fetchVariantKey.digestHex,
+            requestTime: Date().addingTimeInterval(-10),
+            responseTime: Date().addingTimeInterval(-9),
+            expiresAt: Date().addingTimeInterval(3_600),
+            contentID: ContentID(data: body).description,
+            payloadLength: body.count,
+            contentType: "image/png"
+        )
+        let encodedStore = GatedAuthorizedEncodedStore(data: body)
+        let recordStore = FixedAuthorizedRecordStore(record: record)
+        let transport = FakeHTTPTransport(stubs: [])
+        let registry = NamespaceRegistry()
+        let pipeline = FoveaPipeline(
+            transport: transport,
+            encodedStore: encodedStore,
+            recordStore: recordStore,
+            namespaceRegistry: registry,
+            profileAccessPolicy: .unrestricted,
+            codec: ImageIOImageDecoder()
+        )
+        let load = Task {
+            try await pipeline.authorizedEncodedData(for: request)
+        }
+        try await waitUntil("授权编码缓存读取已进入存储层") {
+            await encodedStore.hasStartedRead
+        }
+
+        try await pipeline.revoke(namespace: request.namespace)
+        await encodedStore.releaseRead()
+
+        do {
+            _ = try await load.value
+            XCTFail("撤销期间完成的缓存读取不得返回授权资产")
+        } catch let failure as PipelineFailure {
+            XCTAssertEqual(failure.category, .namespaceRevoked)
+            XCTAssertEqual(failure.stage, .revocation)
+        }
+        let requestCount = await transport.capturedRequests().count
+        XCTAssertEqual(requestCount, 0)
     }
 
     func testCorruptFreshBlobIsRemovedBeforeNetworkFallback() async throws {
@@ -168,4 +303,78 @@ final class EncodedDataCoordinatorTests: XCTestCase {
             appID: "encoded-data-tests"
         )
     }
+}
+
+private actor GatedAuthorizedEncodedStore: OriginalEncodedStoring {
+    private let data: Data
+    private var readStarted = false
+    private var readReleased = false
+    private var readContinuation: CheckedContinuation<Void, Never>?
+
+    init(data: Data) {
+        self.data = data
+    }
+
+    var hasStartedRead: Bool { readStarted }
+
+    func read(contentID: String, namespace: String) async throws -> Data {
+        readStarted = true
+        if !readReleased {
+            await withCheckedContinuation { continuation in
+                readContinuation = continuation
+            }
+        }
+        return data
+    }
+
+    func releaseRead() {
+        readReleased = true
+        readContinuation?.resume()
+        readContinuation = nil
+    }
+
+    func commit(data: Data, contentID: String, namespace: String) async throws -> StoredBlob {
+        try StoredBlob(physicalID: PhysicalBlobID(), byteCount: data.count, wasCreated: true)
+    }
+
+    func physicalID(contentID: String, namespace: String) async -> PhysicalBlobID? { nil }
+    func remove(contentID: String, namespace: String) async throws {}
+    func removeAll(namespace: String) async throws {}
+}
+
+private actor FixedAuthorizedRecordStore: RepresentationRecordStoring {
+    private let record: RepresentationRecord
+
+    init(record: RepresentationRecord) {
+        self.record = record
+    }
+
+    func records(
+        for baseKeyDigest: String,
+        namespace: String,
+        namespaceGeneration: UInt64
+    ) async -> [RepresentationRecord] {
+        guard record.baseKeyDigest == baseKeyDigest,
+            record.securityNamespaceFingerprint
+                == StorageNamespaceFingerprint(namespace: namespace),
+            record.namespaceGeneration == namespaceGeneration
+        else { return [] }
+        return [record]
+    }
+
+    func put(_ record: RepresentationRecord) async throws {}
+
+    func containsReference(
+        to contentID: String,
+        namespace: String,
+        excludingVariantDigest: String?
+    ) async -> Bool { true }
+
+    func remove(
+        _ variantDigest: String,
+        namespace: String,
+        namespaceGeneration: UInt64
+    ) async throws {}
+
+    func removeAll(namespace: String) async throws {}
 }

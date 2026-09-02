@@ -526,6 +526,7 @@ private final class AppleProgressiveTransfer: NSObject, URLSessionDataDelegate,
 
 public final class AppleNativeComparatorAdapter: ComparatorProgressiveAdapter, @unchecked Sendable {
     public let identity: ComparatorIdentity
+    public let runtimeConfiguration: ComparatorRuntimeConfiguration?
 
     private let session: URLSession
     private let progressiveConfiguration: URLSessionConfiguration
@@ -565,6 +566,24 @@ public final class AppleNativeComparatorAdapter: ComparatorProgressiveAdapter, @
         configuration.httpCookieStorage = nil
         configuration.urlCredentialStorage = nil
         configuration.httpShouldSetCookies = false
+        runtimeConfiguration = try ComparatorRuntimeConfiguration(
+            parameters: [
+                "adapter.profile": "apple-native-urlsession-urlcache-imageio",
+                "cache.decodedMemoryCostLimitBytes": String(max(1, memoryCostLimit)),
+                "cache.protocol": "URLCache",
+                "cache.protocol.diskCapacityBytes": String(256 * 1_024 * 1_024),
+                "cache.protocol.memoryCapacityBytes": "0",
+                "decoder": "ImageIO-target-pixel",
+                "session.base": "ephemeral",
+                "session.cookies": "disabled",
+                "session.credentials": "disabled",
+                "session.httpMaximumConnectionsPerHost": String(
+                    configuration.httpMaximumConnectionsPerHost
+                ),
+                "session.requestCachePolicy": "useProtocolCachePolicy",
+                "session.urlCache": "custom",
+            ]
+        )
         progressiveConfiguration = configuration.copy() as! URLSessionConfiguration
         let sessionDelegate = NativeSessionDelegate()
         self.sessionDelegate = sessionDelegate

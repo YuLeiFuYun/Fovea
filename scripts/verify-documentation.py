@@ -22,6 +22,7 @@ DOC_BUILD_DESTINATIONS = (
     ("macOS", "platform=macOS"),
     ("iOS", "generic/platform=iOS Simulator"),
 )
+DOC_BUILD_SCHEMES = ("Fovea", "FoveaAdvanced")
 DOC_BUILD_TOTAL_TIMEOUT_SECONDS = 900
 DOC_BUILD_INACTIVITY_TIMEOUT_SECONDS = 180
 REPORT = ARTIFACT_ROOT / "documentation.json"
@@ -187,25 +188,27 @@ def main() -> int:
     LOG.write_text("")
     for platform_name, destination in DOC_BUILD_DESTINATIONS:
         platform_derived_data = DERIVED_DATA / platform_name
-        command = [
-            "xcodebuild",
-            "docbuild",
-            "-scheme",
-            "Fovea-Package",
-            "-destination",
-            destination,
-            "-derivedDataPath",
-            str(platform_derived_data),
-            "APPINTENTS_METADATA_PROCESSING_ENABLED=NO",
-        ]
-        return_code, failure = run_documentation_build(
-            command, env=env, platform_name=platform_name
-        )
-        if return_code != 0:
-            detail = failure or f"exit {return_code}"
-            print(f"{platform_name} documentation build failed: {detail}", file=sys.stderr)
-            print("\n".join(LOG.read_text(errors="replace").splitlines()[-120:]), file=sys.stderr)
-            return 124 if return_code < 0 else return_code
+        for scheme in DOC_BUILD_SCHEMES:
+            build_name = f"{platform_name}/{scheme}"
+            command = [
+                "xcodebuild",
+                "docbuild",
+                "-scheme",
+                scheme,
+                "-destination",
+                destination,
+                "-derivedDataPath",
+                str(platform_derived_data),
+                "APPINTENTS_METADATA_PROCESSING_ENABLED=NO",
+            ]
+            return_code, failure = run_documentation_build(
+                command, env=env, platform_name=build_name
+            )
+            if return_code != 0:
+                detail = failure or f"exit {return_code}"
+                print(f"{build_name} documentation build failed: {detail}", file=sys.stderr)
+                print("\n".join(LOG.read_text(errors="replace").splitlines()[-120:]), file=sys.stderr)
+                return 124 if return_code < 0 else return_code
 
     owned_warnings = fovea_owned_warning_lines(LOG.read_text(errors="replace"))
     if owned_warnings:

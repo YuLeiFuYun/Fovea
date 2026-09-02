@@ -105,6 +105,9 @@
     "AIQA-MUT-097",
     "AIQA-MUT-098",
     "AIQA-MUT-099",
+    "AIQA-MUT-100",
+    "AIQA-MUT-101",
+    "AIQA-MUT-102",
     "AUTH-PT-008",
     "AUTH-PT-011",
     "AUTH-PT-012",
@@ -139,6 +142,12 @@
     "CODEC-PT-008",
     "CODEC-PT-010",
     "CODEC-PT-011",
+    "CODEC-PT-012",
+    "CODEC-PT-013",
+    "CODEC-PT-014",
+    "CODEC-PT-015",
+    "CODEC-PT-016",
+    "CODEC-PT-017",
     "COMP-PT-001",
     "COMP-PT-002",
     "COMP-PT-003",
@@ -164,6 +173,7 @@
     "COMP-PT-023",
     "COMP-PT-024",
     "COMP-PT-025",
+    "COMP-PT-027",
     "DEMO-PT-001",
     "DEMO-PT-002",
     "DEMO-PT-003",
@@ -274,7 +284,8 @@
     "UI-PT-024",
     "UI-PT-029",
     "UI-PT-030",
-    "VISUAL-PT-001"
+    "VISUAL-PT-001",
+    "W5-PT-205"
   ],
   "schemaVersion": 1
 }

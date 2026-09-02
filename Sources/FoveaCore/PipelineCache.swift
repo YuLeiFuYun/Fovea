@@ -51,27 +51,77 @@ final class PipelineCache: Sendable {
         self.diagnostics = diagnostics
     }
 
+    func uniqueRecord(
+        for variantKeyDigest: String,
+        baseKeyDigest: String,
+        namespaceFingerprint: StorageNamespaceFingerprint,
+        generation: NamespaceGeneration
+    ) -> RepresentationRecord? {
+        guard let exact = recordStore as? any RepresentationRecordExactLookingUp else {
+            return nil
+        }
+        return exact.uniqueRecord(
+            for: variantKeyDigest,
+            baseKeyDigest: baseKeyDigest,
+            namespaceFingerprint: namespaceFingerprint,
+            namespaceGeneration: generation.value
+        )
+    }
+
     func records(
         for baseKeyDigest: String,
         namespace: SecurityNamespaceID,
+        namespaceFingerprint suppliedNamespaceFingerprint: StorageNamespaceFingerprint? = nil,
         generation: NamespaceGeneration
     ) async -> [RepresentationRecord] {
+        let namespaceFingerprint =
+            suppliedNamespaceFingerprint
+            ?? StorageNamespaceFingerprint(namespace: namespace.value)
+        if let snapshot = recordStore as? any RepresentationRecordSnapshotLookingUp,
+            let fast = snapshot.recordsSnapshot(
+                for: baseKeyDigest,
+                namespaceFingerprint: namespaceFingerprint,
+                namespaceGeneration: generation.value
+            )
+        {
+            guard await candidateCountIsAllowed(fast.count) else { return [] }
+            // package-only snapshot provider 保证 record 已持久化验证、scope 精确且 variant 唯一，因此不在每次命中时重复验证同一份不可变 metadata。
+            return fast
+        }
+
         let candidates = await recordStore.records(
             for: baseKeyDigest,
             namespace: namespace.value,
             namespaceGeneration: generation.value
         )
-        guard candidates.count <= HTTPMetadataLimits.maximumRepresentationCandidateCount else {
+        guard await candidateCountIsAllowed(candidates.count) else { return [] }
+        return await validatedRecords(
+            candidates,
+            baseKeyDigest: baseKeyDigest,
+            namespaceFingerprint: namespaceFingerprint,
+            generation: generation
+        )
+    }
+
+    private func candidateCountIsAllowed(_ count: Int) async -> Bool {
+        guard count <= HTTPMetadataLimits.maximumRepresentationCandidateCount else {
             await diagnostics.record(
                 DiagnosticEvent(
                     kind: .cacheReadFailed,
                     reason: "representation-candidate-limit-exceeded"
                 )
             )
-            return []
+            return false
         }
+        return true
+    }
 
-        let namespaceFingerprint = StorageNamespaceFingerprint(namespace: namespace.value)
+    private func validatedRecords(
+        _ candidates: [RepresentationRecord],
+        baseKeyDigest: String,
+        namespaceFingerprint: StorageNamespaceFingerprint,
+        generation: NamespaceGeneration
+    ) async -> [RepresentationRecord] {
         var validatedByVariant: [String: RepresentationRecord] = [:]
         var ambiguousVariants: Set<String> = []
         for record in candidates {

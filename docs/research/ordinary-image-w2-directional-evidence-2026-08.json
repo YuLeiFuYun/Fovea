@@ -1,0 +1,889 @@
+{
+  "evidenceID": "FOVEA-ORDINARY-IMAGE-W2-DIRECTIONAL-2026-08-05",
+  "findings": [
+    "All eighteen A-tier runs passed orientation, color and target-pixel hard checks with zero failed loads and zero hitches.",
+    "In cold W2, Fovea and Apple each opened three origin requests and reused each original representation for three targets; Nuke, Kingfisher, SDWebImage and PINRemoteImage opened nine origin requests in this adapter/workload configuration.",
+    "Fovea cold median was 34.654 ms versus 36.943 ms for Apple and approximately 131.7-141.5 ms for the four direct libraries, but this remains one directional Simulator workload rather than an absolute ordinary-image claim.",
+    "Warm-disk exposes a real policy gap: Fovea re-decodes persisted original bytes at a 26.614 ms median, while Kingfisher and SDWebImage returned persisted processed variants near 3.6-3.7 ms and PINRemoteImage near 0.44 ms.",
+    "Warm-memory Fovea was sub-millisecond at 0.293 ms median, but slower than Apple, Nuke, Kingfisher and SDWebImage on the same nine exact requests."
+  ],
+  "matrix": {
+    "Apple URLSession + URLCache + ImageIO|cold": {
+      "cacheSources": {
+        "disk": 6,
+        "network": 3
+      },
+      "cacheState": "cold",
+      "comparator": {
+        "includesWorkingTreeChanges": false,
+        "name": "Apple URLSession + URLCache + ImageIO",
+        "platformBuild": {
+          "deviceProfileID": "ios26-4-simulator-calibration-v1",
+          "osBuild": "23E254a",
+          "xcodeBuild": "27A5228h"
+        },
+        "sourceKind": "platform-build",
+        "version": "iOS-26.4.1"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 631539792,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 182966458,
+      "medianLatencyNanoseconds": 36943291,
+      "originDeliveredBytes": 1451620,
+      "originRequestCount": 3,
+      "p95LatencyNanoseconds": 182966458,
+      "physicalFootprintDeltaBytes": 8454216
+    },
+    "Apple URLSession + URLCache + ImageIO|warm-disk": {
+      "cacheSources": {
+        "disk": 9
+      },
+      "cacheState": "warm-disk",
+      "comparator": {
+        "includesWorkingTreeChanges": false,
+        "name": "Apple URLSession + URLCache + ImageIO",
+        "platformBuild": {
+          "deviceProfileID": "ios26-4-simulator-calibration-v1",
+          "osBuild": "23E254a",
+          "xcodeBuild": "27A5228h"
+        },
+        "sourceKind": "platform-build",
+        "version": "iOS-26.4.1"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 241442959,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 45936833,
+      "medianLatencyNanoseconds": 26219416,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 45936833,
+      "physicalFootprintDeltaBytes": 17874968
+    },
+    "Apple URLSession + URLCache + ImageIO|warm-memory": {
+      "cacheSources": {
+        "memory": 9
+      },
+      "cacheState": "warm-memory",
+      "comparator": {
+        "includesWorkingTreeChanges": false,
+        "name": "Apple URLSession + URLCache + ImageIO",
+        "platformBuild": {
+          "deviceProfileID": "ios26-4-simulator-calibration-v1",
+          "osBuild": "23E254a",
+          "xcodeBuild": "27A5228h"
+        },
+        "sourceKind": "platform-build",
+        "version": "iOS-26.4.1"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 1472208,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 6166,
+      "medianLatencyNanoseconds": 1959,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 6166,
+      "physicalFootprintDeltaBytes": 16384
+    },
+    "Fovea|cold": {
+      "cacheSources": {
+        "unknown": 9
+      },
+      "cacheState": "cold",
+      "comparator": {
+        "exactCommit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "name": "Fovea",
+        "sourceKind": "git-commit",
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05",
+        "version": "0b-worktree"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 619058166,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 195422709,
+      "medianLatencyNanoseconds": 34653833,
+      "originDeliveredBytes": 1451620,
+      "originRequestCount": 3,
+      "p95LatencyNanoseconds": 195422709,
+      "physicalFootprintDeltaBytes": 12009496
+    },
+    "Fovea|warm-disk": {
+      "cacheSources": {
+        "unknown": 9
+      },
+      "cacheState": "warm-disk",
+      "comparator": {
+        "exactCommit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "name": "Fovea",
+        "sourceKind": "git-commit",
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05",
+        "version": "0b-worktree"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 243548084,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 46148917,
+      "medianLatencyNanoseconds": 26613584,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 46148917,
+      "physicalFootprintDeltaBytes": 17760256
+    },
+    "Fovea|warm-memory": {
+      "cacheSources": {
+        "unknown": 9
+      },
+      "cacheState": "warm-memory",
+      "comparator": {
+        "exactCommit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "name": "Fovea",
+        "sourceKind": "git-commit",
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05",
+        "version": "0b-worktree"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 5605917,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 356333,
+      "medianLatencyNanoseconds": 292583,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 356333,
+      "physicalFootprintDeltaBytes": 32768
+    },
+    "Kingfisher|cold": {
+      "cacheSources": {
+        "network": 9
+      },
+      "cacheState": "cold",
+      "comparator": {
+        "exactCommit": "410984bf301f4fa224fe56277b3f8672cc465c79",
+        "includesWorkingTreeChanges": false,
+        "name": "Kingfisher",
+        "sourceKind": "git-commit",
+        "version": "8.11.0"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 1326144083,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 200774083,
+      "medianLatencyNanoseconds": 141502042,
+      "originDeliveredBytes": 4354860,
+      "originRequestCount": 9,
+      "p95LatencyNanoseconds": 200774083,
+      "physicalFootprintDeltaBytes": 25788440
+    },
+    "Kingfisher|warm-disk": {
+      "cacheSources": {
+        "disk": 9
+      },
+      "cacheState": "warm-disk",
+      "comparator": {
+        "exactCommit": "410984bf301f4fa224fe56277b3f8672cc465c79",
+        "includesWorkingTreeChanges": false,
+        "name": "Kingfisher",
+        "sourceKind": "git-commit",
+        "version": "8.11.0"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 42921583,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 8354083,
+      "medianLatencyNanoseconds": 3747917,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 8354083,
+      "physicalFootprintDeltaBytes": 29917184
+    },
+    "Kingfisher|warm-memory": {
+      "cacheSources": {
+        "memory": 9
+      },
+      "cacheState": "warm-memory",
+      "comparator": {
+        "exactCommit": "410984bf301f4fa224fe56277b3f8672cc465c79",
+        "includesWorkingTreeChanges": false,
+        "name": "Kingfisher",
+        "sourceKind": "git-commit",
+        "version": "8.11.0"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 1498583,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 73333,
+      "medianLatencyNanoseconds": 27791,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 73333,
+      "physicalFootprintDeltaBytes": 1228800
+    },
+    "Nuke|cold": {
+      "cacheSources": {
+        "network": 9
+      },
+      "cacheState": "cold",
+      "comparator": {
+        "exactCommit": "63a8fcbd6621340a2410bc3e9575ac97058615f4",
+        "includesWorkingTreeChanges": false,
+        "name": "Nuke",
+        "sourceKind": "git-commit",
+        "version": "13.0.6"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 1244325750,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 195612042,
+      "medianLatencyNanoseconds": 131744417,
+      "originDeliveredBytes": 4354860,
+      "originRequestCount": 9,
+      "p95LatencyNanoseconds": 195612042,
+      "physicalFootprintDeltaBytes": 9355288
+    },
+    "Nuke|warm-disk": {
+      "cacheSources": {
+        "disk": 9
+      },
+      "cacheState": "warm-disk",
+      "comparator": {
+        "exactCommit": "63a8fcbd6621340a2410bc3e9575ac97058615f4",
+        "includesWorkingTreeChanges": false,
+        "name": "Nuke",
+        "sourceKind": "git-commit",
+        "version": "13.0.6"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 231934083,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 45384875,
+      "medianLatencyNanoseconds": 25318209,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 45384875,
+      "physicalFootprintDeltaBytes": 9109528
+    },
+    "Nuke|warm-memory": {
+      "cacheSources": {
+        "memory": 9
+      },
+      "cacheState": "warm-memory",
+      "comparator": {
+        "exactCommit": "63a8fcbd6621340a2410bc3e9575ac97058615f4",
+        "includesWorkingTreeChanges": false,
+        "name": "Nuke",
+        "sourceKind": "git-commit",
+        "version": "13.0.6"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 1276500,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 10334,
+      "medianLatencyNanoseconds": 6000,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 10334,
+      "physicalFootprintDeltaBytes": 32768
+    },
+    "PINRemoteImage|cold": {
+      "cacheSources": {
+        "network": 9
+      },
+      "cacheState": "cold",
+      "comparator": {
+        "exactCommit": "c0d5cfa1947f2456ddb321a85b347b3d60d83254",
+        "includesWorkingTreeChanges": false,
+        "name": "PINRemoteImage",
+        "sourceKind": "git-commit",
+        "version": "releases/p14.31"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 1312299458,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 199950291,
+      "medianLatencyNanoseconds": 136374500,
+      "originDeliveredBytes": 4354860,
+      "originRequestCount": 9,
+      "p95LatencyNanoseconds": 199950291,
+      "physicalFootprintDeltaBytes": 31146032
+    },
+    "PINRemoteImage|warm-disk": {
+      "cacheSources": {
+        "disk": 8,
+        "memory": 1
+      },
+      "cacheState": "warm-disk",
+      "comparator": {
+        "exactCommit": "c0d5cfa1947f2456ddb321a85b347b3d60d83254",
+        "includesWorkingTreeChanges": false,
+        "name": "PINRemoteImage",
+        "sourceKind": "git-commit",
+        "version": "releases/p14.31"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 6339833,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 922458,
+      "medianLatencyNanoseconds": 439500,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 922458,
+      "physicalFootprintDeltaBytes": 3391488
+    },
+    "PINRemoteImage|warm-memory": {
+      "cacheSources": {
+        "memory": 8,
+        "network": 1
+      },
+      "cacheState": "warm-memory",
+      "comparator": {
+        "exactCommit": "c0d5cfa1947f2456ddb321a85b347b3d60d83254",
+        "includesWorkingTreeChanges": false,
+        "name": "PINRemoteImage",
+        "sourceKind": "git-commit",
+        "version": "releases/p14.31"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 6840166,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 4729917,
+      "medianLatencyNanoseconds": 67292,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 4729917,
+      "physicalFootprintDeltaBytes": 3129344
+    },
+    "SDWebImage|cold": {
+      "cacheSources": {
+        "network": 9
+      },
+      "cacheState": "cold",
+      "comparator": {
+        "exactCommit": "2de3a496eaf6df9a1312862adcfd54acd73c39c0",
+        "includesWorkingTreeChanges": false,
+        "name": "SDWebImage",
+        "sourceKind": "git-commit",
+        "version": "5.21.7"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 1326378833,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 211534167,
+      "medianLatencyNanoseconds": 137798333,
+      "originDeliveredBytes": 4354860,
+      "originRequestCount": 9,
+      "p95LatencyNanoseconds": 211534167,
+      "physicalFootprintDeltaBytes": 23298072
+    },
+    "SDWebImage|warm-disk": {
+      "cacheSources": {
+        "disk": 9
+      },
+      "cacheState": "warm-disk",
+      "comparator": {
+        "exactCommit": "2de3a496eaf6df9a1312862adcfd54acd73c39c0",
+        "includesWorkingTreeChanges": false,
+        "name": "SDWebImage",
+        "sourceKind": "git-commit",
+        "version": "5.21.7"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 39489916,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 7084417,
+      "medianLatencyNanoseconds": 3569250,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 7084417,
+      "physicalFootprintDeltaBytes": 29032448
+    },
+    "SDWebImage|warm-memory": {
+      "cacheSources": {
+        "memory": 9
+      },
+      "cacheState": "warm-memory",
+      "comparator": {
+        "exactCommit": "2de3a496eaf6df9a1312862adcfd54acd73c39c0",
+        "includesWorkingTreeChanges": false,
+        "name": "SDWebImage",
+        "sourceKind": "git-commit",
+        "version": "5.21.7"
+      },
+      "completedLoads": 9,
+      "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+      "durationNanoseconds": 2079709,
+      "failedLoads": 0,
+      "hardFailures": [],
+      "harnessIdentity": {
+        "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+        "includesWorkingTreeChanges": false,
+        "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+      },
+      "hitchCount": 0,
+      "hitchExcessNanoseconds": 0,
+      "maximumLatencyNanoseconds": 110292,
+      "medianLatencyNanoseconds": 59292,
+      "originDeliveredBytes": 0,
+      "originRequestCount": 0,
+      "p95LatencyNanoseconds": 110292,
+      "physicalFootprintDeltaBytes": 1867776
+    }
+  },
+  "method": {
+    "cacheStates": [
+      "cold",
+      "warm-disk",
+      "warm-memory"
+    ],
+    "comparators": [
+      "Apple URLSession + URLCache + ImageIO",
+      "Fovea",
+      "Nuke",
+      "Kingfisher",
+      "SDWebImage",
+      "PINRemoteImage"
+    ],
+    "hardCorrectness": [
+      "orientation-correct",
+      "color-reference-accepted",
+      "target-pixel-invariant"
+    ],
+    "heroSources": [
+      "hero-12mp-4000x3000.jpg",
+      "hero-24mp-6000x4000.jpg",
+      "hero-48mp-8000x6000.jpg"
+    ],
+    "loadsPerState": 9,
+    "targets": [
+      "390x260",
+      "780x520",
+      "1170x780"
+    ],
+    "warmDiskPreparation": "Load all nine exact source-target combinations, then purge memory while retaining disk state.",
+    "warmMemoryPreparation": "Load all nine exact source-target combinations and retain memory state."
+  },
+  "nextWork": [
+    "Run W1 scrolling/cancellation across the complete A-tier matrix on the current clean source.",
+    "Re-run W7 current-source concurrency evidence after ordinary-image changes are settled.",
+    "Design a bounded rendered-variant persistence experiment with explicit storage amplification, version identity, revocation and hit-rate loss rather than blindly copying competitor cache policy.",
+    "Separate image(for:) and events(for:) delivery overhead with a production-representative micro/macro boundary before changing public event semantics."
+  ],
+  "policyInterpretation": {
+    "cold": "Fovea original-encoded reuse reduces network duplication across target variants and keeps memory below Kingfisher, SDWebImage and PINRemoteImage in this run.",
+    "warmDisk": "Persisting only original encoded representations minimizes variant storage but sacrifices exact-repeat latency relative to libraries that persist processed target variants. Any improvement must account for disk amplification, invalidation, namespace generation, codec/transform versioning and revocation.",
+    "warmMemory": "The remaining absolute latency is already below 0.4 ms, but the relative gap indicates event/task delivery overhead. Optimization must improve Fovea-own repeated results, not only comparator-normalized ratios."
+  },
+  "quietHostGateAttempts": [
+    {
+      "cpuIdlePercent": [
+        53.15,
+        68.2,
+        69.35
+      ],
+      "diskMegabytesPerSecond": [
+        20.79,
+        11.05,
+        17.2
+      ],
+      "requiredMaximumDiskMegabytesPerSecond": 12.0,
+      "requiredMinimumCPUIdlePercent": 65.0,
+      "status": "rejected"
+    },
+    {
+      "cpuIdlePercent": [
+        62.56,
+        68.29,
+        64.23
+      ],
+      "diskMegabytesPerSecond": [
+        58.42,
+        75.32,
+        87.09
+      ],
+      "requiredMaximumDiskMegabytesPerSecond": 12.0,
+      "requiredMinimumCPUIdlePercent": 65.0,
+      "status": "rejected"
+    }
+  ],
+  "recordedOn": "2026-08-05",
+  "rejectedRenderedMemoryEventsFastPath": {
+    "baseline": {
+      "cold": {
+        "cacheSources": {
+          "unknown": 9
+        },
+        "cacheState": "cold",
+        "comparator": {
+          "exactCommit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": false,
+          "name": "Fovea",
+          "sourceKind": "git-commit",
+          "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05",
+          "version": "0b-worktree"
+        },
+        "completedLoads": 9,
+        "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+        "durationNanoseconds": 619058166,
+        "failedLoads": 0,
+        "hardFailures": [],
+        "harnessIdentity": {
+          "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": false,
+          "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+        },
+        "hitchCount": 0,
+        "hitchExcessNanoseconds": 0,
+        "maximumLatencyNanoseconds": 195422709,
+        "medianLatencyNanoseconds": 34653833,
+        "originDeliveredBytes": 1451620,
+        "originRequestCount": 3,
+        "p95LatencyNanoseconds": 195422709,
+        "physicalFootprintDeltaBytes": 12009496
+      },
+      "warm-disk": {
+        "cacheSources": {
+          "unknown": 9
+        },
+        "cacheState": "warm-disk",
+        "comparator": {
+          "exactCommit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": false,
+          "name": "Fovea",
+          "sourceKind": "git-commit",
+          "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05",
+          "version": "0b-worktree"
+        },
+        "completedLoads": 9,
+        "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+        "durationNanoseconds": 243548084,
+        "failedLoads": 0,
+        "hardFailures": [],
+        "harnessIdentity": {
+          "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": false,
+          "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+        },
+        "hitchCount": 0,
+        "hitchExcessNanoseconds": 0,
+        "maximumLatencyNanoseconds": 46148917,
+        "medianLatencyNanoseconds": 26613584,
+        "originDeliveredBytes": 0,
+        "originRequestCount": 0,
+        "p95LatencyNanoseconds": 46148917,
+        "physicalFootprintDeltaBytes": 17760256
+      },
+      "warm-memory": {
+        "cacheSources": {
+          "unknown": 9
+        },
+        "cacheState": "warm-memory",
+        "comparator": {
+          "exactCommit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": false,
+          "name": "Fovea",
+          "sourceKind": "git-commit",
+          "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05",
+          "version": "0b-worktree"
+        },
+        "completedLoads": 9,
+        "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+        "durationNanoseconds": 5605917,
+        "failedLoads": 0,
+        "hardFailures": [],
+        "harnessIdentity": {
+          "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": false,
+          "sourceTreeDigest": "163af6290b1e64231316f4c1d64f19ce8ea426fca58e0e87a81048804c1b3c05"
+        },
+        "hitchCount": 0,
+        "hitchExcessNanoseconds": 0,
+        "maximumLatencyNanoseconds": 356333,
+        "medianLatencyNanoseconds": 292583,
+        "originDeliveredBytes": 0,
+        "originRequestCount": 0,
+        "p95LatencyNanoseconds": 356333,
+        "physicalFootprintDeltaBytes": 32768
+      }
+    },
+    "candidate": {
+      "cold": {
+        "cacheSources": {
+          "unknown": 9
+        },
+        "cacheState": "cold",
+        "comparator": {
+          "exactCommit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": true,
+          "name": "Fovea",
+          "sourceKind": "git-commit",
+          "sourceTreeDigest": "97f5d028744ca55c3afe5dcdc9de17c27bb540c3592583fce3d1f95c918a0c6e",
+          "version": "0b-worktree"
+        },
+        "completedLoads": 9,
+        "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+        "durationNanoseconds": 659809209,
+        "failedLoads": 0,
+        "hardFailures": [],
+        "harnessIdentity": {
+          "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": true,
+          "sourceTreeDigest": "97f5d028744ca55c3afe5dcdc9de17c27bb540c3592583fce3d1f95c918a0c6e"
+        },
+        "hitchCount": 0,
+        "hitchExcessNanoseconds": 0,
+        "maximumLatencyNanoseconds": 194309875,
+        "medianLatencyNanoseconds": 35305708,
+        "originDeliveredBytes": 1451620,
+        "originRequestCount": 3,
+        "p95LatencyNanoseconds": 194309875,
+        "physicalFootprintDeltaBytes": 18956312
+      },
+      "warm-disk": {
+        "cacheSources": {
+          "unknown": 9
+        },
+        "cacheState": "warm-disk",
+        "comparator": {
+          "exactCommit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": true,
+          "name": "Fovea",
+          "sourceKind": "git-commit",
+          "sourceTreeDigest": "97f5d028744ca55c3afe5dcdc9de17c27bb540c3592583fce3d1f95c918a0c6e",
+          "version": "0b-worktree"
+        },
+        "completedLoads": 9,
+        "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+        "durationNanoseconds": 247774708,
+        "failedLoads": 0,
+        "hardFailures": [],
+        "harnessIdentity": {
+          "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": true,
+          "sourceTreeDigest": "97f5d028744ca55c3afe5dcdc9de17c27bb540c3592583fce3d1f95c918a0c6e"
+        },
+        "hitchCount": 0,
+        "hitchExcessNanoseconds": 0,
+        "maximumLatencyNanoseconds": 46680875,
+        "medianLatencyNanoseconds": 26560667,
+        "originDeliveredBytes": 0,
+        "originRequestCount": 0,
+        "p95LatencyNanoseconds": 46680875,
+        "physicalFootprintDeltaBytes": 17842200
+      },
+      "warm-memory": {
+        "cacheSources": {
+          "unknown": 9
+        },
+        "cacheState": "warm-memory",
+        "comparator": {
+          "exactCommit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": true,
+          "name": "Fovea",
+          "sourceKind": "git-commit",
+          "sourceTreeDigest": "97f5d028744ca55c3afe5dcdc9de17c27bb540c3592583fce3d1f95c918a0c6e",
+          "version": "0b-worktree"
+        },
+        "completedLoads": 9,
+        "datasetDigest": "d8ccf43dca0f11bc1b1aef2260f263e5d034c44e0dd26959ddc35d1f7fc498e7",
+        "durationNanoseconds": 5216958,
+        "failedLoads": 0,
+        "hardFailures": [],
+        "harnessIdentity": {
+          "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+          "includesWorkingTreeChanges": true,
+          "sourceTreeDigest": "97f5d028744ca55c3afe5dcdc9de17c27bb540c3592583fce3d1f95c918a0c6e"
+        },
+        "hitchCount": 0,
+        "hitchExcessNanoseconds": 0,
+        "maximumLatencyNanoseconds": 389834,
+        "medianLatencyNanoseconds": 315375,
+        "originDeliveredBytes": 0,
+        "originRequestCount": 0,
+        "p95LatencyNanoseconds": 389834,
+        "physicalFootprintDeltaBytes": 32768
+      }
+    },
+    "decision": "reverted",
+    "focusedTests": "ProgressiveImageLoadingTests 12/12 passed before performance rejection.",
+    "keyChanges": {
+      "coldFootprintDeltaBytes": 6946816,
+      "warmMemoryDurationNanoseconds": -388959,
+      "warmMemoryMedianNanoseconds": 22792,
+      "warmMemoryP95Nanoseconds": 33501
+    },
+    "reason": "Per-load warm-memory median and p95 worsened; the 0.389 ms reduction in nine-load total duration was below directional scheduling noise and did not justify a second production path.",
+    "sourceIdentity": {
+      "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+      "includesWorkingTreeChanges": true,
+      "sourceTreeDigest": "97f5d028744ca55c3afe5dcdc9de17c27bb540c3592583fce3d1f95c918a0c6e"
+    }
+  },
+  "schemaVersion": 1,
+  "scope": {
+    "claimEligibility": "not-release-claim-eligible",
+    "environment": "dedicated iPhone 17e Simulator, iOS 26.4.1 build 23E254a, arm64 Release",
+    "evidenceClass": "directional-simulator-clean-source-matrix",
+    "reason": "The preregistered quiet-host gate rejected two attempts; the matrix was then deliberately run with diagnostic mode on one Simulator host."
+  },
+  "sourceIdentity": {
+    "commit": "6f277a26c7afbee755dd340ade7336c95e617623",
+    "includesWorkingTreeChanges": false
+  },
+  "workloadID": "W2-HERO-V1"
+}

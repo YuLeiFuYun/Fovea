@@ -362,6 +362,20 @@ private struct CanonicalEncoder {
 
 extension Data {
     var sha256Hex: String {
-        SHA256.hash(data: self).map { String(format: "%02x", $0) }.joined()
+        lowercaseHexString(SHA256.hash(data: self))
     }
+}
+
+private let lowercaseHexDigits = Array("0123456789abcdef".utf8)
+
+@inline(__always)
+func lowercaseHexString<Bytes: Sequence>(_ bytes: Bytes) -> String
+where Bytes.Element == UInt8 {
+    var output = [UInt8]()
+    output.reserveCapacity(bytes.underestimatedCount * 2)
+    for byte in bytes {
+        output.append(lowercaseHexDigits[Int(byte >> 4)])
+        output.append(lowercaseHexDigits[Int(byte & 0x0f)])
+    }
+    return String(decoding: output, as: UTF8.self)
 }

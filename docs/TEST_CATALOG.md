@@ -300,6 +300,9 @@ AIQA-MUT-096    unmeasurable ImageIO properties count as zero metadata bytes
 AIQA-MUT-097    namespace revoke leaves remembered refreshed credentials alive
 AIQA-MUT-098    orphan blob cleanup reports zero reclaimed files and bytes
 AIQA-MUT-099    garbage collection accepts a noncanonical live-content reference
+AIQA-MUT-100    namespace revocation generation advances without durable publication
+AIQA-MUT-101    auth-like custom header names are treated as ordinary public metadata
+AIQA-MUT-102    benchmark request ID re-enters Fovea cache and single-flight identity
 
 
 COMP-PT-001       comparator identities require exact 40-character commits
@@ -320,6 +323,7 @@ COMP-PT-015       original upstream image-loader tests remain separately executa
 COMP-PT-016       cross-language and cache projects contribute traceable challenges without replacing their native tests
 COMP-PT-017       comparison ontology, source eligibility, semantic profiles, durability levels, and claim states are machine-gated
 COMP-PT-018       Cache Lab stratifies native D1 and wrapper D5 disk semantics, preserves descriptive native metrics, and requires TOST/Holm decisions
+COMP-PT-027       benchmark request IDs reach transport accounting without entering Fovea cache or single-flight identity; ordinary semantic and credential headers remain identity-bearing
 
 DEMO-PT-001       0b/release four-origin HTTPS evidence emits commit/tree-bound metrics and invariant report; excluded from deterministic PR gate
 DEMO-PT-002       Gallery and Network Lab build; Network Lab refuses implicit networking

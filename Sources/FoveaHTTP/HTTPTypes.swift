@@ -1,6 +1,20 @@
 import CryptoKit
 import Foundation
 
+private let httpLowercaseHexDigits = Array("0123456789abcdef".utf8)
+
+@inline(__always)
+func httpLowercaseHexString<Bytes: Sequence>(_ bytes: Bytes) -> String
+where Bytes.Element == UInt8 {
+    var output = [UInt8]()
+    output.reserveCapacity(bytes.underestimatedCount * 2)
+    for byte in bytes {
+        output.append(httpLowercaseHexDigits[Int(byte >> 4)])
+        output.append(httpLowercaseHexDigits[Int(byte & 0x0f)])
+    }
+    return String(decoding: output, as: UTF8.self)
+}
+
 /// 声明 HTTP 传输是否可复用，以及复用所依赖的组合身份。
 
 public struct TransportReusePolicy: Hashable, Sendable {
@@ -31,7 +45,7 @@ public struct TransportReusePolicy: Hashable, Sendable {
         else { return .taskLocal }
 
         let material = Data("transport-context-v2\u{0}\(normalized)".utf8)
-        let digest = SHA256.hash(data: material).map { String(format: "%02x", $0) }.joined()
+        let digest = httpLowercaseHexString(SHA256.hash(data: material))
         return TransportReusePolicy(scope: .reusable(contextDigest: digest))
     }
 
@@ -48,6 +62,11 @@ public struct TransportReusePolicy: Hashable, Sendable {
         case .reusable(let contextDigest):
             return "transport-context-v2:\(contextDigest)"
         }
+    }
+
+    @_spi(FoveaBenchmarking)
+    public var benchmarkingExecutionFingerprint: String {
+        executionFingerprint
     }
 }
 
@@ -361,6 +380,23 @@ public struct TransportResponse: Sendable {
         )
     }
 
+    /// 包内续传重组完整正文时重新计算整体摘要，同时保留本次网络实际接收字节数。
+    package init(
+        head: TransportResponseHead,
+        reassembledBody: Data,
+        receivedBytes: Int,
+        metrics: TransportMetrics
+    ) {
+        self.head = head
+        self.bodyStorage = .memory(reassembledBody)
+        self.digestHex = Self.digestHex(for: reassembledBody)
+        self.metrics = TransportMetrics(
+            receivedBytes: receivedBytes,
+            spilledToDisk: metrics.spilledToDisk,
+            network: metrics.network
+        )
+    }
+
     /// 内置流式传输可以携带仅能在 FoveaHTTP 内部构造的摘要令牌，
     /// 既避免对正文进行第二次哈希，也不暴露可伪造的公共接口。
     init(
@@ -380,9 +416,33 @@ public struct TransportResponse: Sendable {
     }
 
     private static func digestHex(for body: Data) -> String {
-        SHA256.hash(data: body).map { String(format: "%02x", $0) }.joined()
+        httpLowercaseHexString(SHA256.hash(data: body))
     }
 
+}
+
+/// progress-only 长流完成时的已验证摘要；不携带或保留完整响应正文。
+package struct TransportProgressCompletion: Sendable {
+    package let head: TransportResponseHead
+    package let digestHex: String
+    package let byteCount: Int
+    package let metrics: TransportMetrics
+
+    package init(
+        head: TransportResponseHead,
+        digestHex: String,
+        byteCount: Int,
+        metrics: TransportMetrics
+    ) {
+        self.head = head
+        self.digestHex = digestHex
+        self.byteCount = max(0, byteCount)
+        self.metrics = TransportMetrics(
+            receivedBytes: byteCount,
+            spilledToDisk: false,
+            network: metrics.network
+        )
+    }
 }
 
 /// 有界 HTTP 传输层产生的稳定失败类型。
@@ -410,6 +470,16 @@ public enum TransportError: Error, Equatable, Sendable {
 /// 外部自定义 transport 无法访问 package-only observer，因此默认不具备该能力。
 package protocol TransportProgressObservationSupporting: HTTPTransporting {}
 
+/// 可在不暂存完整正文的情况下执行同源 progress-only 长流。
+package protocol TransportProgressOnlyExecuting: TransportProgressObservationSupporting {
+    func executeProgressOnly(_ request: TransportRequest) async throws
+        -> TransportProgressCompletion
+}
+
+/// 执行有界 HTTP 请求，但不应用图像缓存、解码或持久化语义。
+///
+/// 实现负责遵守 `TransportRequest` 的字节和目标约束，并返回完整、已验证的
+/// `TransportResponse`；跨请求共享能力由 `reusePolicy` 显式声明。
 public protocol HTTPTransporting: Sendable {
     /// 管线组合身份使用的传输复用契约。
     nonisolated var reusePolicy: TransportReusePolicy { get }

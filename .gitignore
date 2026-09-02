@@ -3,6 +3,8 @@
 .swiftpm/xcode/xcuserdata/
 .swiftpm/xcode/package.xcworkspace/xcuserdata/
 DerivedData/
+.project-local/
+.codex_tmp/
 *.xcresult
 *.log
 .env

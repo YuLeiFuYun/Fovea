@@ -51,9 +51,13 @@ private final class BenchmarkOriginState: @unchecked Sendable {
     private var requestCount = 0
     private var deliveredBytes = 0
     private var postCancellationBytes = 0
+    private var postCancellationBytesByRequestID: [String: Int] = [:]
+    private var completedRequestIDs: Set<String> = []
     private var cancellationMarkedAtNanoseconds: [String: UInt64] = [:]
     private var cancellationAcknowledgementNanoseconds: [UInt64] = []
     private var completedRequestCount = 0
+    private var latestCompletedAtNanoseconds: UInt64 = 0
+    private var completedRequestDurationNanoseconds: [UInt64] = []
     private var stoppedRequestCount = 0
     private var redirectAuthorizationLeakCount = 0
     private var peakConcurrentRequestCount = 0
@@ -158,9 +162,13 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         requestCount = 0
         deliveredBytes = 0
         postCancellationBytes = 0
+        postCancellationBytesByRequestID.removeAll(keepingCapacity: true)
+        completedRequestIDs.removeAll(keepingCapacity: true)
         cancellationMarkedAtNanoseconds.removeAll(keepingCapacity: true)
         cancellationAcknowledgementNanoseconds.removeAll(keepingCapacity: true)
         completedRequestCount = 0
+        latestCompletedAtNanoseconds = 0
+        completedRequestDurationNanoseconds.removeAll(keepingCapacity: true)
         stoppedRequestCount = 0
         redirectAuthorizationLeakCount = 0
         peakConcurrentRequestCount = 0
@@ -189,11 +197,13 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         lock.unlock()
     }
 
-    func begin(route: String) {
+    func begin(route: String) -> UInt64 {
+        let startedAt = DispatchTime.now().uptimeNanoseconds
         lock.lock()
         requestCount += 1
         routeRequestCounts[route, default: 0] += 1
         lock.unlock()
+        return startedAt
     }
 
     func record(
@@ -207,13 +217,28 @@ private final class BenchmarkOriginState: @unchecked Sendable {
             deliveryStartedAtNanoseconds >= marked
         {
             postCancellationBytes += bytes
+            postCancellationBytesByRequestID[requestID, default: 0] += bytes
         }
         lock.unlock()
     }
 
-    func complete() {
+    func complete(
+        startedAtNanoseconds: UInt64,
+        completedAtNanoseconds: UInt64,
+        requestID: String?
+    ) {
         lock.lock()
         completedRequestCount += 1
+        if let requestID { completedRequestIDs.insert(requestID) }
+        latestCompletedAtNanoseconds = max(
+            latestCompletedAtNanoseconds,
+            completedAtNanoseconds
+        )
+        if completedAtNanoseconds >= startedAtNanoseconds {
+            completedRequestDurationNanoseconds.append(
+                completedAtNanoseconds - startedAtNanoseconds
+            )
+        }
         lock.unlock()
     }
 
@@ -398,14 +423,47 @@ private final class BenchmarkOriginState: @unchecked Sendable {
             let rank = max(1, Int(ceil(Double(acknowledgement.count) * 0.95)))
             acknowledgementP95 = acknowledgement[min(acknowledgement.count - 1, rank - 1)]
         }
+        let completedDurations = completedRequestDurationNanoseconds.sorted()
+        let completedPostCancellationValues = postCancellationBytesByRequestID.compactMap {
+            completedRequestIDs.contains($0.key) ? $0.value : nil
+        }.sorted()
+        let abandonedPostCancellationValues = postCancellationBytesByRequestID.compactMap {
+            completedRequestIDs.contains($0.key) ? nil : $0.value
+        }.sorted()
+        let completedPostCancellationBytes = completedPostCancellationValues.reduce(0, +)
+        let abandonedPostCancellationBytes = abandonedPostCancellationValues.reduce(0, +)
+        let completedP50 = Self.percentile(completedDurations, fraction: 0.50)
+        let completedP95 = Self.percentile(completedDurations, fraction: 0.95)
         let value = BenchmarkOriginMetrics(
             requestCount: requestCount,
             deliveredBytes: deliveredBytes,
             postCancellationBytes: postCancellationBytes,
+            postCancellationCompletedBytes: completedPostCancellationBytes,
+            postCancellationCompletedRequestCount: completedPostCancellationValues.count,
+            postCancellationCompletedBytesP50: Self.percentileInt(
+                completedPostCancellationValues, fraction: 0.50
+            ),
+            postCancellationCompletedBytesP95: Self.percentileInt(
+                completedPostCancellationValues, fraction: 0.95
+            ),
+            postCancellationCompletedBytesMaximum: completedPostCancellationValues.last ?? 0,
+            postCancellationAbandonedBytes: abandonedPostCancellationBytes,
+            postCancellationAbandonedRequestCount: abandonedPostCancellationValues.count,
+            postCancellationAbandonedBytesP50: Self.percentileInt(
+                abandonedPostCancellationValues, fraction: 0.50
+            ),
+            postCancellationAbandonedBytesP95: Self.percentileInt(
+                abandonedPostCancellationValues, fraction: 0.95
+            ),
+            postCancellationAbandonedBytesMaximum: abandonedPostCancellationValues.last ?? 0,
             cancellationAcknowledgementCount: acknowledgement.count,
             cancellationAcknowledgementP95Nanoseconds: acknowledgementP95,
             cancellationAcknowledgementMaximumNanoseconds: acknowledgement.last ?? 0,
             completedRequestCount: completedRequestCount,
+            latestCompletedAtNanoseconds: latestCompletedAtNanoseconds,
+            completedRequestDurationP50Nanoseconds: completedP50,
+            completedRequestDurationP95Nanoseconds: completedP95,
+            completedRequestDurationMaximumNanoseconds: completedDurations.last ?? 0,
             stoppedRequestCount: stoppedRequestCount,
             redirectAuthorizationLeakCount: redirectAuthorizationLeakCount,
             peakConcurrentRequestCount: peakConcurrentRequestCount,
@@ -415,6 +473,18 @@ private final class BenchmarkOriginState: @unchecked Sendable {
         )
         lock.unlock()
         return value
+    }
+
+    private static func percentile(_ sorted: [UInt64], fraction: Double) -> UInt64 {
+        guard !sorted.isEmpty else { return 0 }
+        let rank = max(1, Int(ceil(Double(sorted.count) * fraction)))
+        return sorted[min(sorted.count - 1, rank - 1)]
+    }
+
+    private static func percentileInt(_ sorted: [Int], fraction: Double) -> Int {
+        guard !sorted.isEmpty else { return 0 }
+        let rank = max(1, Int(ceil(Double(sorted.count) * fraction)))
+        return sorted[min(sorted.count - 1, rank - 1)]
     }
 
     func timing() -> (initialDelay: UInt64, bytesPerSecond: Int) {
@@ -615,7 +685,7 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
             return
         }
         let route = url.path
-        state.begin(route: route)
+        let requestStartedAt = state.begin(route: route)
         if route.hasPrefix("/w7/") {
             let label = Self.w7ServiceLabel(for: url, route: route)
             let reservation = state.reserveW7Service(label: label) {
@@ -624,7 +694,12 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
                     state.releaseW7Service(identifier)
                     return
                 }
-                self.deliver(url: url, route: route, w7ServiceIdentifier: identifier)
+                self.deliver(
+                    url: url,
+                    route: route,
+                    requestStartedAtNanoseconds: requestStartedAt,
+                    w7ServiceIdentifier: identifier
+                )
             }
             stopLock.lock()
             w7ServiceIdentifier = reservation.identifier
@@ -637,7 +712,12 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
             }
             return
         }
-        deliver(url: url, route: route, w7ServiceIdentifier: nil)
+        deliver(
+            url: url,
+            route: route,
+            requestStartedAtNanoseconds: requestStartedAt,
+            w7ServiceIdentifier: nil
+        )
     }
 
     private static func w7ServiceLabel(for url: URL, route: String) -> String {
@@ -651,7 +731,13 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
         return label
     }
 
-    private func deliver(url: URL, route: String, w7ServiceIdentifier: UUID?) {
+    private func deliver(
+        url: URL,
+        route: String,
+        requestStartedAtNanoseconds: UInt64,
+        w7ServiceIdentifier: UUID?
+    ) {
+        let requestID = request.value(forHTTPHeaderField: "X-Benchmark-Request-ID")
         if route == "/w7/shared" {
             state.waitForW7SharedPreparationGate()
         }
@@ -681,7 +767,12 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
             redirected.allHTTPHeaderFields = request.allHTTPHeaderFields
             client?.urlProtocol(self, wasRedirectedTo: redirected, redirectResponse: response)
             client?.urlProtocolDidFinishLoading(self)
-            state.complete()
+            let completedAt = DispatchTime.now().uptimeNanoseconds
+            state.complete(
+                startedAtNanoseconds: requestStartedAtNanoseconds,
+                completedAtNanoseconds: completedAt,
+                requestID: requestID
+            )
             finishW7Service(w7ServiceIdentifier)
             return
         }
@@ -703,7 +794,6 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
             }
             let timing = state.timing()
             let initialDelay = timing.initialDelay + resource.delayNanoseconds
-            let requestID = request.value(forHTTPHeaderField: "X-Benchmark-Request-ID")
             let chunkSize = 32 * 1024
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
             for offset in stride(from: 0, to: resource.data.count, by: chunkSize) {
@@ -726,7 +816,12 @@ final class DeterministicBenchmarkURLProtocol: URLProtocol, @unchecked Sendable 
                     self.client?.urlProtocol(self, didLoad: chunk)
                     if end == resource.data.count {
                         self.client?.urlProtocolDidFinishLoading(self)
-                        self.state.complete()
+                        let completedAt = DispatchTime.now().uptimeNanoseconds
+                        self.state.complete(
+                            startedAtNanoseconds: requestStartedAtNanoseconds,
+                            completedAtNanoseconds: completedAt,
+                            requestID: requestID
+                        )
                         self.finishW7Service(w7ServiceIdentifier)
                     }
                 }

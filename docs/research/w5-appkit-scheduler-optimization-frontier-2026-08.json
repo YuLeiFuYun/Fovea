@@ -1,0 +1,82 @@
+{
+  "adoptedMechanism": {
+    "adapterQualificationArtifact": ".artifacts/qualification/w5-imagecraft-animation-adapter-v2-final/report.json",
+    "adapterQualificationArtifactSHA256": "fafc7a0e92ba95a5f6587ad5bbcfba8dc36128fcd7a517adf4014b7715c8b00f",
+    "adapterQualificationRecord": "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json",
+    "eligibleFrameStrategy": "predecodeAll",
+    "productionEncodedAnimationAdapterCompiled": false,
+    "researchRecord": "docs/research/w5-appkit-predecode-compositor-adoption-2026-08.json",
+    "researchRecordSHA256": "07906c8cea6e2a2d90904a15fb7256c68e5b73c7664e91b108fc5c8a026ef83d",
+    "resourceArtifact": ".artifacts/performance/w5-appkit-predecode-compositor-resource-proxy-physical-v1/manifest.json",
+    "runtimeAutomaticPredecodeAdmission": true,
+    "timingArtifact": ".artifacts/performance/w5-appkit-predecode-compositor-screen-timing-physical-v1/manifest.json"
+  },
+  "claimBoundary": [
+    "physical Mac evidence covers internal Fovea scheduling/presentation mechanisms only",
+    "/usr/bin/time -l metrics are process-resource proxies, not energy",
+    "previous failed setter/timer/coalescing/wrapper experiments remain rejected and are not product defaults",
+    "the adopted compositor only runs after a whole track is resident; automatic upgrade is a separate fail-closed runtime mechanism requiring decoded, provider-retained and predecode-peak bounds",
+    "known provider-retained bytes are charged for the handle lifetime even when automatic whole-track selection falls back or a fixed/bounded strategy is used",
+    "automatic admission plus ImageCraft adapter is source-overlay qualified but not yet reachable from the production exact ImageCraft pin",
+    "no third-party, cross-platform, decoder-throughput, total-energy, thermal, or global Pareto claim"
+  ],
+  "currentVerification": {
+    "adapterQualification": "W5_ADAPTER_PT_001..008 + validator + tamper contract",
+    "foveaFullSuite": "731/731",
+    "releaseFoveaAdvancedSHA256": "89604b495ef778b1d4583d65dcc82943056f48f80cd5bea904b9b3f7e3b85fc2",
+    "releaseFoveaSHA256": "d91606b5664916e3f54dbde972a8c05b2fa4ba229d2761c415eb643dd0efad8e"
+  },
+  "formalClaimEligible": true,
+  "nextDirection": "Do not resume AppKit setter/timer micro-tuning. The next high-value step is publication/integration: publish the qualified ImageCraft animation runtime, update the exact Fovea pin, compile the adapter, rerun clean-pin qualification, then measure end-to-end startup plus steady-state physical presentation. Treat the owned-GIF one-time decode cost and compositor steady-state savings as separate endpoints rather than optimizing either in isolation.",
+  "retainedResults": [
+    {
+      "mechanism": "every-refresh external targetTimestamp",
+      "resourceArtifact": ".artifacts/performance/w5-appkit-resource-proxy-physical-v1/manifest.json",
+      "result": "best retained pre-compositor timing/zero-skip reference but materially higher CPU/cycles/context switches than Task deadline",
+      "timingArtifact": ".artifacts/performance/w5-appkit-refresh-timing-physical-v1/manifest.json"
+    },
+    {
+      "artifact": ".artifacts/performance/w5-appkit-deadline-clock-physical-v1/manifest.json",
+      "manifestSHA256": "750567809c9e86fef000a1f3433a1a0dc27db4957da3bddfbb38f1c435b16dcc",
+      "mechanism": "strict Dispatch automatic deadline",
+      "result": "intermediate tradeoff; better timing than Task deadline but higher resource cost and worse timing than external"
+    },
+    {
+      "artifact": ".artifacts/performance/w5-appkit-external-coalescing-physical-v1/manifest.json",
+      "manifestSHA256": "7ebff30545cfc375b563287f8d1e4af8408456a060ab06b2954e959410d509b1",
+      "mechanism": "exact next-frame-boundary external coalescing",
+      "result": "large resource reduction but 3 source skips versus 0; rejected"
+    },
+    {
+      "artifact": ".artifacts/performance/w5-appkit-external-coalescing-lead-physical-v1/manifest.json",
+      "manifestSHA256": "16443b0497496704c94f6a8d03606e00828b1a886f12f3dd39131c25923949e5",
+      "mechanism": "one-refresh-lead external coalescing",
+      "result": "resource reduction but 3 source skips and 1.302x median anchored p95; rejected"
+    },
+    {
+      "callbackArtifact": ".artifacts/performance/w5-appkit-frame-commit-dedup-callback-physical-v1/manifest.json",
+      "mechanism": "same-source-frame NSImage commit suppression",
+      "refreshArtifact": ".artifacts/performance/w5-appkit-frame-commit-dedup-physical-v1/manifest.json",
+      "result": "strong resource reduction and deterministic ownership correctness, but physical timing all-pairs gate failed; not adopted"
+    },
+    {
+      "artifact": ".artifacts/performance/w5-appkit-image-wrapper-reuse-physical-v1/manifest.json",
+      "manifestSHA256": "d25da14bdebeebb2a8ff6713008332f3a66748ef31c04b6070e870df2d789991",
+      "mechanism": "same-CGImage/backing-scale NSImage wrapper reuse",
+      "result": "large resource reduction and p95 within one-refresh margin, but one paired run added a source skip; preregistered adoption gate failed"
+    },
+    {
+      "mechanism": "fully resident predecodeAll Core Animation contents keyframe offload",
+      "resourceArtifact": ".artifacts/performance/w5-appkit-predecode-compositor-resource-proxy-physical-v1/manifest.json",
+      "resourceManifestSHA256": "7be259d8f2f1b31e71cba4efa2ee0c65141e308ffdb7f49a358caf0243053440",
+      "result": "adopted presentation mechanism: six physical timing pairs produced 0 candidate source skips versus 39 baseline and 0.795x median p95; three resource pairs measured 0.207x CPU, 0.293x cycles and 0.178x context switches with matched one-call/60-frame provider work",
+      "scope": "presentation-only physical claim after whole-track residency; current runtime can separately select whole-track automatically when all three conservative cost bounds fit",
+      "timingArtifact": ".artifacts/performance/w5-appkit-predecode-compositor-screen-timing-physical-v1/manifest.json",
+      "timingManifestSHA256": "57890e1df505e9966f0bcc3f37bc4786ba87dcbe556b3e3cd2a5a1b56ae40124"
+    }
+  ],
+  "reviewedOn": "2026-08-08",
+  "schemaVersion": 2,
+  "status": "predecode-compositor-adopted-runtime-admission-closed-production-decoder-pin-next",
+  "studyID": "FOVEA-W5-APPKIT-SCHEDULER-OPTIMIZATION-FRONTIER-2026-08"
+}

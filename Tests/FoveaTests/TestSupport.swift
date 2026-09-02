@@ -2,6 +2,7 @@ import AkashicCore
 import AkashicDisk
 import CoreGraphics
 import CryptoKit
+import Dispatch
 import Foundation
 import FoveaCore
 import FoveaHTTP
@@ -13,35 +14,66 @@ import ImageIO
 import UniformTypeIdentifiers
 import XCTest
 
+struct TestDuration: Equatable, Sendable {
+    let nanoseconds: UInt64
+
+    static let zero = TestDuration(nanoseconds: 0)
+
+    static func seconds(_ value: UInt64) -> TestDuration {
+        TestDuration(nanoseconds: saturatingMultiply(value, 1_000_000_000))
+    }
+
+    static func milliseconds(_ value: UInt64) -> TestDuration {
+        TestDuration(nanoseconds: saturatingMultiply(value, 1_000_000))
+    }
+
+    private static func saturatingMultiply(_ lhs: UInt64, _ rhs: UInt64) -> UInt64 {
+        let product = lhs.multipliedReportingOverflow(by: rhs)
+        return product.overflow ? .max : product.partialValue
+    }
+}
+
+func testUptimeNanoseconds() -> UInt64 {
+    DispatchTime.now().uptimeNanoseconds
+}
+
+func testDeadline(after duration: TestDuration) -> UInt64 {
+    let sum = testUptimeNanoseconds().addingReportingOverflow(duration.nanoseconds)
+    return sum.overflow ? .max : sum.partialValue
+}
+
+func testSleep(_ duration: TestDuration) async throws {
+    try await Task<Never, Never>.sleep(nanoseconds: duration.nanoseconds)
+}
+
 /// 等待异步可观察条件在截止时间前成立。
 ///
 /// 并发测试必须等待明确状态，不得用固定延迟推测任务已经进入某阶段。
 /// 该辅助函数只用于测试控制面；生产调度不得依赖轮询。
 func waitUntil(
     _ description: String,
-    timeout: Duration = .seconds(2),
-    pollInterval: Duration = .milliseconds(1),
+    timeout: TestDuration = .seconds(2),
+    pollInterval: TestDuration = .milliseconds(1),
     file: StaticString = #filePath,
     line: UInt = #line,
     condition: () async -> Bool
 ) async throws {
-    let clock = ContinuousClock()
-    let deadline = clock.now.advanced(by: timeout)
+    let deadline = testDeadline(after: timeout)
     while !(await condition()) {
         try Task.checkCancellation()
-        guard clock.now < deadline else {
+        guard testUptimeNanoseconds() < deadline else {
             XCTFail("等待异步条件超时：\(description)", file: file, line: line)
             return
         }
-        try await Task.sleep(for: pollInterval)
+        try await testSleep(pollInterval)
     }
 }
 
 @MainActor
 func waitUntilOnMainActor(
     _ description: String = "MainActor 条件",
-    timeout: Duration = .seconds(2),
-    pollInterval: Duration = .milliseconds(1),
+    timeout: TestDuration = .seconds(2),
+    pollInterval: TestDuration = .milliseconds(1),
     file: StaticString = #filePath,
     line: UInt = #line,
     condition: @MainActor () async -> Bool
@@ -287,16 +319,15 @@ private func normalizedTestContentID(_ value: String, byteCount: Int) -> String 
 func reopenAkashicOriginalEncodedStore(
     root: URL,
     limits: OriginalEncodedStoreLimits = OriginalEncodedStoreLimits(),
-    timeout: Duration = .seconds(2)
+    timeout: TestDuration = .seconds(2)
 ) async throws -> AkashicOriginalEncodedStore {
-    let clock = ContinuousClock()
-    let deadline = clock.now.advanced(by: timeout)
+    let deadline = testDeadline(after: timeout)
     while true {
         do {
             return try await AkashicOriginalEncodedStore.open(root: root, limits: limits)
         } catch let error as AkashicError where error == .transactionConflict {
-            guard clock.now < deadline else { throw error }
-            try await Task.sleep(for: .milliseconds(10))
+            guard testUptimeNanoseconds() < deadline else { throw error }
+            try await testSleep(.milliseconds(10))
         }
     }
 }

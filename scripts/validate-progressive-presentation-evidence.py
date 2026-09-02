@@ -216,14 +216,13 @@ def summarize_samples(samples: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def repository_has_git_history() -> bool:
+def historical_commit_is_available() -> bool:
     completed = subprocess.run(
-        ["git", "rev-parse", "--is-inside-work-tree"],
+        ["git", "cat-file", "-e", f"{EXPECTED_COMMIT}^{{commit}}"],
         cwd=ROOT,
         capture_output=True,
-        text=True,
     )
-    return completed.returncode == 0 and completed.stdout.strip() == "true"
+    return completed.returncode == 0
 
 
 def git_bytes(*arguments: str) -> bytes:
@@ -255,7 +254,7 @@ def validate(path: Path) -> None:
     require(fixture_path.stat().st_size == FIXTURE_BYTE_COUNT, "current fixture byte count drifted")
     require(sha256_bytes(fixture_path.read_bytes()) == FIXTURE_SHA256, "current fixture digest drifted")
 
-    if repository_has_git_history():
+    if historical_commit_is_available():
         tree = git_bytes("rev-parse", f"{EXPECTED_COMMIT}^{{tree}}").decode().strip()
         require(tree == EXPECTED_TREE, "Git commit tree does not match evidence")
         fixture_at_commit = git_bytes("show", f"{EXPECTED_COMMIT}:{FIXTURE_PATH}")

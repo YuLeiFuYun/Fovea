@@ -10,6 +10,10 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
     case fetchStarted
     case fetchJoined
     case fetchCompleted
+    @_spi(DetailedDiagnostics)
+    case fetchSubscriberReceived
+    @_spi(DetailedDiagnostics)
+    case fetchSubscriberReleased
     case fetchRetryScheduled
     case fetchCancelled
     case fetchFailed
@@ -34,6 +38,8 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
     case imagePropertiesReadCompleted
     case probeValidationCompleted
     case probeCompleted
+    @_spi(DetailedDiagnostics)
+    case decodeResourceEstimateCompleted
     case decodeWorkingSetReserved
     case decodeAdmissionRejected
     case rasterSourceCreationCompleted
@@ -47,6 +53,12 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
     case decodeFailed
     case cacheReadFailed
     case cacheWriteFailed
+    @_spi(DetailedDiagnostics)
+    case responseValidated
+    @_spi(DetailedDiagnostics)
+    case responseBodyMaterialized
+    @_spi(DetailedDiagnostics)
+    case progressiveFinalizationReady
     case responseAnomaly
     case namespaceRevoked
     case pipelineSucceeded
@@ -57,7 +69,7 @@ public enum DiagnosticEventKind: String, Codable, Hashable, Sendable {
 /// 图像管线发出的脱敏且基数有界的诊断记录。
 
 public struct DiagnosticEvent: Codable, Hashable, Sendable {
-    public static let currentSchemaVersion: UInt16 = 17
+    public static let currentSchemaVersion: UInt16 = 19
 
     private static let maximumByteCount = 1024 * 1024 * 1024
     private static let maximumItemCount = 1_000_000

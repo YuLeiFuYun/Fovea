@@ -6,8 +6,10 @@ import Foundation
 /// 不依赖公网的协议实验；该例外不扩展到私网地址、`.local` 名称或任意 IP。
 public enum HTTPURLSecurityPolicy {
     public static func permits(_ url: URL) -> Bool {
-        guard let scheme = url.scheme?.lowercased(),
-            let host = url.host?.lowercased()
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+            components.user == nil, components.password == nil,
+            let scheme = components.scheme?.lowercased(),
+            let host = components.host?.lowercased()
         else { return false }
         if scheme == "https" { return true }
         return scheme == "http" && isLoopbackHost(host)

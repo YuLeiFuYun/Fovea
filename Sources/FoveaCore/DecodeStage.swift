@@ -4,18 +4,8 @@ import ImageCraftCore
 /// 将探测、工作集准入与最终解码组织为三个资源边界。
 /// 探测与解码共享调度优先级，但等待工作集时不得占用解码并发许可。
 package final class DecodeStage: Sendable {
-    private struct DecodePlan: Sendable {
-        let probe: ImageProbe
-        let preparation: ImageDecodePreparation?
-    }
-
     private struct TimedDecodePlan: Sendable {
-        let plan: DecodePlan
-        let durationNanoseconds: UInt64
-    }
-
-    private struct TimedRasterDecode: Sendable {
-        let image: DecodedImage
+        let plan: FoveaDecodePlan
         let durationNanoseconds: UInt64
     }
 
@@ -24,8 +14,7 @@ package final class DecodeStage: Sendable {
     private let limits: DecodeLimits
     private let diagnostics: any DiagnosticsSink
     private let detailedDiagnosticsEnabled: Bool
-    private let permits: AsyncPermitPool
-    private let workingSetPermits: AsyncPermitPool
+    private let permitController: FoveaDecodePermitController
     private let executor = DispatchWorkExecutor(label: "dev.fovea.decode")
     private let registry = SharedTaskRegistry<ScopedDecodeKey, DecodedImage>()
 
@@ -37,25 +26,25 @@ package final class DecodeStage: Sendable {
         maximumDecodeWorkingSetBytes: Int,
         maximumQueuedDecodes: Int,
         decodePermits: AsyncPermitPool? = nil,
-        workingSetPermits: AsyncPermitPool? = nil
+        workingSetPermits: AsyncPermitPool? = nil,
+        globalDecodePermits: AsyncPermitPool? = nil,
+        globalWorkingSetPermits: AsyncPermitPool? = nil
     ) {
         self.codec = codec
         self.codecDescriptor = codec.codecDescriptor
         self.limits = limits
         self.diagnostics = diagnostics
         self.detailedDiagnosticsEnabled = detailedDiagnosticsAreEnabled(diagnostics)
-        self.permits =
-            decodePermits
-            ?? AsyncPermitPool(
-                limit: maximumConcurrentDecodes,
-                queueLimit: maximumQueuedDecodes
-            )
-        self.workingSetPermits =
-            workingSetPermits
-            ?? AsyncPermitPool(
-                limit: maximumDecodeWorkingSetBytes,
-                queueLimit: maximumQueuedDecodes
-            )
+        self.permitController = FoveaDecodePermitController(
+            diagnostics: diagnostics,
+            maximumConcurrentDecodes: maximumConcurrentDecodes,
+            maximumDecodeWorkingSetBytes: maximumDecodeWorkingSetBytes,
+            maximumQueuedDecodes: maximumQueuedDecodes,
+            decodePermits: decodePermits,
+            workingSetPermits: workingSetPermits,
+            globalDecodePermits: globalDecodePermits,
+            globalWorkingSetPermits: globalWorkingSetPermits
+        )
     }
 
     package var progressiveEncodedByteLimit: Int { limits.maximumEncodedBytes }
@@ -64,55 +53,67 @@ package final class DecodeStage: Sendable {
         for request: ImageRequest,
         format: EncodedImageFormat
     ) throws -> (any ImageProgressiveDecodeSession)? {
-        guard codecDescriptor.capabilities.progressiveFormats.contains(format),
-            let progressive = codec as? any ProgressiveImageDecoding
-        else { return nil }
-        return try progressive.makeProgressiveSession(
-            format: format,
-            request: Self.decodeRequest(for: request),
-            limits: limits
+        try ProgressiveDecodeStage.makeSession(
+            codec: codec,
+            descriptor: codecDescriptor,
+            limits: limits,
+            request: request,
+            format: format
         )
     }
 
     package func appendProgressive(
         _ chunk: Data,
-        to session: any ImageProgressiveDecodeSession
+        to session: any ImageProgressiveDecodeSession,
+        for request: ImageRequest
     ) async throws -> ImageProgressiveDecodeGeneration? {
-        try Task.checkCancellation()
-        let generation = try await executor.run {
-            try session.append(chunk)
+        try await permitController.withProgressiveDecodePermits(
+            priority: request.priority,
+            workEstimate: chunk.count
+        ) {
+            try await ProgressiveDecodeStage.append(
+                chunk,
+                to: session,
+                request: request,
+                limits: limits,
+                maximumResidentBytes: permitController.maximumWorkingSetBytes,
+                executor: executor
+            )
         }
-        try Task.checkCancellation()
-        return generation
     }
 
     package func finishProgressive(
-        _ session: any ImageProgressiveDecodeSession
+        _ session: any ImageProgressiveDecodeSession,
+        for request: ImageRequest
     ) async throws {
-        try Task.checkCancellation()
-        try await executor.run {
-            try session.finish()
+        try await permitController.withProgressiveDecodePermits(
+            priority: request.priority,
+            workEstimate: 1
+        ) {
+            try await ProgressiveDecodeStage.finish(session, executor: executor)
         }
     }
 
     package func finishProgressiveWithPreparation(
-        _ session: any ProgressiveImagePreparingSession
+        _ session: any ProgressiveImagePreparingSession,
+        for request: ImageRequest
     ) async throws -> ImageProgressiveDecodePreparationFinalization {
-        try Task.checkCancellation()
-        let finalization = try await executor.run {
-            try session.finishWithPreparation()
+        try await permitController.withProgressiveDecodePermits(
+            priority: request.priority,
+            workEstimate: 1
+        ) {
+            try await ProgressiveDecodeStage.finishWithPreparation(session, executor: executor)
         }
-        try Task.checkCancellation()
-        return finalization
     }
 
     package func discardProgressivePreparation(
         _ preparation: ImageDecodePreparation
     ) async {
-        guard let preparedDecoder = codec as? any PreparedImageDecoding else { return }
-        _ = try? await executor.run {
-            preparedDecoder.discard(preparation)
-        }
+        await ProgressiveDecodeStage.discardPreparation(
+            preparation,
+            codec: codec,
+            executor: executor
+        )
     }
 
     func cancelAll(namespace: SecurityNamespaceID) async {
@@ -199,10 +200,16 @@ package final class DecodeStage: Sendable {
             await priorityControl.finish()
         }
         do {
-            try codecDescriptor.requireSupport(Self.capabilityRequest(for: plan.probe))
+            try codecDescriptor.requireSupport(
+                FoveaCodecAdmission.capabilityRequest(for: plan.probe))
         } catch {
             let failure = PipelineFailure.imageCraft(error, stage: .probe)
-            await recordTerminalFailure(failure, keyDigest: keyDigest, probe: plan.probe)
+            await FoveaDecodeDiagnostics.recordTerminalFailure(
+                diagnostics: diagnostics,
+                failure: failure,
+                keyDigest: keyDigest,
+                probe: plan.probe
+            )
             throw failure
         }
     }
@@ -223,11 +230,11 @@ package final class DecodeStage: Sendable {
             )
         )
 
-        let decodeRequest = Self.decodeRequest(for: request)
-        let plan: DecodePlan
+        let decodeRequest = FoveaCodecAdmission.decodeRequest(for: request)
+        let plan: FoveaDecodePlan
         if let preparation {
             try preparation.probe.validateForFovea(under: limits)
-            plan = DecodePlan(probe: preparation.probe, preparation: preparation)
+            plan = FoveaDecodePlan(probe: preparation.probe, preparation: preparation)
         } else {
             plan = try await prepareDecode(
                 data: data,
@@ -244,7 +251,8 @@ package final class DecodeStage: Sendable {
             keyDigest: keyDigest,
             priorityControl: priorityControl
         )
-        await recordDecodeCompleted(
+        await FoveaDecodeDiagnostics.recordCompleted(
+            diagnostics: diagnostics,
             image: image,
             probe: plan.probe,
             request: request,
@@ -255,34 +263,62 @@ package final class DecodeStage: Sendable {
 
     private func admitAndDecode(
         data: Data,
-        plan: DecodePlan,
+        plan: FoveaDecodePlan,
         request: ImageRequest,
         decodeRequest: ImageDecodeRequest,
         keyDigest: String,
         priorityControl: SharedTaskPriorityControl
     ) async throws -> DecodedImage {
         do {
-            try codecDescriptor.requireSupport(Self.capabilityRequest(for: plan.probe))
+            try codecDescriptor.requireSupport(
+                FoveaCodecAdmission.capabilityRequest(for: plan.probe))
             try Task.checkCancellation()
-            let workingSetBytes = try await conservativeWorkingSetBytes(
+            let estimateStarted =
+                detailedDiagnosticsEnabled ? DispatchTime.now().uptimeNanoseconds : 0
+            let modeledWorkingSetBytes = try await FoveaCodecAdmission.workingSetBytes(
+                codec: codec,
+                executor: executor,
                 probe: plan.probe,
                 request: decodeRequest
             )
-            try Task.checkCancellation()
-            let permit = try await reserveWorkingSet(
-                bytes: workingSetBytes,
-                request: request,
-                keyDigest: keyDigest,
-                priorityControl: priorityControl
+            let preparedResourceLedger = try await FoveaCodecAdmission.preparedResourceLedger(
+                codec: codec,
+                executor: executor,
+                preparation: plan.preparation,
+                request: decodeRequest,
+                limits: limits
             )
-            return try await decode(
+            let workingSetBytes = max(
+                modeledWorkingSetBytes,
+                preparedResourceLedger?.transferredOutput.bytesUpperBound ?? 0
+            )
+            if detailedDiagnosticsEnabled {
+                await diagnostics.record(
+                    DiagnosticEvent(
+                        kind: .decodeResourceEstimateCompleted,
+                        keyDigest: keyDigest,
+                        byteCount: workingSetBytes,
+                        durationNanoseconds:
+                            DispatchTime.now().uptimeNanoseconds &- estimateStarted
+                    )
+                )
+            }
+            try Task.checkCancellation()
+            return try await FoveaRasterDecodeStage.decode(
                 data: data,
                 plan: plan,
+                request: request,
                 decodeRequest: decodeRequest,
-                workingSetPermit: permit,
                 workEstimate: workingSetBytes,
+                preparedResourceLedger: preparedResourceLedger,
                 keyDigest: keyDigest,
-                priorityControl: priorityControl
+                priorityControl: priorityControl,
+                codec: codec,
+                limits: limits,
+                executor: executor,
+                permits: permitController,
+                diagnostics: diagnostics,
+                detailedDiagnosticsEnabled: detailedDiagnosticsEnabled
             )
         } catch {
             await discardPreparation(plan.preparation)
@@ -297,7 +333,7 @@ package final class DecodeStage: Sendable {
 
     private func rethrowAdmissionFailure(
         _ error: any Error,
-        plan: DecodePlan,
+        plan: FoveaDecodePlan,
         decodeRequest: ImageDecodeRequest,
         keyDigest: String
     ) async throws -> Never {
@@ -306,8 +342,9 @@ package final class DecodeStage: Sendable {
             error is CancellationError
             ? PipelineFailure.cancelled(stage: .decode)
             : PipelineFailure.imageCraft(error, stage: .decode)
-        await recordTerminalFailure(
-            failure,
+        await FoveaDecodeDiagnostics.recordTerminalFailure(
+            diagnostics: diagnostics,
+            failure: failure,
             keyDigest: keyDigest,
             probe: plan.probe,
             decodeRequest: decodeRequest
@@ -315,32 +352,12 @@ package final class DecodeStage: Sendable {
         throw failure
     }
 
-    private func recordDecodeCompleted(
-        image: DecodedImage,
-        probe: ImageProbe,
-        request: ImageRequest,
-        keyDigest: String
-    ) async {
-        await diagnostics.record(
-            DiagnosticEvent(
-                kind: .decodeCompleted,
-                keyDigest: keyDigest,
-                sourcePixelCount: Self.pixelCount(
-                    width: probe.pixelWidth, height: probe.pixelHeight),
-                outputPixelCount: Self.pixelCount(
-                    width: image.pixelWidth, height: image.pixelHeight),
-                targetWidth: request.target.width,
-                targetHeight: request.target.height
-            )
-        )
-    }
-
     private func prepareDecode(
         data: Data,
         request: ImageRequest,
         keyDigest: String,
         priorityControl: SharedTaskPriorityControl
-    ) async throws -> DecodePlan {
+    ) async throws -> FoveaDecodePlan {
         let permit = try await acquireProbePermit(
             dataCount: data.count,
             keyDigest: keyDigest,
@@ -368,12 +385,16 @@ package final class DecodeStage: Sendable {
         priorityControl: SharedTaskPriorityControl
     ) async throws -> AsyncPermitPool.Permit {
         do {
-            return try await acquireDecodePermit(
+            return try await permitController.acquireDecodePermit(
                 priorityControl: priorityControl,
                 workEstimate: dataCount
             )
         } catch let failure as PipelineFailure {
-            await recordTerminalFailure(failure, keyDigest: keyDigest)
+            await FoveaDecodeDiagnostics.recordTerminalFailure(
+                diagnostics: diagnostics,
+                failure: failure,
+                keyDigest: keyDigest
+            )
             throw failure
         }
     }
@@ -417,12 +438,12 @@ package final class DecodeStage: Sendable {
         codec: any ImageCodec,
         data: Data,
         limits: DecodeLimits
-    ) throws -> DecodePlan {
+    ) throws -> FoveaDecodePlan {
         if let preparedDecoder = codec as? any PreparedImageDecoding {
             let preparation = try preparedDecoder.prepare(data: data, limits: limits)
-            return DecodePlan(probe: preparation.probe, preparation: preparation)
+            return FoveaDecodePlan(probe: preparation.probe, preparation: preparation)
         }
-        return DecodePlan(
+        return FoveaDecodePlan(
             probe: try codec.probe(data: data, limits: limits),
             preparation: nil
         )
@@ -437,7 +458,7 @@ package final class DecodeStage: Sendable {
             DiagnosticEvent(
                 kind: .probeCompleted,
                 keyDigest: keyDigest,
-                sourcePixelCount: Self.pixelCount(
+                sourcePixelCount: FoveaCodecAdmission.pixelCount(
                     width: timed.plan.probe.pixelWidth,
                     height: timed.plan.probe.pixelHeight
                 ),
@@ -454,220 +475,12 @@ package final class DecodeStage: Sendable {
             error is CancellationError
             ? PipelineFailure.cancelled(stage: .probe)
             : PipelineFailure.imageCraft(error, stage: .probe)
-        await recordTerminalFailure(failure, keyDigest: keyDigest)
-        throw failure
-    }
-
-    private func reserveWorkingSet(
-        bytes: Int,
-        request: ImageRequest,
-        keyDigest: String,
-        priorityControl: SharedTaskPriorityControl
-    ) async throws -> AsyncPermitPool.Permit {
-        do {
-            let permit = try await workingSetPermits.acquire(
-                units: bytes,
-                priority: await priorityControl.currentPriority(),
-                workEstimate: bytes,
-                priorityUpdates: await priorityControl.updates()
-            )
-            await diagnostics.record(
-                DiagnosticEvent(
-                    kind: .decodeWorkingSetReserved,
-                    keyDigest: keyDigest,
-                    byteCount: bytes,
-                    requestedPriority: request.priority,
-                    effectivePriority: await priorityControl.currentPriority()
-                )
-            )
-            return permit
-        } catch is CancellationError {
-            let failure = PipelineFailure.cancelled(stage: .decode)
-            await recordTerminalFailure(failure, keyDigest: keyDigest)
-            throw failure
-        } catch PermitPoolError.requestExceedsLimit {
-            await diagnostics.record(
-                DiagnosticEvent(
-                    kind: .decodeAdmissionRejected,
-                    keyDigest: keyDigest,
-                    byteCount: bytes,
-                    reason: "decode-working-set-limit-exceeded"
-                )
-            )
-            let failure = PipelineFailure.resourceLimit(
-                stage: .decode,
-                reasonCode: "decode-working-set-limit-exceeded"
-            )
-            await recordTerminalFailure(failure, keyDigest: keyDigest)
-            throw failure
-        } catch PermitPoolError.queueLimitExceeded {
-            let failure = PipelineFailure.resourceLimit(
-                stage: .decode,
-                reasonCode: "decode-working-set-queue-limit-exceeded"
-            )
-            await recordTerminalFailure(failure, keyDigest: keyDigest)
-            throw failure
-        } catch {
-            let failure = PipelineFailure.internalFailure(stage: .decode)
-            await recordTerminalFailure(failure, keyDigest: keyDigest)
-            throw failure
-        }
-    }
-
-    private func decode(
-        data: Data,
-        plan: DecodePlan,
-        decodeRequest: ImageDecodeRequest,
-        workingSetPermit: consuming AsyncPermitPool.Permit,
-        workEstimate: Int,
-        keyDigest: String,
-        priorityControl: SharedTaskPriorityControl
-    ) async throws -> DecodedImage {
-        do {
-            let timed = try await executeRasterDecode(
-                data: data,
-                plan: plan,
-                decodeRequest: decodeRequest,
-                workingSetPermit: workingSetPermit,
-                workEstimate: workEstimate,
-                priorityControl: priorityControl
-            )
-            await recordRasterDiagnostics(
-                timed,
-                decodeRequest: decodeRequest,
-                keyDigest: keyDigest
-            )
-            return timed.image
-        } catch {
-            try await rethrowRasterFailure(
-                error,
-                plan: plan,
-                decodeRequest: decodeRequest,
-                keyDigest: keyDigest
-            )
-        }
-    }
-
-    private func executeRasterDecode(
-        data: Data,
-        plan: DecodePlan,
-        decodeRequest: ImageDecodeRequest,
-        workingSetPermit: consuming AsyncPermitPool.Permit,
-        workEstimate: Int,
-        priorityControl: SharedTaskPriorityControl
-    ) async throws -> TimedRasterDecode {
-        try await workingSetPermit.withPermit {
-            let decodePermit = try await acquireDecodePermit(
-                priorityControl: priorityControl,
-                workEstimate: workEstimate
-            )
-            return try await decodePermit.withPermit {
-                try Task.checkCancellation()
-                let result = try await executor.run { [codec, limits] in
-                    try Self.rasterDecode(
-                        codec: codec,
-                        data: data,
-                        plan: plan,
-                        request: decodeRequest,
-                        limits: limits
-                    )
-                }
-                try Task.checkCancellation()
-                return result
-            }
-        }
-    }
-
-    private static func rasterDecode(
-        codec: any ImageCodec,
-        data: Data,
-        plan: DecodePlan,
-        request: ImageDecodeRequest,
-        limits: DecodeLimits
-    ) throws -> TimedRasterDecode {
-        let started = DispatchTime.now().uptimeNanoseconds
-        let image: DecodedImage
-        if let preparation = plan.preparation,
-            let preparedDecoder = codec as? any PreparedImageDecoding
-        {
-            image = try preparedDecoder.decode(
-                preparation: preparation,
-                request: request,
-                limits: limits
-            )
-        } else {
-            image = try codec.decode(
-                data: data,
-                probe: plan.probe,
-                request: request,
-                limits: limits
-            )
-        }
-        return TimedRasterDecode(
-            image: image,
-            durationNanoseconds: DispatchTime.now().uptimeNanoseconds &- started
-        )
-    }
-
-    private func recordRasterDiagnostics(
-        _ timed: TimedRasterDecode,
-        decodeRequest: ImageDecodeRequest,
-        keyDigest: String
-    ) async {
-        guard detailedDiagnosticsEnabled else { return }
-        await diagnostics.record(
-            DiagnosticEvent(
-                kind: .rasterDecodeCompleted,
-                keyDigest: keyDigest,
-                outputPixelCount: Self.pixelCount(
-                    width: timed.image.pixelWidth,
-                    height: timed.image.pixelHeight
-                ),
-                targetWidth: decodeRequest.target.width,
-                targetHeight: decodeRequest.target.height,
-                durationNanoseconds: timed.durationNanoseconds
-            )
-        )
-    }
-
-    private func rethrowRasterFailure(
-        _ error: any Error,
-        plan: DecodePlan,
-        decodeRequest: ImageDecodeRequest,
-        keyDigest: String
-    ) async throws -> Never {
-        let failure: PipelineFailure
-        if error is CancellationError {
-            failure = .cancelled(stage: .decode)
-        } else if let pipelineFailure = error as? PipelineFailure {
-            failure = pipelineFailure
-        } else {
-            failure = .imageCraft(error, stage: .decode)
-        }
-        await recordTerminalFailure(
-            failure,
-            keyDigest: keyDigest,
-            probe: plan.probe,
-            decodeRequest: decodeRequest
+        await FoveaDecodeDiagnostics.recordTerminalFailure(
+            diagnostics: diagnostics,
+            failure: failure,
+            keyDigest: keyDigest
         )
         throw failure
-    }
-
-    private func conservativeWorkingSetBytes(
-        probe: ImageProbe,
-        request: ImageDecodeRequest
-    ) async throws -> Int {
-        let genericBytes = FoveaDecodeWorkingSetEstimator.estimatedBytes(
-            probe: probe,
-            request: request
-        )
-        let backendEstimate = try await executor.run { [codec] in
-            try codec.resourceEstimate(probe: probe, request: request)
-        }
-        return try ImageDecodeResourceEstimate.conservativeMaximum(
-            genericBytes: genericBytes,
-            backendBytes: backendEstimate.workingSetBytes
-        ).workingSetBytes
     }
 
     private func discardPreparation(_ preparation: ImageDecodePreparation?) async {
@@ -679,76 +492,4 @@ package final class DecodeStage: Sendable {
         }
     }
 
-    private static func capabilityRequest(
-        for probe: ImageProbe
-    ) -> ImageDecodeCapabilityRequest {
-        ImageDecodeCapabilityRequest(
-            format: probe.format,
-            deliveryMode: .completeFrame,
-            trackMode: .primaryFrame,
-            requiredMetadata: [.orientation, .sourceColorProfile],
-            dynamicRange: .standard,
-            outputRepresentation: .coreGraphicsImage,
-            cancellationMode: .operationBoundary
-        )
-    }
-
-    private static func decodeRequest(for request: ImageRequest) -> ImageDecodeRequest {
-        ImageDecodeRequest(
-            target: request.target,
-            contentMode: request.contentMode,
-            colorPolicy: request.colorPolicy
-        )
-    }
-
-    private func recordTerminalFailure(
-        _ failure: PipelineFailure,
-        keyDigest: String,
-        probe: ImageProbe? = nil,
-        decodeRequest: ImageDecodeRequest? = nil
-    ) async {
-        await diagnostics.record(
-            DiagnosticEvent(
-                kind: failure.disposition == .cancelled ? .decodeCancelled : .decodeFailed,
-                keyDigest: keyDigest,
-                statusCode: failure.statusCode,
-                sourcePixelCount: probe.map {
-                    Self.pixelCount(width: $0.pixelWidth, height: $0.pixelHeight)
-                },
-                targetWidth: decodeRequest?.target.width,
-                targetHeight: decodeRequest?.target.height,
-                reason: failure.reasonCode,
-                failureCategory: failure.category,
-                failureStage: failure.stage,
-                failureDisposition: failure.disposition
-            )
-        )
-    }
-
-    private func acquireDecodePermit(
-        priorityControl: SharedTaskPriorityControl,
-        workEstimate: Int
-    ) async throws -> AsyncPermitPool.Permit {
-        do {
-            return try await permits.acquire(
-                priority: await priorityControl.currentPriority(),
-                workEstimate: workEstimate,
-                priorityUpdates: await priorityControl.updates()
-            )
-        } catch is CancellationError {
-            throw PipelineFailure.cancelled(stage: .decode)
-        } catch PermitPoolError.queueLimitExceeded {
-            throw PipelineFailure.resourceLimit(
-                stage: .decode,
-                reasonCode: "decode-queue-limit-exceeded"
-            )
-        } catch {
-            throw PipelineFailure.internalFailure(stage: .decode)
-        }
-    }
-
-    private static func pixelCount(width: Int, height: Int) -> Int {
-        let (result, overflow) = width.multipliedReportingOverflow(by: height)
-        return overflow ? Int.max : result
-    }
 }

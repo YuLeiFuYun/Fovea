@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "planID": "FOVEA-W5-APNG-TILE-CHECKPOINT-CANDIDATE-V1",
+  "status": "preregistered-local-analytical-candidate-family-no-product-claim",
+  "basePlan": "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+  "objective": "Test whether immutable persistent tile versions with shared checkpoint roots can provide a useful bounded APNG random-access support envelope after retained full-canvas checkpoints failed the reference policy.",
+  "tileSizes": [32, 64, 128, 256],
+  "rootRepresentation": {
+    "entryBytesPerTile": 8,
+    "headerBytesPerRetainedRoot": 64,
+    "frameZeroRoot": "implicit-transparent-not-retained",
+    "sharing": "unchanged immutable tile versions are shared across checkpoint roots"
+  },
+  "layoutFamilies": [
+    "fixed intervals from one through the maximum replay bound",
+    "access-weight-optimal layouts for a bounded checkpoint-count candidate set"
+  ],
+  "sparseMotion": {
+    "mode": "deterministic-coprime-translation",
+    "xMultiplier": 97,
+    "yMultiplier": 193,
+    "purpose": "avoid assuming every one-pixel sparse update remains in the same tile"
+  },
+  "retainedBudgetMiB": [8, 16, 32, 64, 128, 256, 512],
+  "maximumReplayFrames": [4, 8, 16],
+  "referencePolicyPoint": {
+    "retainedBudgetMiB": 32,
+    "maximumReplayFrames": 8
+  },
+  "candidateSuccessCriteria": [
+    "retained state is no larger than the selected retained-byte budget",
+    "worst replay is no larger than the selected replay bound",
+    "exact-pixel and disposal semantics remain delegated to the owned straight-alpha reference contract",
+    "modeled peak including one materialized output canvas is reported separately from retained feasibility"
+  ],
+  "modelBoundary": [
+    "Every tile touched by a frame is conservatively treated as a new immutable full-tile version even when only part of the tile changes.",
+    "A previous-disposal frame creates transient output tile versions but restores the pre-frame root; those output versions are not retained by later checkpoints.",
+    "A background clear returns a fully covered tile to the implicit transparent tile and creates a new version for a partially cleared tile.",
+    "Each retained checkpoint root is conservatively charged as a flat table containing one eight-byte reference per canvas tile plus a fixed header; unchanged tile bytes are shared across roots.",
+    "Candidate layouts are deterministic fixed-interval and access-optimal families, not a proof of global memory/replay optimality. A failed candidate case does not prove that every possible tile layout is impossible.",
+    "The model reports a conservative peak upper bound containing retained state, one full materialized output, all tiles touched by the largest frame, and root-build scratch. It does not estimate allocator fragmentation, compressed-source decode workspace, CPU, energy, thermal behavior, or physical-device pressure.",
+    "The SpecTesting separate-default previous fixture remains a future owned-decoder geometry stress case and does not activate current ImageCraft support for multi-frame separate-default APNG.",
+    "A feasible candidate is implementation evidence only, not a production or performance claim."
+  ]
+}

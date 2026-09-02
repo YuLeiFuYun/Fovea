@@ -169,9 +169,10 @@ enum BenchmarkCoordinator {
         if loopbackOrigin == nil {
             session.protocolClasses = [DeterministicBenchmarkURLProtocol.self]
         }
-        if arguments.workload == .w7ThousandConcurrent {
-            session.httpMaximumConnectionsPerHost = 8
-        }
+        // Freeze the Foundation default explicitly so transport concurrency cannot drift with
+        // platform defaults while the evidence identity remains unchanged.
+        session.httpMaximumConnectionsPerHost =
+            arguments.workload == .w7ThousandConcurrent ? 8 : 6
         session.urlCache = nil
         session.httpCookieStorage = nil
         session.urlCredentialStorage = nil
@@ -195,6 +196,21 @@ enum BenchmarkCoordinator {
         )
         NSLog("FOVEA_STAGE=adapter-open-ready")
 
+        if arguments.workload == .w5AnimatedMedia {
+            let envelope = try await W5AnimatedTimingWorkload.run(
+                arguments: arguments,
+                catalog: catalog,
+                adapter: adapter,
+                harnessIdentity: harnessIdentity,
+                experimentPlanID: experimentPlanID,
+                experimentPlanDigest: experimentPlanDigest,
+                claimFamilyDigest: claimFamilyDigest
+            )
+            try write(envelope, named: arguments.outputName)
+            await adapter.cancelAll()
+            return
+        }
+
         var correctnessChecks: [BenchmarkCheck] = []
         var heroController: HeroBenchmarkViewController?
         if arguments.workload == .w2DetailHero {
@@ -216,10 +232,12 @@ enum BenchmarkCoordinator {
         NSLog("FOVEA_STAGE=cache-prepare-start")
         try await prepareCache(
             arguments.cacheState,
+            repetitions: arguments.cachePreparationRepetitions,
             workload: arguments.workload,
             adapter: adapter,
             catalog: catalog
         )
+        let cachePreparationDiagnostics = await adapter.cachePreparationDiagnostics()
         NSLog("FOVEA_STAGE=cache-prepare-ready")
         resetOriginMetrics(loopbackOrigin)
         let footprint = PhysicalFootprintSampler()
@@ -272,6 +290,8 @@ enum BenchmarkCoordinator {
                 controller: controller,
                 runIndex: arguments.runIndex
             )
+        case .w5AnimatedMedia:
+            throw BenchmarkAppError.runFailed("w5-early-routing-invariant-failed")
         case .w7ThousandConcurrent:
             let controller = BenchmarkStatusViewController()
             controller.loadViewIfNeeded()
@@ -287,6 +307,16 @@ enum BenchmarkCoordinator {
         NSLog("FOVEA_STAGE=workload-ready")
         frames.stop()
         let memory = footprint.stop()
+        if let ownerCell = W1FootprintOwnerAttributionStore.take() {
+            let ownerArtifact = W1FootprintOwnerCellArtifact(
+                rawCell: ownerCell,
+                hitchCount: frames.hitchCount,
+                hitchExcessNanoseconds: frames.hitchExcessNanoseconds
+            )
+            let ownerName =
+                String(arguments.outputName.dropLast(".json".count)) + "-w1-owner-cell.json"
+            try write(ownerArtifact, named: ownerName)
+        }
         let thermal = thermalMonitor.snapshotAndStop()
         let processMetrics = BenchmarkProcessMetrics(
             baselinePhysicalFootprintBytes: memory.baseline,
@@ -309,6 +339,21 @@ enum BenchmarkCoordinator {
             datasetDigest: catalog.dataset.datasetDigest,
             observations: result.observations
         )
+        if let diagnosticAdapter = adapter as? any ComparatorDiagnosticAdapter {
+            let events = await diagnosticAdapter.diagnosticEvents()
+            if !events.isEmpty {
+                let sidecar = BenchmarkDiagnosticSidecar(
+                    comparator: adapter.identity,
+                    harnessIdentity: harnessIdentity,
+                    workloadID: arguments.workload,
+                    runIndex: arguments.runIndex,
+                    events: events
+                )
+                let diagnosticName =
+                    String(arguments.outputName.dropLast(".json".count)) + "-diagnostics.json"
+                try write(sidecar, named: diagnosticName)
+            }
+        }
         #if targetEnvironment(simulator)
             let allChecks = correctnessChecks + result.checks
         #else
@@ -324,17 +369,20 @@ enum BenchmarkCoordinator {
         let envelope = BenchmarkRunEnvelope(
             planID: experimentPlanID,
             comparator: adapter.identity,
+            comparatorRuntimeConfiguration: adapter.runtimeConfiguration,
             harnessIdentity: harnessIdentity,
             experimentPlanDigest: experimentPlanDigest,
             claimFamilyDigest: claimFamilyDigest,
             environment: catalog.environment,
             workloadID: arguments.workload,
             cacheState: arguments.cacheState,
+            cachePreparationRepetitions: arguments.cachePreparationRepetitions,
             networkProfile: arguments.networkProfile,
             runIndex: arguments.runIndex,
             timeScale: arguments.timeScale,
             datasetDigest: catalog.dataset.datasetDigest,
             artifact: artifact,
+            cachePreparationDiagnostics: cachePreparationDiagnostics,
             processMetrics: processMetrics,
             thermal: thermal,
             originMetrics: originMetrics(loopbackOrigin),
@@ -453,6 +501,7 @@ enum BenchmarkCoordinator {
 
     private static func prepareCache(
         _ state: BenchmarkCacheState,
+        repetitions: Int,
         workload: ComparativeWorkloadID,
         adapter: any ComparatorAdapter,
         catalog: ResourceCatalog
@@ -460,43 +509,48 @@ enum BenchmarkCoordinator {
         try await adapter.purgeDisk()
         await adapter.purgeMemory()
         guard state != .cold else { return }
-        switch workload {
-        case .w1FeedScroll:
-            let target = try ComparatorPixelTarget(width: 320, height: 240)
-            for asset in catalog.dataset.assets {
-                let request = try ComparatorRequest(
-                    resourceID: asset.assetID,
-                    url: benchmarkURL(path: "/asset/\(asset.assetID)"),
-                    target: target,
-                    contentMode: .aspectFill,
-                    priority: .utility
-                )
-                _ = try await adapter.makeLoad(request).result()
-            }
-        case .w2DetailHero:
-            let targets = [
-                try ComparatorPixelTarget(width: 390, height: 260),
-                try ComparatorPixelTarget(width: 780, height: 520),
-                try ComparatorPixelTarget(width: 1_170, height: 780),
-            ]
-            for name in [
-                "hero-12mp-4000x3000.jpg",
-                "hero-24mp-6000x4000.jpg",
-                "hero-48mp-8000x6000.jpg",
-            ] {
-                for target in targets {
+        for repetition in 0..<repetitions {
+            switch workload {
+            case .w1FeedScroll:
+                let target = try ComparatorPixelTarget(width: 320, height: 240)
+                for asset in catalog.dataset.assets {
                     let request = try ComparatorRequest(
-                        resourceID: "hero|\(name)|\(target.width)x\(target.height)",
-                        url: benchmarkURL(path: "/hero/\(name)"),
+                        resourceID: asset.assetID,
+                        url: benchmarkURL(path: "/asset/\(asset.assetID)"),
                         target: target,
-                        contentMode: .aspectFit,
+                        contentMode: .aspectFill,
                         priority: .utility
                     )
                     _ = try await adapter.makeLoad(request).result()
                 }
+            case .w2DetailHero:
+                let targets = [
+                    try ComparatorPixelTarget(width: 390, height: 260),
+                    try ComparatorPixelTarget(width: 780, height: 520),
+                    try ComparatorPixelTarget(width: 1_170, height: 780),
+                ]
+                for name in [
+                    "hero-12mp-4000x3000.jpg",
+                    "hero-24mp-6000x4000.jpg",
+                    "hero-48mp-8000x6000.jpg",
+                ] {
+                    for target in targets {
+                        let request = try ComparatorRequest(
+                            resourceID: "hero|\(name)|\(target.width)x\(target.height)",
+                            url: benchmarkURL(path: "/hero/\(name)"),
+                            target: target,
+                            contentMode: .aspectFit,
+                            priority: .utility
+                        )
+                        _ = try await adapter.makeLoad(request).result()
+                    }
+                }
+            case .w3AuthGallery, .w4ProgressiveJPEG, .w5AnimatedMedia,
+                .w7ThousandConcurrent:
+                break
             }
-        case .w3AuthGallery, .w4ProgressiveJPEG, .w7ThousandConcurrent:
-            break
+            try await adapter.finishCachePreparation()
+            if repetition + 1 < repetitions { await adapter.purgeMemory() }
         }
         if state == .warmDisk { await adapter.purgeMemory() }
     }
@@ -514,7 +568,7 @@ enum BenchmarkCoordinator {
         return components.url!
     }
 
-    private static func write(_ envelope: BenchmarkRunEnvelope, named name: String) throws {
+    static func write<Envelope: Encodable>(_ envelope: Envelope, named name: String) throws {
         let documents = try FileManager.default.url(
             for: .documentDirectory,
             in: .userDomainMask,

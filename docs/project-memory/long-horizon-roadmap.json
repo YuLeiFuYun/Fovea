@@ -39,8 +39,8 @@
     {
       "id": "P1-GOVERNANCE-001",
       "phase": "P1",
-      "status": "completed-current-public-xcode27-ci-green-required-check-active",
-      "summary": "ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e and Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 are the only supported component revisions. Both are public, MIT licensed, xcode-27 CI-green and protected by required core checks; physical-device evidence remains open."
+      "status": "completed-current-public-alpha8-alpha7-ci-green-required-check-active",
+      "summary": "Fovea production pins are ImageCraft c16a868f1a1c0ed6b1a916ad082f762969ac5a7e (0.1.0-alpha.8) and Akashic 0376b960ec8abe54f2d4a9d7d66e97f395215eaf (0.1.0-alpha.7). Both component main branches are required-core CI green. Fovea has production host integration for ImageCraft animation admission and Akashic eviction reporting; protected Fovea release evidence and physical-device qualification remain open."
     },
     {
       "id": "P3-CONTRACT-001",
@@ -51,8 +51,8 @@
     {
       "id": "P4-DISK-001",
       "phase": "P4",
-      "status": "public-xcode27-ci-green-alpha3-required-check-fault-rebind-device-pending",
-      "summary": "Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 is public under MIT, xcode-27 CI-green in run 30790047451, tagged 0.1.0-alpha.5, and protected by a required core check. Fovea public-pin clean-copy passes 478/478 and CacheLab V4 is bound to clean source-control resolution; physical power-loss and stable-device resource qualification remain open."
+      "status": "public-alpha7-required-core-green-current-pin-physical-evidence-pending",
+      "summary": "Akashic 0.1.0-alpha.7 at 0376b960ec8abe54f2d4a9d7d66e97f395215eaf is public, MIT, required-core CI green and exactly pinned by Fovea. The current implementation includes compact manifest v2, dynamic global-unassigned memory budgeting and exact eviction reporting. Historical CacheLab V4 remains bound to alpha.5; physical power-loss/resource evidence and a current alpha.7 formal performance campaign remain open."
     },
     {
       "id": "P4-EVIDENCE-001",
@@ -63,32 +63,32 @@
     {
       "id": "P5-AKASHIC-ADAPTER-001",
       "phase": "P5",
-      "status": "current-public-alpha5-pin-478-current-schema-tested",
-      "summary": "Fovea consumes public Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 (0.1.0-alpha.5) by exact revision and passes 478/478. Current manifest, resource V2 and fault V5 evidence are bound to this source identity; physical qualification remains open."
+      "status": "current-public-alpha7-pin-production-eviction-report-integrated",
+      "summary": "Fovea consumes Akashic 0.1.0-alpha.7 by exact revision and uses exact eviction reports to synchronize host rendered-cache residency. The production integration is current; historical alpha.5 fault/resource/performance artifacts retain their original source binding and do not automatically qualify alpha.7. Physical and protected release evidence remain open."
     },
     {
       "id": "P4-MANIFEST-001",
       "phase": "P4",
-      "status": "active-retained-counterexample",
-      "summary": "Retain the 64 x 4 KiB small-object workload that exposes about 3.8033x application-layer logical write amplification from full-manifest replacement. Compare batching, segmented manifests and append/checkpoint candidates only behind the existing crash, recovery, schema and partition gates."
+      "status": "completed-local-compact-record-v2-retained-regression-gate-physical-io-pending",
+      "summary": "The historical 64 x 4 KiB full-manifest counterexample (~3.8033x) is superseded. Current Akashic first reached 1.1012x with per-key incremental records, then compact record v2 reduced metadata writes by 51.4% to 12,897 B and total logical write amplification to about 1.0492x without changing the per-key durable transaction boundary. Legacy v1 create/tombstone replay and future-schema/filename-key fail-closed checks are retained. Resource verification now enforces <=1.06x for 64 x 4 KiB, <=1.005x for 32 x 64 KiB and <=1.001x for 8 x 1 MiB. Physical NAND/write-cache/energy amplification remains under P4-EVIDENCE-001."
     },
     {
       "id": "P0-CLEAN-PUBLICATION-BASELINE-001",
       "phase": "P0",
-      "status": "privacy-sanitized-current-root-ready-public-ci-pending",
-      "summary": "The privacy-sanitized Fovea publication tree excludes embedded component sources, build artifacts, local paths, credentials and old Git history. Current exact-pin clean-copy passes; public-root CI remains pending."
+      "status": "public-root-exists-untagged-protected-full-workbench-ui-blocked",
+      "summary": "The privacy-sanitized Fovea public repository root already exists. main remains f4b320b7f995bc565f0ca5ef053a5cd5bfb3a3c7 and 0.1.0-alpha.1 is absent. A later candidate passed exact local qualification and hosted identity but full verification failed in a Workbench UI shard; final-candidate local qualification and fresh protected identity/full evidence remain mandatory before main/tag publication."
     },
     {
       "id": "P2-IMAGECRAFT-EXTERNAL-SWITCH-001",
       "phase": "P2",
-      "status": "clean-alpha5-composition-simulator-host-and-portable-source-copy-qualified-public-ci-pending",
-      "summary": "Fovea consumes ImageCraft bc93b8df0337d7a57779b53106dd744ad97b095e (0.1.0-alpha.5) as the only supported exact revision. Clean premerge, conformance, Release, iOS Simulator 485/485, five-relaunch host evidence 10/10, and git-archive portable replay (root 484/484, Release, rebuilt-comparator CacheLab 7/7) pass; public CI, production streaming and physical-device evidence remain open. Full profile portability remains a tooling obligation."
+      "status": "current-public-alpha8-pin-production-animation-adapter-integrated-device-release-pending",
+      "summary": "Fovea now exactly pins ImageCraft 0.1.0-alpha.8 at c16a868f1a1c0ed6b1a916ad082f762969ac5a7e. FoveaSystem compiles a production ImageCraftAnimationPlaybackPreparer and uses ImageCraft frame-window/whole-track cost estimates inside host-global animation admission while Fovea retains authorization, identity, cancellation and publication authority. Stable physical-iOS/resource evidence, same-semantics player comparison and protected release qualification remain open; no global performance claim is permitted."
     },
     {
       "id": "P6-CROSS-REPOSITORY-CONFORMANCE-001",
       "phase": "P6",
-      "status": "local-schema4-seatbelt-contained-dual-component-composition-passed-release-evidence-pending",
-      "summary": "Persistent-store provider and ImageCodec v1 remain the sole current conformance kits and pass their independent self-host consumers. Source identity v2 binds component domain, complete coverage, exact exclusions, every file digest and executable bit. The schema-4 Fovea gate independently validates external identity documents, materializes byte-validated snapshots, and executes candidate manifests, package edit, dependency inspection and 478/478 tests inside FOVEA-COMPONENT-CANDIDATE-SANDBOX-V1. Seven runtime probes prove network denial, host-source read denial, host-write denial, isolated Fovea source write denial and both candidate snapshot write denials while the dedicated State root remains writable; immutable Fovea and component identities remain unchanged after testing. Akashic 5887e2facb07 (84 files) and ImageCraft 045aa7013b19 (94 files) also pass full local release-readiness and clean-copy campaigns. The same candidate bytes are now published as Akashic 2715f23d50b5 / 0.1.0-alpha.5 and ImageCraft e147b349d4ff / 0.1.0-alpha.4, with both component GitHub Verify workflows green. That campaign used ImageCraft e147b349d4ff / 0.1.0-alpha.4; the current supported ImageCraft pin later advanced to bc93b8df0337 / 0.1.0-alpha.5 and requires the present composition requalification. The sandbox still uses deprecated SwiftPM native build system and candidates can read the isolated Fovea source graph, so default swiftbuild equivalence, mutual confidentiality, Fovea protected CI, real independent third-party implementations and physical-device qualification remain pending."
+      "status": "current-exact-pin-kits-green-historical-schema4-campaign-retained-protected-release-pending",
+      "summary": "Persistent-store provider and ImageCodec v1 remain the current conformance kits, and their manifests follow the exact production component pins. Earlier schema-4 Seatbelt campaigns remain historical source-bound evidence and are not rewritten to new component revisions. Current ImageCraft alpha.8/Akashic alpha.7 composition and host adapters are integrated; protected Fovea release evidence, real third-party implementations, stronger isolation and physical-device qualification remain open."
     },
     {
       "id": "P6-QUALIFIED-COMPOSITION-SEAMS-001",
@@ -105,20 +105,20 @@
     {
       "id": "P0-SWIFT64-TOOLCHAIN-001",
       "phase": "P0",
-      "status": "current-components-xcode27-green-private-fovea-root-pending",
-      "summary": "Xcode 27/Swift 6.4 selection and local gates pass. Current ImageCraft and Akashic revisions are green on xcode-27; the sanitized private Fovea root remains the hosted-CI task."
+      "status": "current-components-xcode27-green-fovea-protected-full-workbench-ui-failure",
+      "summary": "Xcode 27/Swift 6.4 selection and local gates pass. Current ImageCraft alpha.8 and Akashic alpha.7 are green on xcode-27. Fovea Verification is active: 6cf identity passed, while full verification failed in a hosted Workbench UI shard; final-candidate qualification and fresh protected evidence remain the publication task."
     },
     {
       "id": "P1-SWIFT64-IMAGECRAFT-001",
       "phase": "P1",
-      "status": "public-alpha5-xcode27-green-progressive-evidence-physical-pending",
-      "summary": "ImageCraft 0.1.0-alpha.5 passes release-readiness, compatibility, macOS 12/iOS 15 platform builds, progressive real-photo/scan/pipeline evidence and public xcode-27 CI. Physical-device presentation and energy evidence remain open."
+      "status": "public-alpha8-xcode27-green-animation-window-contract-physical-pending",
+      "summary": "ImageCraft 0.1.0-alpha.8 is public and xcode-27 CI green; it includes the bounded animation frame-window/whole-track cost contract consumed by Fovea. Historical progressive/animation mechanism evidence retains its original source binding. Stable physical-device presentation/resource/energy evidence remains open."
     },
     {
       "id": "P4-SWIFT64-AKASHIC-001",
       "phase": "P4",
-      "status": "public-alpha5-xcode27-green-full-fault-rebind-pending",
-      "summary": "Akashic noncopyable writer lease and defer cleanup pass 41 tests, release, consumers, API baseline and six macOS 12/iOS 15 platform cases."
+      "status": "public-alpha7-xcode27-green-current-pin-physical-current-performance-pending",
+      "summary": "Akashic 0.1.0-alpha.7 is public and xcode-27 CI green and is Fovea's exact production pin. Current dynamic budget/eviction-report semantics are integrated; physical qualification and a current-source formal performance campaign remain open."
     },
     {
       "id": "P6-SWIFT64-COMPOSITION-001",
@@ -147,8 +147,8 @@
     {
       "id": "P7-COMPARATOR-ADAPTER-VALIDATION-001",
       "phase": "P7",
-      "status": "completed-local-build-compatibility-no-performance-claim",
-      "summary": "The locked comparative lab completed all seven configured adapter validations with external sources enabled and iOS builds enabled. Apple URLSession/URLCache/ImageIO, Fovea, Nuke, Kingfisher, SDWebImage, AlamofireImage and PINRemoteImage passed macOS and generic iOS Simulator builds; the native URLCache behavior contract and 11 simulator-support tests also passed. This establishes source-pin and adapter compatibility only. Phase 1 declaration and performance ranking remain blocked by the dirty Fovea workspace identity, stable runtime/device evidence, repeated measurements and the other preregistered entry blockers."
+      "status": "completed-historical-build-compatibility-current-clean-formal-and-physical-ranking-pending",
+      "summary": "All seven configured comparator integrations passed the locked build/structural contract in the recorded campaign. That evidence establishes compatibility only. The old dirty-workspace blocker is not a current-source claim; current develop is committed, but formal ranking still requires a fresh exact-candidate/quiet-host campaign plus stable physical-device evidence and all preregistered entry blockers."
     },
     {
       "id": "P7-DOMINANCE-GATE-001",
@@ -165,20 +165,74 @@
     {
       "id": "P4-AKASHIC-DISK-V2-DOMINANCE-001",
       "phase": "P4",
-      "status": "completed-local-d5-dominance-release-rebind-pending",
-      "summary": "Akashic disk publication now uses schema-compatible incremental manifest records, bounded generation checkpoints, fd-based temporary inode hardening and a same-directory two-file fast commit. Migration/replay/tombstone/corrupt-record/stale-generation tests, 11 deterministic process-exit points, 78 random-kill cases and the six-case Apple platform matrix pass. A 20-run same-D5 CacheLab block put write throughput, read throughput and read p99 above the preregistered 20% dominance margin versus the durable-validated PIN wrapper. The worktree is dirty and Akashic release/API/fault evidence must be rebound before a release claim."
+      "status": "historical-d5-dominance-current-alpha7-new-formal-and-physical-evidence-pending",
+      "summary": "The earlier D5 campaign proved the then-bound Akashic incremental-manifest implementation above the preregistered 20% margin for write throughput, read throughput and read p99. Akashic has since advanced to public alpha.7 and Fovea pins that exact revision. Preserve the D5 result as historical source-bound evidence; current alpha.7 requires a new clean formal campaign plus physical I/O/energy qualification."
     },
     {
       "id": "P4-AKASHIC-SHARDED-SIEVE-001",
       "phase": "P4",
-      "status": "v4-local-formal-and-release-candidate-passed-publication-pending",
-      "summary": "V4 executes twenty fresh-cache rounds and uses eight shards after sixteen and thirty-two shards failed explicit retention counterexamples. Twenty clean process blocks pass all thirteen applicable endpoint-dominance comparisons. The 81-file Git-free Akashic candidate 91608c55745b333bf28b923bf0bf64744541b5e81344f061a251adea483bdb92 passes 55 tests, clean-copy replay, fault/quota/resource/concurrency mechanics, six Apple Release builds and an independent Fovea 478/478 integration. A public Akashic revision, exact Fovea pin and clean trusted CI remain mandatory."
+      "status": "historical-v4-alpha5-formal-passed-current-alpha7-requalification-pending",
+      "summary": "The V4 eight-shard/twenty-block campaign passed all thirteen applicable comparisons and was published on the measured alpha.5 line. Fovea now pins Akashic alpha.7 with different dynamic unassigned-budget and eviction-report semantics. The V4 result remains historical; current alpha.7 needs new formal and physical evidence rather than a revision rebind."
     },
     {
       "id": "P7-CACHE-ENDPOINT-DOMINANCE-001",
       "phase": "P7",
-      "status": "v4-local-thirteen-of-thirteen-dominance-trusted-publication-pending",
-      "summary": "Cache Lab V4 binds twenty fresh-cache hot rounds, 1536 post-throughput disk p99 samples, eight shards, independent process blocks and contamination rejection. The local twenty-block campaign passes all thirteen applicable comparisons with zero correctness, inferior, inconclusive or dominance failures. The result remains local research evidence until the measured Akashic candidate is published, Fovea pins that exact revision and protected trusted CI repeats from clean checkouts."
+      "status": "historical-v4-alpha5-thirteen-of-thirteen-current-alpha7-campaign-pending",
+      "summary": "Cache Lab V4 remains a valid thirteen-of-thirteen local formal result for its exact Akashic alpha.5 source. It cannot certify the current alpha.7 implementation. A new clean alpha.7 campaign, protected Fovea evidence and physical-device qualification are required before any current-stack cache dominance certificate."
+    },
+    {
+      "id": "P7-BOUNDED-CANCELLATION-HANDOFF-001",
+      "phase": "P7",
+      "status": "implemented-bounded-policy-and-instrumentation-clean-formal-device-calibration-pending",
+      "summary": "Cancellation handoff uses a known-remaining-byte bound and retained compatibility fallback, with ComparativeLab separating completed versus abandoned post-cancellation bytes. Production tests remain green. The prior dirty-source diagnostic is historical; current exact-candidate formal calibration, stable-device resource tails and release evidence remain pending."
+    },
+    {
+      "id": "P7-DERIVED-RASTER-CACHE-001",
+      "phase": "P7",
+      "status": "local-opt-in-alias-aware-byte-and-durable-logical-write-budgets-integrated-default-disabled-clean-physical-device-qualification-pending",
+      "summary": "The package-internal default-off P7 derived-raster path now has alias-aware physical-byte accounting/eviction above Akashic, shared-container byte deduplication, in-memory second-chance recency, reopen reconciliation/GC, eager normal orphan cleanup and a restart-durable fixed-window logical write admission gate. Logical budget rejection carries the actual container-plus-projected-alias-manifest charge. W11_PT_040-048 plus pipeline coverage pass inside a 47-test derived-raster strict suite. Public/default admission remains off: clean W2/W11, physical write-amplification calibration, fixed-window burst policy, large-store reconciliation cost, eviction-policy comparison and stable-device energy/thermal/reclaim-tail evidence remain open."
+    },
+    {
+      "id": "P7-WARM-MEMORY-IDENTITY-CACHE-001",
+      "phase": "P7",
+      "status": "local-optimization-passed-end-to-end-gap-remains",
+      "summary": "Validated ImageRequest construction now caches namespace and fetch-base digests, removing repeated SHA-256 from rendered-memory authorization. Release microbenchmarks and five diagnostic W2 blocks show a stable local improvement, but Apple warm-memory display-ready remains faster because comparator delivery and pixel materialization dominate. Further work must preserve one request path and use clean stable-device evidence."
+    },
+    {
+      "id": "P7-W11-SHARED-PROGRESSIVE-FINALIZATION-001",
+      "phase": "P7",
+      "status": "local-correctness-fix-passed-clean-matrix-pending",
+      "summary": "Same-source multi-target event subscribers now distinguish the transport owner from a subscriber that observed no progress. Response completion closes only the latter empty finalization and falls back to ordinary full-body decode, preventing an indefinite wait while preserving one origin transport. Adapter and root tests pass; clean W11 simulator and cancellation/revoke stress remain pending."
+    },
+    {
+      "id": "P7-W5-ANIMATED-MEDIA-FOUNDATION-001",
+      "phase": "P7",
+      "status": "production-alpha8-adapter-integrated-workload-gap-device-comparator-release-pending",
+      "summary": "W5 retains the authorized encoded-animation seam, bounded frame/provider/peak accounting, platform presentation work and cancellation linearizability fixes. The former publication/adapter gap is closed on the development line: Fovea pins public ImageCraft alpha.8 and compiles the production preparer with frame-window/whole-track resource admission. W5 remains a workload capability gap until held-out corpus coverage, stable physical-iOS timing/memory/energy/thermal evidence, fair player-level comparator A/B, structural debt and protected release qualification are closed."
+    },
+    {
+      "id": "P0-VERIFICATION-IMPACT-001",
+      "phase": "P0",
+      "status": "completed-local-effective-escalation-run-scoped-smart-green",
+      "summary": "Close OPEN-FOVEA-PUBLICATION's local verification-routing and evidence-isolation gaps: apply downstream rules after every effective-profile transition, classify known Tool/performance/capture surfaces, retain premerge escalation for genuine unknowns, reject concurrent profile writers, and preserve digest-bound logs plus a source-bound report per run. Exclusive smart run 20260806T060153.388539Z-23894 passed 26 phases with 660/660 root tests at tree d7abaff9304b. Release, clean-copy, hosted and physical-device evidence remain open."
+    },
+    {
+      "id": "P2-CODEC-HOST-OUTPUT-CONTRACT-001",
+      "phase": "P2",
+      "status": "current-alpha8-complete-frame-host-boundary-closed-progressive-peak-and-new-format-contract-open",
+      "summary": "Fovea exact ImageCraft pin c16a868f1a1c0ed6b1a916ad082f762969ac5a7e remains behind host postconditions for complete-frame pixels, DecodeLimits, target geometry, resident bytes and source-profile consistency. Progressive output checks remain active, while pre-decode progressive peak semantics, AVIF/JPEG XL contract evolution, a second backend, hostile corpus/fuzz and device evidence remain open. Animation uses the separate alpha.8 frame-window/whole-track cost contract through the production FoveaSystem preparer."
+    },
+    {
+      "id": "P0-WORKBENCH-LIFECYCLE-VISUAL-2026-08",
+      "phase": "P0",
+      "status": "local-project-generation-build-static-visual-and-phone-tablet-unit-evidence-passed",
+      "summary": "Workbench project lifecycle is reproducible through XcodeGen 2.46.0 from project.yml and generic iOS Simulator build-for-testing succeeds. Static visual source audit has localization=0, layout=0 and asset findings=0 after making bundled real-media generation explicitly 1280px and replacing two undersized derivatives. WorkbenchVisualSystemTests validate actual bundle raster dimensions and pass 6/6 on iPhone 17e plus 6/6 on iPad Pro 11-inch M5. Subjective screenshot geometry, stable physical-device presentation and release evidence remain separate."
+    },
+    {
+      "id": "P0-REV32-CANDIDATE-AUTHORITY-001",
+      "phase": "P0",
+      "status": "historical-rev32-snapshot-current-final-candidate-fresh-authority-required",
+      "summary": "Revision 32 remains historical evidence for its migration-time ownership/quality snapshot and must not be projected onto later bytes. Current develop is a clean committed history, but release authority must be recomputed on the final exact candidate through the current continuity, source-identity and qualification gates; old untraced-path counts are neither current blockers nor current proof."
     }
   ],
   "phases": [
@@ -419,9 +473,13 @@
     {
       "adoption": "Adopt async defer, weak let, linear writer lease and Swift Build path discovery; defer RawSpan hot paths, public linear decode preparation, cancellation shields, SBOM certification and manual optimizer attributes until explicit gates pass.",
       "name": "Swift 6.4 ownership and toolchain audit"
+    },
+    {
+      "adoption": "Compare buffering, lifecycle, timing, memory-warning and format-breadth mechanisms. Exact-pin W5 adapters now cover SDWebImage, Kingfisher, PINRemoteImage, FLAnimatedImage and AnimatedImage plus the Fovea player-only path; AnimatedImage variable-delay semantics are explicitly not-comparable and FL uses a public Objective-C displayLayer observation shim. APNGKit runtime timing and YYImage source-oracle gaps are now structurally closed; adopt only mechanisms that pass Fovea correctness/resource gates and stable physical-device non-inferiority.",
+      "name": "AnimatedImageComparatorMechanismAudit"
     }
   ],
-  "reviewedOn": "2026-08-03",
+  "reviewedOn": "2026-08-09",
   "roadmapID": "FOVEA-LONG-HORIZON-ROADMAP-V1",
   "routeInvariants": [
     "Every multi-step Fovea task loads this manifest through the mandatory project context before changes.",
@@ -431,7 +489,10 @@
     "ImageCraft and Akashic are consumed only through current exact public revisions and isolated source identities.",
     "Fovea retains HTTP, authorization, identity, namespace revocation, shared-work and cross-store commit state machines.",
     "A second production codec cannot be admitted until resource-estimate coverage and codec conformance obligations are explicit.",
-    "New research changes the route only through a recorded adoption, rejection or supersession decision."
+    "New research changes the route only through a recorded adoption, rejection or supersession decision.",
+    "Maintainability repair is transaction-owned: unowned reviewable source drift remains candidate-authority work and must not force one change to refactor another actor's files.",
+    "A legacy conservative candidate/quality epoch begins at the migration-time Git HEAD tree; it never reconstructs earlier dirty state or swallows current dirty working-tree bytes.",
+    "Concurrency and lifecycle regression tests must mechanically establish the suspended, queued, pending, coalesced or restored state they claim; fixed Task.yield counts are scheduling hints and cannot serve as proof of admission or state transition."
   ],
   "schemaVersion": 1,
   "status": "active"

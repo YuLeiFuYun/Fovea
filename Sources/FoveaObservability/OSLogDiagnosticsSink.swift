@@ -1,5 +1,5 @@
 import Foundation
-import FoveaCore
+@_spi(DetailedDiagnostics) import FoveaCore
 
 /// 生产诊断事件的采样策略。
 ///
@@ -404,13 +404,14 @@ public actor OSLogDiagnosticsSink: DiagnosticsSink {
     private static func signpostInterval(for kind: DiagnosticEventKind) -> OSLogDiagnosticsInterval
     {
         switch kind {
-        case .fetchQueued, .fetchStarted, .fetchJoined, .fetchCompleted, .fetchRetryScheduled,
+        case .fetchQueued, .fetchStarted, .fetchJoined, .fetchCompleted,
+            .fetchSubscriberReceived, .fetchSubscriberReleased, .fetchRetryScheduled,
             .fetchCancelled, .fetchFailed:
             .fetch
         case .decodeQueued, .decodeJoined, .decodeStarted, .containerInspectionCompleted,
             .imageSourceCreationCompleted, .imageSourceTypeCompleted,
             .imageFrameCountCompleted, .imagePropertiesReadCompleted,
-            .probeValidationCompleted, .probeCompleted,
+            .probeValidationCompleted, .probeCompleted, .decodeResourceEstimateCompleted,
             .decodeWorkingSetReserved, .decodeAdmissionRejected,
             .rasterSourceCreationCompleted, .rasterSourceTypeCompleted,
             .rasterFrameCountCompleted, .rasterImageCreationCompleted,
@@ -422,7 +423,8 @@ public actor OSLogDiagnosticsSink: DiagnosticsSink {
             .encodedHandoffHit, .encodedHandoffRejected, .staleFallbackUsed,
             .renderedMemoryHit, .renderedMemoryPurged, .cacheReadFailed, .cacheWriteFailed:
             .cache
-        case .namespaceRevoked, .pipelineSucceeded, .pipelineFailed:
+        case .responseValidated, .responseBodyMaterialized, .progressiveFinalizationReady,
+            .namespaceRevoked, .pipelineSucceeded, .pipelineFailed:
             .pipeline
         case .responseAnomaly, .diagnosticsDropped:
             .general

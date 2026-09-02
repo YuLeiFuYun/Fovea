@@ -59,7 +59,7 @@ final class SwiftUIStateTests: XCTestCase {
         let second = try request(path: "second.png", width: 20, height: 20)
 
         let firstTask = Task { await model.load(request: first, loader: pipeline) }
-        try await Task.sleep(for: .milliseconds(10))
+        try await testSleep(.milliseconds(10))
         await model.load(request: second, loader: pipeline)
         _ = await firstTask.result
 
@@ -116,7 +116,7 @@ final class SwiftUIStateTests: XCTestCase {
             )
         }
 
-        try await Task.sleep(for: .milliseconds(10))
+        try await testSleep(.milliseconds(10))
         XCTAssertEqual(model.phase.kind, .loading)
         await task.value
         XCTAssertEqual(model.phase.kind, .success)

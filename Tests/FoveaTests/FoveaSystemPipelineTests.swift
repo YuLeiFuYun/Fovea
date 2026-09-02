@@ -2,7 +2,7 @@ import Foundation
 import FoveaCore
 import FoveaHTTP
 import FoveaPersistence
-import FoveaSystem
+@_spi(FoveaBenchmarking) import FoveaSystem
 import FoveaTesting
 import ImageCraftCore
 import XCTest
@@ -46,6 +46,22 @@ final class FoveaSystemPipelineTests: XCTestCase {
         let enabledRemovalCount = await enabled.simulateMemoryPressureForTesting()
         XCTAssertEqual(disabledRemovalCount, 0)
         XCTAssertEqual(enabledRemovalCount, 0)
+    }
+
+    func testOrderedSystemEventExecutorPreservesSubmissionOrderAcrossSuspension_T00() async {
+        let executor = FoveaSystemOrderedEventExecutor<Int>()
+        let probe = SystemEventOrderingProbe()
+        executor.submit(1) { value in await probe.apply(value) }
+        await probe.waitUntilFirstStarted()
+        executor.submit(2) { value in await probe.apply(value) }
+        for _ in 0..<20 { await Task.yield() }
+        let beforeRelease = await probe.values()
+        XCTAssertEqual(beforeRelease, [])
+        await probe.releaseFirst()
+        await executor.waitUntilDrainedForTesting()
+        let afterRelease = await probe.values()
+        XCTAssertEqual(afterRelease, [1, 2])
+        executor.cancelPending()
     }
 
     func testMemoryPressureMonitorIsRetainedByPipelineInsteadOfWrapper() async throws {
@@ -103,6 +119,56 @@ final class FoveaSystemPipelineTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(firstPurge.itemCount, 1)
         XCTAssertGreaterThan(firstPurge.byteCount ?? 0, firstPurge.itemCount ?? Int.max)
+    }
+
+    func testWarningPressurePreservesPromotedRenderedMainButCriticalPurges_RES_PT_020() async throws
+    {
+        let body = try makePNG(width: 40, height: 20)
+        let rendered = DefaultRenderedImageCache(
+            costLimit: 1024 * 1024, probationCostLimit: 256 * 1024)
+        let (pipeline, transport, _, _) = try await makePipeline(
+            stubs: [
+                .init(
+                    statusCode: 200,
+                    headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+                    body: body
+                )
+            ],
+            renderedImageCache: rendered
+        )
+        let request = try ImageRequest.publicImage(
+            url: try XCTUnwrap(URL(string: "https://example.test/warning-tiered-pressure.png")),
+            target: TargetPixels(width: 20, height: 20),
+            appID: "warning-tiered-pressure-tests"
+        )
+        _ = try await pipeline.image(for: request)
+        _ = try await pipeline.image(for: request)
+        XCTAssertEqual(rendered.count, 1)
+        XCTAssertGreaterThan(rendered.currentCost, 0)
+        let monitor = FoveaMemoryPressureMonitor(pipeline: pipeline)
+
+        _ = await monitor.simulatePressureForTesting(.warning)
+        XCTAssertEqual(rendered.count, 1)
+        XCTAssertGreaterThan(rendered.currentCost, 0)
+        _ = try await pipeline.image(for: request)
+        let requestCountAfterWarningHit = await transport.capturedRequests().count
+        XCTAssertEqual(requestCountAfterWarningHit, 1)
+
+        _ = await monitor.simulatePressureForTesting(.critical)
+        XCTAssertEqual(rendered.count, 0)
+        XCTAssertEqual(rendered.currentCost, 0)
+    }
+
+    func testWarningPressureFallsBackToFullPurgeForCustomRenderedCache_RES_PT_021() async throws {
+        let rendered = PressureFallbackRenderedCache()
+        let (pipeline, _, _, _) = try await makePipeline(stubs: [], renderedImageCache: rendered)
+        let monitor = FoveaMemoryPressureMonitor(pipeline: pipeline)
+
+        _ = await monitor.simulatePressureForTesting(.warning)
+        XCTAssertEqual(rendered.removeAllCallCount, 1)
+
+        _ = await monitor.simulatePressureForTesting(.critical)
+        XCTAssertEqual(rendered.removeAllCallCount, 2)
     }
 
     func testSystemCompositionDefaultsToPublicOnly_AUTH_PT_014() async throws {
@@ -190,6 +256,46 @@ final class FoveaSystemPipelineTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: manifestURL), original)
     }
 
+    func testDerivedRasterBenchmarkConfigurationClampsAndProjects_T00() {
+        let configuration = FoveaDerivedRasterBenchmarkConfiguration(
+            softTotalBytes: 0,
+            maximumBlobBytes: 0,
+            maximumWriteBytesPerWindow: 0,
+            writeBudgetWindowNanoseconds: 0,
+            maximumContainerToOriginalPermille: 0,
+            maximumCreationNanoseconds: 0,
+            estimatedPersistentReadOverheadNanoseconds: 17,
+            safetyMarginHits: -1,
+            maximumConcurrentCreations: 0,
+            maximumQueuedCreations: -1
+        )
+
+        XCTAssertEqual(configuration.profileID, "derived-raster-observed-v1")
+        XCTAssertEqual(configuration.softTotalBytes, 1)
+        XCTAssertEqual(configuration.maximumBlobBytes, 1)
+        XCTAssertEqual(configuration.maximumWriteBytesPerWindow, 1)
+        XCTAssertEqual(configuration.writeBudgetWindowNanoseconds, 1)
+        XCTAssertEqual(configuration.maximumContainerToOriginalPermille, 1)
+        XCTAssertEqual(configuration.safetyMarginHits, 0)
+        XCTAssertEqual(configuration.maximumConcurrentCreations, 1)
+        XCTAssertEqual(configuration.maximumQueuedCreations, 0)
+
+        let store = configuration.storeLimits
+        XCTAssertEqual(store.softTotalBytes, 1)
+        XCTAssertEqual(store.maximumBlobBytes, 1)
+        XCTAssertEqual(store.maximumWriteBytesPerWindow, 1)
+        XCTAssertEqual(store.writeBudgetWindowNanoseconds, 1)
+
+        let runtime = configuration.runtimeConfiguration
+        XCTAssertEqual(runtime.maximumContainerBytes, 1)
+        XCTAssertEqual(runtime.maximumContainerToOriginalPermille, 1)
+        XCTAssertEqual(runtime.maximumCreationNanoseconds, 1)
+        XCTAssertEqual(runtime.estimatedPersistentReadOverheadNanoseconds, 17)
+        XCTAssertEqual(runtime.safetyMarginHits, 0)
+        XCTAssertEqual(runtime.maximumConcurrentCreations, 1)
+        XCTAssertEqual(runtime.maximumQueuedCreations, 0)
+    }
+
     func testSafeCompositionRootCreatesSinglePersistentGeneration_PIPE_PT_009() async throws {
         let root = try makeTemporaryDirectory("system-pipeline")
 
@@ -204,4 +310,57 @@ final class FoveaSystemPipelineTests: XCTestCase {
             )
         )
     }
+}
+
+private final class PressureFallbackRenderedCache: @unchecked Sendable, RenderedImageCaching {
+    private let lock = NSLock()
+    private var removeAllCalls = 0
+
+    var removeAllCallCount: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return removeAllCalls
+    }
+
+    func image(for _: RenderedImageCacheKey) -> DecodedImage? { nil }
+    func insert(_: DecodedImage, for _: RenderedImageCacheKey, cost _: Int) {}
+    func remove(_: RenderedImageCacheKey) {}
+    func removeAll(where _: @Sendable (RenderedImageCacheKey) -> Bool) {}
+
+    func removeAllAndReport() -> RenderedImageCacheRemovalSummary {
+        lock.lock()
+        removeAllCalls += 1
+        lock.unlock()
+        return RenderedImageCacheRemovalSummary(itemCount: 0, costBytes: 0)
+    }
+
+    var currentCost: Int { 0 }
+    var count: Int { 0 }
+}
+
+private actor SystemEventOrderingProbe {
+    private var firstStarted = false
+    private var firstReleased = false
+    private var startWaiters: [CheckedContinuation<Void, Never>] = []
+    private var releaseWaiters: [CheckedContinuation<Void, Never>] = []
+    private var applied: [Int] = []
+    func apply(_ value: Int) async {
+        if !firstStarted {
+            firstStarted = true
+            for waiter in startWaiters { waiter.resume() }
+            startWaiters.removeAll(keepingCapacity: false)
+            if !firstReleased { await withCheckedContinuation { releaseWaiters.append($0) } }
+        }
+        applied.append(value)
+    }
+    func waitUntilFirstStarted() async {
+        if firstStarted { return }
+        await withCheckedContinuation { startWaiters.append($0) }
+    }
+    func releaseFirst() {
+        firstReleased = true
+        for waiter in releaseWaiters { waiter.resume() }
+        releaseWaiters.removeAll(keepingCapacity: false)
+    }
+    func values() -> [Int] { applied }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import FoveaHTTP
+import FoveaStorage
 import ImageCraftCore
 
 /// 控制图像请求在查询缓存后是否可以访问网络。
@@ -77,7 +78,13 @@ public struct ImageRequest: Sendable {
     /// 敏感请求头参与 Vary 时使用的不可逆指纹。
     public let headerVariantFingerprints: [String: HeaderVariantFingerprint]
 
+    /// 仅供基准测试传输记账使用、不会参与请求/缓存身份的传输元数据。
+    /// 只有 `FoveaBenchmarking` SPI 可以写入，且只接受 `x-benchmark-request-id`。
+    var benchmarkTransportHeaders: [String: String] = [:]
+
+    private let cachedStorageNamespaceFingerprint: StorageNamespaceFingerprint
     private let cachedFetchBaseKey: FetchBaseKey
+    private let cachedFetchBaseDigest: String
     private let cachedFetchVariantKey: FetchVariantKey
     private let cachedDefaultFetchExecutionKey: FetchExecutionKey
     private let cachedDefaultFetchExecutionDigest: String
@@ -85,6 +92,21 @@ public struct ImageRequest: Sendable {
     private let cachedCredentialExecutionFingerprint: String
     private let cachedRenderAliasIdentity: String
     private let cachedDisplayIdentity: String
+
+    private struct ValidatedComponents {
+        let url: URL
+        let logicalSource: LogicalSourceID
+        let headers: [String: String]
+        let credentialHeaderNames: Set<String>
+        let headerVariantFingerprints: [String: HeaderVariantFingerprint]
+        let storageNamespaceFingerprint: StorageNamespaceFingerprint
+        let fetchBaseKey: FetchBaseKey
+        let fetchBaseDigest: String
+        let defaultFetchExecutionKey: FetchExecutionKey
+        let defaultFetchExecutionDigest: String
+        let exactRequestHeaderFingerprint: String
+        let credentialExecutionFingerprint: String
+    }
 
     /// 从显式目标创建请求，并验证 URL、身份、请求头与安全元数据。
     public init(
@@ -106,34 +128,89 @@ public struct ImageRequest: Sendable {
         credentialHeaderNames: Set<String> = [],
         headerVariantFingerprints: [String: HeaderVariantFingerprint] = [:]
     ) throws {
+        let components = try Self.validatedComponents(
+            url: url,
+            logicalSource: logicalSource,
+            namespace: namespace,
+            authorizationContext: authorizationContext,
+            credentialGeneration: credentialGeneration,
+            networkPolicy: networkPolicy,
+            headers: headers,
+            credentialHeaderNames: credentialHeaderNames,
+            headerVariantFingerprints: headerVariantFingerprints,
+            geometryPolicyFingerprint: geometryPolicyFingerprint
+        )
+        let renderAliasIdentity = [
+            components.defaultFetchExecutionDigest,
+            "\(target.width)x\(target.height)",
+            contentMode.rawValue,
+            geometryPolicyFingerprint,
+            colorPolicy.rawValue,
+        ].joined(separator: "|")
+        let displayIdentity = [
+            renderAliasIdentity,
+            renderCacheAdmission.rawValue,
+            cachePolicy.rawValue,
+            stalePolicy.rawValue,
+            networkPolicy.executionFingerprint,
+        ].joined(separator: "|")
+        self.url = components.url
+        self.logicalSource = components.logicalSource
+        self.target = target
+        self.contentMode = contentMode
+        self.geometryPolicyFingerprint = geometryPolicyFingerprint
+        self.colorPolicy = colorPolicy
+        self.renderCacheAdmission = renderCacheAdmission
+        self.namespace = namespace
+        self.authorizationContext = authorizationContext
+        self.credentialGeneration = credentialGeneration
+        self.priority = priority
+        self.cachePolicy = cachePolicy
+        self.stalePolicy = stalePolicy
+        self.networkPolicy = networkPolicy
+        self.headers = components.headers
+        self.credentialHeaderNames = components.credentialHeaderNames
+        self.headerVariantFingerprints = components.headerVariantFingerprints
+        self.cachedStorageNamespaceFingerprint = components.storageNamespaceFingerprint
+        self.cachedFetchBaseKey = components.fetchBaseKey
+        self.cachedFetchBaseDigest = components.fetchBaseDigest
+        self.cachedFetchVariantKey = FetchVariantKey(baseDigest: components.fetchBaseDigest)
+        self.cachedDefaultFetchExecutionKey = components.defaultFetchExecutionKey
+        self.cachedDefaultFetchExecutionDigest = components.defaultFetchExecutionDigest
+        self.cachedExactRequestHeaderFingerprint = components.exactRequestHeaderFingerprint
+        self.cachedCredentialExecutionFingerprint = components.credentialExecutionFingerprint
+        self.cachedRenderAliasIdentity = renderAliasIdentity
+        self.cachedDisplayIdentity = displayIdentity
+    }
+
+    private static func validatedComponents(
+        url: URL,
+        logicalSource: LogicalSourceID?,
+        namespace: SecurityNamespaceID,
+        authorizationContext: AuthorizationContextID,
+        credentialGeneration: CredentialGeneration?,
+        networkPolicy: ImageRequestNetworkPolicy,
+        headers: [String: String],
+        credentialHeaderNames: Set<String>,
+        headerVariantFingerprints: [String: HeaderVariantFingerprint],
+        geometryPolicyFingerprint: String
+    ) throws -> ValidatedComponents {
         let normalizedURL = try ImageRequestValidation.normalizedHTTPURL(url)
         let resolvedLogicalSource =
             logicalSource ?? LogicalSourceID(normalizedHTTPURL: normalizedURL)
-        try ImageRequestValidation.validateIdentityComponent(
-            resolvedLogicalSource.value,
-            name: "logical-source",
-            maximumBytes: ImageRequestValidation.maximumLogicalSourceBytes
-        )
-        try ImageRequestValidation.validateIdentityComponent(
-            namespace.value,
-            name: "namespace",
-            maximumBytes: ImageRequestValidation.maximumNamespaceBytes
-        )
-        try ImageRequestValidation.validateIdentityComponent(
-            authorizationContext.value,
-            name: "authorization-context",
-            maximumBytes: ImageRequestValidation.maximumAuthorizationContextBytes
-        )
-        try ImageRequestValidation.validateIdentityComponent(
-            geometryPolicyFingerprint,
-            name: "geometry-policy-fingerprint",
-            maximumBytes: ImageRequestValidation.maximumGeometryFingerprintBytes
+        try Self.validateIdentityComponents(
+            logicalSource: resolvedLogicalSource,
+            namespace: namespace,
+            authorizationContext: authorizationContext,
+            geometryPolicyFingerprint: geometryPolicyFingerprint
         )
         let normalizedHeaders = try ImageRequestValidation.normalizedHeaders(headers)
         let normalizedCredentialNames = try ImageRequestValidation.normalizedHeaderNames(
-            credentialHeaderNames)
+            credentialHeaderNames
+        )
         let normalizedFingerprints = try ImageRequestValidation.normalizedFingerprints(
-            headerVariantFingerprints)
+            headerVariantFingerprints
+        )
         for name in normalizedFingerprints.keys
         where !CredentialHeaderPolicy.isSensitiveHeaderName(
             name,
@@ -141,6 +218,9 @@ public struct ImageRequest: Sendable {
         ) {
             throw ImageRequestError.fingerprintForNonCredentialHeader(name)
         }
+        let storageNamespaceFingerprint = StorageNamespaceFingerprint(
+            namespace: namespace.value
+        )
         let fetchBaseKey = FetchBaseKey(
             source: resolvedLogicalSource,
             namespace: namespace,
@@ -166,46 +246,48 @@ public struct ImageRequest: Sendable {
             transportPolicyFingerprint:
                 "\(credentialExecutionFingerprint)|\(networkPolicy.executionFingerprint)|request-default-v1"
         )
-        let defaultFetchExecutionDigest = defaultFetchExecutionKey.digestHex
-        let renderAliasIdentity = [
-            defaultFetchExecutionDigest,
-            "\(target.width)x\(target.height)",
-            contentMode.rawValue,
+        return ValidatedComponents(
+            url: normalizedURL,
+            logicalSource: resolvedLogicalSource,
+            headers: normalizedHeaders,
+            credentialHeaderNames: normalizedCredentialNames,
+            headerVariantFingerprints: normalizedFingerprints,
+            storageNamespaceFingerprint: storageNamespaceFingerprint,
+            fetchBaseKey: fetchBaseKey,
+            fetchBaseDigest: fetchBaseDigest,
+            defaultFetchExecutionKey: defaultFetchExecutionKey,
+            defaultFetchExecutionDigest: defaultFetchExecutionKey.digestHex,
+            exactRequestHeaderFingerprint: exactRequestHeaderFingerprint,
+            credentialExecutionFingerprint: credentialExecutionFingerprint
+        )
+    }
+
+    private static func validateIdentityComponents(
+        logicalSource: LogicalSourceID,
+        namespace: SecurityNamespaceID,
+        authorizationContext: AuthorizationContextID,
+        geometryPolicyFingerprint: String
+    ) throws {
+        try ImageRequestValidation.validateIdentityComponent(
+            logicalSource.value,
+            name: "logical-source",
+            maximumBytes: ImageRequestValidation.maximumLogicalSourceBytes
+        )
+        try ImageRequestValidation.validateIdentityComponent(
+            namespace.value,
+            name: "namespace",
+            maximumBytes: ImageRequestValidation.maximumNamespaceBytes
+        )
+        try ImageRequestValidation.validateIdentityComponent(
+            authorizationContext.value,
+            name: "authorization-context",
+            maximumBytes: ImageRequestValidation.maximumAuthorizationContextBytes
+        )
+        try ImageRequestValidation.validateIdentityComponent(
             geometryPolicyFingerprint,
-            colorPolicy.rawValue,
-        ].joined(separator: "|")
-        let displayIdentity = [
-            renderAliasIdentity,
-            renderCacheAdmission.rawValue,
-            cachePolicy.rawValue,
-            stalePolicy.rawValue,
-            networkPolicy.executionFingerprint,
-        ].joined(separator: "|")
-        self.url = normalizedURL
-        self.logicalSource = resolvedLogicalSource
-        self.target = target
-        self.contentMode = contentMode
-        self.geometryPolicyFingerprint = geometryPolicyFingerprint
-        self.colorPolicy = colorPolicy
-        self.renderCacheAdmission = renderCacheAdmission
-        self.namespace = namespace
-        self.authorizationContext = authorizationContext
-        self.credentialGeneration = credentialGeneration
-        self.priority = priority
-        self.cachePolicy = cachePolicy
-        self.stalePolicy = stalePolicy
-        self.networkPolicy = networkPolicy
-        self.headers = normalizedHeaders
-        self.credentialHeaderNames = normalizedCredentialNames
-        self.headerVariantFingerprints = normalizedFingerprints
-        self.cachedFetchBaseKey = fetchBaseKey
-        self.cachedFetchVariantKey = FetchVariantKey(baseDigest: fetchBaseDigest)
-        self.cachedDefaultFetchExecutionKey = defaultFetchExecutionKey
-        self.cachedDefaultFetchExecutionDigest = defaultFetchExecutionDigest
-        self.cachedExactRequestHeaderFingerprint = exactRequestHeaderFingerprint
-        self.cachedCredentialExecutionFingerprint = credentialExecutionFingerprint
-        self.cachedRenderAliasIdentity = renderAliasIdentity
-        self.cachedDisplayIdentity = displayIdentity
+            name: "geometry-policy-fingerprint",
+            maximumBytes: ImageRequestValidation.maximumGeometryFingerprintBytes
+        )
     }
 
     /// 从已解析的响应式目标创建请求。
@@ -263,6 +345,28 @@ public struct ImageRequest: Sendable {
         Self(prevalidated: self, priority: priority)
     }
 
+    /// 附加仅用于实验仪器记账的非语义传输头。
+    ///
+    /// 普通请求头继续参与精确执行身份；这里只允许唯一的 request-id 测量字段、
+    /// 非敏感且不与已有语义头重名，避免该 SPI 成为绕过缓存身份或 Vary 的通用后门。
+    @_spi(FoveaBenchmarking)
+    public func withBenchmarkTransportHeaders(_ headers: [String: String]) throws -> Self {
+        let normalized = try ImageRequestValidation.normalizedHeaders(headers)
+        for name in normalized.keys {
+            guard name == "x-benchmark-request-id", self.headers[name] == nil,
+                !CredentialHeaderPolicy.isSensitiveHeaderName(
+                    name,
+                    additionalSensitiveNames: credentialHeaderNames
+                )
+            else {
+                throw ImageRequestError.invalidHeaderName(name)
+            }
+        }
+        var copy = self
+        copy.benchmarkTransportHeaders = normalized
+        return copy
+    }
+
     private init(prevalidated source: Self, resolvedTarget: ResolvedImageTarget) {
         self.url = source.url
         self.logicalSource = source.logicalSource
@@ -281,7 +385,10 @@ public struct ImageRequest: Sendable {
         self.headers = source.headers
         self.credentialHeaderNames = source.credentialHeaderNames
         self.headerVariantFingerprints = source.headerVariantFingerprints
+        self.benchmarkTransportHeaders = source.benchmarkTransportHeaders
+        self.cachedStorageNamespaceFingerprint = source.cachedStorageNamespaceFingerprint
         self.cachedFetchBaseKey = source.cachedFetchBaseKey
+        self.cachedFetchBaseDigest = source.cachedFetchBaseDigest
         self.cachedFetchVariantKey = source.cachedFetchVariantKey
         self.cachedDefaultFetchExecutionKey = source.cachedDefaultFetchExecutionKey
         self.cachedDefaultFetchExecutionDigest = source.cachedDefaultFetchExecutionDigest
@@ -321,7 +428,10 @@ public struct ImageRequest: Sendable {
         self.headers = source.headers
         self.credentialHeaderNames = source.credentialHeaderNames
         self.headerVariantFingerprints = source.headerVariantFingerprints
+        self.benchmarkTransportHeaders = source.benchmarkTransportHeaders
+        self.cachedStorageNamespaceFingerprint = source.cachedStorageNamespaceFingerprint
         self.cachedFetchBaseKey = source.cachedFetchBaseKey
+        self.cachedFetchBaseDigest = source.cachedFetchBaseDigest
         self.cachedFetchVariantKey = source.cachedFetchVariantKey
         self.cachedDefaultFetchExecutionKey = source.cachedDefaultFetchExecutionKey
         self.cachedDefaultFetchExecutionDigest = source.cachedDefaultFetchExecutionDigest
@@ -381,8 +491,16 @@ public struct ImageRequest: Sendable {
         )
     }
 
+    /// 当前请求安全命名空间的已验证持久化分区指纹。
+    package var storageNamespaceFingerprint: StorageNamespaceFingerprint {
+        cachedStorageNamespaceFingerprint
+    }
+
     /// 此来源所有 HTTP 变体共享的持久基础身份。
     public var fetchBaseKey: FetchBaseKey { cachedFetchBaseKey }
+
+    /// 请求构造时预计算的持久基础身份摘要。
+    package var fetchBaseDigest: String { cachedFetchBaseDigest }
 
     /// 尚未得知 Vary 选择时使用的无条件表征身份。
     public var fetchVariantKey: FetchVariantKey { cachedFetchVariantKey }

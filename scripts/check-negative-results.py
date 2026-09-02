@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "docs/research/negative-results.json"
 ARTIFACT = ROOT / ".artifacts/mathematics/negative-results-verification.json"
+ROOT_RESOLVED = ROOT.resolve()
 
 
 def main() -> int:
@@ -54,7 +55,15 @@ def main() -> int:
                     f"{identifier}: evidence path must be tracked and fresh-clone available: {relative}"
                 )
                 continue
-            if not (ROOT / relative).exists():
+            candidate = (ROOT / relative).resolve()
+            try:
+                candidate.relative_to(ROOT_RESOLVED)
+            except ValueError:
+                errors.append(
+                    f"{identifier}: evidence path must stay inside the Fovea repository: {relative}"
+                )
+                continue
+            if not candidate.exists():
                 errors.append(f"{identifier}: missing evidence path {relative}")
     digest = hashlib.sha256(
         json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()

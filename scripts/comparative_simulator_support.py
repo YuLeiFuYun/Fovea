@@ -170,9 +170,14 @@ def assert_coresimulator_healthy(
     }
     path = root / CORESIMULATOR_HEALTH_ARTIFACT
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(artifact, indent=2, sort_keys=True) + "\n")
-    temporary.replace(path)
+    temporary = path.with_name(
+        f".{path.name}.{os.getpid()}.{time.time_ns()}.tmp"
+    )
+    try:
+        temporary.write_text(json.dumps(artifact, indent=2, sort_keys=True) + "\n")
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
     if blocked:
         descriptions = ", ".join(
             f"pid={item['pid']} state={item['state']}" for item in blocked

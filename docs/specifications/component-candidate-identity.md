@@ -37,9 +37,9 @@ ImageCraft 仅声明两个精确排除子树：
 4. 从再次读取并校验的内存字节物化隔离候选快照，规范化写出可执行或不可执行模式；构建不再引用原候选工作区。
 5. 仅在沙箱外解析当前受支持的公开精确 pin；此时尚未把 SwiftPM 切换到候选快照，因此候选 manifest 不会在沙箱前执行。
 6. 生成 `FOVEA-COMPONENT-CANDIDATE-SANDBOX-V1` Seatbelt profile。它禁止全部网络、禁止读取宿主用户主目录、默认禁止文件写入，只允许专用 State 根、SwiftPM 的 `Packages/` 与 `Package.resolved` 状态、已确认的 Swift 工具链临时路径和 Fovea 测试专属临时根。
-7. 在沙箱内执行七个实际探针：专用 State 写入必须成功；宿主 Fovea 源码读取、隔离 Fovea `Package.swift` 写入、宿主写逃逸、两个候选快照写入和 IPv4 connect 必须以 `EPERM/EACCES` 失败。
+7. 在沙箱内执行实际逃逸探针：专用 State 写入必须成功；宿主 Fovea 源码读取、隔离 Fovea `Package.swift` 写入、宿主写逃逸、每个已提供候选快照写入和 IPv4 connect 必须以 `EPERM/EACCES` 失败。单组件与双组件候选使用同一策略，探针数量随候选数变化。
 8. 在同一沙箱内执行 `swift package edit`、依赖路径检查和完整 Fovea 测试。当前隔离重放使用 SwiftPM `native` build system，并显式关闭 SwiftPM 的嵌套沙箱；外层 Seatbelt 才是权威隔离边界。
-9. 要求精确 478 项测试且无 Fovea 自有 warning；测试结束后再次验证两个候选身份，并比较 Fovea 不可变源码前后摘要。
+9. 当前工作树要求精确 838 项测试且无 Fovea 自有 warning；测试结束后再次验证所有已提供候选身份，并比较 Fovea 不可变源码前后摘要。
 
 因此，原候选在校验后的变化不会改变实际构建输入；候选快照和 Fovea 不可变源码在构建期间的变化也不会被静默接受。候选 manifest、编译器子进程和测试进程不能读取原始宿主仓库或用户主目录、修改已验证源码，亦不能访问网络。
 

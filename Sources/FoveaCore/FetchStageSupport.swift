@@ -13,7 +13,8 @@ struct TimedTransportResponse: Sendable {
 enum FetchRequestPreparation {
     static func authorizedRequest(
         for request: ImageRequest,
-        conditionalRecord: RepresentationRecord?
+        conditionalRecord: RepresentationRecord?,
+        byteRangeResume: FetchByteRangeResume? = nil
     ) -> URLRequest {
         var urlRequest = URLRequest(url: request.url)
         urlRequest.httpMethod = "GET"
@@ -24,10 +25,20 @@ enum FetchRequestPreparation {
         for (name, value) in request.headers {
             urlRequest.setValue(value, forHTTPHeaderField: name)
         }
+        for (name, value) in request.benchmarkTransportHeaders {
+            urlRequest.setValue(value, forHTTPHeaderField: name)
+        }
         if let conditionalRecord {
             for (name, value) in HTTPCachePolicy.conditionalHeaders(for: conditionalRecord) {
                 urlRequest.setValue(value, forHTTPHeaderField: name)
             }
+        }
+        if let byteRangeResume {
+            urlRequest.setValue(
+                "bytes=\(byteRangeResume.startOffset)-",
+                forHTTPHeaderField: "Range"
+            )
+            urlRequest.setValue(byteRangeResume.validator, forHTTPHeaderField: "If-Range")
         }
         return urlRequest
     }
@@ -37,6 +48,17 @@ enum FetchRequestPreparation {
         let etag = record.etag ?? ""
         let lastModified = record.lastModified ?? ""
         return Data("etag:\(etag)\u{0}last-modified:\(lastModified)".utf8).sha256Hex
+    }
+
+    static func executionRevalidationFingerprint(
+        for record: RepresentationRecord?,
+        byteRangeResume: FetchByteRangeResume?
+    ) -> String {
+        let base = revalidationFingerprint(for: record)
+        guard let byteRangeResume else { return base }
+        return Data(
+            "revalidation:\(base)\u{0}resume:\(byteRangeResume.executionFingerprint)".utf8
+        ).sha256Hex
     }
 }
 

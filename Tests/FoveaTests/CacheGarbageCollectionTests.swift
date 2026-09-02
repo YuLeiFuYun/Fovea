@@ -209,7 +209,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
         let imageTask = Task { try await pipeline.image(for: request) }
         await barrierStore.waitUntilCommitStarts()
         let garbageTask = Task { try await pipeline.garbageCollectCaches() }
-        try await Task.sleep(for: .milliseconds(20))
+        try await testSleep(.milliseconds(20))
 
         garbageTask.cancel()
         do {
@@ -300,7 +300,7 @@ final class CacheGarbageCollectionTests: XCTestCase {
             await completion.markFinished()
             return result
         }
-        try await Task.sleep(for: .milliseconds(20))
+        try await testSleep(.milliseconds(20))
         let finishedBeforeRelease = await completion.isFinished
         XCTAssertFalse(finishedBeforeRelease)
 

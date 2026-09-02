@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "studyID": "W1-A-TIER-SCROLL-MATRIX-2026-08",
+  "workload": "W1-SCROLL-V1",
+  "environment": {
+    "executionEnvironment": "iOS Simulator",
+    "osVersion": "26.4.1",
+    "osBuild": "23E254a",
+    "deviceProfileID": "ios26-4-simulator-calibration-v1",
+    "cacheState": "cold"
+  },
+  "claimEligible": false,
+  "claimBoundary": "All rows were captured with ComparativeLab --diagnostic. Values are directional same-harness evidence only and are not release-claim evidence.",
+  "primaryEndpoints": [
+    "cancel-waste-bytes: lower is better",
+    "main-thread-hitch-time: lower is better",
+    "peak-dirty-memory/physical-footprint delta: lower is better"
+  ],
+  "comparators": [
+    {
+      "name": "Fovea",
+      "postCancellationAbandonedBytes": 163840,
+      "cancellationAcknowledgementP95Nanoseconds": 18816542,
+      "hitchExcessNanoseconds": 0,
+      "hitchCount": 0,
+      "physicalFootprintDeltaBytes": 38879232,
+      "notes": "Zero measured hitch; cancel waste is one 32KiB origin chunk above PINRemoteImage; resident decoded-memory footprint is above Apple, Nuke and SDWebImage."
+    },
+    {
+      "name": "PINRemoteImage",
+      "postCancellationAbandonedBytes": 131072,
+      "cancellationAcknowledgementP95Nanoseconds": 2020625,
+      "hitchExcessNanoseconds": 8366666,
+      "hitchCount": 1,
+      "physicalFootprintDeltaBytes": 59342848
+    },
+    {
+      "name": "Kingfisher",
+      "postCancellationAbandonedBytes": 163840,
+      "cancellationAcknowledgementP95Nanoseconds": 21347917,
+      "hitchExcessNanoseconds": 0,
+      "hitchCount": 0,
+      "physicalFootprintDeltaBytes": 43352064
+    },
+    {
+      "name": "SDWebImage",
+      "postCancellationAbandonedBytes": 196608,
+      "cancellationAcknowledgementP95Nanoseconds": 10830125,
+      "hitchExcessNanoseconds": 0,
+      "hitchCount": 0,
+      "physicalFootprintDeltaBytes": 36093976
+    },
+    {
+      "name": "Nuke",
+      "postCancellationAbandonedBytes": 524288,
+      "cancellationAcknowledgementP95Nanoseconds": 2337250,
+      "hitchExcessNanoseconds": 0,
+      "hitchCount": 0,
+      "physicalFootprintDeltaBytes": 32456776
+    },
+    {
+      "name": "Apple URLSession + URLCache + ImageIO",
+      "postCancellationAbandonedBytes": 294912,
+      "cancellationAcknowledgementP95Nanoseconds": 5542000,
+      "hitchExcessNanoseconds": 8599916,
+      "hitchCount": 1,
+      "physicalFootprintDeltaBytes": 6389760
+    }
+  ],
+  "originChunkBytes": 32768,
+  "findings": [
+    "Fovea is tied for the best hitch endpoint at zero measured hitch excess.",
+    "PINRemoteImage has the lowest cancel waste in this diagnostic matrix; Fovea trails by exactly one 32KiB origin chunk total.",
+    "Fovea is not the memory leader on W1: Apple, Nuke and SDWebImage have lower physical-footprint deltas.",
+    "The current Fovea rendered cache uses a 64MiB total cost budget and W1 cycles through 128 assets at 320x240, creating one-pass scan pollution before the budget fills."
+  ],
+  "activeExperiments": [
+    "URLSession delegate queue QoS utility -> default, isolated control-plane A/B; not yet benchmarked.",
+    "Rendered cache scan-resistant probation/main split: default 16MiB probation plus remaining main budget; not yet benchmarked."
+  ],
+  "nextGate": "Fresh Release must keep hitch excess at zero, reduce abandoned bytes toward or below 128KiB, and reduce W1 footprint below at least Nuke/SDWebImage without regressing W2 warm-memory or W2 warm-disk."
+}

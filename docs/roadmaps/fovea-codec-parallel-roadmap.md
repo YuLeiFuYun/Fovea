@@ -32,16 +32,21 @@ independent codec repository
 
 ## 2. 已完成基线
 
-### F0：host contract 基线 — 已完成
+### F0：host contract 基线 — complete-frame 已闭合，progressive 资源准入仍开放
 
 - 有限 capability request/descriptor；
 - format、delivery、track、metadata、range、output、cancellation；
+- `progressiveFormats` 与 delivery mode 分离，不能把 progressive 能力错误地外推到 descriptor 的全部格式；
 - strict progressive generation 与 checked frame timing；
-- conservative resource join；
+- complete-frame conservative resource join；`ImageCodec.resourceEstimate` 必须表示该 probe/request 的**总保守峰值**，不是只报 codec-private scratch；
 - backend/version/contract fingerprint；
 - ImageIO conservative adapter；
 - pipeline 分配前协商与 prepared cleanup；
-- Swift conformance tests 与 Python model checker。
+- complete-frame decode 返回后由 Fovea 独立重验 DecodeLimits、target geometry、实际 `CGImage` resident bytes 与 source-profile fact，后端声明不能单独授权像素发布；
+- progressive preview 返回后重验 DecodeLimits、target 与单个输出 resident bytes；当前精确 contract 尚没有 session/generation 的 pre-decode peak resource estimate，因此 progressive 峰值准入仍是 F4/C4 blocker；
+- Swift hostile-backend tests 与 Python finite-domain/model checker。
+
+当前 Fovea 精确 ImageCraft pin `736d0fb75ec612082817ff782d25cb638cb8469e` 的 `EncodedImageFormat` 只有 PNG/JPEG/GIF。AVIF、JPEG XL 或其他新容器不是“注册第二个 backend”即可接入：必须先演进独立 `ImageCraftCore` 的版本化格式/能力合同，并由 Fovea 显式接受新 contract version。
 
 ### C0：codec 项目接口输入 — 可立即采用
 
@@ -115,6 +120,7 @@ registered descriptor set
 需要新 pipeline contract，而不是复用静态 `image(for:)` 返回值：
 
 - encoded stream 累计字节预算；
+- 每个 progressive session 在执行会产生像素的 decode step **之前**提供可由 host 准入的 peak resource envelope；当前 contract 只有事后像素 resident 上界检查，不能把它误记为 pre-decode 峰值预算；
 - generation strictly increasing；
 - preview cadence/coalescing；
 - 同一 content/backend/request identity；
@@ -253,8 +259,8 @@ registered descriptor set
 
 - `codecDescriptor`；
 - bounded `probe`；
-- `resourceEstimate`；
-- still decode；
+- `resourceEstimate`，并明确它是 probe/request 的总保守峰值还是可组合的分项资源；
+- still decode，以及 host 对实际输出的 target/limits/resident/profile 后验验证；
 - prepared state create/consume/discard；
 - future progressive/track interfaces only when implemented。
 
@@ -288,7 +294,7 @@ registered descriptor set
 3. malformed corpus、fuzz、sanitizer 达到预注册时长/coverage，零未处置 crash；
 4. probe、decode、metadata、orientation、color 的 differential 差异均分类；
 5. 无 cache identity collision；
-6. 资源估计不低于已观测峰值加安全余量，host hard limit 可阻断；
+6. complete-frame `resourceEstimate` 的语义与覆盖集合明确，且不低于独立观测峰值加安全余量；host hard limit 可在执行前阻断，实际返回像素还必须通过 host 后验 resident/geometry 检查；progressive 必须另有 pre-decode session/generation resource envelope，不能只依赖事后检查；
 7. 取消和 preparation/resource cleanup 有确定性测试；
 8. 同设备性能实验给出 median、tail、peak RSS、CPU/energy，而不是单次最好值；
 9. lossy codec 给出 rate-distortion/perceptual 指标与参数，不使用不可比默认值；
@@ -312,6 +318,21 @@ registered descriptor set
 - schema/contract 不兼容时拒绝加载，而不是猜测；
 - rollback 不删除研究 corpus、失败证据或版本差异；
 - 若 candidate 产生错误像素，先全局关闭，再按 fingerprint 清理派生结果，不重下载可复用 original bytes。
+
+### 8.1 集成分支策略
+
+Fovea 与独立 codec 仓库各自使用短生命周期、可丢弃的集成分支推进候选实现；任一默认分支都不得依赖另一个仓库的浮动 branch、可移动 tag 或未固定版本范围。跨仓库集成按以下顺序建立可追溯关系：
+
+1. 先在 contract/conformance 所属仓库形成可验证的接口修订，并固定不可变 commit / contract version；
+2. codec 分支只针对该精确 contract pin 实现并通过共享 conformance、hostile corpus 与 differential gate；
+3. Fovea 集成分支再固定精确 contract/codec commit，运行本仓库的 admission、identity、cancellation、cache、resource 与 UI/verification gate；
+4. 候选只可按 `conformance -> shadow -> internal canary -> format-scoped opt-in -> default` 的顺序晋级；成为 default 仍必须满足第 7 节全部适用证据门。
+
+候选身份和证据必须同时绑定 Fovea tree digest 与跨仓库精确 pin。任一侧源码、contract version 或 codec pin 变化，都使此前候选绑定失效；不得把旧 benchmark、review、physical trace 或 conformance 结果静默复用于新组合，必须重新生成对应候选并重绑适用证据。接口不兼容时 fail closed，不得通过浮动依赖或语义更弱的 silent fallback 恢复构建。
+
+已用于审查、benchmark、canary 或发布决策的分支/提交历史不得 force-push、rewrite 或通过删除证据掩盖失败；后续修订以新 commit 和 superseded 记录前向演进。集成分支在完成 merge / reject 决策后可以删除，但其不可变 pin、失败记录、证据摘要与决策边界必须保留。
+
+回滚时优先关闭 candidate，恢复上一个已验证的精确 codec/contract pin 或 ImageIO reference path，并按 backend fingerprint 失效或清理 candidate 派生像素；original encoded data 不因分支切换、pin 回退或 backend 回滚而删除。此分支策略只约束跨仓库交付与证据治理，不构成性能、质量或总体 superiority 声明。
 
 ## 9. 并行执行建议
 

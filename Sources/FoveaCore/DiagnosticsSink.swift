@@ -21,6 +21,11 @@ public protocol DiagnosticsSink: Sendable {
     func record(_ event: DiagnosticEvent) async
 }
 
+/// 仅 benchmark 可用的 inline recorder 逃生口：`record` 实现自身必须有界、非阻塞且可安全内联执行。
+/// 普通外部 sink 不得采用此 SPI；生产 pipeline 会插入 `BufferedDiagnosticsRelay`，防止 observability 延迟图像交付。
+@_spi(FoveaBenchmarking)
+public protocol InlineBenchmarkDiagnosticsSink: DiagnosticsSink {}
+
 /// 有意丢弃所有事件的诊断接收器。
 
 public struct NullDiagnosticsSink: DiagnosticsSink {
@@ -149,7 +154,11 @@ package actor BufferedDiagnosticsRelay: DiagnosticsSink {
 package func nonBlockingDiagnosticsSink(
     _ sink: any DiagnosticsSink
 ) -> any DiagnosticsSink {
-    if sink is NullDiagnosticsSink || sink is BoundedDiagnosticsSink { return sink }
+    if sink is NullDiagnosticsSink || sink is BoundedDiagnosticsSink
+        || sink is any InlineBenchmarkDiagnosticsSink
+    {
+        return sink
+    }
     return BufferedDiagnosticsRelay(downstream: sink)
 }
 
@@ -174,9 +183,7 @@ package struct RedactingDiagnosticsSink: DiagnosticsSink, Sendable {
         material.append(salt)
         material.append(0)
         material.append(contentsOf: stableDigest.utf8)
-        let correlation = SHA256.hash(data: material)
-            .map { String(format: "%02x", $0) }
-            .joined()
+        let correlation = lowercaseHexString(SHA256.hash(data: material))
         await downstream.record(event.replacingKeyDigest(correlation))
     }
 }
@@ -185,6 +192,9 @@ package func pipelineDiagnosticsSink(
     _ sink: any DiagnosticsSink
 ) -> any DiagnosticsSink {
     if sink is NullDiagnosticsSink { return sink }
+    // 显式 benchmark 生命周期 tracing 需要 emit-site timestamp。DiagnosticEvent 已验证全部动态字段，包括 keyDigest 必须为小写 SHA-256；
+    // benchmark adapter 在 workload 计时后重新关联该 digest 再导出 sidecar，普通外部 sink 仍保留生产脱敏与 buffered-relay 边界。
+    if sink is any InlineBenchmarkDiagnosticsSink { return sink }
     return RedactingDiagnosticsSink(downstream: nonBlockingDiagnosticsSink(sink))
 }
 

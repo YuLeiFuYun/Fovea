@@ -9,6 +9,7 @@ private final class FeedBenchmarkCell: UICollectionViewCell {
     private(set) var token = UUID()
     private var load: ComparatorLoad?
     private var requestID: String?
+    private var ownerBackingMetadata: W1FootprintBackingMetadata?
     var loaderTask: Task<Void, Never>?
 
     override init(frame: CGRect) {
@@ -35,11 +36,46 @@ private final class FeedBenchmarkCell: UICollectionViewCell {
         cancel()
         token = UUID()
         imageView.image = nil
+        ownerBackingMetadata = nil
     }
 
     func install(load: ComparatorLoad, requestID: String) {
         self.load = load
         self.requestID = requestID
+    }
+
+    func installRenderedImage(
+        _ image: ComparatorRenderImage,
+        captureOwnerMetadata: Bool
+    ) {
+        let cgImage = image.cgImage
+        if captureOwnerMetadata {
+            let (byteCount, overflow) = cgImage.bytesPerRow.multipliedReportingOverflow(
+                by: cgImage.height
+            )
+            ownerBackingMetadata = W1FootprintBackingMetadata(
+                imageIdentity: ObjectIdentifier(cgImage),
+                providerIdentity: cgImage.dataProvider.map(ObjectIdentifier.init),
+                pixelWidth: cgImage.width,
+                pixelHeight: cgImage.height,
+                bytesPerRow: cgImage.bytesPerRow,
+                estimatedByteCount: overflow ? Int.max : max(0, byteCount)
+            )
+        } else {
+            ownerBackingMetadata = nil
+        }
+        imageView.image = UIImage(cgImage: cgImage)
+    }
+
+    func ownerBackingMetadataForAttribution() -> W1FootprintBackingMetadata? {
+        ownerBackingMetadata
+    }
+
+    func releaseBackingForOwnerAttribution() -> Bool {
+        let hadBacking = ownerBackingMetadata != nil || imageView.image != nil
+        imageView.image = nil
+        ownerBackingMetadata = nil
+        return hadBacking
     }
 
     func cancel() {
@@ -55,6 +91,15 @@ private final class FeedBenchmarkCell: UICollectionViewCell {
 }
 
 @MainActor
+private final class WeakFeedBenchmarkCell {
+    weak var value: FeedBenchmarkCell?
+
+    init(_ value: FeedBenchmarkCell) {
+        self.value = value
+    }
+}
+
+@MainActor
 final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataSource,
     UICollectionViewDelegateFlowLayout
 {
@@ -65,6 +110,9 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
     private let accumulator = ObservationAccumulator()
     private var tasks: [Task<Void, Never>] = []
     private var lateResultsRejected = 0
+    private var isStopping = false
+    private var ownerAttribution: W1FootprintOwnerAttributionRecorder?
+    private var ownerCells: [WeakFeedBenchmarkCell] = []
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 8
@@ -104,22 +152,55 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
     }
 
     func execute() async throws -> WorkloadResult {
+        if let intervention = try W1FootprintOwnerIntervention.requestedFromEnvironment() {
+            ownerAttribution = W1FootprintOwnerAttributionRecorder(intervention: intervention)
+            try ownerAttribution?.recordPhase("post-cache-preparation-baseline")
+        }
+
         loadViewIfNeeded()
         collectionView.reloadData()
         collectionView.layoutIfNeeded()
         let started = DispatchTime.now().uptimeNanoseconds
         let driver = ScrollTraceDriver(collectionView: collectionView, timeScale: timeScale)
+        try ownerAttribution?.recordPhase("scroll-start")
         NSLog("FOVEA_STAGE=scroll-start")
         await driver.run()
         NSLog("FOVEA_STAGE=scroll-finished")
-        for case let cell as FeedBenchmarkCell in collectionView.visibleCells { cell.cancel() }
-        NSLog("FOVEA_STAGE=cancel-all-start")
-        await adapter.cancelAll()
-        NSLog("FOVEA_STAGE=cancel-all-finished")
+        try ownerAttribution?.recordPhase("scroll-finished")
+        isStopping = true
+        if ownerAttribution != nil {
+            try ownerAttribution?.recordPhase("cancel-all-start")
+            NSLog("FOVEA_STAGE=cancel-all-start")
+            cancelOwnerLoadsWithoutAdapterTeardown()
+            NSLog("FOVEA_STAGE=cancel-all-finished")
+            try ownerAttribution?.recordPhase("cancel-all-finished")
+        } else {
+            for case let cell as FeedBenchmarkCell in collectionView.visibleCells { cell.cancel() }
+            NSLog("FOVEA_STAGE=cancel-all-start")
+            await adapter.cancelAll()
+            NSLog("FOVEA_STAGE=cancel-all-finished")
+        }
         for task in tasks { await task.value }
         NSLog("FOVEA_STAGE=loads-drained")
+        try ownerAttribution?.recordPhase("loads-drained")
         let snapshot = await accumulator.snapshot()
         let duration = DispatchTime.now().uptimeNanoseconds &- started
+
+        if let ownerAttribution {
+            let visibleCells = collectionView.visibleCells.compactMap { $0 as? FeedBenchmarkCell }
+            let visibleBackings = visibleCells.compactMap {
+                $0.ownerBackingMetadataForAttribution()
+            }
+            try await ownerAttribution.runIntervention(
+                adapter: adapter,
+                visibleCellCount: visibleCells.count,
+                visibleBackings: visibleBackings,
+                releaseUIBackings: { [weak self] in
+                    self?.releaseOwnerBackings() ?? 0
+                }
+            )
+        }
+
         return WorkloadResult(
             observations: snapshot.observations,
             checks: [
@@ -137,6 +218,11 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
                     identifier: "target-pixel-box",
                     passed: snapshot.targetPixelViolationCount == 0,
                     value: snapshot.targetPixelViolationCount
+                ),
+                BenchmarkCheck(
+                    identifier: "failed-load-count-zero",
+                    passed: snapshot.failed == 0,
+                    value: snapshot.failed
                 ),
             ],
             durationNanoseconds: duration,
@@ -157,10 +243,14 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
         _ collectionView: UICollectionView,
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
-        collectionView.dequeueReusableCell(
+        let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: FeedBenchmarkCell.reuseIdentifier,
             for: indexPath
         )
+        if ownerAttribution != nil, let feedCell = cell as? FeedBenchmarkCell {
+            registerOwnerCell(feedCell)
+        }
+        return cell
     }
 
     func collectionView(
@@ -188,7 +278,38 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
         (cell as? FeedBenchmarkCell)?.cancel()
     }
 
+    private func registerOwnerCell(_ cell: FeedBenchmarkCell) {
+        ownerCells.removeAll { $0.value == nil }
+        guard !ownerCells.contains(where: { $0.value === cell }) else { return }
+        ownerCells.append(WeakFeedBenchmarkCell(cell))
+    }
+
+    private func cancelOwnerLoadsWithoutAdapterTeardown() {
+        ownerCells.removeAll { $0.value == nil }
+        for reference in ownerCells {
+            reference.value?.cancel()
+        }
+        for task in tasks {
+            task.cancel()
+        }
+    }
+
+    private func releaseOwnerBackings() -> Int {
+        ownerCells.removeAll { $0.value == nil }
+        var released = 0
+        for reference in ownerCells {
+            if reference.value?.releaseBackingForOwnerAttribution() == true {
+                released += 1
+            }
+        }
+        return released
+    }
+
     private func startLoad(cell: FeedBenchmarkCell, logicalIndex: Int) {
+        guard !isStopping else {
+            cell.cancel()
+            return
+        }
         cell.cancel()
         let token = cell.token
         let asset = catalog.dataset.assets[logicalIndex % catalog.dataset.assets.count]
@@ -196,6 +317,7 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
         let task = Task { @MainActor [weak self, weak cell] in
             guard let self, let cell else { return }
             do {
+                try Task.checkCancellation()
                 let target = try ComparatorPixelTarget(width: 320, height: 240)
                 let request = try ComparatorRequest(
                     resourceID: asset.assetID,
@@ -220,10 +342,14 @@ final class FeedBenchmarkViewController: UIViewController, UICollectionViewDataS
                     lateResultsRejected += 1
                     return
                 }
-                cell.imageView.image = UIImage(cgImage: image.cgImage)
+                cell.installRenderedImage(
+                    image,
+                    captureOwnerMetadata: ownerAttribution != nil
+                )
             } catch is CancellationError {
                 return
             } catch {
+                guard !Task.isCancelled else { return }
                 let target = try? ComparatorPixelTarget(width: 320, height: 240)
                 if let target,
                     let measurement = try? ComparatorLoadResult(

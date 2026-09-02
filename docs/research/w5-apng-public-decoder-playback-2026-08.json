@@ -1,0 +1,274 @@
+{
+  "claimBoundary": [
+    "public ImageIOAnimatedImageDecoder and AnimatedImageAsset provider route",
+    "owned APNG admission remains RGBA8 non-interlaced and maximum dimension 1024",
+    "unsupported aligned APNG may use ImageIO; unsupported unaligned timelines fail closed",
+    "full-canvas convertToSRGB correctness, reverse access and cancellation only",
+    "no Fovea dependency pin, latency, energy, thermal, or physical-device claim"
+  ],
+  "date": "2026-08-07",
+  "evidence": {
+    "artifactInventoryCount": 84,
+    "captureManifest": ".artifacts/performance/w5-apng-public-decoder-playback-v1/capture-manifest.json",
+    "captureManifestSHA256": "510ac7014d7269983638f20aa3ae7781e9f1b40487622366bb80cf63866fb258",
+    "captureRunner": "Tools/Performance/capture_w5_apng_public_decoder_playback.py",
+    "report": ".artifacts/performance/w5-apng-public-decoder-playback-v1/report.json",
+    "reportSHA256": "8362d2262b6d597bfde7838737345ce566c6dbf974dcb8544c7f0c069d8f27ae",
+    "retainedReleaseBinary": ".artifacts/performance/w5-apng-public-decoder-playback-v1/bin/ImageCraftEvidence",
+    "retainedReleaseBinarySHA256": "162c2669a9c9cfedb14a1744009481a007565d99b5416b6aac5911bb26c8143e",
+    "sourceIdentity": ".artifacts/performance/w5-apng-public-decoder-playback-v1/source-identity.json",
+    "sourceIdentitySHA256": "2287ec60ab750a8343dffec36da191261b2b9cc400cadba2c74b44dcaa61d514",
+    "tamperContract": "Tools/Performance/test_w5_apng_public_decoder_playback.py",
+    "validator": "Tools/Performance/validate_w5_apng_public_decoder_playback.py"
+  },
+  "implementation": {
+    "codecFingerprint": "dev.fovea.imageio.animation#impl=2#contract=2",
+    "fallbackPolicy": {
+      "alignedUnsupportedAPNG": "fallback to Apple ImageIO source-index materialization",
+      "malformedOwnedInput": "fail closed; do not hide CRC, sequence, inflate, filter, rect or byte-count errors behind ImageIO",
+      "unalignedUnsupportedAPNG": "fail closed with animationUnsupported"
+    },
+    "foveaDependencyPinChanged": false,
+    "macPerformanceStudy": "docs/research/w5-apng-public-decoder-mac-performance-2026-08.json",
+    "ownedAdmission": "ImageCraft/Sources/ImageCraftImageIO/APNGOwnedAnimationIntegration.swift",
+    "ownedAdmissionPolicy": {
+      "decompressorWorkspaceBytes": 262144,
+      "formats": "RGBA8 non-interlaced APNG only",
+      "maximumCanvasDimension": 1024,
+      "maximumCheckpointRatioPPM": 100000,
+      "maximumReplayFrames": 8,
+      "maximumRetainedBytes": 33554432,
+      "smallCanvasBlobAllowanceBytes": 4096
+    },
+    "ownedCheckpointStore": "ImageCraft/Sources/ImageCraftImageIO/APNGCompressedCheckpoint.swift",
+    "ownedParser": "ImageCraft/Sources/ImageCraftImageIO/APNGRawSubrectDecoder.swift",
+    "ownedPlayback": "ImageCraft/Sources/ImageCraftImageIO/APNGOwnedStraightAlphaPlayback.swift",
+    "ownedRFC1950": "ImageCraft/Sources/ImageCraftImageIO/RFC1950Zlib.swift",
+    "preparationDiagnostics": "ImageCraft/Sources/ImageCraftImageIO/ImageIOAnimationPreparationDiagnostics.swift",
+    "publicAPIAdded": false,
+    "publicDecoder": "ImageCraft/Sources/ImageCraftImageIO/ImageIOAnimatedImageDecoder.swift",
+    "publicDecoderIntegrated": true,
+    "publicProvider": "ImageCraft/Sources/ImageCraftImageIO/ImageIOAnimationFrameProvider.swift",
+    "renderer": "ImageCraft/Sources/ImageCraftImageIO/ImageIOAnimationFrameRenderer.swift"
+  },
+  "interpretation": [
+    "The retained Release binary exercises the public ImageIOAnimatedImageDecoder and AnimatedImageAsset provider, not the package-only evidence seam.",
+    "The public route is byte-exact with the owned Python reference on all 24 retained animation frames and with retained Apple ImageIO sidecars on all 21 aligned frames.",
+    "SpecTesting 016 now succeeds through the public owned route on all three animation frames without publishing the static default image.",
+    "Sequential decode windows and reverse random access produce identical pixels, and cancellation fences subsequent frame requests for every retained fixture.",
+    "Aligned APNG outside the owned RGBA8 subset may still use Apple ImageIO; an unsupported unaligned separate-default timeline remains fail closed.",
+    "This closes the ImageCraft decoder/provider integration gap for the admitted subset, but not publication, Fovea revision pinning, concrete Fovea adapter integration, physical-device memory/deadline/energy/thermal gates, or a 2048-square support policy.",
+    "Package-only preparation diagnostics report ownedAPNG for all seven retained fixtures, so pixel agreement is no longer being used as a proxy for backing selection.",
+    "All real fixtures remain shorter than the eight-frame replay interval and report zero retained checkpoints; checkpoint insertion/restoration remains proven by IMG_ANIM_PT_049 and the lower-level IMG_ANIM_PT_044.",
+    "Observed real-fixture retained bytes peak at 23,796 and modeled peak bytes at 981,940 under the bound full-canvas request, but these are deterministic model/accounting values rather than allocator or physical-device measurements.",
+    "The public range path shares one checkpoint resolution and one straight-alpha canvas across the requested window; IMG_ANIM_PT_051 prevents regression to repeated random-access replay.",
+    "Aligned ImageIO fallback now uses the same bounded no-cache materialization for single-frame and window requests; IMG_ANIM_PT_052 and the current Mac capture report zero reverse mismatches."
+  ],
+  "objective": "Verify the actual public ImageIOAnimatedImageDecoder and AnimatedImageAsset provider route after integrating the owned RGBA8 non-interlaced APNG parser, exact straight-alpha compositor and bounded compressed checkpoint replay for admitted inputs.",
+  "results": {
+    "allBackingsOwnedAPNG": true,
+    "allCancellationFenced": true,
+    "allOwnedRetainedWithin32MiB": true,
+    "allPublicAppleExactWhereAvailable": true,
+    "allPublicPythonExact": true,
+    "allRealFixtureCheckpointCountsZero": true,
+    "allReverseRandomAccessExact": true,
+    "fixtureCount": 7,
+    "fixtureResults": {
+      "APNG-OVER-BACKGROUND": {
+        "allPublicAppleExact": true,
+        "allPublicPythonExact": true,
+        "allReverseRandomAccessExact": true,
+        "cancellationFenced": true,
+        "frameCount": 3
+      },
+      "APNG-OVER-NONE": {
+        "allPublicAppleExact": true,
+        "allPublicPythonExact": true,
+        "allReverseRandomAccessExact": true,
+        "cancellationFenced": true,
+        "frameCount": 3
+      },
+      "APNG-OVER-PREVIOUS": {
+        "allPublicAppleExact": true,
+        "allPublicPythonExact": true,
+        "allReverseRandomAccessExact": true,
+        "cancellationFenced": true,
+        "frameCount": 3
+      },
+      "APNG-SEPARATE-DEFAULT": {
+        "allPublicAppleExact": null,
+        "allPublicPythonExact": true,
+        "allReverseRandomAccessExact": true,
+        "cancellationFenced": true,
+        "frameCount": 3
+      },
+      "APNG-SUBRECT-BACKGROUND": {
+        "allPublicAppleExact": true,
+        "allPublicPythonExact": true,
+        "allReverseRandomAccessExact": true,
+        "cancellationFenced": true,
+        "frameCount": 3
+      },
+      "APNG-SUBRECT-NONE": {
+        "allPublicAppleExact": true,
+        "allPublicPythonExact": true,
+        "allReverseRandomAccessExact": true,
+        "cancellationFenced": true,
+        "frameCount": 3
+      },
+      "APNG-SUBRECT-PREVIOUS-SOURCE": {
+        "allPublicAppleExact": true,
+        "allPublicPythonExact": true,
+        "allReverseRandomAccessExact": true,
+        "cancellationFenced": true,
+        "frameCount": 6
+      }
+    },
+    "frameCount": 24,
+    "integrationTests": {
+      "alignedUnsupportedRGBFallback": "IMG_ANIM_PT_046",
+      "backingAndAccountingDiagnostics": "IMG_ANIM_PT_050",
+      "fallbackSingleWindowPixelConsistency": "IMG_ANIM_PT_052",
+      "fitAndFill": "IMG_ANIM_PT_045",
+      "ownedCancellation": "IMG_ANIM_PT_048",
+      "publicCheckpointCrossingRandomAccess": "IMG_ANIM_PT_049",
+      "sharedCanvasRangeReplay": "IMG_ANIM_PT_051",
+      "unalignedUnsupportedRGBFailClosed": "IMG_ANIM_PT_047"
+    },
+    "maximumObservedEncodedFramePayloadBytes": 23796,
+    "maximumObservedModeledPeakBytesUpperBound": 981940,
+    "maximumObservedRetainedBytes": 23796,
+    "preparationDiagnostics": {
+      "APNG-OVER-BACKGROUND": {
+        "backingKind": "ownedAPNG",
+        "imageIOSourceIndicesMatchTimeline": true,
+        "ownedCanvasRGBABytes": 90000,
+        "ownedDecompressorWorkspaceBytes": 262144,
+        "ownedEncodedFramePayloadBytes": 6456,
+        "ownedMaterializedOutputRGBABytes": 90000,
+        "ownedMaximumPreviousSaveRGBABytes": 0,
+        "ownedMaximumRawSubrectRGBABytes": 90000,
+        "ownedMaximumReplayFrames": 8,
+        "ownedModeledPeakBytesUpperBound": 538600,
+        "ownedRetainedBytes": 6456,
+        "ownedRetainedCheckpointBytes": 0,
+        "ownedRetainedCheckpointCount": 0
+      },
+      "APNG-OVER-NONE": {
+        "backingKind": "ownedAPNG",
+        "imageIOSourceIndicesMatchTimeline": true,
+        "ownedCanvasRGBABytes": 90000,
+        "ownedDecompressorWorkspaceBytes": 262144,
+        "ownedEncodedFramePayloadBytes": 6456,
+        "ownedMaterializedOutputRGBABytes": 90000,
+        "ownedMaximumPreviousSaveRGBABytes": 0,
+        "ownedMaximumRawSubrectRGBABytes": 90000,
+        "ownedMaximumReplayFrames": 8,
+        "ownedModeledPeakBytesUpperBound": 538600,
+        "ownedRetainedBytes": 6456,
+        "ownedRetainedCheckpointBytes": 0,
+        "ownedRetainedCheckpointCount": 0
+      },
+      "APNG-OVER-PREVIOUS": {
+        "backingKind": "ownedAPNG",
+        "imageIOSourceIndicesMatchTimeline": true,
+        "ownedCanvasRGBABytes": 90000,
+        "ownedDecompressorWorkspaceBytes": 262144,
+        "ownedEncodedFramePayloadBytes": 6456,
+        "ownedMaterializedOutputRGBABytes": 90000,
+        "ownedMaximumPreviousSaveRGBABytes": 90000,
+        "ownedMaximumRawSubrectRGBABytes": 90000,
+        "ownedMaximumReplayFrames": 8,
+        "ownedModeledPeakBytesUpperBound": 628600,
+        "ownedRetainedBytes": 6456,
+        "ownedRetainedCheckpointBytes": 0,
+        "ownedRetainedCheckpointCount": 0
+      },
+      "APNG-SEPARATE-DEFAULT": {
+        "backingKind": "ownedAPNG",
+        "imageIOSourceIndicesMatchTimeline": false,
+        "ownedCanvasRGBABytes": 32768,
+        "ownedDecompressorWorkspaceBytes": 262144,
+        "ownedEncodedFramePayloadBytes": 291,
+        "ownedMaterializedOutputRGBABytes": 32768,
+        "ownedMaximumPreviousSaveRGBABytes": 8192,
+        "ownedMaximumRawSubrectRGBABytes": 32768,
+        "ownedMaximumReplayFrames": 8,
+        "ownedModeledPeakBytesUpperBound": 368931,
+        "ownedRetainedBytes": 291,
+        "ownedRetainedCheckpointBytes": 0,
+        "ownedRetainedCheckpointCount": 0
+      },
+      "APNG-SUBRECT-BACKGROUND": {
+        "backingKind": "ownedAPNG",
+        "imageIOSourceIndicesMatchTimeline": true,
+        "ownedCanvasRGBABytes": 32768,
+        "ownedDecompressorWorkspaceBytes": 262144,
+        "ownedEncodedFramePayloadBytes": 269,
+        "ownedMaterializedOutputRGBABytes": 32768,
+        "ownedMaximumPreviousSaveRGBABytes": 0,
+        "ownedMaximumRawSubrectRGBABytes": 32768,
+        "ownedMaximumReplayFrames": 8,
+        "ownedModeledPeakBytesUpperBound": 360717,
+        "ownedRetainedBytes": 269,
+        "ownedRetainedCheckpointBytes": 0,
+        "ownedRetainedCheckpointCount": 0
+      },
+      "APNG-SUBRECT-NONE": {
+        "backingKind": "ownedAPNG",
+        "imageIOSourceIndicesMatchTimeline": true,
+        "ownedCanvasRGBABytes": 32768,
+        "ownedDecompressorWorkspaceBytes": 262144,
+        "ownedEncodedFramePayloadBytes": 390,
+        "ownedMaterializedOutputRGBABytes": 32768,
+        "ownedMaximumPreviousSaveRGBABytes": 0,
+        "ownedMaximumRawSubrectRGBABytes": 32768,
+        "ownedMaximumReplayFrames": 8,
+        "ownedModeledPeakBytesUpperBound": 360838,
+        "ownedRetainedBytes": 390,
+        "ownedRetainedCheckpointBytes": 0,
+        "ownedRetainedCheckpointCount": 0
+      },
+      "APNG-SUBRECT-PREVIOUS-SOURCE": {
+        "backingKind": "ownedAPNG",
+        "imageIOSourceIndicesMatchTimeline": true,
+        "ownedCanvasRGBABytes": 193600,
+        "ownedDecompressorWorkspaceBytes": 262144,
+        "ownedEncodedFramePayloadBytes": 23796,
+        "ownedMaterializedOutputRGBABytes": 193600,
+        "ownedMaximumPreviousSaveRGBABytes": 115200,
+        "ownedMaximumRawSubrectRGBABytes": 193600,
+        "ownedMaximumReplayFrames": 8,
+        "ownedModeledPeakBytesUpperBound": 981940,
+        "ownedRetainedBytes": 23796,
+        "ownedRetainedCheckpointBytes": 0,
+        "ownedRetainedCheckpointCount": 0
+      }
+    },
+    "publicAppleExactFramesWhereAvailable": 21,
+    "publicPythonExactFrames": 24,
+    "qualification": {
+      "failures": 0,
+      "imageCraftCoreTests": 16,
+      "imageCraftImageIOTests": 111,
+      "totalTests": 127,
+      "warningsAsErrorsReleaseBuildPassed": true
+    },
+    "realFixtureRetainedCheckpointCount": 0,
+    "separateDefaultPublicPythonExactFrames": 3,
+    "separateDefaultTimelineExact": true
+  },
+  "schemaVersion": 1,
+  "sourceIdentity": {
+    "apngKitCommit": "341383f61000e8d2e55d45db0f0756b239d0a2f1",
+    "foveaWorkingTree": "13e623ba63c3332d149828c20868eca64fbe731b",
+    "governingFilesUnchangedDuringCapture": true,
+    "imageCraftHeadCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+    "imageCraftWorkingTree": "2799c28c0b8eeda718e63a7e74d4e45f20cd6bc5",
+    "inputSourcesUnchangedDuringCapture": true,
+    "sourceUnchangedDuringCapture": true
+  },
+  "status": "completed-local-source-and-retained-release-binary-bound-public-imagecraft-decoder-owned-apng-route-exact-publication-fovea-pin-and-device-gates-pending",
+  "studyID": "FOVEA-W5-APNG-PUBLIC-IMAGECRAFT-DECODER-PLAYBACK-2026-08"
+}

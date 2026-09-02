@@ -20,6 +20,7 @@ package final class FoveaCompactSieveCache<Key: Hashable & Sendable, Value: Send
 
     private let lock = NSLock()
     private let costLimit: Int
+    private let countLimit: Int
     private var totalCost = 0
     private var residentCount = 0
     private var visitedCount = 0
@@ -31,8 +32,9 @@ package final class FoveaCompactSieveCache<Key: Hashable & Sendable, Value: Send
     private var mostRecent: Int?
     private var sieveHand: Int?
 
-    package init(costLimit: Int) {
+    package init(costLimit: Int, countLimit: Int = .max) {
         self.costLimit = max(1, costLimit)
+        self.countLimit = max(1, countLimit)
     }
 
     package func value(for key: Key) -> Value? {
@@ -77,7 +79,9 @@ package final class FoveaCompactSieveCache<Key: Hashable & Sendable, Value: Send
             }
 
             let maximumExistingCost = costLimit - normalizedCost
-            while totalCost > maximumExistingCost, let victim = nextSieveVictimLocked() {
+            while insertionRequiresEvictionLocked(maximumExistingCost: maximumExistingCost),
+                let victim = nextSieveVictimLocked()
+            {
                 if let slot = slots[victim] { evicted.append(slot.key) }
                 removeLocked(victim)
             }
@@ -138,8 +142,39 @@ package final class FoveaCompactSieveCache<Key: Hashable & Sendable, Value: Send
         }
     }
 
+    /// 使用同一 SIEVE victim policy 将驻留条目裁剪到请求总成本；返回实际驱逐的 key，并把请求上限夹到 cache 固定 cap。
+    package func trimReportingEvictions(toCost requestedCost: Int) -> [Key] {
+        atomic {
+            let target = min(costLimit, max(0, requestedCost))
+            var evicted: [Key] = []
+            while totalCost > target, let victim = nextSieveVictimLocked() {
+                if let slot = slots[victim] { evicted.append(slot.key) }
+                removeLocked(victim)
+            }
+            return evicted
+        }
+    }
+
     package func removeAll(where predicate: @Sendable (Key) -> Bool) {
-        _ = removeAllReportingKeys(where: predicate)
+        _ = removeAllAndReport(where: predicate)
+    }
+
+    package func removeAllAndReport(
+        where predicate: @Sendable (Key) -> Bool
+    ) -> MemoryCacheRemovalSummary {
+        atomic {
+            let victims = indices.compactMap { predicate($0.key) ? $0.value : nil }
+            var itemCount = 0
+            var costBytes = 0
+            for index in victims {
+                guard let slot = slots[index] else { continue }
+                itemCount += 1
+                let next = costBytes.addingReportingOverflow(slot.cost)
+                costBytes = next.overflow ? Int.max : next.partialValue
+                removeLocked(index)
+            }
+            return MemoryCacheRemovalSummary(itemCount: itemCount, costBytes: costBytes)
+        }
     }
 
     package func removeAllReportingKeys(
@@ -186,6 +221,10 @@ package final class FoveaCompactSieveCache<Key: Hashable & Sendable, Value: Send
 
     package var currentCost: Int { atomic { totalCost } }
     package var count: Int { atomic { indices.count } }
+
+    private func insertionRequiresEvictionLocked(maximumExistingCost: Int) -> Bool {
+        totalCost > maximumExistingCost || residentCount >= countLimit
+    }
 
     private func nextSieveVictimLocked() -> Int? {
         guard residentCount > 0, let leastRecent else { return nil }

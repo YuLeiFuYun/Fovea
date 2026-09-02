@@ -54,9 +54,9 @@ struct TransportVerifiedEncodedHandoffMetadata: Codable, Sendable {
     ) {
         guard record.isValidPersistentRecord(),
             record.securityNamespaceFingerprint
-                == StorageNamespaceFingerprint(namespace: request.namespace.value),
+                == request.storageNamespaceFingerprint,
             record.namespaceGeneration == generation.value,
-            record.baseKeyDigest == request.fetchBaseKey.digestHex,
+            record.baseKeyDigest == request.fetchBaseDigest,
             record.variantKeyDigest == request.fetchVariantKey(for: record.vary).digestHex,
             record.statusCode == 200,
             record.disposition == .reusable,
@@ -95,7 +95,7 @@ struct TransportVerifiedEncodedHandoffMetadata: Codable, Sendable {
         RepresentationRecord(
             securityNamespace: request.namespace.value,
             namespaceGeneration: generation.value,
-            baseKeyDigest: request.fetchBaseKey.digestHex,
+            baseKeyDigest: request.fetchBaseDigest,
             variantKeyDigest: variantKeyDigest(for: request),
             vary: vary,
             statusCode: 200,
@@ -227,6 +227,9 @@ extension PipelineCache {
             generation: generation,
             executionDigest: request.fetchExecutionKey.digestHex
         )
+        // 常见 warm-disk 路径没有 transient transport handoff；不要仅为发现 index miss 就派发异步 file I/O。
+        // positive snapshot 之后仍以 `entry` 为权威读取，并由它安全处理并发删除。
+        guard transportVerifiedHandoffs.contains(key) else { return nil }
         let entry: TransportVerifiedEncodedHandoffEntry
         do {
             guard let stored = try await transportVerifiedHandoffs.entry(for: key) else {

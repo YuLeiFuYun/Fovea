@@ -33,11 +33,11 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/YuLeiFuYun/ImageCraft.git",
-            revision: "736d0fb75e9e128642ce418ad984ce5151b1f324"
+            revision: "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e"
         ),
         .package(
             url: "https://github.com/YuLeiFuYun/Akashic.git",
-            revision: "2715f23d50b5a17b7328be41608eaf1b1c99b0d6"
+            revision: "0376b960ec8abe54f2d4a9d7d66e97f395215eaf"
         ),
     ],
     targets: [
@@ -145,6 +145,36 @@ let package = Package(
             name: "FoveaStoreProbe",
             dependencies: ["FoveaPersistence"],
             path: "Tools/FoveaStoreProbe",
+            swiftSettings: concurrencySettings
+        ),
+        .executableTarget(
+            name: "FoveaDerivedRasterLab",
+            dependencies: [
+                "FoveaCore", "FoveaPersistence", "FoveaStorage",
+                .product(name: "AkashicCore", package: "Akashic"),
+                .product(name: "ImageCraftCore", package: "ImageCraft"),
+                .product(name: "ImageCraftImageIO", package: "ImageCraft"),
+            ],
+            path: "Tools/FoveaDerivedRasterLab",
+            swiftSettings: concurrencySettings
+        ),
+        .executableTarget(
+            name: "FoveaWarmMemoryLab",
+            dependencies: [
+                "FoveaCore", "FoveaHTTP", "FoveaPersistence", "FoveaTesting",
+                .product(name: "ImageCraftCore", package: "ImageCraft"),
+                .product(name: "ImageCraftImageIO", package: "ImageCraft"),
+            ],
+            path: "Tools/FoveaWarmMemoryLab",
+            swiftSettings: concurrencySettings
+        ),
+        .executableTarget(
+            name: "FoveaAnimationMacLab",
+            dependencies: [
+                "FoveaCore", "FoveaAppKit",
+                .product(name: "ImageCraftCore", package: "ImageCraft"),
+            ],
+            path: "Tools/FoveaAnimationMacLab",
             swiftSettings: concurrencySettings
         ),
         .target(

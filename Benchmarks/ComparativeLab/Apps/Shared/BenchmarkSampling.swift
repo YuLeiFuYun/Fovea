@@ -1,6 +1,7 @@
 import Darwin
 import Foundation
 import QuartzCore
+import UIKit
 
 final class PhysicalFootprintSampler: @unchecked Sendable {
     private let lock = NSLock()
@@ -177,5 +178,86 @@ final class DisplayFrameBarrier {
         let continuation = continuation
         self.continuation = nil
         continuation?.resume()
+    }
+}
+
+/// Refresh-synchronized, non-retaining observation of the image currently bound to one benchmark
+/// `UIImageView`. The recorder stores only opaque backing/binding identities and timestamps; it
+/// never retains `UIImage`, `CGImage`, or the view.
+///
+/// A binding token is distinct from backing identity so a later semantic frame that intentionally
+/// reuses the same `CGImage` can still be observed independently. All mutation happens on the main
+/// actor, matching `CADisplayLink` and benchmark UI assignment.
+@MainActor
+final class ImageViewPresentationRecorder {
+    struct Observation: Sendable {
+        let bindingToken: UInt64
+        let backingIdentity: UInt64
+        let uptimeNanoseconds: UInt64
+        let displayLinkTimestamp: CFTimeInterval
+        let displayLinkTargetTimestamp: CFTimeInterval
+    }
+
+    private struct Binding {
+        let token: UInt64
+        let backingIdentity: UInt64
+    }
+
+    private weak var imageView: UIImageView?
+    private let maximumObservations: Int
+    private var displayLink: CADisplayLink?
+    private var currentBinding: Binding?
+    private var observationsByToken: [UInt64: Observation] = [:]
+
+    init(imageView: UIImageView, maximumObservations: Int = 64) {
+        self.imageView = imageView
+        self.maximumObservations = max(1, maximumObservations)
+        observationsByToken.reserveCapacity(self.maximumObservations)
+    }
+
+    func start() {
+        guard displayLink == nil else { return }
+        currentBinding = nil
+        observationsByToken.removeAll(keepingCapacity: true)
+        let link = CADisplayLink(target: self, selector: #selector(tick(_:)))
+        link.add(to: .main, forMode: .common)
+        displayLink = link
+    }
+
+    func stop() {
+        displayLink?.invalidate()
+        displayLink = nil
+        currentBinding = nil
+    }
+
+    func didBind(image: CGImage, bindingToken: UInt64) {
+        currentBinding = Binding(
+            token: bindingToken,
+            backingIdentity: Self.backingIdentity(image)
+        )
+    }
+
+    func observation(for bindingToken: UInt64) -> Observation? {
+        observationsByToken[bindingToken]
+    }
+
+    static func backingIdentity(_ image: CGImage) -> UInt64 {
+        UInt64(UInt(bitPattern: Unmanaged.passUnretained(image).toOpaque()))
+    }
+
+    @objc private func tick(_ link: CADisplayLink) {
+        guard observationsByToken.count < maximumObservations,
+            let binding = currentBinding,
+            observationsByToken[binding.token] == nil,
+            let image = imageView?.image?.cgImage,
+            Self.backingIdentity(image) == binding.backingIdentity
+        else { return }
+        observationsByToken[binding.token] = Observation(
+            bindingToken: binding.token,
+            backingIdentity: binding.backingIdentity,
+            uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds,
+            displayLinkTimestamp: link.timestamp,
+            displayLinkTargetTimestamp: link.targetTimestamp
+        )
     }
 }

@@ -327,10 +327,39 @@
         "SRC-RESEARCH-GITHUB-XCODE27-PREVIEW-2026-08"
       ],
       "status": "active-current-components-green-fovea-qualification"
+    },
+    {
+      "decisions": [
+        "Fovea, ImageCraft and Akashic are developed and evaluated as one image-lifecycle system; a component-local win that shifts latency, memory, write amplification, cancellation waste or lifecycle cost into another component is not a system win.",
+        "The target is a large advantage on almost every semantically comparable, preregistered metric, but global unbounded world-best language remains forbidden until the common comparator matrix and every required device/resource gate support the scoped claim.",
+        "When local host resource admission or quiescence gates are not met, a measurement may still run only as explicitly labeled directional evidence. It may guide mechanism selection but cannot satisfy, weaken or silently downgrade a formal claim gate.",
+        "When an eligible physical device is online, existing physical-device capture and comparative runners are preferred for claim-bearing latency, memory, energy, thermal, lifecycle and reclamation evidence; Simulator or host results cannot impersonate physical-device evidence.",
+        "Superseded production implementations, temporary baselines and redundant code should be removed once the replacement is verified. Historical negative results and bound evidence required for reproducibility are retained and marked superseded rather than deleted.",
+        "Current upstream source and frontier literature are recurring design inputs, but adoption requires causal mechanism evidence, exact semantic gates and a measured end-to-end benefit rather than authority by citation."
+      ],
+      "id": "DISC-2026-08-10-INTEGRATED-PARETO-AND-EVIDENCE-ROUTING",
+      "openItems": [
+        "Repeat current W5 ImageCraft/Fovea qualification and performance/resource evidence on the eligible physical iPhone when it is online.",
+        "Extend the same system-level Pareto accounting to cancellation/reclamation, derived-raster persistence/write amplification and Akashic durability/resource endpoints.",
+        "Keep formal verification fail-closed while making directional host runs easy to retain with explicit evidence class and capacity metadata."
+      ],
+      "repositoryTargets": [
+        "docs/project-memory/project-memory.json",
+        "docs/research/negative-results.json",
+        "scripts/check-verification-capacity.py",
+        "scripts/run-verification-profile.py",
+        "scripts/run-comparative-device-lab.py",
+        "Benchmarks/claim-policy.json",
+        "Benchmarks/ComparativeLab/animated-image-plan.json"
+      ],
+      "sourceIDs": [
+        "SRC-DISCUSSION-INTEGRATED-PARETO-AND-EVIDENCE-ROUTING-2026-08-10"
+      ],
+      "status": "active"
     }
   ],
   "ledgerID": "FOVEA-DISCUSSION-LEDGER-V1",
-  "reviewedOn": "2026-08-01",
+  "reviewedOn": "2026-08-10",
   "rules": {
     "acceptedDiscussionMustBeRecorded": true,
     "activeDecisionMustHaveRepositoryTargets": true,

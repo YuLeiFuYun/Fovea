@@ -1,4 +1,5 @@
 import CoreGraphics
+import ImageIO
 import XCTest
 
 @testable import FoveaWorkbench
@@ -100,6 +101,23 @@ final class WorkbenchVisualSystemTests: XCTestCase {
             XCTAssertFalse(asset.author.isEmpty)
             XCTAssertFalse(asset.license.isEmpty)
             XCTAssertTrue(asset.sourcePageURL.absoluteString.hasPrefix("https://"))
+        }
+    }
+
+    func testBundledRealAssetsRetainMinimumRasterResolution() throws {
+        for asset in WorkbenchRemoteAssetCatalog.bundledAssets {
+            let url = try XCTUnwrap(asset.bundledURL, asset.id)
+            let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil), asset.id)
+            let properties = try XCTUnwrap(
+                CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+                asset.id
+            )
+            let width = try XCTUnwrap(properties[kCGImagePropertyPixelWidth] as? Int, asset.id)
+            let height = try XCTUnwrap(properties[kCGImagePropertyPixelHeight] as? Int, asset.id)
+
+            XCTAssertGreaterThanOrEqual(min(width, height), 480, asset.id)
+            XCTAssertLessThanOrEqual(width, asset.originalPixelWidth, asset.id)
+            XCTAssertLessThanOrEqual(height, asset.originalPixelHeight, asset.id)
         }
     }
 

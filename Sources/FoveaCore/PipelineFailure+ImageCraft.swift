@@ -76,32 +76,58 @@ extension PipelineFailure {
         _ error: ImageCraftError,
         stage: Stage
     ) -> PipelineFailure {
-        switch error {
-        case .invalidTarget:
+        if error == .invalidTarget {
             return requestLimitFailure(error)
-        case .encodedBytesExceeded, .dimensionLimitExceeded, .pixelLimitExceeded,
-            .frameLimitExceeded:
+        }
+        if isDecodeLimitFailure(error) {
             return decodeLimitFailure(error, stage: stage)
-        case .unsupportedFormat, .formatMismatch, .metadataLimitExceeded,
-            .auxiliaryAttachmentLimitExceeded:
+        }
+        if isProbeLimitFailure(error) {
             return probeLimitFailure(error)
-        case .unsupportedOrCorruptImage, .probeMismatch, .decodeFailed:
+        }
+        if isExecutionFailure(error) {
             return executionFailure(error)
-        case .progressiveDecodingUnsupported:
+        }
+        if error == .progressiveDecodingUnsupported {
             return Mapping(
                 category: .decode,
                 stage: stage,
                 disposition: .terminal,
                 reasonCode: "progressive-decoding-unsupported"
             ).failure
-        case .progressiveSessionFinished:
+        }
+        if error == .progressiveSessionFinished {
             return internalContractFailure(
                 stage: stage,
                 reasonCode: "progressive-session-finished"
             )
-        case .progressiveSessionCancelled:
+        }
+        if error == .progressiveSessionCancelled {
             return cancelled(stage: stage)
         }
+        // ImageCraft 是独立版本化的 exact-pin 依赖；新增 public error case 必须失败关闭，但不能让候选 pin 与 Fovea 源码不兼容。
+        // 这里用 equality 分类，同时避开旧 pin 的 unreachable-default 和新 pin 的 non-exhaustive-switch warnings-as-errors 诊断。
+        return unexpectedImageCraftFailure(error, stage: stage)
+    }
+
+    private static func isDecodeLimitFailure(_ error: ImageCraftError) -> Bool {
+        error == .encodedBytesExceeded
+            || error == .dimensionLimitExceeded
+            || error == .pixelLimitExceeded
+            || error == .frameLimitExceeded
+    }
+
+    private static func isProbeLimitFailure(_ error: ImageCraftError) -> Bool {
+        error == .unsupportedFormat
+            || error == .formatMismatch
+            || error == .metadataLimitExceeded
+            || error == .auxiliaryAttachmentLimitExceeded
+    }
+
+    private static func isExecutionFailure(_ error: ImageCraftError) -> Bool {
+        error == .unsupportedOrCorruptImage
+            || error == .probeMismatch
+            || error == .decodeFailed
     }
 
     private static func requestLimitFailure(_ error: ImageCraftError) -> PipelineFailure {

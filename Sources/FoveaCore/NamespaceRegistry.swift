@@ -69,7 +69,12 @@ package actor NamespaceRegistry {
     package func generation(
         for namespace: SecurityNamespaceID
     ) throws -> NamespaceGeneration {
-        let fingerprint = Self.fingerprint(for: namespace)
+        try generation(for: Self.fingerprint(for: namespace))
+    }
+
+    package func generation(
+        for fingerprint: StorageNamespaceFingerprint
+    ) throws -> NamespaceGeneration {
         if let existing = states[fingerprint] {
             guard !existing.isExhausted, existing.activeRevocations == 0 else {
                 throw PipelineFailure.namespaceRevoked
@@ -181,7 +186,14 @@ package actor NamespaceRegistry {
         _ generation: NamespaceGeneration,
         for namespace: SecurityNamespaceID
     ) -> Bool {
-        guard let state = states[Self.fingerprint(for: namespace)] else {
+        isActive(generation, for: Self.fingerprint(for: namespace))
+    }
+
+    package func isActive(
+        _ generation: NamespaceGeneration,
+        for fingerprint: StorageNamespaceFingerprint
+    ) -> Bool {
+        guard let state = states[fingerprint] else {
             return generation == NamespaceGeneration(0)
         }
         return !state.isExhausted

@@ -290,6 +290,7 @@ private struct DiagnosticEventRow: View {
         case .pipelineSucceeded: "图片管线完成"
         case .pipelineFailed: "图片管线失败"
         case .diagnosticsDropped: "诊断事件被有界丢弃"
+        default: item.event.kind.rawValue
         }
     }
 

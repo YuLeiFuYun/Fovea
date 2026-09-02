@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "planID": "FOVEA-W5-APNG-CHECKPOINT-MODEL-V1",
+  "status": "preregistered-local-analytical-model-no-product-claim",
+  "objective": "Determine whether an owned APNG raw-subrect compositor can satisfy explicit retained-byte and random-access replay bounds without assuming that parsed frame rectangles imply subrect storage.",
+  "sourceFixtureRoot": ".artifacts/research/animation-libs/APNGKit/Tests/APNGKitTests/Resources",
+  "sourceFixtures": [
+    {
+      "id": "FULL-NONE",
+      "relativePath": "General/over_none.apng",
+      "role": "full-canvas none disposal"
+    },
+    {
+      "id": "FULL-BACKGROUND",
+      "relativePath": "General/over_background.apng",
+      "role": "full-canvas background disposal"
+    },
+    {
+      "id": "FULL-PREVIOUS",
+      "relativePath": "General/over_previous.apng",
+      "role": "full-canvas previous disposal"
+    },
+    {
+      "id": "SUBRECT-NONE",
+      "relativePath": "SpecTesting/013.png",
+      "role": "offset subrect none disposal"
+    },
+    {
+      "id": "SUBRECT-BACKGROUND",
+      "relativePath": "SpecTesting/015.png",
+      "role": "offset subrect background disposal"
+    },
+    {
+      "id": "SUBRECT-PREVIOUS",
+      "relativePath": "SpecTesting/016.png",
+      "role": "offset subrect previous disposal"
+    },
+    {
+      "id": "MIXED-PREVIOUS-SOURCE",
+      "relativePath": "General/pia.png",
+      "role": "mixed subrect sizes with previous and source blend"
+    },
+    {
+      "id": "BALL-MOTION",
+      "relativePath": "General/ball.apng",
+      "role": "twenty-frame moving subrect sequence"
+    },
+    {
+      "id": "EXTREME-SPARSE",
+      "relativePath": "General/maneki-neko.apng",
+      "role": "full first frame followed by one-pixel frames"
+    }
+  ],
+  "syntheticScenarios": [
+    {
+      "id": "FULL-1024-60",
+      "patternFixture": "FULL-NONE",
+      "patternMode": "repeat-scaled-area-ratios",
+      "frameCount": 60,
+      "canvasWidth": 1024,
+      "canvasHeight": 1024,
+      "encodedSourceBytes": 8388608
+    },
+    {
+      "id": "SUBRECT-NONE-1024-60",
+      "patternFixture": "SUBRECT-NONE",
+      "patternMode": "repeat-scaled-area-ratios",
+      "frameCount": 60,
+      "canvasWidth": 1024,
+      "canvasHeight": 1024,
+      "encodedSourceBytes": 4194304
+    },
+    {
+      "id": "SUBRECT-PREVIOUS-1024-120",
+      "patternFixture": "SUBRECT-PREVIOUS",
+      "patternMode": "repeat-scaled-area-ratios",
+      "frameCount": 120,
+      "canvasWidth": 1024,
+      "canvasHeight": 1024,
+      "encodedSourceBytes": 8388608
+    },
+    {
+      "id": "MIXED-PREVIOUS-2048-120",
+      "patternFixture": "MIXED-PREVIOUS-SOURCE",
+      "patternMode": "repeat-scaled-area-ratios",
+      "frameCount": 120,
+      "canvasWidth": 2048,
+      "canvasHeight": 2048,
+      "encodedSourceBytes": 33554432
+    },
+    {
+      "id": "BALL-2048-120",
+      "patternFixture": "BALL-MOTION",
+      "patternMode": "repeat-scaled-area-ratios",
+      "frameCount": 120,
+      "canvasWidth": 2048,
+      "canvasHeight": 2048,
+      "encodedSourceBytes": 16777216
+    },
+    {
+      "id": "SPARSE-2048-256",
+      "patternFixture": "EXTREME-SPARSE",
+      "patternMode": "first-full-then-one-pixel",
+      "frameCount": 256,
+      "canvasWidth": 2048,
+      "canvasHeight": 2048,
+      "encodedSourceBytes": 4194304
+    },
+    {
+      "id": "FULL-2048-32",
+      "patternFixture": "FULL-NONE",
+      "patternMode": "repeat-scaled-area-ratios",
+      "frameCount": 32,
+      "canvasWidth": 2048,
+      "canvasHeight": 2048,
+      "encodedSourceBytes": 33554432
+    }
+  ],
+  "accessProfiles": [
+    {
+      "id": "uniform",
+      "kind": "uniform"
+    },
+    {
+      "id": "tail-hot",
+      "kind": "tail-hot",
+      "tailFraction": 0.25,
+      "tailWeight": 4.0
+    }
+  ],
+  "retentionStrategies": [
+    {
+      "id": "raw-subrect-retained",
+      "retainRawSubrects": true,
+      "retainedSource": "released-after-raw-preparation"
+    },
+    {
+      "id": "encoded-source-retained",
+      "retainRawSubrects": false,
+      "retainedSource": "scenario-encoded-source-bytes"
+    }
+  ],
+  "retainedBudgetMiB": [8, 16, 32, 64, 128, 256, 512],
+  "maximumReplayFrames": [4, 8, 16],
+  "referencePolicyPoint": {
+    "retainedBudgetMiB": 32,
+    "maximumReplayFrames": 8
+  },
+  "boundImplementationPolicies": {
+    "imageCraftMaximumEncodedBytes": 67108864,
+    "imageCraftMaximumTimelineDecodedBytes": 536870912,
+    "imageCraftMaximumFrameDecodeWindow": 8,
+    "foveaAnimationFrameMemoryHardCap": 33554432
+  },
+  "modelBoundary": [
+    "The model counts decoded raw subrect RGBA, retained pre-frame full-canvas checkpoints, optional retained encoded source, one compositor canvas, the largest current raw subrect, a previous-disposal save region, and one materialized output canvas.",
+    "The frame-zero pre-frame state is an implicit transparent canvas and consumes working bytes but no retained checkpoint bytes.",
+    "The model does not estimate allocator fragmentation, ImageIO private state, compression workspace, energy, thermal effects, decode latency, or physical-device memory pressure.",
+    "Synthetic encoded source sizes are explicit scenario inputs, not estimates derived from compression ratios.",
+    "A feasible analytical plan is not a product implementation or performance claim."
+  ]
+}

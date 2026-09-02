@@ -199,6 +199,156 @@ def verify_fovea_visible_latency_contract() -> None:
         )
 
 
+def verify_runtime_configuration_attestation_contract() -> None:
+    core = (ROOT / "Benchmarks/ComparativeLab/Sources/ComparativeLabCore/ComparativeLabCore.swift").read_text()
+    models = (ROOT / "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkModels.swift").read_text()
+    runtime = (ROOT / "Benchmarks/ComparativeLab/Apps/Shared/BenchmarkRuntime.swift").read_text()
+    if "public struct ComparatorRuntimeConfiguration" not in core:
+        fail("ComparativeLab core must define the comparator runtime configuration attestation")
+    if "let comparatorRuntimeConfiguration: ComparatorRuntimeConfiguration?" not in models:
+        fail("BenchmarkRunEnvelope must carry comparator runtime configuration attestation")
+    if "self.schemaVersion = 5" not in models:
+        fail("BenchmarkRunEnvelope schema must be v5 after runtime configuration attestation")
+    if "comparatorRuntimeConfiguration: adapter.runtimeConfiguration" not in runtime:
+        fail("benchmark runtime must write the adapter runtime configuration into every run envelope")
+    if "arguments.workload == .w7ThousandConcurrent ? 8 : 6" not in runtime:
+        fail("shared session connection concurrency must be explicitly frozen by workload")
+
+    adapters = [
+        "AppleNativeAdapterPackage/Sources/AppleNativeComparatorAdapter/AppleNativeComparatorAdapter.swift",
+        "FoveaAdapterPackage/Sources/FoveaComparatorAdapter/FoveaComparatorAdapter.swift",
+        "NukeAdapterPackage/Sources/NukeComparatorAdapter/NukeComparatorAdapter.swift",
+        "KingfisherAdapterPackage/Sources/KingfisherComparatorAdapter/KingfisherComparatorAdapter.swift",
+        "SDWebImageAdapterPackage/Sources/SDWebImageComparatorAdapter/SDWebImageComparatorAdapter.swift",
+        "PINRemoteImageAdapterPackage/Sources/PINRemoteImageComparatorAdapter/PINRemoteImageComparatorAdapter.swift",
+    ]
+    missing = []
+    for relative in adapters:
+        source = (ROOT / "Benchmarks/ComparativeLab/Adapters" / relative).read_text()
+        if "runtimeConfiguration" not in source or "ComparatorRuntimeConfiguration(" not in source:
+            missing.append(relative)
+    if missing:
+        fail("headless comparator runtime attestation is missing from: " + ", ".join(missing))
+
+    for relative in (
+        "scripts/run-comparative-simulator-lab.py",
+        "scripts/run-comparative-device-lab.py",
+        "scripts/run-w7-concurrency-lab.py",
+    ):
+        source = (ROOT / relative).read_text()
+        if 'data.get("schemaVersion") != 5' not in source:
+            fail(f"{relative} must require BenchmarkRunEnvelope schema v5")
+        if 'data.get("comparatorRuntimeConfiguration")' not in source:
+            fail(f"{relative} must reject missing comparator runtime configuration attestation")
+
+
+def verify_sdwebimage_fixed_cache_and_downloader_contract() -> None:
+    adapter_path = ROOT / (
+        "Benchmarks/ComparativeLab/Adapters/SDWebImageAdapterPackage/Sources/"
+        "SDWebImageComparatorAdapter/SDWebImageComparatorAdapter.swift"
+    )
+    adapter = adapter_path.read_text()
+    required = {
+        "evaluator-owned cache root": "diskCacheDirectory: cacheDirectory.path",
+        "runtime disk-root containment": "cache.diskCachePath",
+        "fixed memory budget": "cacheConfig.maxMemoryCost = UInt(boundedMemoryCost)",
+        "fixed disk budget": "cacheConfig.maxDiskSize = 256 * 1_024 * 1_024",
+        "runtime expiration attestation": '"cache.diskExpirationSeconds"',
+        "runtime expire-type attestation": '"cache.diskExpireTypeRaw"',
+        "runtime atomic-write attestation": '"cache.diskWritingOptionsRaw"',
+        "runtime downloader timeout": '"downloader.timeoutSeconds"',
+        "runtime downloader order": '"downloader.executionOrderRaw"',
+        "URLCache disabled": "session.urlCache = nil",
+    }
+    missing = [label for label, marker in required.items() if marker not in adapter]
+    if missing:
+        fail("SDWebImage cache/downloader contract drifted; missing: " + ", ".join(missing))
+
+
+def verify_kingfisher_fixed_cache_budget() -> None:
+    adapter_path = ROOT / (
+        "Benchmarks/ComparativeLab/Adapters/KingfisherAdapterPackage/Sources/"
+        "KingfisherComparatorAdapter/KingfisherComparatorAdapter.swift"
+    )
+    adapter = adapter_path.read_text()
+    required = {
+        "evaluator-owned cache root": "cacheDirectoryURL: cacheDirectory",
+        "fixed memory budget": "memoryCostLimit: Int = 128 * 1_024 * 1_024",
+        "fixed disk budget": "diskSizeLimit: UInt = 256 * 1_024 * 1_024",
+        "memory cost assignment": "cache.memoryStorage.config.totalCostLimit = boundedMemoryCost",
+        "memory expiration": "cache.memoryStorage.config.expiration = .seconds(300)",
+        "memory cleanup interval": "cache.memoryStorage.config.cleanInterval = 120",
+        "disk size assignment": "cache.diskStorage.config.sizeLimit = boundedDiskSize",
+        "disk expiration": "cache.diskStorage.config.expiration = .days(7)",
+        "runtime root attestation": '"cache.rootPolicy": "evaluator-owned"',
+        "runtime memory budget": '"cache.memoryTotalCostLimitBytes"',
+        "runtime disk budget": '"cache.diskSizeLimitBytes"',
+    }
+    missing = [label for label, marker in required.items() if marker not in adapter]
+    if missing:
+        fail("Kingfisher fixed cache budget contract drifted; missing: " + ", ".join(missing))
+    forbidden = {
+        "device-derived default memory budget": "ProcessInfo.processInfo.physicalMemory",
+        "unbounded disk size assignment": "config.sizeLimit = 0",
+        "unfrozen cache limits marker": '"cache.limits": "pinned-library-defaults"',
+    }
+    present = [label for label, marker in forbidden.items() if marker in adapter]
+    if present:
+        fail("Kingfisher comparator reintroduced unstable cache defaults: " + ", ".join(present))
+
+
+def verify_pinremoteimage_cache_isolation_and_dependency_pins() -> None:
+    package_root = ROOT / "Benchmarks/ComparativeLab/Adapters/PINRemoteImageAdapterPackage"
+    resolved_path = package_root / "Package.resolved"
+    if not resolved_path.is_file():
+        fail("PINRemoteImage comparator must commit Package.resolved for PINCache/PINOperation")
+    resolved = json.loads(resolved_path.read_text())
+    pins = {
+        item.get("identity"): item.get("state", {})
+        for item in resolved.get("pins", [])
+        if isinstance(item, dict)
+    }
+    expected = {
+        "pincache": (
+            "3.0.4",
+            "2fb85948463292c2e824148cf17dc62a4c217a94",
+        ),
+        "pinoperation": (
+            "1.2.3",
+            "a74f978733bdaf982758bfa23d70a189f4b4c1b6",
+        ),
+    }
+    for identity, (version, revision) in expected.items():
+        state = pins.get(identity)
+        if not isinstance(state, dict) or state.get("version") != version or state.get(
+            "revision"
+        ) != revision:
+            fail(f"PINRemoteImage comparator dependency pin drifted for {identity}")
+
+    package_source = (package_root / "Package.swift").read_text()
+    if 'exact: "3.0.4"' not in package_source or 'product(name: "PINCache"' not in package_source:
+        fail("PINRemoteImage comparator must depend directly on exact PINCache 3.0.4")
+
+    adapter = (
+        package_root
+        / "Sources/PINRemoteImageComparatorAdapter/PINRemoteImageComparatorAdapter.swift"
+    ).read_text()
+    forbidden = "PINRemoteImageManager.defaultImageTtlCache()"
+    if forbidden in adapter:
+        fail("PINRemoteImage comparator must not use the process-global default cache root")
+    required = {
+        "direct PINCache import": "import PINCache",
+        "evaluator-owned root": "makeIsolatedPINRemoteImageCache(root: cacheDirectory)",
+        "root containment check": "diskPath.hasPrefix(rootPath + \"/\")",
+        "TTL cache": "ttlCache: true",
+        "resume-aware serializer": "pinResumeCacheKeyPrefix = \"R-\"",
+        "dependency attestation": '"dependency.PINCache"',
+    }
+    missing = [label for label, marker in required.items() if marker not in adapter]
+    if missing:
+        fail("PINRemoteImage cache isolation contract drifted; missing: " + ", ".join(missing))
+
+
 def verify_apple_native_urlcache_contract() -> None:
     factory_path = ROOT / (
         "Benchmarks/ComparativeLab/Apps/AppleNative/BenchmarkAdapterFactory.swift"
@@ -502,6 +652,10 @@ def main() -> int:
         require_success(invoke(command, capture=True, timeout=300), label)
     verify_fovea_visible_latency_contract()
     verify_apple_native_urlcache_contract()
+    verify_runtime_configuration_attestation_contract()
+    verify_sdwebimage_fixed_cache_and_downloader_contract()
+    verify_kingfisher_fixed_cache_budget()
+    verify_pinremoteimage_cache_isolation_and_dependency_pins()
     verify_simulator_runner_resilience()
     lint_comparative_sources()
     require_success(

@@ -29,6 +29,7 @@ API = "https://commons.wikimedia.org/w/api.php"
 USER_AGENT = "FoveaWorkbenchCatalog/1.0 (https://github.com/; educational example)"
 TARGET_REMOTE_COUNT = 480
 TARGET_LOCAL_COUNT = 29
+LOCAL_THUMBNAIL_WIDTH = 1280
 CACHE_ROOT = ROOT / ".artifacts/workbench-media-generator"
 REQUEST_LOCK = threading.Lock()
 LAST_REQUEST_TIME = 0.0
@@ -332,7 +333,7 @@ def collect_remote() -> list[dict[str, Any]]:
     return output
 
 
-def thumbnail_urls(file_names: list[str], width: int = 640) -> dict[str, str]:
+def thumbnail_urls(file_names: list[str], width: int) -> dict[str, str]:
     result: dict[str, str] = {}
     for offset in range(0, len(file_names), 40):
         batch = file_names[offset:offset + 40]
@@ -407,7 +408,10 @@ def download_local(remote: list[dict[str, Any]]) -> list[dict[str, Any]]:
         raise ValueError(f"curated local assets disappeared from remote catalog: {missing}")
     chosen = [remote_by_file[name] for name in CURATED_LOCAL_FILE_NAMES]
 
-    urls = thumbnail_urls([item["fileName"] for item in chosen])
+    urls = thumbnail_urls(
+        [item["fileName"] for item in chosen],
+        width=LOCAL_THUMBNAIL_WIDTH,
+    )
     completed: list[tuple[int, dict[str, Any], str, bytes, str]] = []
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures = [

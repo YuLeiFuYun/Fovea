@@ -1,0 +1,199 @@
+{
+  "claimBoundary": "Source-audit matrix only. It is not a performance ranking, completeness score, or dependency recommendation.",
+  "mechanisms": [
+    {
+      "coverage": {
+        "APNGKit": "not-applicable",
+        "AnimatedImage": "not-applicable",
+        "FLAnimatedImage": "not-applicable",
+        "Fovea": "present",
+        "Gifu": "not-applicable",
+        "ImageCraft": "not-applicable",
+        "Kingfisher": "present-different-contract",
+        "PINRemoteImage": "present-different-contract",
+        "SDWebImage": "present-different-contract",
+        "SwiftyGif": "not-applicable",
+        "YYImage": "not-applicable"
+      },
+      "foveaDecision": "retain",
+      "id": "MECH-AUTHORIZED-ENCODED-IDENTITY",
+      "importance": "correctness-security",
+      "note": "Fovea binds ContentID, request execution, selected Vary representation, namespace generation and render request identity before runtime ownership transfer. W5_ADAPTER_PT_001 now carries that real authorized FoveaSystemPipeline path through a concrete isolated-overlay ImageCraft animation adapter and proves first-frame pixel identity plus zero driver leak on cancellation. The production ImageCraft pin is intentionally unchanged, so this is adapter feasibility evidence rather than shipped integration. Other loaders have their own cache/request identities but were not audited against this exact contract."
+    },
+    {
+      "coverage": {
+        "APNGKit": "present-different-contract",
+        "AnimatedImage": "present-different-contract",
+        "FLAnimatedImage": "present-different-contract",
+        "Fovea": "present",
+        "Gifu": "present-different-contract",
+        "ImageCraft": "not-applicable",
+        "Kingfisher": "present-different-contract",
+        "PINRemoteImage": "present-different-contract",
+        "SDWebImage": "present-different-contract",
+        "SwiftyGif": "present-different-contract",
+        "YYImage": "present-different-contract"
+      },
+      "foveaDecision": "retain-uikit-and-macos14-appkit-local-refresh-timing-direction-green-energy-ios-pending",
+      "id": "MECH-DISPLAY-TARGET-TIMESTAMP",
+      "importance": "deadline-smoothness",
+      "note": "FoveaUIKit and macOS 14+ FoveaAppKit use targetTimestamp with a newest-only external-tick buffer; macOS 12-13 retain the deadline loop. Future-target lifecycle timestamps clamp to the last accepted target (W5_PT_144). AppKit now has package-only automatic-deadline and common-refresh benchmark seams (W5_PT_145-148). The final physical-Mac fixed-six-pair Release study observes both schedulers on the same NSView.displayLink.timestamp coordinate and anchors source timing to the exact driver start. Every pair has no-worse external anchored p95 timing error and source-frame skips; medians are 14.102375 ms versus 75.461355 ms and total skips 0 versus 82. Actual retained display-link medians are 16.666625 ms although maximumFramesPerSecond=120. The earlier commit-callback comparison is retained only as a rejected coordinate. This remains one-host internal scheduling evidence; energy/thermal, hardware scanout, cross-player and physical-iOS gates are open."
+    },
+    {
+      "coverage": {
+        "APNGKit": "present-different-contract",
+        "AnimatedImage": "not-audited",
+        "FLAnimatedImage": "present-different-contract",
+        "Fovea": "present",
+        "Gifu": "present-different-contract",
+        "ImageCraft": "present-different-contract",
+        "Kingfisher": "present-different-contract",
+        "PINRemoteImage": "present-different-contract",
+        "SDWebImage": "present-different-contract",
+        "SwiftyGif": "present-different-contract",
+        "YYImage": "present-different-contract"
+      },
+      "foveaDecision": "retain-learned-byte-cap-and-measure-recovery",
+      "id": "MECH-ACTUAL-BYTE-FRAME-MEMORY",
+      "importance": "memory-bounds",
+      "note": "Fovea uses actual DecodedImage.estimatedByteCost for SIEVE residency. Provider frames must fit the decode target and single-frame animation-memory budget before publication; once a real frame cost is observed, subsequent upcoming windows are capped by cache capacity divided by the maximum observed cost, while normal/warning/critical frame-count caps still apply. The current display frame is publication-prioritized under tight budgets. Specialized players commonly use frame count, estimated bytes, preload count, or format-specific caches; equivalent-budget physical-device comparison remains required."
+    },
+    {
+      "coverage": {
+        "APNGKit": "not-audited",
+        "AnimatedImage": "not-audited",
+        "FLAnimatedImage": "present",
+        "Fovea": "present",
+        "Gifu": "not-audited",
+        "ImageCraft": "not-applicable",
+        "Kingfisher": "present-different-contract",
+        "PINRemoteImage": "present-different-contract",
+        "SDWebImage": "present",
+        "SwiftyGif": "present-different-contract",
+        "YYImage": "present"
+      },
+      "foveaDecision": "retain-warning-fence-defer-shared-cache-trim",
+      "id": "MECH-PRESSURE-SHRINK-AND-RECOVERY",
+      "importance": "lifecycle-memory",
+      "note": "Fovea has normal/warning/critical window policies. Warning now advances the publication generation, so a normal-size decode already in flight cannot repopulate the cache after pressure; subsequent work uses the smaller warning and actual-byte learned cap. Critical still purges the shared animation cache and pauses. Unlike FLAnimatedImage/YYImage per-player buffers, Fovea shares frames across independent view clocks, so destructive per-session warning trim is deferred until runtime can union all active retention sets without evicting another view current frame."
+    },
+    {
+      "coverage": {
+        "APNGKit": "present",
+        "AnimatedImage": "not-audited",
+        "FLAnimatedImage": "not-applicable",
+        "Fovea": "deferred",
+        "Gifu": "not-applicable",
+        "ImageCraft": "present-different-contract",
+        "Kingfisher": "not-applicable",
+        "PINRemoteImage": "present",
+        "SDWebImage": "present",
+        "SwiftyGif": "not-applicable",
+        "YYImage": "present"
+      },
+      "foveaDecision": "defer-until-real-adapter",
+      "id": "MECH-SUBRECT-DISPOSAL-BLEND-COMPOSITION",
+      "importance": "correctness-memory",
+      "note": "ImageCraft validates rect/disposal/blend metadata but currently asks ImageIO for complete display frames. APNGKit and YYImage own explicit canvas composition. A Fovea/ImageCraft checkpoint strategy is deferred until exact-pixel and memory evidence exists."
+    },
+    {
+      "coverage": {
+        "APNGKit": "present",
+        "AnimatedImage": "not-audited",
+        "FLAnimatedImage": "not-audited",
+        "Fovea": "deferred",
+        "Gifu": "not-audited",
+        "ImageCraft": "deferred",
+        "Kingfisher": "not-audited",
+        "PINRemoteImage": "present-different-contract",
+        "SDWebImage": "present-different-contract",
+        "SwiftyGif": "not-audited",
+        "YYImage": "present-different-contract"
+      },
+      "foveaDecision": "defer-until-large-fixture-benefit",
+      "id": "MECH-PARTIAL-FIRST-PASS-METADATA",
+      "importance": "startup-bounds",
+      "note": "APNGKit distinguishes partially loaded and full duration. Fovea will not adopt this until large APNG startup benefit survives CRC/order/security and retained-input limits."
+    },
+    {
+      "coverage": {
+        "APNGKit": "present-different-contract",
+        "AnimatedImage": "present-different-contract",
+        "FLAnimatedImage": "present-different-contract",
+        "Fovea": "present",
+        "Gifu": "present-different-contract",
+        "ImageCraft": "not-applicable",
+        "Kingfisher": "present-different-contract",
+        "PINRemoteImage": "present-different-contract",
+        "SDWebImage": "present-different-contract",
+        "SwiftyGif": "present-different-contract",
+        "YYImage": "present-different-contract"
+      },
+      "foveaDecision": "retain",
+      "id": "MECH-OFFSCREEN-BACKGROUND-REPLACEMENT-FENCES",
+      "importance": "lifecycle-correctness",
+      "note": "Fovea combines cached structural visibility, app activity, pressure, cancellation and presentation generation. UIKit requires window, superview, own hidden=false and alpha>0; AppKit also receives ancestor hide/unhide. Duplicate visibility states are ignored. W5_PT_125 and W5_PT_126 bind the predicate and platform wiring. Screen-intersection caching is intentionally excluded without a reliable scroll/reentry observer."
+    },
+    {
+      "coverage": {
+        "APNGKit": "not-audited",
+        "AnimatedImage": "not-audited",
+        "FLAnimatedImage": "not-audited",
+        "Fovea": "present",
+        "Gifu": "not-audited",
+        "ImageCraft": "not-applicable",
+        "Kingfisher": "not-audited",
+        "PINRemoteImage": "not-audited",
+        "SDWebImage": "not-audited",
+        "SwiftyGif": "not-audited",
+        "YYImage": "not-audited"
+      },
+      "foveaDecision": "retain",
+      "id": "MECH-REDUCE-MOTION-FIRST-FRAME",
+      "importance": "accessibility-lifecycle",
+      "note": "Fovea resolves Reduce Motion to source frame zero and closes live transport when motion is not explicitly preserved. Other libraries require dedicated adapter-level audit before comparison."
+    },
+    {
+      "coverage": {
+        "APNGKit": "not-applicable",
+        "AnimatedImage": "not-applicable",
+        "FLAnimatedImage": "not-applicable",
+        "Fovea": "present",
+        "Gifu": "not-applicable",
+        "ImageCraft": "not-applicable",
+        "Kingfisher": "not-applicable",
+        "PINRemoteImage": "not-audited",
+        "SDWebImage": "present-different-contract",
+        "SwiftyGif": "not-applicable",
+        "YYImage": "not-applicable"
+      },
+      "foveaDecision": "retain-separate-workload",
+      "id": "MECH-LIVE-MJPEG-LATEST-ONLY",
+      "importance": "bounded-live-delivery",
+      "note": "Fovea live MJPEG is a separate progress-only multipart workload, not an encoded animation container. It remains outside GIF/APNG aggregate comparisons."
+    }
+  ],
+  "reviewedOn": "2026-08-07",
+  "schemaVersion": 1,
+  "statusVocabulary": [
+    "present",
+    "present-different-contract",
+    "planned-experiment",
+    "deferred",
+    "not-applicable",
+    "not-audited"
+  ],
+  "systems": [
+    "Fovea",
+    "ImageCraft",
+    "Gifu",
+    "FLAnimatedImage",
+    "APNGKit",
+    "AnimatedImage",
+    "YYImage",
+    "SDWebImage",
+    "PINRemoteImage",
+    "Kingfisher",
+    "SwiftyGif"
+  ]
+}

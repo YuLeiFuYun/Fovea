@@ -5,7 +5,7 @@
       "identity": "akashic",
       "name": "Akashic",
       "repositoryURL": "https://github.com/YuLeiFuYun/Akashic.git",
-      "revision": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
+      "revision": "0376b960ec8abe54f2d4a9d7d66e97f395215eaf",
       "products": [
         "AkashicCore",
         "AkashicMemory",
@@ -18,7 +18,7 @@
       "identity": "imagecraft",
       "name": "ImageCraft",
       "repositoryURL": "https://github.com/YuLeiFuYun/ImageCraft.git",
-      "revision": "736d0fb75e9e128642ce418ad984ce5151b1f324",
+      "revision": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
       "products": [
         "ImageCraftCore",
         "ImageCraftImageIO"

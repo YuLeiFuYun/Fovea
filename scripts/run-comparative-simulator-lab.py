@@ -244,6 +244,8 @@ def build_apps(env: dict[str, str], selected: list[str]) -> None:
 def specifications(
     selected: list[str],
     workloads: list[str],
+    cache_preparation_repetitions: int,
+    derived_raster_profile: str | None,
 ) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for comparator in selected:
@@ -253,6 +255,12 @@ def specifications(
                     "comparator": comparator,
                     "workload": workload,
                     "cache": "cold",
+                    "cachePreparationRepetitions": 1,
+                    "derivedRasterProfile": (
+                        derived_raster_profile
+                        if comparator == "Fovea" and workload == "W2-HERO-V1"
+                        else None
+                    ),
                     "scale": 0.1 if workload == "W1-SCROLL-V1" else 1.0,
                 }
             )
@@ -263,6 +271,10 @@ def specifications(
                             "comparator": comparator,
                             "workload": workload,
                             "cache": cache,
+                            "cachePreparationRepetitions": cache_preparation_repetitions,
+                            "derivedRasterProfile": (
+                                derived_raster_profile if comparator == "Fovea" else None
+                            ),
                             "scale": 1.0,
                         }
                     )
@@ -273,7 +285,16 @@ def validate(
     data: dict[str, Any], spec: dict[str, Any], identity: dict[str, Any],
     plan_digest: str, claim_family_digest: str,
 ) -> None:
-    if data.get("schemaVersion") != 3: raise RuntimeError("unexpected result schema")
+    if data.get("schemaVersion") != 5: raise RuntimeError("unexpected result schema")
+    runtime_configuration = data.get("comparatorRuntimeConfiguration")
+    if not isinstance(runtime_configuration, dict) or runtime_configuration.get("schemaVersion") != 1:
+        raise RuntimeError("comparator runtime configuration attestation is missing or invalid")
+    runtime_parameters = runtime_configuration.get("parameters")
+    if not isinstance(runtime_parameters, dict) or not runtime_parameters or not all(
+        isinstance(key, str) and isinstance(value, str)
+        for key, value in runtime_parameters.items()
+    ):
+        raise RuntimeError("comparator runtime configuration parameters are invalid")
     if data.get("planID") != "FOVEA-P0B-COMP-V1": raise RuntimeError("unexpected result plan")
     if data.get("harnessIdentity") != identity: raise RuntimeError("harness identity mismatch")
     if data.get("experimentPlanDigest") != plan_digest: raise RuntimeError("experiment plan digest mismatch")
@@ -288,6 +309,15 @@ def validate(
     if drift: raise RuntimeError(f"simulator environment identity mismatch: {drift}")
     if data.get("comparator",{}).get("name") != spec["comparator"]: raise RuntimeError("comparator mismatch")
     if data.get("workloadID") != spec["workload"] or data.get("cacheState") != spec["cache"]: raise RuntimeError("run identity mismatch")
+    if data.get("cachePreparationRepetitions") != spec["cachePreparationRepetitions"]:
+        raise RuntimeError("cache-preparation repetition mismatch")
+    comparator_version = data.get("comparator", {}).get("version", "")
+    expected_profile = spec.get("derivedRasterProfile")
+    if expected_profile is not None:
+        if not comparator_version.endswith("+derived-raster-observed-v1"):
+            raise RuntimeError("derived-raster comparator identity mismatch")
+    elif comparator_version.endswith("+derived-raster-observed-v1"):
+        raise RuntimeError("unexpected derived-raster comparator identity")
     if data.get("provisional") is not True: raise RuntimeError("simulator result must be provisional")
     thermal = data.get("thermal")
     if not isinstance(thermal, dict): raise RuntimeError("thermal evidence is missing")
@@ -311,9 +341,14 @@ def validate(
 
 
 def result_name(spec: dict[str, Any]) -> str:
+    preparation_suffix = (
+        "" if spec["cachePreparationRepetitions"] == 1
+        else f"-prep{spec['cachePreparationRepetitions']}"
+    )
+    profile_suffix = "-derived-observed-v1" if spec.get("derivedRasterProfile") else ""
     return (
         f"{spec['comparator'].lower()}-{spec['workload'].lower()}-"
-        f"{spec['cache']}-000.json"
+        f"{spec['cache']}{preparation_suffix}{profile_suffix}-000.json"
     )
 
 
@@ -408,6 +443,20 @@ def main() -> int:
         help="Limit calibration to selected workloads; W4 uses the constrained network profile.",
     )
     parser.add_argument(
+        "--cache-preparation-repetitions",
+        type=int,
+        default=1,
+        help=(
+            "Repeat each non-cold cache-preparation pass with a memory purge between passes. "
+            "Values other than 1 are exploratory and remain provisional."
+        ),
+    )
+    parser.add_argument(
+        "--derived-raster-profile",
+        choices=["observed-v1"],
+        help="Enable the fixed Fovea W2 derived-raster exploratory profile only.",
+    )
+    parser.add_argument(
         "--build-only",
         action="store_true",
         help="Prepare resources and build selected apps without installing or measuring.",
@@ -426,6 +475,11 @@ def main() -> int:
         "--diagnostic",
         action="store_true",
         help="Skip the quiescent-host gate for rapid directional runs; never claim-eligible.",
+    )
+    parser.add_argument(
+        "--lifecycle-diagnostics",
+        action="store_true",
+        help="Enable the Fovea-only bounded lifecycle trace sidecar; requires --diagnostic.",
     )
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--skip-prepare", action="store_true")
@@ -450,10 +504,14 @@ def main() -> int:
             "--build-only, --install-only, --initialize-simulator-only and "
             "--aggregate-only are mutually exclusive"
         )
+    if args.lifecycle_diagnostics and not args.diagnostic:
+        parser.error("--lifecycle-diagnostics requires --diagnostic")
     if args.build_only and args.skip_build:
         parser.error("--build-only cannot be combined with --skip-build")
     if args.install_only and (args.skip_build or args.skip_prepare):
         parser.error("--install-only already skips build and preparation")
+    if not 1 <= args.cache_preparation_repetitions <= 64:
+        parser.error("--cache-preparation-repetitions must be between 1 and 64")
     if (
         not args.build_only
         and not args.install_only
@@ -490,7 +548,12 @@ def main() -> int:
         plan_digest=canonical_digest(ROOT/"Benchmarks/ComparativeLab/experiment-plan.json")
         claim_family_digest=canonical_digest(ROOT/"Benchmarks/statistical-claim-families.json")
         workloads = args.workload or ["W1-SCROLL-V1", "W2-HERO-V1", "W3-AUTH-V1"]
-        specs = specifications(selected, workloads)
+        specs = specifications(
+            selected,
+            workloads,
+            args.cache_preparation_repetitions,
+            args.derived_raster_profile,
+        )
         if args.aggregate_only:
             paths=[]
             for spec in specs:
@@ -538,15 +601,22 @@ def main() -> int:
                 "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_BUILD":SIMULATOR_IDENTITY["osBuild"],
                 "SIMCTL_CHILD_FOVEA_SIMULATOR_OS_CHANNEL":SIMULATOR_IDENTITY["osChannel"],
             })
+            if args.lifecycle_diagnostics:
+                child["SIMCTL_CHILD_FOVEA_BENCHMARK_DIAGNOSTICS"] = "1"
+            if spec.get("derivedRasterProfile") is not None:
+                child["SIMCTL_CHILD_FOVEA_DERIVED_RASTER_PROFILE"] = spec["derivedRasterProfile"]
             print(f"Simulator run {index}/{len(specs)}: {comparator} {spec['workload']} {spec['cache']}",flush=True)
             container=Path(run(["xcrun","simctl","get_app_container",udid,bundle,"data"],env=env,timeout=60).stdout.strip())
             source=container/"Documents"/name
             failure=container/"Documents"/(name+".failure")
+            diagnostic_source=container/"Documents"/(name[:-5]+"-diagnostics.json")
             source.unlink(missing_ok=True)
             failure.unlink(missing_ok=True)
+            diagnostic_source.unlink(missing_ok=True)
             run([
                 "xcrun","simctl","launch","--terminate-running-process",udid,bundle,
-                "--workload",spec["workload"],"--cache-state",spec["cache"],"--network-profile",
+                "--workload",spec["workload"],"--cache-state",spec["cache"],
+                "--cache-preparation-repetitions",str(spec["cachePreparationRepetitions"]),"--network-profile",
                 "NET-CONSTRAINED-V1" if spec["workload"] == "W4-PROGRESSIVE-JPEG-V1" else "NET-LOCAL-V1",
                 "--run-index","0","--time-scale",str(spec["scale"]),"--output",name,
             ],env=child,timeout=60)
@@ -554,6 +624,10 @@ def main() -> int:
             data=json.loads(source.read_text()); validate(data,spec,identity,plan_digest,claim_family_digest)
             dest=artifact_path(spec)
             dest.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(source,dest); paths.append(dest)
+            diagnostic_dest=dest.with_name(dest.stem+"-diagnostics.json")
+            diagnostic_dest.unlink(missing_ok=True)
+            if args.lifecycle_diagnostics and diagnostic_source.is_file():
+                shutil.copy2(diagnostic_source,diagnostic_dest)
         report=write_report(selected,paths,identity,plan_digest,claim_family_digest)
         return 0 if report["status"] == "completed" else 1
     except Exception as error:

@@ -1,0 +1,120 @@
+{
+  "claimBoundary": [
+    "package-internal checkpoint format interoperability route only",
+    "public decoder integration is validated separately; this command adds no public API and Fovea dependency pin remains unchanged",
+    "four deterministic local straight-alpha fixtures",
+    "binary compatibility is bound to the retained release executable and current system toolchain",
+    "byte-identical compressed payloads are observed, not required as a portable contract"
+  ],
+  "date": "2026-08-07",
+  "evidence": {
+    "artifactInventoryCount": 21,
+    "captureManifest": ".artifacts/performance/w5-apng-compressed-checkpoint-interop-v1/capture-manifest.json",
+    "captureManifestSHA256": "4af70a20d496d375610cab3c630e486d552f1961a1038567b5a5482b1a5ab234",
+    "captureRunner": "Tools/Performance/capture_w5_apng_compressed_checkpoint_interop.py",
+    "report": ".artifacts/performance/w5-apng-compressed-checkpoint-interop-v1/report.json",
+    "reportSHA256": "d941640920888333d046807f667c892e769fefccc0f3b8c190748b74635aabf9",
+    "retainedReleaseBinary": ".artifacts/performance/w5-apng-compressed-checkpoint-interop-v1/bin/ImageCraftEvidence",
+    "retainedReleaseBinarySHA256": "162c2669a9c9cfedb14a1744009481a007565d99b5416b6aac5911bb26c8143e",
+    "sourceIdentity": ".artifacts/performance/w5-apng-compressed-checkpoint-interop-v1/source-identity.json",
+    "sourceIdentitySHA256": "205f415404857cedfeefa5935db0b56084978914b9257568401714d61bf26181",
+    "tamperContract": "Tools/Performance/test_w5_apng_compressed_checkpoint_interop.py",
+    "validator": "Tools/Performance/validate_w5_apng_compressed_checkpoint_interop.py"
+  },
+  "implementation": {
+    "decoderIntegration": false,
+    "format": ">8sIIIII header with FOVAPNG1 magic, width, height, raw byte count, CRC32, payload byte count; RFC 1950 zlib payload with Adler-32 trailer",
+    "foveaDependencyPinChanged": false,
+    "publicAPI": false,
+    "publicDecoderDiagnostics": "ImageCraft/Sources/ImageCraftImageIO/ImageIOAnimationPreparationDiagnostics.swift",
+    "publicDecoderIntegrated": true,
+    "publicDecoderStudy": "docs/research/w5-apng-public-decoder-playback-2026-08.json",
+    "pythonCodec": "Tools/Performance/w5_apng_compressed_checkpoint_model.py",
+    "swiftCodec": "ImageCraft/Sources/ImageCraftImageIO/APNGCompressedCheckpoint.swift",
+    "swiftEvidenceCommand": "ImageCraft/Sources/ImageCraftEvidence/APNGCheckpointInteropEvidence.swift",
+    "swiftPolicy": "package-internal only; default maximum canvas 1024, retained bytes 32 MiB, replay 8, proportional checkpoint ratio 10% plus 4 KiB small-canvas allowance",
+    "swiftRFC1950": "ImageCraft/Sources/ImageCraftImageIO/RFC1950Zlib.swift",
+    "swiftTests": "ImageCraft/Tests/ImageCraftImageIOTests/APNGCompressedCheckpointTests.swift"
+  },
+  "interpretation": [
+    "All four Python-produced blobs decode to the exact source straight-alpha bytes in the retained Swift release binary, and all four Swift-produced blobs decode exactly in the owned Python model.",
+    "Apple Compression COMPRESSION_ZLIB exposes a raw DEFLATE payload. The prototype must add and validate the RFC 1950 header and Adler-32 trailer explicitly; passing COMPRESSION_ZLIB bytes directly to Python zlib.decompress fails.",
+    "Compressed payload byte identity is not a portable contract. Three fixtures happened to be byte-identical; the sparse fixture was 94 bytes from Python and 151 bytes from Swift while both decoded exactly.",
+    "The durable contract is framing, dimensions, raw byte count, CRC32, valid RFC 1950 payload, exact decoded straight-alpha bytes, retained budget and replay limits.",
+    "This evidence validates a package-internal storage primitive and store lookup only. It does not provide raw APNG subrect extraction in Swift, decoder integration, frame output aliasing, physical-device latency, energy or production admission."
+  ],
+  "objective": "Verify that the package-internal ImageCraft compressed APNG checkpoint prototype and the owned Python FOVAPNG1 model exchange RFC 1950 zlib blobs in both directions without treating compressed payload byte identity as the portability contract.",
+  "results": {
+    "allObservedBlobBytesExact": false,
+    "allPythonToSwiftDecodedExact": true,
+    "allSwiftToPythonDecodedExact": true,
+    "fixtureCount": 4,
+    "fixtures": {
+      "GRADIENT-128X64": {
+        "height": 64,
+        "pythonAndSwiftBlobByteExact": true,
+        "pythonBlobByteCount": 26488,
+        "pythonBlobDifferentByteCount": 0,
+        "pythonToSwiftDecodedExact": true,
+        "rawByteCount": 32768,
+        "rawSHA256": "6662c9fbc4f10593158c2739e8ac23d26fbc48d33acd637f0d5b8b534f6341d7",
+        "swiftBlobByteCount": 26488,
+        "swiftToPythonDecodedExact": true,
+        "width": 128
+      },
+      "SPARSE-64X32": {
+        "height": 32,
+        "pythonAndSwiftBlobByteExact": false,
+        "pythonBlobByteCount": 94,
+        "pythonBlobDifferentByteCount": null,
+        "pythonToSwiftDecodedExact": true,
+        "rawByteCount": 8192,
+        "rawSHA256": "931c3699abd3b1825794f96747aff7137b18a31fcf17c90d86ee68aa407fa6b9",
+        "swiftBlobByteCount": 151,
+        "swiftToPythonDecodedExact": true,
+        "width": 64
+      },
+      "STRUCTURED-16X16": {
+        "height": 16,
+        "pythonAndSwiftBlobByteExact": true,
+        "pythonBlobByteCount": 796,
+        "pythonBlobDifferentByteCount": 0,
+        "pythonToSwiftDecodedExact": true,
+        "rawByteCount": 1024,
+        "rawSHA256": "eab2f4aa56ac046331bf169a0d8ae2a327e37839773da9dee11019c4da904721",
+        "swiftBlobByteCount": 796,
+        "swiftToPythonDecodedExact": true,
+        "width": 16
+      },
+      "TINY-2X2": {
+        "height": 2,
+        "pythonAndSwiftBlobByteExact": true,
+        "pythonBlobByteCount": 48,
+        "pythonBlobDifferentByteCount": 0,
+        "pythonToSwiftDecodedExact": true,
+        "rawByteCount": 16,
+        "rawSHA256": "ba0d534aa3bc66f53b4b95b963cd12c549e4cefa254a884bdf9a9d4a1da20d3b",
+        "swiftBlobByteCount": 48,
+        "swiftToPythonDecodedExact": true,
+        "width": 2
+      }
+    },
+    "qualification": {
+      "failures": 0,
+      "imageCraftCoreTests": 16,
+      "imageCraftImageIOTests": 111,
+      "totalTests": 127,
+      "warningsAsErrorsReleaseBuildPassed": true
+    }
+  },
+  "schemaVersion": 1,
+  "sourceIdentity": {
+    "foveaWorkingTree": "13e623ba63c3332d149828c20868eca64fbe731b",
+    "governingFilesUnchangedDuringCapture": true,
+    "imageCraftHeadCommit": "04e153795b80164983a57b0b871f10d87ba79ea1",
+    "imageCraftWorkingTree": "2799c28c0b8eeda718e63a7e74d4e45f20cd6bc5",
+    "sourceUnchangedDuringCapture": true
+  },
+  "status": "completed-local-source-and-binary-bound-package-internal-swift-python-rfc1950-interop-no-product-claim",
+  "studyID": "FOVEA-W5-APNG-COMPRESSED-CHECKPOINT-SWIFT-PYTHON-INTEROP-2026-08"
+}

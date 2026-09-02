@@ -17,6 +17,14 @@ packages:
     path: ../Adapters/NukeAdapterPackage
   KingfisherAdapter:
     path: ../Adapters/KingfisherAdapterPackage
+  AnimatedImageAdapter:
+    path: ../Adapters/AnimatedImageAdapterPackage
+  FLAnimatedImageAdapter:
+    path: ../Adapters/FLAnimatedImageAdapterPackage
+  GifuAdapter:
+    path: ../Adapters/GifuAdapterPackage
+  APNGKitAdapter:
+    path: ../Adapters/APNGKitAdapterPackage
   SDWebImageAdapter:
     path: ../Adapters/SDWebImageAdapterPackage
   AlamofireImageAdapter:
@@ -156,6 +164,60 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.kingfisher
         INFOPLIST_KEY_CFBundleDisplayName: Kingfisher Bench
         BENCHMARK_COMPARATOR_NAME: Kingfisher
+
+  APNGKitComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: APNGKit
+    dependencies:
+      - package: APNGKitAdapter
+        product: APNGKitComparatorAdapter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.apngkit
+        INFOPLIST_KEY_CFBundleDisplayName: APNGKit Bench
+        BENCHMARK_COMPARATOR_NAME: APNGKit
+
+  GifuComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: Gifu
+    dependencies:
+      - package: GifuAdapter
+        product: GifuComparatorAdapter
+    settings:
+      base:
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.gifu
+        INFOPLIST_KEY_CFBundleDisplayName: Gifu Bench
+        BENCHMARK_COMPARATOR_NAME: Gifu
+
+  FLAnimatedImageComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: FLAnimatedImage
+    dependencies:
+      - package: FLAnimatedImageAdapter
+        product: FLAnimatedImageComparatorAdapter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.flanimatedimage
+        INFOPLIST_KEY_CFBundleDisplayName: FLAnimatedImage Bench
+        BENCHMARK_COMPARATOR_NAME: FLAnimatedImage
+
+  AnimatedImageComparatorBench:
+    templates: [BenchmarkApp]
+    sources:
+      - path: AnimatedImage
+    dependencies:
+      - package: AnimatedImageAdapter
+        product: AnimatedImageComparatorAdapter
+    settings:
+      base:
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        PRODUCT_BUNDLE_IDENTIFIER: dev.fovea.comparative.animatedimage
+        INFOPLIST_KEY_CFBundleDisplayName: AnimatedImage Bench
+        BENCHMARK_COMPARATOR_NAME: AnimatedImage
 
   SDWebImageComparatorBench:
     templates: [BenchmarkApp]

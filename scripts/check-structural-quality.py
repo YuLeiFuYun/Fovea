@@ -271,6 +271,8 @@ def swift_function_metrics(text: str, relative: str) -> list[dict[str, object]]:
                 if pending is not None and "bodyDepth" not in pending:
                     pending["bodyDepth"] = brace_depth
             elif character == "}":
+                if pending is not None and "bodyDepth" not in pending:
+                    pending = None
                 if pending is not None and pending.get("bodyDepth") == brace_depth:
                     start_line = int(pending["startLine"])
                     body = "\n".join(lines[start_line - 1 : line_number])

@@ -10,14 +10,6 @@
 
     @MainActor
     final class ProgressivePresentationHostTests: XCTestCase {
-        private var window: UIWindow?
-
-        override func tearDown() {
-            window?.isHidden = true
-            window = nil
-            ProgressiveFixtureURLProtocol.reset()
-            super.tearDown()
-        }
 
         func testChunkedURLSessionPreviewReachesDisplayLinkBeforeFinal_UI_PT_029() async throws {
             let fixture = try BenchmarkFixtureCatalog.load(
@@ -28,9 +20,12 @@
                 chunkSize: 16 * 1024,
                 intervalNanoseconds: 30_000_000,
             )
+            defer { ProgressiveFixtureURLProtocol.reset() }
             let trace = ProgressiveHostTrace()
             let loader = ProgressiveURLSessionLoader(trace: trace)
-            let imageView = makeVisibleImageView()
+            let host = makeVisibleImageView()
+            defer { host.close() }
+            let imageView = host.imageView
             let displayLink = ProgressiveDisplayLinkRecorder(imageView: imageView, trace: trace)
             displayLink.start()
             defer { displayLink.stop() }
@@ -95,13 +90,16 @@
                 chunkSize: 32 * 1024,
                 intervalNanoseconds: 20_000_000,
             )
+            defer { ProgressiveFixtureURLProtocol.reset() }
             let trace = ProgressiveHostTrace()
             let barrier = ProgressivePublicationBarrier()
             let firstLoader = ProgressiveURLSessionLoader(
                 trace: trace,
                 publicationBarrier: barrier,
             )
-            let imageView = makeVisibleImageView()
+            let host = makeVisibleImageView()
+            defer { host.close() }
+            let imageView = host.imageView
             let displayLink = ProgressiveDisplayLinkRecorder(imageView: imageView, trace: trace)
             displayLink.start()
             defer { displayLink.stop() }
@@ -187,7 +185,17 @@
             )
         }
 
-        private func makeVisibleImageView() -> FoveaImageView {
+        private func makeVisibleImageView() -> ProgressiveVisibleImageHost {
+            ProgressiveVisibleImageHost()
+        }
+    }
+
+    @MainActor
+    private final class ProgressiveVisibleImageHost {
+        let imageView: FoveaImageView
+        private let window: UIWindow
+
+        init() {
             let controller = UIViewController()
             let imageView = FoveaImageView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
             imageView.contentMode = .scaleAspectFit
@@ -195,8 +203,14 @@
             let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
             window.rootViewController = controller
             window.makeKeyAndVisible()
+            self.imageView = imageView
             self.window = window
-            return imageView
+        }
+
+        func close() {
+            imageView.cancelImageRequest(clearImage: true)
+            window.isHidden = true
+            window.rootViewController = nil
         }
     }
 

@@ -1,14 +1,10 @@
 import Foundation
 import FoveaHTTP
+import FoveaStorage
 import ImageCraftCore
 
 /// 负责缓存候选选择、回源或再验证，以及订阅者级 stale 裁决。
 final class ImageLoadCoordinator: Sendable {
-    private struct ReusableLookup {
-        let conditionalRecord: RepresentationRecord?
-        let image: DecodedImage?
-    }
-
     private let configuration: PipelineConfiguration
     private let transportReusePolicy: TransportReusePolicy
     private let cache: PipelineCache
@@ -18,6 +14,9 @@ final class ImageLoadCoordinator: Sendable {
     private let namespaceRegistry: NamespaceRegistry
     private let diagnostics: any DiagnosticsSink
     private let clock: any WallClock
+    private let reusableLookup: ReusableImageLookupCoordinator
+    private let validatedOriginalPrefetch: ValidatedOriginalPrefetchCoordinator
+    private let transportVerifiedHandoffDelivery: TransportVerifiedHandoffDelivery
 
     init(
         configuration: PipelineConfiguration,
@@ -28,7 +27,8 @@ final class ImageLoadCoordinator: Sendable {
         delivery: ImageDeliveryCoordinator,
         namespaceRegistry: NamespaceRegistry,
         diagnostics: any DiagnosticsSink,
-        clock: any WallClock
+        clock: any WallClock,
+        derivedRasterRuntime: DerivedRasterRuntime? = nil
     ) {
         self.configuration = configuration
         self.transportReusePolicy = transportReusePolicy
@@ -39,6 +39,40 @@ final class ImageLoadCoordinator: Sendable {
         self.namespaceRegistry = namespaceRegistry
         self.diagnostics = diagnostics
         self.clock = clock
+        let derivedRaster = derivedRasterRuntime.map {
+            DerivedRasterLoadCoordinator(
+                runtime: $0,
+                cache: cache,
+                delivery: delivery,
+                namespaceRegistry: namespaceRegistry,
+                clock: clock
+            )
+        }
+        reusableLookup = ReusableImageLookupCoordinator(
+            cache: cache,
+            fetchStage: fetchStage,
+            delivery: delivery,
+            diagnostics: diagnostics,
+            clock: clock,
+            derivedRaster: derivedRaster
+        )
+        validatedOriginalPrefetch = ValidatedOriginalPrefetchCoordinator(
+            configuration: configuration,
+            transportReusePolicy: transportReusePolicy,
+            cache: cache,
+            fetchStage: fetchStage,
+            responseProcessor: responseProcessor,
+            namespaceRegistry: namespaceRegistry,
+            clock: clock
+        )
+        transportVerifiedHandoffDelivery = TransportVerifiedHandoffDelivery(
+            cache: cache,
+            fetchStage: fetchStage,
+            responseProcessor: responseProcessor,
+            delivery: delivery,
+            namespaceRegistry: namespaceRegistry,
+            diagnostics: diagnostics
+        )
     }
 
     func load(
@@ -47,7 +81,8 @@ final class ImageLoadCoordinator: Sendable {
         progressObserver: TransportProgressObserver? = nil,
         progressiveFinalization: PipelineProgressiveFinalization? = nil
     ) async throws -> DecodedImage {
-        let generation = try await namespaceRegistry.generation(for: request.namespace)
+        let generation = try await namespaceRegistry.generation(
+            for: request.storageNamespaceFingerprint)
         guard transportReusePolicy.allowsCrossRequestReuse else {
             return try await loadTaskLocal(
                 request: request,
@@ -58,8 +93,8 @@ final class ImageLoadCoordinator: Sendable {
             )
         }
 
-        // 已验证的渲染内存命中是成本最低的完整结果，应先于临时编码交接检查，
-        // 避免热命中无意义地进入磁盘支撑状态。
+        // 已验证的渲染内存命中已绑定当前 ContentID 与 namespace generation，是成本最低的完整结果；应先于临时编码交接检查，
+        // 避免同一已授权身份的热命中无意义地进入磁盘 I/O 支撑状态。
         if let rendered = try await renderedMemoryHit(
             request: request,
             generation: generation
@@ -72,7 +107,7 @@ final class ImageLoadCoordinator: Sendable {
             generation: generation,
             currentDate: { [clock] in await clock.now() }
         ) {
-            return try await deliverTransportVerifiedHandoff(
+            return try await transportVerifiedHandoffDelivery.deliver(
                 handoff,
                 request: request,
                 generation: generation,
@@ -80,8 +115,10 @@ final class ImageLoadCoordinator: Sendable {
             )
         }
 
-        let lookup = try await lookupReusableState(request: request, generation: generation)
-        if let image = lookup.image { return image }
+        let lookup = try await reusableLookup.lookup(request: request, generation: generation)
+        if let image = lookup.image {
+            return image
+        }
         guard request.cachePolicy != .onlyIfCached else {
             throw PipelineFailure.onlyIfCachedMiss
         }
@@ -96,6 +133,63 @@ final class ImageLoadCoordinator: Sendable {
         )
     }
 
+    struct WarmMemoryBenchmarkResult: Sendable {
+        let image: DecodedImage
+        let namespaceGenerationNanoseconds: UInt64
+        let aliasAuthorizationNanoseconds: UInt64
+        let aliasIndexLookupNanoseconds: UInt64
+        let representationAuthorizationNanoseconds: UInt64
+        let varySelectionNanoseconds: UInt64
+        let fixedIdentityAuthorizationNanoseconds: UInt64
+        let renderedImageLookupNanoseconds: UInt64
+        let freshnessClockNanoseconds: UInt64
+        let freshnessEvaluationNanoseconds: UInt64
+        let activeNamespaceFenceNanoseconds: UInt64
+        let cancellationFenceNanoseconds: UInt64
+        let coordinatorTotalNanoseconds: UInt64
+    }
+
+    func warmMemoryHitForBenchmarking(
+        request: ImageRequest
+    ) async throws -> WarmMemoryBenchmarkResult {
+        let totalStarted = DispatchTime.now().uptimeNanoseconds
+        let generationStarted = totalStarted
+        let generation = try await namespaceRegistry.generation(
+            for: request.storageNamespaceFingerprint)
+        let generationFinished = DispatchTime.now().uptimeNanoseconds
+        let lookup = await cache.renderedImageForBenchmarking(
+            for: request,
+            generation: generation,
+            currentDate: { [clock] in await clock.now() }
+        )
+        guard let image = lookup.image else {
+            throw PipelineFailure.onlyIfCachedMiss
+        }
+        let activeStarted = DispatchTime.now().uptimeNanoseconds
+        try await requireActive(generation, for: request)
+        let activeFinished = DispatchTime.now().uptimeNanoseconds
+        let cancellationStarted = activeFinished
+        try Task.checkCancellation()
+        let cancellationFinished = DispatchTime.now().uptimeNanoseconds
+        return WarmMemoryBenchmarkResult(
+            image: image,
+            namespaceGenerationNanoseconds: generationFinished &- generationStarted,
+            aliasAuthorizationNanoseconds: lookup.aliasAuthorizationNanoseconds,
+            aliasIndexLookupNanoseconds: lookup.aliasIndexLookupNanoseconds,
+            representationAuthorizationNanoseconds:
+                lookup.representationAuthorizationNanoseconds,
+            varySelectionNanoseconds: lookup.varySelectionNanoseconds,
+            fixedIdentityAuthorizationNanoseconds:
+                lookup.fixedIdentityAuthorizationNanoseconds,
+            renderedImageLookupNanoseconds: lookup.renderedImageLookupNanoseconds,
+            freshnessClockNanoseconds: lookup.freshnessClockNanoseconds,
+            freshnessEvaluationNanoseconds: lookup.freshnessEvaluationNanoseconds,
+            activeNamespaceFenceNanoseconds: activeFinished &- activeStarted,
+            cancellationFenceNanoseconds: cancellationFinished &- cancellationStarted,
+            coordinatorTotalNanoseconds: cancellationFinished &- totalStarted
+        )
+    }
+
     func warmOriginal(request: ImageRequest) async throws {
         guard transportReusePolicy.allowsCrossRequestReuse,
             request.cachePolicy == .automatic,
@@ -103,7 +197,8 @@ final class ImageLoadCoordinator: Sendable {
             !request.containsCredentialHeaders
         else { return }
 
-        let generation = try await namespaceRegistry.generation(for: request.namespace)
+        let generation = try await namespaceRegistry.generation(
+            for: request.storageNamespaceFingerprint)
         await diagnostics.record(
             DiagnosticEvent(
                 kind: .encodedHandoffStarted,
@@ -118,8 +213,9 @@ final class ImageLoadCoordinator: Sendable {
             return
         }
         let candidates = await cache.records(
-            for: request.fetchBaseKey.digestHex,
+            for: request.fetchBaseDigest,
             namespace: request.namespace,
+            namespaceFingerprint: request.storageNamespaceFingerprint,
             generation: generation
         )
         if let selected = HTTPCachePolicy.selectRecord(
@@ -145,79 +241,8 @@ final class ImageLoadCoordinator: Sendable {
         )
     }
 
-    private func deliverTransportVerifiedHandoff(
-        _ handoff: TransportVerifiedEncodedHandoffEntry,
-        request: ImageRequest,
-        generation: NamespaceGeneration,
-        onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?
-    ) async throws -> DecodedImage {
-        await diagnostics.record(
-            DiagnosticEvent(
-                kind: .originalEncodedHit,
-                keyDigest: handoff.variantKeyDigest(for: request),
-                byteCount: handoff.byteCount,
-                reason: "transport-verified-handoff"
-            )
-        )
-
-        let data: Data
-        do {
-            data = try handoff.materializedData()
-        } catch {
-            await cache.removeTransportVerifiedHandoff(for: request, generation: generation)
-            throw PipelineFailure(
-                category: .cacheRead,
-                stage: .cacheLookup,
-                disposition: .cacheDegraded,
-                reasonCode: "transport-handoff-body-unavailable"
-            )
-        }
-
-        let image: DecodedImage
-        do {
-            // 这是 transient bytes 首次跨入图像信任域的位置。imageFromReusableData
-            // 必须完成容器检查、probe、目标解码与变换，成功前不得持久化。
-            image = try await delivery.imageFromReusableData(
-                data: data,
-                request: request,
-                generation: generation,
-                representation: nil,
-                keyDigest: handoff.variantKeyDigest(for: request)
-            )
-        } catch let failure as PipelineFailure {
-            let provesInvalidEncodedBytes =
-                failure.disposition != .cancelled
-                && (failure.stage == .probe || failure.stage == .decode)
-            if provesInvalidEncodedBytes {
-                await cache.removeTransportVerifiedHandoff(for: request, generation: generation)
-                await fetchStage.invalidateCompletionHandoff(
-                    for: request,
-                    conditionalRecord: nil
-                )
-            }
-            throw failure
-        } catch is CancellationError {
-            // 订阅者取消不证明编码字节无效；保留 handoff 供下一位同身份消费者复用。
-            throw CancellationError()
-        } catch {
-            await cache.removeTransportVerifiedHandoff(for: request, generation: generation)
-            throw error
-        }
-
-        try Task.checkCancellation()
-        try await requireActive(generation, for: request.namespace)
-        if let onFullQualityPreview {
-            try await onFullQualityPreview(image)
-            await Task.yield()
-        }
-        try await responseProcessor.persistTransportVerifiedHandoff(
-            handoff,
-            data: data,
-            request: request,
-            generation: generation
-        )
-        await cache.removeTransportVerifiedHandoff(for: request, generation: generation)
-        return image
+    func prefetchValidatedOriginal(request: ImageRequest) async throws {
+        try await validatedOriginalPrefetch.prefetch(request: request)
     }
 
     private func loadTaskLocal(
@@ -258,7 +283,7 @@ final class ImageLoadCoordinator: Sendable {
             )
         else { return nil }
 
-        try await requireActive(generation, for: request.namespace)
+        try await requireActive(generation, for: request)
         try Task.checkCancellation()
         if detailedDiagnosticsAreEnabled(diagnostics) {
             await diagnostics.record(
@@ -272,74 +297,6 @@ final class ImageLoadCoordinator: Sendable {
             )
         }
         return rendered
-    }
-
-    private func lookupReusableState(
-        request: ImageRequest,
-        generation: NamespaceGeneration
-    ) async throws -> ReusableLookup {
-        let candidates = await cache.records(
-            for: request.fetchBaseKey.digestHex,
-            namespace: request.namespace,
-            generation: generation
-        )
-        let selected = HTTPCachePolicy.selectRecord(
-            from: candidates,
-            requestHeaders: request.headers,
-            additionalSensitiveNames: request.credentialHeaderNames,
-            sensitiveFingerprints: request.headerVariantFingerprints
-        )
-        guard let selected else {
-            return ReusableLookup(conditionalRecord: nil, image: nil)
-        }
-
-        let now = await clock.now()
-        guard selected.isFresh(at: now), selected.disposition != .noStore else {
-            return ReusableLookup(conditionalRecord: selected, image: nil)
-        }
-
-        // 先使用记录中的 ContentID 查询 rendered-memory。旧实现先读取完整原编码文件，
-        // 导致滚动回屏即使最终命中内存，也会被磁盘 I/O 和占位视图延迟阻塞。
-        if let contentID = ContentID(
-            persistentDescription: selected.contentID,
-            expectedByteCount: selected.payloadLength
-        ),
-            let rendered = try await delivery.renderedImageIfPresent(
-                contentID: contentID,
-                request: request,
-                generation: generation,
-                keyDigest: selected.variantKeyDigest
-            )
-        {
-            return ReusableLookup(conditionalRecord: selected, image: rendered)
-        }
-
-        guard
-            let data = try await readCachedData(
-                record: selected,
-                request: request,
-                generation: generation,
-                failureReason: "original-encoded-read"
-            )
-        else {
-            return ReusableLookup(conditionalRecord: nil, image: nil)
-        }
-
-        await diagnostics.record(
-            DiagnosticEvent(
-                kind: .originalEncodedHit,
-                keyDigest: selected.variantKeyDigest,
-                byteCount: data.count
-            )
-        )
-        let image = try await delivery.imageFromReusableData(
-            data: data,
-            request: request,
-            generation: generation,
-            representation: selected,
-            keyDigest: selected.variantKeyDigest
-        )
-        return ReusableLookup(conditionalRecord: selected, image: image)
     }
 
     private func fetchReusable(
@@ -429,9 +386,9 @@ final class ImageLoadCoordinator: Sendable {
         else { return nil }
 
         try Task.checkCancellation()
-        try await requireActive(generation, for: request.namespace)
+        try await requireActive(generation, for: request)
         guard
-            let data = try await readCachedData(
+            let data = try await reusableLookup.readCachedData(
                 record: record,
                 request: request,
                 generation: generation,
@@ -457,39 +414,6 @@ final class ImageLoadCoordinator: Sendable {
         )
     }
 
-    private func readCachedData(
-        record: RepresentationRecord,
-        request: ImageRequest,
-        generation: NamespaceGeneration,
-        failureReason: String
-    ) async throws -> Data? {
-        do {
-            return try await cache.read(record, namespace: request.namespace)
-        } catch is CancellationError {
-            throw CancellationError()
-        } catch let failure as PipelineFailure where failure.disposition == .cancelled {
-            throw failure
-        } catch {
-            await diagnostics.record(
-                DiagnosticEvent(
-                    kind: .cacheReadFailed,
-                    keyDigest: record.variantKeyDigest,
-                    reason: failureReason
-                )
-            )
-            await cache.removeRecord(
-                record.variantKeyDigest,
-                namespace: request.namespace,
-                generation: generation
-            )
-            await fetchStage.invalidateCompletionHandoff(
-                for: request,
-                conditionalRecord: nil
-            )
-            return nil
-        }
-    }
-
     private static func pixelCount(_ image: DecodedImage) -> Int {
         let (count, overflow) = image.pixelWidth.multipliedReportingOverflow(by: image.pixelHeight)
         return overflow ? Int.max : count
@@ -497,9 +421,14 @@ final class ImageLoadCoordinator: Sendable {
 
     private func requireActive(
         _ generation: NamespaceGeneration,
-        for namespace: SecurityNamespaceID
+        for request: ImageRequest
     ) async throws {
-        guard await namespaceRegistry.isActive(generation, for: namespace) else {
+        guard
+            await namespaceRegistry.isActive(
+                generation,
+                for: request.storageNamespaceFingerprint
+            )
+        else {
             throw PipelineFailure.namespaceRevoked
         }
     }

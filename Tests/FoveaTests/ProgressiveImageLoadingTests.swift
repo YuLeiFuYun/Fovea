@@ -1,6 +1,5 @@
 import AkashicCore
 import AkashicDisk
-import FoveaCore
 import FoveaHTTP
 import FoveaPersistence
 import FoveaStorage
@@ -9,7 +8,20 @@ import ImageCraftCore
 import ImageCraftImageIO
 import XCTest
 
+@_spi(FoveaBenchmarking) @testable import FoveaCore
+
 final class ProgressiveImageLoadingTests: XCTestCase {
+
+    func testResponseCompletionClosesUnobservedProgressiveFinalization_UI_PT_034() async {
+        let finalization = PipelineProgressiveFinalization()
+
+        let candidate = await finalization.valueAfterResponseCompletion()
+
+        XCTAssertNil(candidate)
+        let completedCandidate = await finalization.completedCandidate()
+        XCTAssertNil(completedCandidate)
+    }
+
     func testDefaultImageMethodReturnsFinalEventAfterPreviews() async throws {
         let preview = try testDecodedImage(width: 10, height: 10)
         let final = try testDecodedImage(width: 20, height: 20)
@@ -33,6 +45,339 @@ final class ProgressiveImageLoadingTests: XCTestCase {
             XCTFail("A progressive stream without a final image must fail")
         } catch let failure as PipelineFailure {
             XCTAssertEqual(failure, .incompleteProgressiveStream)
+        }
+    }
+
+    func testDifferentTargetsShareProgressiveFetchAndNonOwnerFallsBack_UI_PT_035()
+        async throws
+    {
+        let root = try makeTemporaryDirectory("w11-progressive-multi-target")
+        let fixture = try BenchmarkFixtureCatalog.load(
+            named: "progressive-people-usda-meeting-1920x1280.jpg"
+        )
+        let transport = SharedProgressiveJPEGTransport(body: fixture.data)
+        let pipeline = FoveaPipeline(
+            transport: transport,
+            encodedStore: try await AkashicOriginalEncodedStore.open(
+                root: root.appendingPathComponent("encoded")
+            ),
+            recordStore: try await RepresentationRecordStore.open(
+                root: root.appendingPathComponent("records")
+            ),
+            profileAccessPolicy: .unrestricted,
+            codec: ImageIOImageDecoder()
+        )
+        let url = try XCTUnwrap(
+            URL(string: "https://example.test/w11-progressive-multi-target.jpg")
+        )
+        let small = try ImageRequest.publicImage(
+            url: url,
+            target: TargetPixels(width: 320, height: 320),
+            appID: "progressive-loader-tests"
+        )
+        let large = try ImageRequest.publicImage(
+            url: url,
+            target: TargetPixels(width: 768, height: 768),
+            appID: "progressive-loader-tests"
+        )
+        let owner = PipelineEventRecorder()
+        let nonOwner = PipelineEventRecorder()
+        let ownerOutcome = PipelineEventTaskOutcomeRecorder()
+        let nonOwnerOutcome = PipelineEventTaskOutcomeRecorder()
+        let ownerDone = expectation(description: "W11 progressive owner completes")
+        let nonOwnerDone = expectation(description: "W11 progressive non-owner completes")
+        let ownerTask = Task {
+            defer { ownerDone.fulfill() }
+            do {
+                for try await event in pipeline.events(for: small) {
+                    await owner.record(event)
+                }
+                await ownerOutcome.record(.success)
+            } catch let failure as PipelineFailure {
+                await ownerOutcome.record(.failure(failure))
+            } catch is CancellationError {
+                await ownerOutcome.record(.cancellation)
+            } catch {
+                await ownerOutcome.record(.other(String(describing: error)))
+            }
+        }
+        defer {
+            ownerTask.cancel()
+            Task { await transport.releaseRemainingBytes() }
+        }
+
+        try await waitUntil("W11 owner observes progressive transport bytes") {
+            await owner.snapshot().previewCount > 0
+        }
+        let nonOwnerTask = Task {
+            defer { nonOwnerDone.fulfill() }
+            do {
+                for try await event in pipeline.events(for: large) {
+                    await nonOwner.record(event)
+                }
+                await nonOwnerOutcome.record(.success)
+            } catch let failure as PipelineFailure {
+                await nonOwnerOutcome.record(.failure(failure))
+            } catch is CancellationError {
+                await nonOwnerOutcome.record(.cancellation)
+            } catch {
+                await nonOwnerOutcome.record(.other(String(describing: error)))
+            }
+        }
+        defer { nonOwnerTask.cancel() }
+        try await waitUntil("W11 different targets share one encoded fetch") {
+            let requestCount = await transport.requestCount
+            let subscriberCount = await pipeline.fetchSubscriberCountForTesting(small)
+            return requestCount == 1 && subscriberCount == 2
+        }
+
+        await transport.releaseRemainingBytes()
+        await fulfillment(of: [ownerDone, nonOwnerDone], timeout: 3)
+
+        let ownerSnapshot = await owner.snapshot()
+        let nonOwnerSnapshot = await nonOwner.snapshot()
+        XCTAssertEqual(ownerSnapshot.finalCount, 1)
+        XCTAssertEqual(nonOwnerSnapshot.finalCount, 1)
+        XCTAssertEqual(ownerSnapshot.finalImage?.pixelWidth, 320)
+        XCTAssertEqual(nonOwnerSnapshot.finalImage?.pixelWidth, 768)
+        let requestCount = await transport.requestCount
+        let ownerResult = await ownerOutcome.snapshot()
+        let nonOwnerResult = await nonOwnerOutcome.snapshot()
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(ownerResult, .success)
+        XCTAssertEqual(nonOwnerResult, .success)
+    }
+
+    func testDifferentTargetProgressiveOwnerCancellationStress_UI_PT_036() async throws {
+        let root = try makeTemporaryDirectory("w11-progressive-owner-cancel-stress")
+        let fixture = try BenchmarkFixtureCatalog.load(
+            named: "progressive-people-usda-meeting-1920x1280.jpg"
+        )
+        let transport = SharedProgressiveJPEGTransport(body: fixture.data)
+        let pipeline = FoveaPipeline(
+            transport: transport,
+            encodedStore: try await AkashicOriginalEncodedStore.open(
+                root: root.appendingPathComponent("encoded")
+            ),
+            recordStore: try await RepresentationRecordStore.open(
+                root: root.appendingPathComponent("records")
+            ),
+            profileAccessPolicy: .unrestricted,
+            codec: ImageIOImageDecoder()
+        )
+
+        for round in 0..<12 {
+            await transport.prepareNextRequestGate()
+            let url = try XCTUnwrap(
+                URL(string: "https://example.test/w11-cancel-\(round).jpg")
+            )
+            let ownerRequest = try ImageRequest.publicImage(
+                url: url,
+                target: TargetPixels(width: 320, height: 320),
+                appID: "progressive-loader-tests"
+            )
+            let survivorRequest = try ImageRequest.publicImage(
+                url: url,
+                target: TargetPixels(width: 768, height: 768),
+                appID: "progressive-loader-tests"
+            )
+            let owner = PipelineEventRecorder()
+            let survivor = PipelineEventRecorder()
+            let ownerOutcome = PipelineEventTaskOutcomeRecorder()
+            let survivorOutcome = PipelineEventTaskOutcomeRecorder()
+            let ownerDone = expectation(description: "W11 cancelled owner round \(round)")
+            let survivorDone = expectation(description: "W11 survivor round \(round)")
+            let ownerTask = Task {
+                defer { ownerDone.fulfill() }
+                do {
+                    for try await event in pipeline.events(for: ownerRequest) {
+                        await owner.record(event)
+                    }
+                    await ownerOutcome.record(.success)
+                } catch let failure as PipelineFailure {
+                    await ownerOutcome.record(.failure(failure))
+                } catch is CancellationError {
+                    await ownerOutcome.record(.cancellation)
+                } catch {
+                    await ownerOutcome.record(.other(String(describing: error)))
+                }
+            }
+
+            try await waitUntil("W11 cancellation owner observes progress round \(round)") {
+                await owner.snapshot().previewCount > 0
+            }
+            let survivorTask = Task {
+                defer { survivorDone.fulfill() }
+                do {
+                    for try await event in pipeline.events(for: survivorRequest) {
+                        await survivor.record(event)
+                    }
+                    await survivorOutcome.record(.success)
+                } catch let failure as PipelineFailure {
+                    await survivorOutcome.record(.failure(failure))
+                } catch is CancellationError {
+                    await survivorOutcome.record(.cancellation)
+                } catch {
+                    await survivorOutcome.record(.other(String(describing: error)))
+                }
+            }
+            try await waitUntil("W11 cancellation targets share fetch round \(round)") {
+                let requestCount = await transport.requestCount
+                let subscriberCount = await pipeline.fetchSubscriberCountForTesting(ownerRequest)
+                return requestCount == round + 1 && subscriberCount == 2
+            }
+
+            ownerTask.cancel()
+            await transport.releaseRemainingBytes()
+            await fulfillment(of: [ownerDone, survivorDone], timeout: 3)
+
+            let survivorResult = await survivorOutcome.snapshot()
+            let ownerSnapshot = await owner.snapshot()
+            let survivorSnapshot = await survivor.snapshot()
+            let requestCount = await transport.requestCount
+            XCTAssertEqual(ownerSnapshot.finalCount, 0)
+            XCTAssertEqual(survivorResult, .success)
+            XCTAssertEqual(survivorSnapshot.finalCount, 1)
+            XCTAssertEqual(survivorSnapshot.finalImage?.pixelWidth, 768)
+            XCTAssertEqual(requestCount, round + 1)
+            survivorTask.cancel()
+        }
+    }
+
+    func testDifferentTargetProgressiveNamespaceRevokeStress_UI_PT_037() async throws {
+        let root = try makeTemporaryDirectory("w11-progressive-revoke-stress")
+        let fixture = try BenchmarkFixtureCatalog.load(
+            named: "progressive-people-usda-meeting-1920x1280.jpg"
+        )
+
+        for round in 0..<12 {
+            let roundRoot = root.appendingPathComponent("round-\(round)")
+            let transport = SharedProgressiveJPEGTransport(
+                body: fixture.data,
+                cacheControl: "max-age=3600"
+            )
+            let registry = NamespaceRegistry()
+            let records = try await RepresentationRecordStore.open(
+                root: roundRoot.appendingPathComponent("records")
+            )
+            let barrierRecords = ProgressiveCleanupBarrierRecordStore(base: records)
+            let pipeline = FoveaPipeline(
+                transport: transport,
+                encodedStore: try await AkashicOriginalEncodedStore.open(
+                    root: roundRoot.appendingPathComponent("encoded")
+                ),
+                recordStore: barrierRecords,
+                namespaceRegistry: registry,
+                profileAccessPolicy: .unrestricted,
+                codec: ImageIOImageDecoder()
+            )
+            let namespace = SecurityNamespaceID("w11-revoke-\(round)")
+            let url = try XCTUnwrap(
+                URL(string: "https://example.test/w11-revoke-\(round).jpg")
+            )
+            let ownerRequest = try ImageRequest(
+                url: url,
+                target: TargetPixels(width: 320, height: 320),
+                namespace: namespace,
+                authorizationContext: AuthorizationContextID("w11-principal-\(round)")
+            )
+            let nonOwnerRequest = try ImageRequest(
+                url: url,
+                target: TargetPixels(width: 768, height: 768),
+                namespace: namespace,
+                authorizationContext: AuthorizationContextID("w11-principal-\(round)")
+            )
+            let owner = PipelineEventRecorder()
+            let nonOwner = PipelineEventRecorder()
+            let ownerOutcome = PipelineEventTaskOutcomeRecorder()
+            let nonOwnerOutcome = PipelineEventTaskOutcomeRecorder()
+            let revokeOutcome = PipelineEventTaskOutcomeRecorder()
+            let ownerDone = expectation(description: "W11 revoke owner round \(round)")
+            let nonOwnerDone = expectation(description: "W11 revoke non-owner round \(round)")
+            let revokeDone = expectation(description: "W11 revoke completes round \(round)")
+            let ownerTask = Task {
+                defer { ownerDone.fulfill() }
+                do {
+                    for try await event in pipeline.events(for: ownerRequest) {
+                        await owner.record(event)
+                    }
+                    await ownerOutcome.record(.success)
+                } catch let failure as PipelineFailure {
+                    await ownerOutcome.record(.failure(failure))
+                } catch is CancellationError {
+                    await ownerOutcome.record(.cancellation)
+                } catch {
+                    await ownerOutcome.record(.other(String(describing: error)))
+                }
+            }
+            try await waitUntil("W11 revoke owner observes progress round \(round)") {
+                await owner.snapshot().previewCount > 0
+            }
+            let nonOwnerTask = Task {
+                defer { nonOwnerDone.fulfill() }
+                do {
+                    for try await event in pipeline.events(for: nonOwnerRequest) {
+                        await nonOwner.record(event)
+                    }
+                    await nonOwnerOutcome.record(.success)
+                } catch let failure as PipelineFailure {
+                    await nonOwnerOutcome.record(.failure(failure))
+                } catch is CancellationError {
+                    await nonOwnerOutcome.record(.cancellation)
+                } catch {
+                    await nonOwnerOutcome.record(.other(String(describing: error)))
+                }
+            }
+            try await waitUntil("W11 revoke targets share fetch round \(round)") {
+                let requestCount = await transport.requestCount
+                let subscriberCount = await pipeline.fetchSubscriberCountForTesting(ownerRequest)
+                return requestCount == 1 && subscriberCount == 2
+            }
+
+            let revokeTask = Task {
+                defer { revokeDone.fulfill() }
+                do {
+                    try await pipeline.revoke(namespace: namespace)
+                    await revokeOutcome.record(.success)
+                } catch let failure as PipelineFailure {
+                    await revokeOutcome.record(.failure(failure))
+                } catch is CancellationError {
+                    await revokeOutcome.record(.cancellation)
+                } catch {
+                    await revokeOutcome.record(.other(String(describing: error)))
+                }
+            }
+            await barrierRecords.waitUntilCleanupStarts()
+
+            do {
+                _ = try await registry.generation(for: namespace)
+                XCTFail("W11 revocation barrier must reject old-generation work")
+            } catch let failure as PipelineFailure {
+                XCTAssertEqual(failure.category, .namespaceRevoked)
+            }
+            await transport.releaseRemainingBytes()
+            await barrierRecords.releaseCleanup()
+            await fulfillment(of: [ownerDone, nonOwnerDone, revokeDone], timeout: 3)
+
+            let revokeResult = await revokeOutcome.snapshot()
+            let ownerSnapshot = await owner.snapshot()
+            let nonOwnerSnapshot = await nonOwner.snapshot()
+            let requestCount = await transport.requestCount
+            let generation = try await registry.generation(for: namespace)
+            let oldRecords = await records.records(
+                for: ownerRequest.fetchBaseKey.digestHex,
+                namespace: namespace.value,
+                namespaceGeneration: 0
+            )
+            XCTAssertEqual(revokeResult, .success)
+            XCTAssertEqual(ownerSnapshot.finalCount, 0)
+            XCTAssertEqual(nonOwnerSnapshot.finalCount, 0)
+            XCTAssertEqual(requestCount, 1)
+            XCTAssertEqual(generation, NamespaceGeneration(1))
+            XCTAssertTrue(oldRecords.isEmpty)
+            ownerTask.cancel()
+            nonOwnerTask.cancel()
+            revokeTask.cancel()
         }
     }
 
@@ -89,6 +434,10 @@ final class ProgressiveImageLoadingTests: XCTestCase {
         try await waitUntil("both subscribers join one fetch execution") {
             await pipeline.fetchSubscriberCountForTesting(request) == 2
         }
+        let firstAtJoin = await first.snapshot()
+        let secondAtJoin = await second.snapshot()
+        XCTAssertEqual(firstAtJoin.networkPreviewQualities, [1])
+        XCTAssertEqual(secondAtJoin.networkPreviewQualities, [1])
 
         await transport.releaseRemainingBytes()
         try await firstTask.value
@@ -100,9 +449,21 @@ final class ProgressiveImageLoadingTests: XCTestCase {
         let producerStarts = await pipeline.progressiveProducerStartCountForTesting()
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(producerStarts, 1)
-        XCTAssertEqual(firstSnapshot.networkPreviewQualities, [1, 2, 3, 4])
-        XCTAssertEqual(
-            secondSnapshot.networkPreviewQualities, firstSnapshot.networkPreviewQualities)
+        // 每个订阅者使用 bufferingNewest(1)：慢消费者允许合并中间 generation，
+        // 但已观察的质量必须非空、严格递增且来自同一四代 producer。
+        for qualities in [
+            firstSnapshot.networkPreviewQualities,
+            secondSnapshot.networkPreviewQualities,
+        ] {
+            XCTAssertFalse(qualities.isEmpty)
+            XCTAssertEqual(qualities.first, 1)
+            XCTAssertTrue(qualities.allSatisfy { (1...4).contains($0) })
+            XCTAssertTrue(
+                zip(qualities, qualities.dropFirst()).allSatisfy { previous, next in
+                    previous < next
+                }
+            )
+        }
         XCTAssertEqual(firstSnapshot.fullQualityPreviewCount, 0)
         XCTAssertEqual(secondSnapshot.fullQualityPreviewCount, 0)
         XCTAssertEqual(firstSnapshot.finalCount, 1)
@@ -438,6 +799,45 @@ final class ProgressiveImageLoadingTests: XCTestCase {
         XCTAssertEqual(captured.count, 1)
         XCTAssertTrue(persistentRecords.isEmpty)
         XCTAssertNil(physicalID)
+    }
+
+    func testBenchmarkMemoryPurgeRemovesTransportVerifiedHandoff_CACHE_PT_047() async throws {
+        let root = try makeTemporaryDirectory("benchmark-memory-purge-handoff")
+        let body = try makePNG(width: 96, height: 64)
+        let transport = FakeHTTPTransport(stubs: [
+            .init(
+                statusCode: 200,
+                headers: ["Content-Type": "image/png", "Cache-Control": "max-age=3600"],
+                body: body
+            )
+        ])
+        let encoded = try await AkashicOriginalEncodedStore.open(
+            root: root.appendingPathComponent("encoded")
+        )
+        let records = try await RepresentationRecordStore.open(
+            root: root.appendingPathComponent("records")
+        )
+        let pipeline = FoveaPipeline(
+            transport: transport,
+            encodedStore: encoded,
+            recordStore: records,
+            profileAccessPolicy: .unrestricted,
+            codec: ImageIOImageDecoder()
+        )
+        let request = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/benchmark-memory-purge.png")),
+            target: TargetPixels(width: 48, height: 32),
+            appID: "progressive-loader-tests"
+        )
+
+        try await pipeline.warmOriginalForTesting(request)
+        let handoffBeforePurge = await pipeline.hasTransportVerifiedHandoffForTesting(request)
+        XCTAssertTrue(handoffBeforePurge)
+
+        await pipeline.purgeMemoryStateForBenchmarking()
+
+        let handoffAfterPurge = await pipeline.hasTransportVerifiedHandoffForTesting(request)
+        XCTAssertFalse(handoffAfterPurge)
     }
 
     func testMalformedTransportVerifiedHandoffCannotPersistAndIsRemoved_CACHE_PT_046()
@@ -921,6 +1321,79 @@ private final class PreparedProgressiveCodec:
     }
 }
 
+private actor ProgressiveCleanupBarrierRecordStore: RepresentationRecordStoring {
+    private let base: RepresentationRecordStore
+    private var cleanupStarted = false
+    private var cleanupReleased = false
+    private var startedWaiters: [CheckedContinuation<Void, Never>] = []
+    private var releaseWaiters: [CheckedContinuation<Void, Never>] = []
+
+    init(base: RepresentationRecordStore) {
+        self.base = base
+    }
+
+    func records(
+        for baseKeyDigest: String,
+        namespace: String,
+        namespaceGeneration: UInt64
+    ) async -> [RepresentationRecord] {
+        await base.records(
+            for: baseKeyDigest,
+            namespace: namespace,
+            namespaceGeneration: namespaceGeneration
+        )
+    }
+
+    func put(_ record: RepresentationRecord) async throws {
+        try await base.put(record)
+    }
+
+    func containsReference(
+        to contentID: String,
+        namespace: String,
+        excludingVariantDigest: String?
+    ) async -> Bool {
+        await base.containsReference(
+            to: contentID,
+            namespace: namespace,
+            excludingVariantDigest: excludingVariantDigest
+        )
+    }
+
+    func remove(
+        _ variantDigest: String,
+        namespace: String,
+        namespaceGeneration: UInt64
+    ) async throws {
+        try await base.remove(
+            variantDigest,
+            namespace: namespace,
+            namespaceGeneration: namespaceGeneration
+        )
+    }
+
+    func removeAll(namespace: String) async throws {
+        cleanupStarted = true
+        for waiter in startedWaiters { waiter.resume() }
+        startedWaiters.removeAll(keepingCapacity: false)
+        if !cleanupReleased {
+            await withCheckedContinuation { releaseWaiters.append($0) }
+        }
+        try await base.removeAll(namespace: namespace)
+    }
+
+    func waitUntilCleanupStarts() async {
+        guard !cleanupStarted else { return }
+        await withCheckedContinuation { startedWaiters.append($0) }
+    }
+
+    func releaseCleanup() {
+        cleanupReleased = true
+        for waiter in releaseWaiters { waiter.resume() }
+        releaseWaiters.removeAll(keepingCapacity: false)
+    }
+}
+
 private actor SharedProgressiveJPEGTransport:
     HTTPTransporting, TransportProgressObservationSupporting
 {
@@ -930,13 +1403,19 @@ private actor SharedProgressiveJPEGTransport:
 
     private let body: Data
     private let completionDigestOverride: String?
+    private let cacheControl: String
     private var remainingBytesReleased = false
     private var releaseWaiters: [CheckedContinuation<Void, Never>] = []
     private(set) var requestCount = 0
 
-    init(body: Data, completionDigestOverride: String? = nil) {
+    init(
+        body: Data,
+        completionDigestOverride: String? = nil,
+        cacheControl: String = "no-store"
+    ) {
         self.body = body
         self.completionDigestOverride = completionDigestOverride
+        self.cacheControl = cacheControl
     }
 
     func execute(_ request: TransportRequest) async throws -> TransportResponse {
@@ -946,7 +1425,7 @@ private actor SharedProgressiveJPEGTransport:
             headers: [
                 "Content-Type": "image/jpeg",
                 "Content-Length": String(body.count),
-                "Cache-Control": "no-store",
+                "Cache-Control": cacheControl,
             ],
             url: request.request.url
         )
@@ -967,7 +1446,7 @@ private actor SharedProgressiveJPEGTransport:
                 .data(body.subdata(in: offset..<end), cumulativeByteCount: end)
             )
             offset = end
-            try await Task.sleep(for: .milliseconds(2))
+            try await testSleep(.milliseconds(2))
         }
         let response = TransportResponse(
             head: head,
@@ -981,6 +1460,11 @@ private actor SharedProgressiveJPEGTransport:
             )
         )
         return response
+    }
+
+    func prepareNextRequestGate() {
+        precondition(releaseWaiters.isEmpty)
+        remainingBytesReleased = false
     }
 
     func releaseRemainingBytes() {
@@ -997,6 +1481,46 @@ private actor SharedProgressiveJPEGTransport:
             releaseWaiters.append(continuation)
         }
     }
+}
+
+private enum PipelineEventTaskOutcome: Equatable, Sendable {
+    case pending
+    case success
+    case cancellation
+    case failure(PipelineFailure)
+    case other(String)
+
+    var isCancellationLike: Bool {
+        switch self {
+        case .cancellation:
+            true
+        case .failure(let failure):
+            failure.category == .cancelled
+        case .pending, .success, .other:
+            false
+        }
+    }
+
+    var isRevocationLike: Bool {
+        switch self {
+        case .cancellation:
+            true
+        case .failure(let failure):
+            failure.category == .namespaceRevoked || failure.category == .cancelled
+        case .pending, .success, .other:
+            false
+        }
+    }
+}
+
+private actor PipelineEventTaskOutcomeRecorder {
+    private var outcome: PipelineEventTaskOutcome = .pending
+
+    func record(_ outcome: PipelineEventTaskOutcome) {
+        self.outcome = outcome
+    }
+
+    func snapshot() -> PipelineEventTaskOutcome { outcome }
 }
 
 private actor PipelineEventRecorder {

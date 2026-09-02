@@ -11,10 +11,13 @@ import argparse
 import concurrent.futures
 import datetime as dt
 import errno
+import fcntl
+import hashlib
 import json
 import os
 import re
 import signal
+import stat
 import shlex
 import subprocess
 import sys
@@ -30,6 +33,7 @@ ARTIFACTS = ROOT / ".artifacts/verification"
 PROFILE_CHOICES = ("iteration", "smart", "premerge", "release", "workbench-smoke")
 _ACTIVE_PROCESS_GROUPS: set[int] = set()
 _ACTIVE_PROCESS_GROUPS_LOCK = threading.Lock()
+_RUN_ARTIFACTS: Path | None = None
 
 
 def register_process_group(identifier: int) -> None:
@@ -108,6 +112,95 @@ class SourceState:
     dirty: bool
 
 
+def active_artifacts() -> Path:
+    return _RUN_ARTIFACTS or ARTIFACTS
+
+
+def verification_run_id(now: dt.datetime | None = None) -> str:
+    instant = now or dt.datetime.now(dt.timezone.utc)
+    return f"{instant.strftime('%Y%m%dT%H%M%S.%fZ')}-{os.getpid()}"
+
+
+def create_run_artifacts() -> Path:
+    global _RUN_ARTIFACTS
+    if _RUN_ARTIFACTS is not None:
+        raise RuntimeError("verification run artifacts are already initialized")
+    path = ARTIFACTS / "runs" / verification_run_id()
+    path.mkdir(parents=True, exist_ok=False)
+    _RUN_ARTIFACTS = path
+    return path
+
+
+def reset_run_artifacts() -> None:
+    global _RUN_ARTIFACTS
+    _RUN_ARTIFACTS = None
+
+
+def acquire_verification_lock() -> int:
+    ARTIFACTS.mkdir(parents=True, exist_ok=True)
+    lock_path = ARTIFACTS / "run.lock"
+    descriptor = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError as error:
+        try:
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            owner = os.read(descriptor, 4096).decode(errors="replace").strip()
+        finally:
+            os.close(descriptor)
+        detail = f" ({owner})" if owner else ""
+        raise RuntimeError(f"another Fovea verification profile is already running{detail}") from error
+    os.ftruncate(descriptor, 0)
+    payload = (
+        f"pid={os.getpid()}\n"
+        f"startedAt={dt.datetime.now(dt.timezone.utc).isoformat()}\n"
+    ).encode()
+    os.write(descriptor, payload)
+    os.fsync(descriptor)
+    return descriptor
+
+
+def release_verification_lock(descriptor: int) -> None:
+    fcntl.flock(descriptor, fcntl.LOCK_UN)
+    os.close(descriptor)
+
+
+def atomic_write_json(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    os.replace(temporary, path)
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def validate_report_artifacts(report: dict[str, object]) -> None:
+    artifact_directory = ROOT / str(report["artifactDirectory"])
+    resolved_artifacts = artifact_directory.resolve()
+    seen_logs: set[Path] = set()
+    for item in report["phases"]:
+        if not isinstance(item, dict):
+            raise RuntimeError("verification report phase entry must be an object")
+        log_path = (ROOT / str(item["log"])).resolve()
+        try:
+            log_path.relative_to(resolved_artifacts)
+        except ValueError as error:
+            raise RuntimeError("verification phase log escapes its run directory") from error
+        if log_path in seen_logs:
+            raise RuntimeError("verification report contains a duplicate phase log")
+        seen_logs.add(log_path)
+        if log_path.stat().st_size != int(item["logByteCount"]):
+            raise RuntimeError(f"verification phase log byte count changed: {item['name']}")
+        if file_sha256(log_path) != str(item["logSha256"]):
+            raise RuntimeError(f"verification phase log digest changed: {item['name']}")
+
+
 def command_output(command: list[str], *, env: dict[str, str] | None = None) -> str:
     return subprocess.run(
         command,
@@ -144,6 +237,100 @@ def source_state() -> SourceState:
         working_tree=working_tree_identity(),
         dirty=bool(command_output(["git", "status", "--porcelain"])),
     )
+
+
+def repository_relative(path: Path) -> Path:
+    return path.resolve().relative_to(ROOT.resolve())
+
+
+def candidate_baseline_path(value: str, *, require_existing: bool) -> Path:
+    path = Path(value)
+    if not path.is_absolute():
+        path = ROOT / path
+    resolved_parent = path.parent.resolve()
+    try:
+        resolved_parent.relative_to(ROOT.resolve())
+    except ValueError as error:
+        raise ValueError("candidate baseline must remain inside the repository") from error
+    resolved = resolved_parent / path.name
+    if require_existing:
+        metadata = resolved.lstat()
+        if resolved.is_symlink() or not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise ValueError("candidate baseline must be a single-link regular file")
+    elif resolved.exists() or resolved.is_symlink():
+        metadata = resolved.lstat()
+        if resolved.is_symlink() or not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise ValueError("candidate baseline destination must be a single-link regular file")
+    return resolved
+
+
+def write_candidate_baseline(value: str, state: SourceState) -> Path:
+    path = candidate_baseline_path(value, require_existing=False)
+    relative = str(repository_relative(path))
+    ignored = subprocess.run(
+        ["git", "check-ignore", "-q", "--", relative],
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if ignored.returncode != 0:
+        raise ValueError("candidate baseline destination must be ignored by Git")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schemaVersion": 1,
+        "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "headCommit": state.head_commit,
+        "workingTree": state.working_tree,
+        "dirty": state.dirty,
+    }
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    os.replace(temporary, path)
+    return path
+
+
+def load_candidate_baseline(value: str, *, current_head: str) -> tuple[Path, dict[str, object]]:
+    path = candidate_baseline_path(value, require_existing=True)
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"invalid candidate baseline: {error}") from error
+    if not isinstance(payload, dict) or payload.get("schemaVersion") != 1:
+        raise ValueError("candidate baseline requires schemaVersion 1")
+    head = str(payload.get("headCommit") or "")
+    tree = str(payload.get("workingTree") or "")
+    if head != current_head:
+        raise ValueError("candidate baseline HEAD differs from the current repository HEAD")
+    if re.fullmatch(r"[0-9a-f]{40,64}", tree) is None:
+        raise ValueError("candidate baseline working-tree identity is malformed")
+    probe = subprocess.run(
+        ["git", "cat-file", "-e", f"{tree}^{{tree}}"],
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if probe.returncode != 0:
+        raise ValueError("candidate baseline working-tree object is unavailable")
+    return path, payload
+
+
+def changed_files_between_trees(previous_tree: str, current_tree: str) -> list[str]:
+    diff = subprocess.run(
+        [
+            "git", "diff", "--no-renames", "--name-only",
+            "--diff-filter=ACMRDT", previous_tree, current_tree, "--",
+        ],
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if diff.returncode != 0:
+        raise RuntimeError(diff.stderr.strip() or "unable to diff candidate baseline")
+    return sorted({line for line in diff.stdout.splitlines() if line})
 
 
 def changed_files(base: str | None) -> list[str]:
@@ -214,6 +401,10 @@ def classify(paths: list[str]) -> dict[str, object]:
             categories.add("cache-lab")
         elif path.startswith("Benchmarks/"):
             categories.add("benchmark")
+        elif path.startswith("Tools/"):
+            categories.add("tooling")
+            if path.startswith("Tools/Performance/") or "Lab/" in path:
+                categories.add("benchmark")
         elif path.startswith("docs/") or path.endswith(".md"):
             categories.add("docs")
         elif path.startswith(".github/"):
@@ -228,7 +419,7 @@ def classify(paths: list[str]) -> dict[str, object]:
             if name.startswith(("model-check-", "analyze-")) and name.endswith(".py"):
                 model_scripts.add(path)
             known_prefixes = (
-                "verify", "check-", "validate-", "run-", "test-", "model-check-",
+                "verify", "check-", "validate-", "run-", "test-", "capture-", "model-check-",
                 "analyze-", "audit-", "render-", "generate-", "prepare-", "select-", "write-",
                 "ios_example_", "lint-", "prove-",
             )
@@ -349,8 +540,41 @@ def iteration_static_phases(impact: dict[str, object]) -> list[Phase]:
     if "dependencies" in categories:
         phases.extend((
             Phase("component-pins", ("python3", "scripts/check-component-pins.py"), 120),
+            Phase(
+                "imagecraft-animation-pin-readiness",
+                ("python3", "scripts/check-imagecraft-animation-pin-readiness.py"),
+                120,
+            ),
+            Phase(
+                "imagecraft-animation-pin-readiness-contract",
+                ("python3", "scripts/test-imagecraft-animation-pin-readiness.py"),
+                120,
+            ),
             Phase("supply-chain", ("python3", "scripts/check-supply-chain.py"), 180),
         ))
+    elif any(
+        path in {
+            "docs/project-memory/component-pins.json",
+            "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json",
+            "scripts/check-imagecraft-animation-pin-readiness.py",
+            "scripts/test-imagecraft-animation-pin-readiness.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "imagecraft-animation-pin-readiness",
+                ("python3", "scripts/check-imagecraft-animation-pin-readiness.py"),
+                120,
+            )
+        )
+        phases.append(
+            Phase(
+                "imagecraft-animation-pin-readiness-contract",
+                ("python3", "scripts/test-imagecraft-animation-pin-readiness.py"),
+                120,
+            )
+        )
     if categories & {"provider-conformance", "codec-conformance"}:
         phases.append(Phase(
             "cross-repository-conformance-kits",
@@ -358,6 +582,29 @@ def iteration_static_phases(impact: dict[str, object]) -> list[Phase]:
         ))
     if any("test-traceability" in path or "current-required-ids" in path for path in paths):
         phases.append(Phase("traceability", ("python3", "scripts/check-test-traceability.py"), 180))
+    if any(
+        path in {
+            "Benchmarks/ComparativeLab/animated-image-plan.json",
+            "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+            "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+            "Benchmarks/ComparativeLab/apng-tile-checkpoint-plan.json",
+            "Benchmarks/ComparativeLab/apng-compressed-checkpoint-plan.json",
+            "docs/research/animated-image-library-registry-2026-08.json",
+            "docs/research/animated-image-mechanism-matrix-2026-08.json",
+            "docs/research/animated-image-source-audit-2026-08.md",
+            "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json",
+            "docs/research/w5-apng-semantic-replay-2026-08.json",
+            "scripts/check-animated-image-library-registry.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "animated-image-library-registry",
+                ("python3", "scripts/check-animated-image-library-registry.py"),
+                120,
+            )
+        )
     if any("progressive-presentation" in path for path in paths):
         phases.append(Phase(
             "progressive-presentation-evidence",
@@ -367,16 +614,408 @@ def iteration_static_phases(impact: dict[str, object]) -> list[Phase]:
             ), 180,
         ))
     if any(
+        path.startswith(
+            "Benchmarks/ComparativeLab/AnimatedCodecLabPackage/"
+        )
+        or path in {
+            "Tools/Performance/capture_w5_animated_codec.py",
+            "Tools/Performance/validate_w5_animated_codec.py",
+            "Tools/Performance/test_w5_animated_codec_identity.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-animated-codec-identity-contract",
+                ("python3", "Tools/Performance/test_w5_animated_codec_identity.py"),
+                120,
+            )
+        )
+    if any(
+        path.startswith(
+            "Benchmarks/ComparativeLab/APNGCompositionOracleLabPackage/"
+        )
+        or path in {
+            "Tools/Performance/capture_w5_apng_composition_oracle.py",
+            "Tools/Performance/validate_w5_apng_composition_oracle.py",
+            "Tools/Performance/test_w5_apng_composition_oracle.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-apng-composition-oracle-contract",
+                ("python3", "Tools/Performance/test_w5_apng_composition_oracle.py"),
+                120,
+            )
+        )
+    if any(
+        path in {
+            "Tools/Performance/w5_apng_reference.py",
+            "Tools/Performance/capture_w5_apng_reference.py",
+            "Tools/Performance/validate_w5_apng_reference.py",
+            "Tools/Performance/test_w5_apng_reference.py",
+            "Tools/Performance/test_w5_apng_reference_capture.py",
+        }
+        for path in paths
+    ):
+        phases.extend(
+            [
+                Phase(
+                    "w5-apng-reference-core",
+                    ("python3", "Tools/Performance/test_w5_apng_reference.py"),
+                    120,
+                ),
+                Phase(
+                    "w5-apng-reference-capture-contract",
+                    (
+                        "python3",
+                        "Tools/Performance/test_w5_apng_reference_capture.py",
+                    ),
+                    120,
+                ),
+            ]
+        )
+    if any(
+        path in {
+            "Benchmarks/ComparativeLab/apng-checkpoint-plan.json",
+            "Tools/Performance/w5_apng_checkpoint_model.py",
+            "Tools/Performance/test_w5_apng_checkpoint_model.py",
+            "Tools/Performance/capture_w5_apng_checkpoint_model.py",
+            "Tools/Performance/validate_w5_apng_checkpoint_model.py",
+            "Tools/Performance/test_w5_apng_checkpoint_capture.py",
+        }
+        for path in paths
+    ):
+        phases.extend(
+            [
+                Phase(
+                    "w5-apng-checkpoint-model-core",
+                    (
+                        "python3",
+                        "Tools/Performance/test_w5_apng_checkpoint_model.py",
+                    ),
+                    120,
+                ),
+                Phase(
+                    "w5-apng-checkpoint-capture-contract",
+                    (
+                        "python3",
+                        "Tools/Performance/test_w5_apng_checkpoint_capture.py",
+                    ),
+                    120,
+                ),
+            ]
+        )
+    if any(
+        path in {
+            "scripts/run-w5-animated-simulator-lab.py",
+            "scripts/test-w5-animated-simulator-runner.py",
+            "scripts/validate-w5-animated-timing.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-animated-simulator-runner-contract",
+                ("python3", "scripts/test-w5-animated-simulator-runner.py"),
+                120,
+            )
+        )
+    if any(
+        path in {
+            "Sources/FoveaCore/AnimationPlaybackDriver.swift",
+            "Sources/FoveaAppKit/FoveaAnimationDisplayLinkDriver.swift",
+            "Sources/FoveaAppKit/FoveaAnimatedImageViewPresenter.swift",
+            "Sources/FoveaAppKit/FoveaImageView.swift",
+            "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabMain.swift",
+            "Tools/Performance/capture_w5_appkit_display_link.py",
+            "Tools/Performance/test_w5_appkit_display_link_capture.py",
+            "Tools/Performance/capture_w5_appkit_callback_timing.py",
+            "Tools/Performance/test_w5_appkit_callback_timing_capture.py",
+            "Tools/Performance/capture_w5_appkit_refresh_timing.py",
+            "Tools/Performance/test_w5_appkit_refresh_timing_capture.py",
+            "Tools/Performance/capture_w5_appkit_resource_proxy.py",
+            "Tools/Performance/test_w5_appkit_resource_proxy_capture.py",
+            "Tests/FoveaTests/AnimationPlaybackDriverTests.swift",
+            "Tests/FoveaTests/AnimatedPlatformPresenterTests.swift",
+            "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+            "docs/research/w5-appkit-display-link-physical-2026-08.json",
+            "docs/research/w5-appkit-refresh-timing-physical-2026-08.json",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-appkit-display-link-capture-contract",
+                ("python3", "Tools/Performance/test_w5_appkit_display_link_capture.py"),
+                120,
+            )
+        )
+        phases.append(
+            Phase(
+                "w5-appkit-callback-timing-capture-contract",
+                ("python3", "Tools/Performance/test_w5_appkit_callback_timing_capture.py"),
+                120,
+            )
+        )
+        phases.append(
+            Phase(
+                "w5-appkit-refresh-timing-capture-contract",
+                ("python3", "Tools/Performance/test_w5_appkit_refresh_timing_capture.py"),
+                120,
+            )
+        )
+        phases.append(
+            Phase(
+                "w5-appkit-resource-proxy-capture-contract",
+                ("python3", "Tools/Performance/test_w5_appkit_resource_proxy_capture.py"),
+                120,
+            )
+        )
+    if any(
+        path in {
+            "Benchmarks/ComparativeLab/apng-semantic-replay-plan.json",
+            "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+            "Tools/Performance/w5_apng_checkpoint_model.py",
+            "Tools/Performance/test_w5_apng_checkpoint_model.py",
+            "Tools/Performance/w5_yyimage_semantic_replay_oracle.py",
+            "Tools/Performance/test_w5_yyimage_semantic_replay_oracle.py",
+            "docs/research/w5-apng-semantic-replay-2026-08.json",
+            "docs/research/animated-image-library-registry-2026-08.json",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-apng-semantic-replay-oracle",
+                (
+                    "python3",
+                    "Tools/Performance/test_w5_yyimage_semantic_replay_oracle.py",
+                ),
+                120,
+            )
+        )
+    if any(
+        path in {
+            "Benchmarks/ComparativeLab/apng-tile-checkpoint-plan.json",
+            "Tools/Performance/w5_apng_tile_checkpoint_model.py",
+            "Tools/Performance/test_w5_apng_tile_checkpoint_model.py",
+            "Tools/Performance/capture_w5_apng_tile_checkpoint_model.py",
+            "Tools/Performance/validate_w5_apng_tile_checkpoint_model.py",
+            "Tools/Performance/test_w5_apng_tile_checkpoint_capture.py",
+        }
+        for path in paths
+    ):
+        phases.extend(
+            [
+                Phase(
+                    "w5-apng-tile-checkpoint-model-core",
+                    (
+                        "python3",
+                        "Tools/Performance/test_w5_apng_tile_checkpoint_model.py",
+                    ),
+                    120,
+                ),
+                Phase(
+                    "w5-apng-tile-checkpoint-capture-contract",
+                    (
+                        "python3",
+                        "Tools/Performance/test_w5_apng_tile_checkpoint_capture.py",
+                    ),
+                    120,
+                ),
+            ]
+        )
+    if any(
+        path in {
+            "Benchmarks/ComparativeLab/apng-compressed-checkpoint-plan.json",
+            "Tools/Performance/w5_apng_compressed_checkpoint_model.py",
+            "Tools/Performance/test_w5_apng_compressed_checkpoint_model.py",
+            "Tools/Performance/capture_w5_apng_compressed_checkpoint_model.py",
+            "Tools/Performance/validate_w5_apng_compressed_checkpoint_model.py",
+            "Tools/Performance/test_w5_apng_compressed_checkpoint_capture.py",
+        }
+        for path in paths
+    ):
+        phases.extend(
+            [
+                Phase(
+                    "w5-apng-compressed-checkpoint-model-core",
+                    (
+                        "python3",
+                        "Tools/Performance/test_w5_apng_compressed_checkpoint_model.py",
+                    ),
+                    120,
+                ),
+                Phase(
+                    "w5-apng-compressed-checkpoint-capture-contract",
+                    (
+                        "python3",
+                        "Tools/Performance/test_w5_apng_compressed_checkpoint_capture.py",
+                    ),
+                    120,
+                ),
+            ]
+        )
+    if any(
+        path in {
+            "Tools/Performance/capture_w5_apng_compressed_checkpoint_interop.py",
+            "Tools/Performance/validate_w5_apng_compressed_checkpoint_interop.py",
+            "Tools/Performance/test_w5_apng_compressed_checkpoint_interop.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-apng-compressed-checkpoint-interop-contract",
+                (
+                    "python3",
+                    "Tools/Performance/test_w5_apng_compressed_checkpoint_interop.py",
+                ),
+                180,
+            )
+        )
+    if any(
+        path in {
+            "Tools/Performance/capture_w5_apng_owned_swift_playback.py",
+            "Tools/Performance/validate_w5_apng_owned_swift_playback.py",
+            "Tools/Performance/test_w5_apng_owned_swift_playback.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-apng-owned-swift-playback-contract",
+                (
+                    "python3",
+                    "Tools/Performance/test_w5_apng_owned_swift_playback.py",
+                ),
+                180,
+            )
+        )
+    if any(
+        path in {
+            "Tools/Performance/capture_w5_apng_public_decoder_playback.py",
+            "Tools/Performance/validate_w5_apng_public_decoder_playback.py",
+            "Tools/Performance/test_w5_apng_public_decoder_playback.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-apng-public-decoder-playback-contract",
+                (
+                    "python3",
+                    "Tools/Performance/test_w5_apng_public_decoder_playback.py",
+                ),
+                180,
+            )
+        )
+    if any(
+        path in {
+            "Tools/Performance/capture_w5_apng_public_decoder_mac_performance.py",
+            "Tools/Performance/validate_w5_apng_public_decoder_mac_performance.py",
+            "Tools/Performance/test_w5_apng_public_decoder_mac_performance.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-apng-public-decoder-mac-performance-contract",
+                (
+                    "python3",
+                    "Tools/Performance/test_w5_apng_public_decoder_mac_performance.py",
+                ),
+                180,
+            )
+        )
+    if any(
+        path in {
+            "Tools/Performance/capture_w5_apng_imageio_cache_divergence.py",
+            "Tools/Performance/validate_w5_apng_imageio_cache_divergence.py",
+            "Tools/Performance/test_w5_apng_imageio_cache_divergence.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-apng-imageio-cache-divergence-contract",
+                (
+                    "python3",
+                    "Tools/Performance/test_w5_apng_imageio_cache_divergence.py",
+                ),
+                180,
+            )
+        )
+    if any(
+        path.startswith("Sources/FoveaUIKit/")
+        or path in {
+            "docs/public-api-budget.json",
+            "scripts/check-foveauikit-api-budget.py",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "foveauikit-api-budget",
+                ("python3", "scripts/check-foveauikit-api-budget.py"),
+                120,
+            )
+        )
+    if any(
+        path.startswith("Tools/AnimationAdapterQualification/")
+        or path in {
+            "Sources/FoveaCore/PipelineFailure+ImageCraft.swift",
+            "Benchmarks/ComparativeLab/animated-player-mechanism-plan.json",
+            "docs/research/w5-imagecraft-animation-adapter-qualification-2026-08.json",
+        }
+        for path in paths
+    ):
+        phases.append(
+            Phase(
+                "w5-imagecraft-animation-adapter-contract",
+                (
+                    "python3",
+                    "Tools/AnimationAdapterQualification/test_imagecraft_animation_adapter_qualification.py",
+                ),
+                300,
+            )
+        )
+    if any(
         path in {
             "scripts/check-tooling-syntax.py",
             "scripts/run-verification-profile.py",
         }
         for path in paths
     ):
+        phases.extend(
+            [
+                Phase(
+                    "tooling-contract",
+                    ("python3", "scripts/check-tooling-syntax.py", "--quick"),
+                    120,
+                ),
+                Phase(
+                    "candidate-baseline-contract",
+                    ("python3", "scripts/test-verification-candidate-baseline.py"),
+                    120,
+                ),
+            ]
+        )
+    if any(
+        path in {
+            "scripts/component_candidate_sandbox.py",
+            "scripts/test-component-candidate-sandbox.py",
+            "scripts/verify-component-candidate-clean-copy.py",
+            "scripts/run-verification-profile.py",
+        }
+        for path in paths
+    ):
         phases.append(
             Phase(
-                "tooling-contract",
-                ("python3", "scripts/check-tooling-syntax.py", "--quick"),
+                "component-candidate-sandbox-contract",
+                ("python3", "scripts/test-component-candidate-sandbox.py"),
                 120,
             )
         )
@@ -394,6 +1033,16 @@ def static_phases(include_docs: bool) -> list[Phase]:
         Phase("architecture", ("python3", "scripts/check-architecture-boundaries.py"), 120),
         Phase("component-pins", ("python3", "scripts/check-component-pins.py"), 120),
         Phase(
+            "imagecraft-animation-pin-readiness",
+            ("python3", "scripts/check-imagecraft-animation-pin-readiness.py"),
+            120,
+        ),
+        Phase(
+            "imagecraft-animation-pin-readiness-contract",
+            ("python3", "scripts/test-imagecraft-animation-pin-readiness.py"),
+            120,
+        ),
+        Phase(
             "cross-repository-conformance-kits",
             ("python3", "scripts/check-cross-repository-conformance-kits.py"),
             120,
@@ -409,6 +1058,148 @@ def static_phases(include_docs: bool) -> list[Phase]:
             180,
         ),
         Phase("tooling-contract", ("python3", "scripts/check-tooling-syntax.py"), 240),
+        Phase(
+            "animated-image-library-registry",
+            ("python3", "scripts/check-animated-image-library-registry.py"),
+            120,
+        ),
+        Phase(
+            "w5-animated-codec-identity-contract",
+            ("python3", "Tools/Performance/test_w5_animated_codec_identity.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-composition-oracle-contract",
+            ("python3", "Tools/Performance/test_w5_apng_composition_oracle.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-reference-core",
+            ("python3", "Tools/Performance/test_w5_apng_reference.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-reference-capture-contract",
+            ("python3", "Tools/Performance/test_w5_apng_reference_capture.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-checkpoint-model-core",
+            ("python3", "Tools/Performance/test_w5_apng_checkpoint_model.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-checkpoint-capture-contract",
+            ("python3", "Tools/Performance/test_w5_apng_checkpoint_capture.py"),
+            120,
+        ),
+        Phase(
+            "w5-animated-simulator-runner-contract",
+            ("python3", "scripts/test-w5-animated-simulator-runner.py"),
+            120,
+        ),
+        Phase(
+            "w5-appkit-display-link-capture-contract",
+            ("python3", "Tools/Performance/test_w5_appkit_display_link_capture.py"),
+            120,
+        ),
+        Phase(
+            "w5-appkit-callback-timing-capture-contract",
+            ("python3", "Tools/Performance/test_w5_appkit_callback_timing_capture.py"),
+            120,
+        ),
+        Phase(
+            "w5-appkit-refresh-timing-capture-contract",
+            ("python3", "Tools/Performance/test_w5_appkit_refresh_timing_capture.py"),
+            120,
+        ),
+        Phase(
+            "w5-appkit-resource-proxy-capture-contract",
+            ("python3", "Tools/Performance/test_w5_appkit_resource_proxy_capture.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-semantic-replay-oracle",
+            (
+                "python3",
+                "Tools/Performance/test_w5_yyimage_semantic_replay_oracle.py",
+            ),
+            120,
+        ),
+        Phase(
+            "w5-apng-tile-checkpoint-model-core",
+            ("python3", "Tools/Performance/test_w5_apng_tile_checkpoint_model.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-tile-checkpoint-capture-contract",
+            ("python3", "Tools/Performance/test_w5_apng_tile_checkpoint_capture.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-compressed-checkpoint-model-core",
+            ("python3", "Tools/Performance/test_w5_apng_compressed_checkpoint_model.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-compressed-checkpoint-capture-contract",
+            ("python3", "Tools/Performance/test_w5_apng_compressed_checkpoint_capture.py"),
+            120,
+        ),
+        Phase(
+            "w5-apng-compressed-checkpoint-interop-contract",
+            ("python3", "Tools/Performance/test_w5_apng_compressed_checkpoint_interop.py"),
+            180,
+        ),
+        Phase(
+            "w5-apng-owned-swift-playback-contract",
+            ("python3", "Tools/Performance/test_w5_apng_owned_swift_playback.py"),
+            180,
+        ),
+        Phase(
+            "w5-apng-public-decoder-playback-contract",
+            ("python3", "Tools/Performance/test_w5_apng_public_decoder_playback.py"),
+            180,
+        ),
+        Phase(
+            "w5-apng-public-decoder-mac-performance-contract",
+            (
+                "python3",
+                "Tools/Performance/test_w5_apng_public_decoder_mac_performance.py",
+            ),
+            180,
+        ),
+        Phase(
+            "w5-apng-imageio-cache-divergence-contract",
+            (
+                "python3",
+                "Tools/Performance/test_w5_apng_imageio_cache_divergence.py",
+            ),
+            180,
+        ),
+        Phase(
+            "foveauikit-api-budget",
+            ("python3", "scripts/check-foveauikit-api-budget.py"),
+            120,
+        ),
+        Phase(
+            "w5-imagecraft-animation-adapter-contract",
+            (
+                "python3",
+                "Tools/AnimationAdapterQualification/test_imagecraft_animation_adapter_qualification.py",
+            ),
+            300,
+        ),
+        Phase(
+            "candidate-baseline-contract",
+            ("python3", "scripts/test-verification-candidate-baseline.py"),
+            120,
+        ),
+        Phase(
+            "component-candidate-sandbox-contract",
+            ("python3", "scripts/test-component-candidate-sandbox.py"),
+            120,
+        ),
         Phase("sensitive-material", ("python3", "scripts/check-sensitive-material.py"), 120),
         Phase("supply-chain", ("python3", "scripts/check-supply-chain.py"), 180),
         Phase("swift-format", ("python3", "scripts/lint-fovea-swift-format.py"), 180),
@@ -425,8 +1216,9 @@ def static_phases(include_docs: bool) -> list[Phase]:
 
 
 def run_phase(phase: Phase, env: dict[str, str]) -> PhaseResult:
-    ARTIFACTS.mkdir(parents=True, exist_ok=True)
-    log_path = ARTIFACTS / f"{phase.name}.log"
+    artifacts = active_artifacts()
+    artifacts.mkdir(parents=True, exist_ok=True)
+    log_path = artifacts / f"{phase.name}.log"
     started = time.monotonic()
     process: subprocess.Popen[str] | None = None
     spawn_error: OSError | None = None
@@ -497,18 +1289,26 @@ def phase_plan(profile: str, impact: dict[str, object]) -> tuple[str, list[Phase
             for path in impact["changedFiles"]
         )
     )
-    if profile == "iteration" and iteration_requires_smart:
+    if effective == "iteration" and iteration_requires_smart:
         effective = "smart"
         reasons.append("iteration change requires broader smart verification")
-    if profile == "smart" and ("unknown" in categories or "unknown-tooling" in categories):
+    if effective == "smart" and ("unknown" in categories or "unknown-tooling" in categories):
         effective = "premerge"
         reasons.append("unknown change path escalated to premerge")
-    if profile == "smart" and "deleted" in categories:
+    if effective == "smart" and "deleted" in categories:
         effective = "premerge"
         reasons.append("deleted path escalated to premerge")
 
     phases: list[Phase] = []
     include_docs = effective != "smart" or "docs" in categories or "governance" in categories
+    if effective in {"premerge", "release"}:
+        phases.append(
+            Phase(
+                "verification-capacity",
+                ("python3", "scripts/check-verification-capacity.py"),
+                60,
+            )
+        )
     if effective == "iteration":
         phases.extend(iteration_static_phases(impact))
     else:
@@ -681,16 +1481,22 @@ def write_report(
     started: float,
     source_before: SourceState,
     source_after: SourceState,
+    candidate_baseline: dict[str, object] | None = None,
 ) -> Path:
-    ARTIFACTS.mkdir(parents=True, exist_ok=True)
+    artifacts = active_artifacts()
+    artifacts.mkdir(parents=True, exist_ok=True)
     source_unchanged = source_before == source_after
     phases_passed = all(item.return_code == 0 for item in results)
+    run_id = artifacts.name if _RUN_ARTIFACTS is not None else None
     report = {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "runID": run_id,
+        "artifactDirectory": str(artifacts.relative_to(ROOT)),
         "requestedProfile": requested,
         "effectiveProfile": effective,
         "verificationBase": verification_base,
+        "candidateBaseline": candidate_baseline,
         "headCommit": source_after.head_commit,
         "verifiedTree": source_after.working_tree,
         "dirty": source_after.dirty,
@@ -706,12 +1512,22 @@ def write_report(
                 "returnCode": item.return_code,
                 "elapsedSeconds": round(item.elapsed_seconds, 3),
                 "log": item.log,
+                "logByteCount": (ROOT / item.log).stat().st_size,
+                "logSha256": file_sha256(ROOT / item.log),
             }
             for item in results
         ],
     }
-    path = ARTIFACTS / "latest.json"
-    path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+    validate_report_artifacts(report)
+    path = artifacts / ("report.json" if _RUN_ARTIFACTS is not None else "latest.json")
+    atomic_write_json(path, report)
+    if json.loads(path.read_text()) != report:
+        raise RuntimeError("verification run report failed its write-back check")
+    if _RUN_ARTIFACTS is not None:
+        latest = ARTIFACTS / "latest.json"
+        atomic_write_json(latest, report)
+        if latest.read_bytes() != path.read_bytes():
+            raise RuntimeError("latest verification report differs from its run report")
     return path
 
 
@@ -719,18 +1535,52 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run a bounded Fovea verification profile.")
     parser.add_argument("--profile", choices=PROFILE_CHOICES, default="smart")
     parser.add_argument("--base", default=os.environ.get("FOVEA_VERIFY_BASE") or os.environ.get("FOVEA_BASE_COMMIT"))
+    parser.add_argument(
+        "--candidate-baseline",
+        default=os.environ.get("FOVEA_VERIFY_CANDIDATE_BASELINE"),
+        help="compute impact from a captured working-tree identity instead of HEAD",
+    )
+    parser.add_argument(
+        "--capture-candidate-baseline",
+        help="write the current HEAD and working-tree identity, then exit",
+    )
     parser.add_argument("--plan", action="store_true", help="print the impact plan without executing phases")
     args = parser.parse_args()
 
     started = time.monotonic()
     install_signal_handlers()
+    lock_descriptor: int | None = None
     try:
+        if args.capture_candidate_baseline:
+            source = source_state()
+            path = write_candidate_baseline(args.capture_candidate_baseline, source)
+            print(f"Captured Fovea candidate baseline: {repository_relative(path)}")
+            return 0
+        lock_descriptor = acquire_verification_lock()
+        run_artifacts = create_run_artifacts()
         source_before = source_state()
-        paths = changed_files(args.base)
+        baseline_record: dict[str, object] | None = None
+        if args.candidate_baseline:
+            baseline_path, baseline_payload = load_candidate_baseline(
+                args.candidate_baseline,
+                current_head=source_before.head_commit,
+            )
+            baseline_record = {
+                "path": str(repository_relative(baseline_path)),
+                "headCommit": baseline_payload["headCommit"],
+                "workingTree": baseline_payload["workingTree"],
+            }
+            paths = changed_files_between_trees(
+                str(baseline_payload["workingTree"]),
+                source_before.working_tree,
+            )
+        else:
+            paths = changed_files(args.base)
         impact = classify(paths)
         effective, phases, reasons = phase_plan(args.profile, impact)
-        ARTIFACTS.mkdir(parents=True, exist_ok=True)
-        (ARTIFACTS / "impact.json").write_text(json.dumps(impact, indent=2, sort_keys=True) + "\n")
+        atomic_write_json(run_artifacts / "impact.json", impact)
+        atomic_write_json(ARTIFACTS / "impact.json", impact)
+        print(f"Fovea verification run: {run_artifacts.name}")
         print(f"Fovea verification profile: requested={args.profile} effective={effective}")
         print(f"Changed files: {len(paths)}; categories={','.join(impact['categories']) or 'none'}")
         if reasons:
@@ -747,14 +1597,33 @@ def main() -> int:
             "python-syntax", "comparative-core-tests",
             "progressive-presentation-evidence",
         })
-        parallel = [phase for phase in phases if phase.name in static_names]
-        sequential = [phase for phase in phases if phase.name not in static_names]
-        results = run_parallel(parallel, env)
+        preflight = [phase for phase in phases if phase.name == "verification-capacity"]
+        parallel = [
+            phase for phase in phases
+            if phase.name in static_names and phase.name != "verification-capacity"
+        ]
+        sequential = [
+            phase for phase in phases
+            if phase.name not in static_names and phase.name != "verification-capacity"
+        ]
+        results: list[PhaseResult] = []
+        for phase in preflight:
+            result = run_phase(phase, env)
+            results.append(result)
+            if result.return_code != 0:
+                source_after = source_state()
+                report = write_report(
+                    args.profile, effective, args.base, impact, reasons, results, started,
+                    source_before, source_after, baseline_record,
+                )
+                print(f"Verification failed: {report.relative_to(ROOT)}", file=sys.stderr)
+                return 1
+        results.extend(run_parallel(parallel, env))
         if any(item.return_code != 0 for item in results):
             source_after = source_state()
             report = write_report(
                 args.profile, effective, args.base, impact, reasons, results, started,
-                source_before, source_after,
+                source_before, source_after, baseline_record,
             )
             print(f"Verification failed: {report.relative_to(ROOT)}", file=sys.stderr)
             return 1
@@ -766,7 +1635,7 @@ def main() -> int:
         source_after = source_state()
         report = write_report(
             args.profile, effective, args.base, impact, reasons, results, started,
-            source_before, source_after,
+            source_before, source_after, baseline_record,
         )
         if any(item.return_code != 0 for item in results) or source_after != source_before:
             print(f"Verification failed: {report.relative_to(ROOT)}", file=sys.stderr)
@@ -779,6 +1648,10 @@ def main() -> int:
     except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as error:
         print(f"Verification planning failed: {error}", file=sys.stderr)
         return 1
+    finally:
+        reset_run_artifacts()
+        if lock_descriptor is not None:
+            release_verification_lock(lock_descriptor)
 
 
 if __name__ == "__main__":

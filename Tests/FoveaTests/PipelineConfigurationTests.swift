@@ -207,7 +207,7 @@ final class PipelineConfigurationTests: XCTestCase {
             appID: "tests"
         )
         let oldTask = Task { try await oldPipeline.image(for: request) }
-        try await Task.sleep(for: .milliseconds(10))
+        try await testSleep(.milliseconds(10))
 
         let newPipeline = FoveaPipeline(
             configuration: PipelineConfiguration(

@@ -76,8 +76,8 @@ if "profile:" not in verify_trigger:
     errors.append("verify: profile dispatch input is required")
 if "timeout-minutes: 15" not in verify:
     errors.append("verify: identity matrix must cap each architecture at 15 minutes")
-if "timeout-minutes: 60" not in verify:
-    errors.append("verify: full verification must retain a 60-minute hard ceiling")
+if "timeout-minutes: 120" not in verify:
+    errors.append("verify: full verification must retain a 120-minute hard ceiling")
 if "inputs.profile == 'identity' || inputs.profile == 'full'" in verify:
     errors.append("verify: full profile must not repeat the identity matrix")
 
@@ -92,7 +92,7 @@ else:
     for marker in (
         "manually dispatched only",
         "budget_approved: false",
-        "all 101 mutation applications",
+        "all 102 mutation applications",
         "Do not push a sequence of speculative root commits",
     ):
         if marker not in policy:

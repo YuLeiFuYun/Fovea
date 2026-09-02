@@ -1,5 +1,6 @@
 import AkashicMemory
 import XCTest
+
 @testable import FoveaCore
 
 final class MemoryCacheTests: XCTestCase {
@@ -150,6 +151,19 @@ final class MemoryCacheTests: XCTestCase {
         XCTAssertTrue(visited.contains(1))
         XCTAssertFalse(visited.contains(2))
         XCTAssertTrue(visited.contains(3))
+    }
+
+    func testCompactSieveCountLimitBoundsSmallEntryScan_CACHE_PT_063() {
+        let cache = FoveaCompactSieveCache<Int, Int>(costLimit: 1_000, countLimit: 4)
+
+        for key in 0..<20 {
+            cache.insert(key, for: key, cost: 1)
+            XCTAssertLessThanOrEqual(cache.count, 4)
+            XCTAssertLessThanOrEqual(cache.currentCost, 4)
+        }
+
+        XCTAssertEqual(cache.count, 4)
+        XCTAssertEqual(cache.currentCost, 4)
     }
 
     func testCompactSieveMatchesReferenceAcrossDeterministicTrace_CACHE_PT_047() {

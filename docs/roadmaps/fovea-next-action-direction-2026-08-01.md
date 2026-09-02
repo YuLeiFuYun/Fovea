@@ -7,7 +7,7 @@
 > 状态：Active execution direction
 > 适用范围：Fovea、ImageCraft、Akashic、跨仓 conformance、比较与发布证据
 > 继承：`docs/project-memory/long-horizon-roadmap.json` 的 P0-P9 机器骨架，不替代、不重编号既有阶段
-> 当前源状态：ImageCraft 与 Akashic 已公开、MIT、alpha-tagged、CI-green 且受 required check 保护；Fovea 已使用公共 exact pins，正在建立首个隐私净化公共根提交
+> 当前源状态：ImageCraft `0.1.0-alpha.8` 与 Akashic `0.1.0-alpha.7` 已公开、MIT、CI-green 且受 required check 保护，Fovea 以公共 exact pins 消费两者并已接入 production animation/eviction-report 路径。Fovea 公共根已存在；`0.1.0-alpha.1` 尚未发布，最终 clean candidate 的本地 qualification 与 fresh protected identity/full 仍是当前发布门。
 
 ## 1. 真正的核心问题
 
@@ -32,7 +32,7 @@
 - `ImageCraftImageIO`：Apple ImageIO/Core Graphics 参考实现；
 - 独立消费者、公共 API、平台矩阵、retained corpus、oracle、性能与 release-readiness 门。
 
-ImageCraft 当前公共提交 `bc93b8df0337d7a57779b53106dd744ad97b095e` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required CI，并以 `0.1.0-alpha.5` 标记。Fovea 通过公共 HTTPS exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy 通过。剩余缺口是真实独立 codec、hostile corpus 和真机资源证据。
+ImageCraft 当前唯一支持的生产 revision 是 `c16a868f1a1c0ed6b1a916ad082f762969ac5a7e`，以 `0.1.0-alpha.8` 发布并通过 required `core` CI。Fovea 通过公共 HTTPS exact revision 使用它，内嵌 target/source 已删除；`FoveaSystem` 现已编译 production `ImageCraftAnimationPlaybackPreparer`，把 ImageCraft 的 frame-window/whole-track cost contract 并入宿主全局 animation admission。普通稳定公开动画 API、真实独立 codec、hostile corpus、protected Fovea release 与物理设备资源证据仍未闭合。
 
 ### 2.2 缓存库也不需要从零拆分
 
@@ -42,7 +42,7 @@ ImageCraft 当前公共提交 `bc93b8df0337d7a57779b53106dd744ad97b095e` 是唯�
 - `AkashicMemory`：SIEVE 内存缓存；
 - `AkashicDisk`：stage/publish/discard、单 writer、恢复、损坏隔离和文件系统防御。
 
-Akashic 当前公共提交 `2715f23d50b5a17b7328be41608eaf1b1c99b0d6` 是唯一支持的 revision，已通过 GitHub Hosted `xcode-27` required `core` CI（run `30790047451`），并以 `0.1.0-alpha.5` 标记。Fovea 通过 typed adapter 和公共 exact revision 使用它，内嵌 target/source 已删除；当前 clean-copy、fault V5、resource V2 与平台构建证据通过。物理断电和稳定真机资源/能耗证据仍待完成。
+Akashic 当前唯一支持的生产 revision 是 `0376b960ec8abe54f2d4a9d7d66e97f395215eaf`，以 `0.1.0-alpha.7` 发布并通过 required `core` CI。Fovea 通过 typed adapter 和公共 exact revision 使用它，内嵌 target/source 已删除；当前开发线还消费 alpha.7 的动态 global-unassigned memory budget 与精确 eviction report 来同步 rendered-cache residency。历史 fault/resource/CacheLab V4 证据继续绑定其原始 revision，不能通过替换 SHA 重绑到 alpha.7；当前实现仍缺新的 formal performance、物理断电和稳定真机资源/能耗证据。
 
 ### 2.3 “整体帕累托优势”不能作为一个无条件目标
 
@@ -107,7 +107,7 @@ Akashic 当前公共提交 `2715f23d50b5a17b7328be41608eaf1b1c99b0d6` 是唯一�
 
 优先级从高到低：
 
-1. **发布 Fovea 隐私净化公共根，并让 required CI 全绿**；
+1. **完成 Fovea 首个 alpha release candidate，并让 protected required CI 全绿后发布 `0.1.0-alpha.1`**；
 2. **保持当前 exact pin、clean-copy 与 conformance registry 一致**；
 3. **建立独立 codec/storage conformance kits 与 qualified composition seam**；
 4. **完成 Akashic 物理断电、真机 I/O/能耗和 ImageCraft 真机资源证据**；
@@ -120,31 +120,31 @@ Akashic 当前公共提交 `2715f23d50b5a17b7328be41608eaf1b1c99b0d6` 是唯一�
 
 ### Gate 0：建立可迁移的干净基线（P0）
 
-状态：**当前组件边界已完成；Fovea 公共根待发布。**
+状态：**当前组件边界已完成；Fovea 公共根已存在，首个 alpha tag 与 protected full qualification 待完成。**
 
-已完成：本地历史 bundle、隐私净化、MIT 边界、公共 exact pins、`Package.resolved`、零 sibling 依赖 clean-copy、475 项宿主回归。当前退出条件只剩 Fovea 根提交、公共 CI 与后续提交可执行源码回退。
+已完成：本地历史 bundle、隐私净化、MIT 边界、公共 exact pins、`Package.resolved`、零 sibling 依赖 clean-copy 与公共仓库根。候选 `6cf6175c3c47de64fa9d60341de7e5cd71cd29b7` 已通过 exact 本地 qualification 和 hosted identity，但 full run `33505961407` 两次在 Workbench `ui-tests-core-shard-1` 失败；当前开发线已包含 terminal XCTest failure 诊断修复以及 alpha.8/alpha.7 生产集成。退出条件是形成新的 clean candidate，重新完成本地 qualification、fresh identity/full protected verification，并仅在成功后推进 main/tag。
 
 ### Workstream A：ImageCraft 正式发行与迁移（P1 → P2）
 
 状态：**本地与公共迁移完成。**
 
-- 公共 MIT 仓库、`0.1.0-alpha.4`、Hosted `xcode-27` required `core` check 已建立；
+- 公共 MIT 仓库、`0.1.0-alpha.8`、Hosted `xcode-27` required `core` check 已建立；
 - 公共 API、consumer、兼容与组件门在 GitHub CI 通过；
-- Fovea 只固定到 `bc93b8df0337d7a57779b53106dd744ad97b095e`；
+- Fovea 只固定到 `c16a868f1a1c0ed6b1a916ad082f762969ac5a7e`，并已编译 production ImageCraft animation preparer；
 - 内嵌源码已删除，宿主与 clean-copy 均为 475/475。
 
-剩余：真实独立 codec conformance、稳定真机 RSS/能耗和格式范围扩展证据。
+剩余：普通稳定公开动画 API 的产品化边界、真实独立 codec conformance、稳定真机 RSS/能耗、同语义动画 comparator 与格式范围扩展证据。
 
 ### Workstream B：Akashic 正式发行与迁移（P4 → P5）
 
 状态：**本地与公共迁移完成。**
 
-- 公共 MIT 仓库、`0.1.0-alpha.5`、Hosted `xcode-27` required `core` check 已建立；
+- 公共 MIT 仓库、`0.1.0-alpha.7`、Hosted `xcode-27` required `core` check 已建立；
 - 55 项组件测试、fault V5、resource V2、崩溃/quota/contention/六项平台门和 GitHub CI 通过；
-- Fovea 只固定到 `2715f23d50b5a17b7328be41608eaf1b1c99b0d6`；
+- Fovea 只固定到 `0376b960ec8abe54f2d4a9d7d66e97f395215eaf`，并消费 exact eviction report 同步宿主 rendered-cache residency；
 - typed adapter 是唯一原编码持久化路径，内嵌源码已删除，当前宿主与 clean-copy 均为 478/478。
 
-剩余：跨仓 storage conformance、物理断电和稳定真机 I/O/能耗；flat-manifest 写放大已由 manifest v2 增量记录方案替代。
+剩余：跨仓 storage conformance 的最终 protected 证据、物理断电和稳定真机 I/O/能耗，以及 alpha.7 当前实现的新 formal performance campaign；历史 CacheLab V4 仍绑定 alpha.5。flat-manifest 写放大已由 manifest v2 增量记录方案替代。
 
 ### Workstream C：跨仓 conformance（P6）
 

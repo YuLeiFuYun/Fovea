@@ -107,6 +107,23 @@ package enum HTTPCachePolicy {
         return result
     }
 
+    package static func recordMatchesRequest(
+        _ record: RepresentationRecord,
+        requestHeaders: [String: String],
+        additionalSensitiveNames: Set<String>,
+        sensitiveFingerprints: [String: HeaderVariantFingerprint]
+    ) -> Bool {
+        guard record.disposition != .noStore,
+            let current = varySelection(
+                fieldNames: record.vary.fieldNames,
+                requestHeaders: requestHeaders,
+                additionalSensitiveNames: additionalSensitiveNames,
+                sensitiveFingerprints: sensitiveFingerprints
+            )
+        else { return false }
+        return current == record.vary
+    }
+
     package static func selectRecord(
         from candidates: [RepresentationRecord],
         requestHeaders: [String: String],
@@ -114,15 +131,12 @@ package enum HTTPCachePolicy {
         sensitiveFingerprints: [String: HeaderVariantFingerprint]
     ) -> RepresentationRecord? {
         let matching = candidates.filter { record in
-            guard record.disposition != .noStore,
-                let current = varySelection(
-                    fieldNames: record.vary.fieldNames,
-                    requestHeaders: requestHeaders,
-                    additionalSensitiveNames: additionalSensitiveNames,
-                    sensitiveFingerprints: sensitiveFingerprints
-                )
-            else { return false }
-            return current == record.vary
+            recordMatchesRequest(
+                record,
+                requestHeaders: requestHeaders,
+                additionalSensitiveNames: additionalSensitiveNames,
+                sensitiveFingerprints: sensitiveFingerprints
+            )
         }
 
         guard !matching.isEmpty else { return nil }

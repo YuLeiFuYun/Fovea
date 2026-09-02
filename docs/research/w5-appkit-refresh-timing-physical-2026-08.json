@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 1,
+  "studyID": "FOVEA-W5-APPKIT-REFRESH-SAMPLED-TIMING-PHYSICAL-2026-08",
+  "reviewedOn": "2026-08-07",
+  "status": "physical-mac-fixed-six-pairs-refresh-sampled-start-anchored-directional-green-no-release-ranking",
+  "formalClaimEligible": false,
+  "claimBoundary": [
+    "one physical arm64 Mac and one variable-delay synthetic Fovea source timeline only",
+    "comparison is Fovea targetTimestamp external scheduling versus Fovea automatic deadline scheduling, not a third-party player ranking",
+    "source-frame state is sampled from the same view-bound NSView.displayLink.timestamp coordinate for both modes; this is committed-frame refresh observation, not hardware pixel scanout timing",
+    "six fixed pairs use alternating order and no retry-until-success path",
+    "primary directional metrics are playback-start-anchored p95 absolute transition timing error and raw observed skipped source frames; maximum-FPS-derived missed/early counts are supplemental only",
+    "no energy, thermal, memory, startup, codec, cross-player, physical-iOS, or cross-platform superiority claim"
+  ],
+  "protocol": {
+    "configuration": "Release",
+    "pairCount": 6,
+    "pairOrder": "odd pairs external-then-deadline; even pairs deadline-then-external",
+    "retryPolicy": "none; all fixed runs are preserved",
+    "frameCount": 60,
+    "frameDurationsNanoseconds": [
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000,
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000,
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000,
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000,
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000,
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000,
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000,
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000,
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000,
+      20000000,
+      30000000,
+      50000000,
+      80000000,
+      120000000,
+      200000000
+    ],
+    "nominalLoopDurationNanoseconds": 5000000000,
+    "observerCoordinate": "NSView.displayLink callback timestamp; current committed source-frame index sampled before external mode offers the future targetTimestamp",
+    "externalClockRole": "the same view display link is observer plus targetTimestamp playback driver",
+    "deadlineClockRole": "the view display link is observer-only; AnimationPlaybackDriver remains automaticDeadlineLoop",
+    "playbackStartAnchor": "AnimationPlaybackDriver exact clock.now value retained package-internally and bound by W5_PT_148",
+    "actualRefreshCadenceRule": "record every positive display-link interval; do not infer actual cadence from NSScreen.maximumFramesPerSecond"
+  },
+  "sourceIdentity": {
+    "headCommit": "9137539f6222e7c3fa0ff098d531c3b45917b3c2",
+    "sourceTreeDigest": "7c4870ddb7c49fcc53c15d9d9e276159be8952976c0c978e5f39a0ca7591dcb2",
+    "includesWorkingTreeChanges": true,
+    "sourceUnchangedDuringCapture": true,
+    "executableSHA256": "a5494cd61834aee0adade108904d3985b9bda52a3727a9125976889098ca8a84",
+    "executableByteCount": 7083672
+  },
+  "environment": {
+    "activeProcessorCount": 8,
+    "architecture": "arm64",
+    "displayBackingScaleFactor": 2,
+    "displayMaximumFramesPerSecond": 120,
+    "operatingSystemVersion": "Version 27.0 (Build 26A5388g)",
+    "processorCount": 8
+  },
+  "artifact": {
+    "manifest": ".artifacts/performance/w5-appkit-refresh-timing-physical-v1/manifest.json",
+    "manifestSHA256": "aa5e241c294a03816df364ed1cd44c3b6f0f73c2c6a00fb5aa4612a11b2a4e59",
+    "status": "passed-fixed-six-pairs-no-retry",
+    "allValidationErrorsEmpty": true,
+    "allReturnCodesZero": true
+  },
+  "primaryResults": {
+    "external": {
+      "medianP95AbsoluteTimingErrorNanoseconds": 14102375,
+      "observedMedianRefreshIntervalsNanoseconds": [
+        16666625,
+        16666625,
+        16666625,
+        16666625,
+        16666625,
+        16666625
+      ],
+      "observedSkippedSourceFrameCounts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "p95AbsoluteTimingErrorsNanoseconds": [
+        26895209,
+        14843334,
+        45964417,
+        11746459,
+        11334459,
+        13361417
+      ],
+      "totalEarlyDeadlineCount": 0,
+      "totalMissedDeadlineCount": 229,
+      "totalObservedSkippedSourceFrameCount": 0,
+      "validRunCount": 6
+    },
+    "automaticDeadline": {
+      "medianP95AbsoluteTimingErrorNanoseconds": 75461355,
+      "observedMedianRefreshIntervalsNanoseconds": [
+        16666625,
+        16666625,
+        16666625,
+        16666625,
+        16666625,
+        16666625
+      ],
+      "observedSkippedSourceFrameCounts": [
+        16,
+        13,
+        10,
+        15,
+        13,
+        15
+      ],
+      "p95AbsoluteTimingErrorsNanoseconds": [
+        73552626,
+        78214626,
+        79287584,
+        71130500,
+        57011834,
+        77370084
+      ],
+      "totalEarlyDeadlineCount": 0,
+      "totalMissedDeadlineCount": 260,
+      "totalObservedSkippedSourceFrameCount": 82,
+      "validRunCount": 6
+    },
+    "allSixPairsExternalAnchoredP95NoWorse": true,
+    "allSixPairsExternalSkippedFramesNoWorse": true,
+    "directionalRefreshTimingNonRegressionAllPairs": true,
+    "externalTotalSkippedSourceFrames": 0,
+    "automaticDeadlineTotalSkippedSourceFrames": 82,
+    "externalMedianAnchoredP95Nanoseconds": 14102375,
+    "automaticDeadlineMedianAnchoredP95Nanoseconds": 75461355
+  },
+  "refreshCadenceObservation": {
+    "reportedMaximumFramesPerSecond": 120,
+    "externalMedianRefreshIntervalsNanoseconds": [
+      16666625,
+      16666625,
+      16666625,
+      16666625,
+      16666625,
+      16666625
+    ],
+    "automaticDeadlineMedianRefreshIntervalsNanoseconds": [
+      16666625,
+      16666625,
+      16666625,
+      16666625,
+      16666625,
+      16666625
+    ],
+    "observedMedianIntervalInterpretation": "all retained runs report 16,666,625 ns median intervals, approximately 60 Hz despite maximumFramesPerSecond=120; maximum-FPS-derived missed/early counts are therefore not a primary gate"
+  },
+  "supplementalResults": {
+    "firstObservationNormalized": {
+      "deadline": {
+        "medianP95AbsoluteTimingErrorNanoseconds": 66656875,
+        "observedMedianRefreshIntervalsNanoseconds": [
+          16666625,
+          16666625,
+          16666625,
+          16666625,
+          16666625,
+          16666625
+        ],
+        "observedSkippedSourceFrameCounts": [
+          16,
+          13,
+          10,
+          15,
+          13,
+          15
+        ],
+        "p95AbsoluteTimingErrorsNanoseconds": [
+          66665750,
+          66655000,
+          66658750,
+          49994625,
+          53321500,
+          69993125
+        ],
+        "totalEarlyDeadlineCount": 5,
+        "totalMissedDeadlineCount": 204,
+        "totalObservedSkippedSourceFrameCount": 82,
+        "validRunCount": 6
+      },
+      "external": {
+        "medianP95AbsoluteTimingErrorNanoseconds": 8342937,
+        "observedMedianRefreshIntervalsNanoseconds": [
+          16666625,
+          16666625,
+          16666625,
+          16666625,
+          16666625,
+          16666625
+        ],
+        "observedSkippedSourceFrameCounts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "p95AbsoluteTimingErrorsNanoseconds": [
+          20010000,
+          3340875,
+          33322500,
+          3342125,
+          3343375,
+          13342500
+        ],
+        "totalEarlyDeadlineCount": 63,
+        "totalMissedDeadlineCount": 13,
+        "totalObservedSkippedSourceFrameCount": 0,
+        "validRunCount": 6
+      }
+    },
+    "anchoredMissedEarlyCountsBoundary": "retained for diagnostic compatibility only; the primary directional gate excludes missed/early counts because the fixed 1/maxFPS tolerance is not the observed refresh period"
+  },
+  "rejectedMeasurementCoordinates": [
+    {
+      "artifact": ".artifacts/performance/w5-appkit-callback-timing-physical-v1/manifest.json",
+      "manifestSHA256": "c9e36aad85e550d7e81ad432cee5ea56d4ed3702e04dafee2a9ae83fa833db97",
+      "reason": "presenter commit callbacks mix future-target external timing with current/deadline timing and produced systematic early events; not a fair presentation-timing coordinate",
+      "negativeResult": "NEG-W5-APPKIT-COMMIT-CALLBACK-TIMING-COORDINATE-001"
+    },
+    {
+      "artifact": ".artifacts/performance/w5-appkit-refresh-timing-physical-v1-first-observation-normalized/manifest.json",
+      "manifestSHA256": "8aafd2973b985776ddf5780458202907e6d1549df2bd14435af471367d24b106",
+      "reason": "first-observation phase normalization leaves startup-to-first-refresh phase unbound and did not record actual per-refresh intervals; retained as an intermediate artifact, not the final timing claim",
+      "negativeResult": "NEG-W5-APPKIT-MAXFPS-AS-ACTUAL-REFRESH-PERIOD-001"
+    }
+  ],
+  "regressionTests": [
+    "W5_PT_142",
+    "W5_PT_143",
+    "W5_PT_144",
+    "W5_PT_145",
+    "W5_PT_146",
+    "W5_PT_147",
+    "W5_PT_148"
+  ],
+  "conclusion": {
+    "supported": "On this exact physical-Mac protocol, targetTimestamp external scheduling is directionally better than the automatic-deadline control on both preregistered primary metrics: every pair has no-worse start-anchored p95 transition timing error and no-worse skipped source frames; the six-run medians are 14,102,375 ns versus 75,461,355 ns and total skips are 0 versus 82.",
+    "notSupported": "This does not establish hardware scanout timing, energy or thermal non-inferiority, memory superiority, third-party player ranking, physical-iOS performance, released-product integration, or global Pareto dominance."
+  },
+  "nextGates": [
+    "retain refresh-timing capture contract in iteration/premerge/release verification",
+    "collect physical-Mac energy and thermal evidence in separate non-perturbing runs before a scheduler Pareto claim",
+    "run stable physical-iPhone timing/memory/offscreen/energy/thermal evidence when the device is online",
+    "publish and pin the exact ImageCraft animation revision before encoded-native production startup/ranking claims"
+  ]
+}

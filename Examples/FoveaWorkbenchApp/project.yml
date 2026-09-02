@@ -24,6 +24,11 @@ targets:
         excludes:
           - Resources
       - path: FoveaWorkbench/Resources
+        excludes:
+          - LocalMedia
+        buildPhase: resources
+      - path: FoveaWorkbench/Resources/LocalMedia
+        type: folder
         buildPhase: resources
     dependencies:
       - package: Fovea

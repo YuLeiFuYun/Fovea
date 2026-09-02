@@ -1,88 +1,174 @@
 {
-  "schemaVersion": 1,
-  "modelID": "FOVEA-DECODE-RESOURCE-COMPOSITION-MODEL-V1",
-  "status": "research-gate-active",
-  "currentImplementation": {
-    "strategy": "max-reported-totals",
-    "codePath": "component://ImageCraft/Sources/ImageCraftCore/ImageCodecContract.swift",
-    "codeFragment": "workingSetBytes: max(genericBytes, backendBytes)",
-    "claimBoundary": "admission-estimate-not-proven-complete-live-set"
-  },
   "cases": [
     {
-      "id": "complete-common-coverage",
-      "description": "Both reports cover the same complete physical live set; max is exact and sum double-counts.",
       "allocations": [
-        {"id": "output", "bytes": 80, "start": 0, "end": 2},
-        {"id": "scratch", "bytes": 40, "start": 0, "end": 1}
+        {
+          "bytes": 80,
+          "end": 2,
+          "id": "output",
+          "start": 0
+        },
+        {
+          "bytes": 40,
+          "end": 1,
+          "id": "scratch",
+          "start": 0
+        }
       ],
-      "genericCovers": ["output", "scratch"],
-      "backendCovers": ["output", "scratch"],
+      "backendCovers": [
+        "output",
+        "scratch"
+      ],
+      "description": "Both reports cover the same complete physical live set; max is exact and sum double-counts.",
       "expected": {
-        "truePeak": 120,
+        "maxClassification": "exact",
         "maxReported": 120,
         "sumReported": 240,
-        "unionReported": 120,
-        "maxClassification": "exact"
-      }
+        "truePeak": 120,
+        "unionReported": 120
+      },
+      "genericCovers": [
+        "output",
+        "scratch"
+      ],
+      "id": "complete-common-coverage"
     },
     {
-      "id": "disjoint-overlap",
-      "description": "Host surfaces and codec-private temporary storage overlap in time; max under-reports.",
       "allocations": [
-        {"id": "host-output", "bytes": 100, "start": 0, "end": 2},
-        {"id": "codec-temporary", "bytes": 80, "start": 0, "end": 1}
+        {
+          "bytes": 100,
+          "end": 2,
+          "id": "host-output",
+          "start": 0
+        },
+        {
+          "bytes": 80,
+          "end": 1,
+          "id": "codec-temporary",
+          "start": 0
+        }
       ],
-      "genericCovers": ["host-output"],
-      "backendCovers": ["codec-temporary"],
+      "backendCovers": [
+        "codec-temporary"
+      ],
+      "description": "Host surfaces and codec-private temporary storage overlap in time; max under-reports.",
       "expected": {
-        "truePeak": 180,
+        "maxClassification": "under",
         "maxReported": 100,
         "sumReported": 180,
-        "unionReported": 180,
-        "maxClassification": "under"
-      }
+        "truePeak": 180,
+        "unionReported": 180
+      },
+      "genericCovers": [
+        "host-output"
+      ],
+      "id": "disjoint-overlap"
     },
     {
-      "id": "partial-overlap",
-      "description": "Both reports include the output, while each also covers a distinct temporary allocation; max under-reports and sum over-reports.",
       "allocations": [
-        {"id": "output", "bytes": 100, "start": 0, "end": 2},
-        {"id": "host-temporary", "bytes": 30, "start": 0, "end": 1},
-        {"id": "codec-temporary", "bytes": 60, "start": 0, "end": 1}
+        {
+          "bytes": 100,
+          "end": 2,
+          "id": "output",
+          "start": 0
+        },
+        {
+          "bytes": 30,
+          "end": 1,
+          "id": "host-temporary",
+          "start": 0
+        },
+        {
+          "bytes": 60,
+          "end": 1,
+          "id": "codec-temporary",
+          "start": 0
+        }
       ],
-      "genericCovers": ["output", "host-temporary"],
-      "backendCovers": ["output", "codec-temporary"],
+      "backendCovers": [
+        "output",
+        "codec-temporary"
+      ],
+      "description": "Both reports include the output, while each also covers a distinct temporary allocation; max under-reports and sum over-reports.",
       "expected": {
-        "truePeak": 190,
+        "maxClassification": "under",
         "maxReported": 160,
         "sumReported": 290,
-        "unionReported": 190,
-        "maxClassification": "under"
-      }
+        "truePeak": 190,
+        "unionReported": 190
+      },
+      "genericCovers": [
+        "output",
+        "host-temporary"
+      ],
+      "id": "partial-overlap"
     },
     {
-      "id": "mutually-exclusive-branches",
-      "description": "Two allocations belong to non-overlapping phases; summation over-reports and max is exact.",
       "allocations": [
-        {"id": "host-branch", "bytes": 100, "start": 0, "end": 1},
-        {"id": "codec-branch", "bytes": 80, "start": 1, "end": 2}
+        {
+          "bytes": 100,
+          "end": 1,
+          "id": "host-branch",
+          "start": 0
+        },
+        {
+          "bytes": 80,
+          "end": 2,
+          "id": "codec-branch",
+          "start": 1
+        }
       ],
-      "genericCovers": ["host-branch"],
-      "backendCovers": ["codec-branch"],
+      "backendCovers": [
+        "codec-branch"
+      ],
+      "description": "Two allocations belong to non-overlapping phases; summation over-reports and max is exact.",
       "expected": {
-        "truePeak": 100,
+        "maxClassification": "exact",
         "maxReported": 100,
         "sumReported": 180,
-        "unionReported": 100,
-        "maxClassification": "exact"
-      }
+        "truePeak": 100,
+        "unionReported": 100
+      },
+      "genericCovers": [
+        "host-branch"
+      ],
+      "id": "mutually-exclusive-branches"
     }
   ],
+  "currentImplementation": {
+    "claimBoundary": "admission-estimate-not-proven-complete-live-set",
+    "codeFragment": "workingSetBytes: max(genericBytes, backendBytes)",
+    "codePath": "component://ImageCraft/Sources/ImageCraftCore/ImageCodecContract.swift",
+    "contractPrecondition": "backend workingSetBytes is a conservative total peak for the complete probe/request execution, not merely codec-private scratch bytes",
+    "exactImageCraftPin": "736d0fb75ec612082817ff782d25cb638cb8469e",
+    "hostPostDecodeChecks": [
+      "decoded dimensions and pixel count remain inside DecodeLimits",
+      "decoded dimensions do not exceed the requested target box",
+      "actual CGImage resident byte cost does not exceed the admitted complete-frame working-set bytes",
+      "decoded source-profile fact matches the validated probe source-profile fact"
+    ],
+    "progressiveStatus": {
+      "postDecodeChecks": [
+        "DecodeLimits",
+        "requested target box",
+        "single returned image resident bytes <= configured host hard limit"
+      ],
+      "preDecodePeakAdmission": "open: current ImageProgressiveDecodeSession contract exposes no per-session or per-generation resource estimate"
+    },
+    "strategy": "max-reported-totals"
+  },
+  "interpretation": {
+    "maxReportedTotals": "Safe only under the current contract precondition that each backend report is already a conservative total peak for the full decode execution. The disjoint/partial-overlap counterexamples demonstrate why max is unsound if a future contract reinterprets backendBytes as codec-private scratch.",
+    "nextContractTrigger": "If future codecs cannot conservatively express one total peak, evolve ImageCraftCore to versioned phase/coverage resource envelopes rather than summing or maxing ambiguous reports.",
+    "postDecodeValidation": "Catches returned-object contract violations and some estimate under-reporting, but cannot retroactively prevent a transient codec scratch peak that already occurred during decode."
+  },
+  "modelID": "FOVEA-DECODE-RESOURCE-COMPOSITION-MODEL-V1",
   "requiredWitnesses": {
-    "maxUnderReportCasesAtLeast": 2,
     "maxExactCasesAtLeast": 1,
-    "sumOverReportCasesAtLeast": 2,
-    "partialOverlapCaseRequired": true
-  }
+    "maxUnderReportCasesAtLeast": 2,
+    "partialOverlapCaseRequired": true,
+    "sumOverReportCasesAtLeast": 2
+  },
+  "schemaVersion": 1,
+  "status": "research-gate-active"
 }

@@ -168,7 +168,10 @@ final class ImageDecoderTests: XCTestCase {
         let tagged = try makeColorManagedPNG(
             colorSpace: try XCTUnwrap(CGColorSpace(name: CGColorSpace.displayP3))
         )
-        let data = try removingPNGChunks(["iCCP", "sRGB", "gAMA", "cHRM"], from: tagged)
+        let data = try removingPNGChunks(
+            ["iCCP", "cICP", "sRGB", "gAMA", "cHRM"],
+            from: tagged
+        )
         let decoder = ImageIOImageDecoder()
         let target = try TargetPixels(width: 16, height: 8)
         let first = try decoder.decode(data: data, target: target)
@@ -180,10 +183,13 @@ final class ImageDecoderTests: XCTestCase {
     }
 
     func testDownsamplePreservesEmbeddedP3Description_IMG_PT_006() throws {
-        let data = try makeColorManagedPNG(
-            width: 64,
-            height: 32,
-            colorSpace: try XCTUnwrap(CGColorSpace(name: CGColorSpace.displayP3))
+        let data = try removingPNGChunks(
+            ["cICP"],
+            from: makeColorManagedPNG(
+                width: 64,
+                height: 32,
+                colorSpace: try XCTUnwrap(CGColorSpace(name: CGColorSpace.displayP3))
+            )
         )
         let decoder = ImageIOImageDecoder()
         let probe = try decoder.probe(data: data, limits: .coreV1)
@@ -550,6 +556,334 @@ extension ImageDecoderTests {
         }
         XCTAssertEqual(decoder.snapshot(), .init(prepared: 1, discarded: 1, decoded: 0))
     }
+    func testDecodeStageRejectsCodecOutputThatExceedsRequestedTargetCodecPt012() async throws {
+        let decoder = try ContractOutputDecoder(
+            probe: ImageProbe(pixelWidth: 20, pixelHeight: 20, frameCount: 1, format: .png),
+            output: DecodedImage(cgImage: makeTestCGImage(width: 11, height: 10)),
+            backendWorkingSetBytes: 16 * 1024
+        )
+        let stage = DecodeStage(
+            codec: decoder,
+            limits: .coreV1,
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 1,
+            maximumDecodeWorkingSetBytes: 64 * 1024,
+            maximumQueuedDecodes: 1
+        )
+        let request = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/oversized-codec-output.png")),
+            target: TargetPixels(width: 10, height: 10),
+            appID: "codec-contract-tests"
+        )
+
+        do {
+            _ = try await stage.image(
+                from: Data([0]),
+                contentID: ContentID(data: Data([0])),
+                request: request,
+                generation: NamespaceGeneration(0),
+                keyDigest: String(repeating: "e", count: 64)
+            )
+            XCTFail("codec output larger than the requested target must fail closed")
+        } catch let failure as PipelineFailure {
+            XCTAssertEqual(failure.category, .internalFailure)
+            XCTAssertEqual(failure.stage, .decode)
+            XCTAssertEqual(failure.reasonCode, "codec-output-exceeds-target")
+        }
+    }
+
+    func testDecodeStageRejectsCodecOutputThatExceedsDecodeLimitsCodecPt013() async throws {
+        let decoder = try ContractOutputDecoder(
+            probe: ImageProbe(pixelWidth: 8, pixelHeight: 8, frameCount: 1, format: .png),
+            output: DecodedImage(cgImage: makeTestCGImage(width: 9, height: 8)),
+            backendWorkingSetBytes: 16 * 1024
+        )
+        let stage = DecodeStage(
+            codec: decoder,
+            limits: DecodeLimits(
+                maximumEncodedBytes: 1_024,
+                maximumDimension: 8,
+                maximumPixelCount: 64,
+                maximumFrameCount: 1,
+                maximumMetadataBytes: 0,
+                maximumAuxiliaryAttachments: 0,
+                allowedFormats: [.png]
+            ),
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 1,
+            maximumDecodeWorkingSetBytes: 64 * 1024,
+            maximumQueuedDecodes: 1
+        )
+        let request = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/limit-violating-codec-output.png")),
+            target: TargetPixels(width: 10, height: 10),
+            appID: "codec-contract-tests"
+        )
+
+        do {
+            _ = try await stage.image(
+                from: Data([0]),
+                contentID: ContentID(data: Data([0])),
+                request: request,
+                generation: NamespaceGeneration(0),
+                keyDigest: String(repeating: "1", count: 64)
+            )
+            XCTFail("codec output must remain inside host DecodeLimits")
+        } catch let failure as PipelineFailure {
+            XCTAssertEqual(failure.category, .internalFailure)
+            XCTAssertEqual(failure.stage, .decode)
+            XCTAssertEqual(failure.reasonCode, "codec-output-exceeds-decode-limits")
+        }
+    }
+
+    func testDecodeStageRejectsCodecOutputThatExceedsAdmittedWorkingSetCodecPt014() async throws {
+        let output = DecodedImage(
+            cgImage: try makeTestCGImage(width: 10, height: 10, bytesPerRow: 4_096)
+        )
+        XCTAssertEqual(output.estimatedByteCost, 40_960)
+        let decoder = try ContractOutputDecoder(
+            probe: ImageProbe(pixelWidth: 10, pixelHeight: 10, frameCount: 1, format: .png),
+            output: output,
+            backendWorkingSetBytes: 1_200
+        )
+        let stage = DecodeStage(
+            codec: decoder,
+            limits: .coreV1,
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 1,
+            maximumDecodeWorkingSetBytes: 64 * 1024,
+            maximumQueuedDecodes: 1
+        )
+        let request = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/underestimated-codec-output.png")),
+            target: TargetPixels(width: 10, height: 10),
+            appID: "codec-contract-tests"
+        )
+
+        do {
+            _ = try await stage.image(
+                from: Data([0]),
+                contentID: ContentID(data: Data([0])),
+                request: request,
+                generation: NamespaceGeneration(0),
+                keyDigest: String(repeating: "f", count: 64)
+            )
+            XCTFail("actual resident output bytes must fit inside the admitted working set")
+        } catch let failure as PipelineFailure {
+            XCTAssertEqual(failure.category, .internalFailure)
+            XCTAssertEqual(failure.stage, .decode)
+            XCTAssertEqual(failure.reasonCode, "codec-output-exceeds-admitted-working-set")
+        }
+    }
+
+    func testDecodeStageRejectsCodecOutputWithMismatchedSourceProfileCodecPt015() async throws {
+        let decoder = try ContractOutputDecoder(
+            probe: ImageProbe(
+                pixelWidth: 10,
+                pixelHeight: 10,
+                frameCount: 1,
+                format: .png,
+                sourceColorProfile: .standardSRGB
+            ),
+            output: DecodedImage(
+                cgImage: makeTestCGImage(width: 10, height: 10),
+                sourceColorProfile: .unknown
+            ),
+            backendWorkingSetBytes: 1_200
+        )
+        let stage = DecodeStage(
+            codec: decoder,
+            limits: .coreV1,
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 1,
+            maximumDecodeWorkingSetBytes: 64 * 1024,
+            maximumQueuedDecodes: 1
+        )
+        let request = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/profile-violating-codec-output.png")),
+            target: TargetPixels(width: 10, height: 10),
+            appID: "codec-contract-tests"
+        )
+
+        do {
+            _ = try await stage.image(
+                from: Data([0]),
+                contentID: ContentID(data: Data([0])),
+                request: request,
+                generation: NamespaceGeneration(0),
+                keyDigest: String(repeating: "2", count: 64)
+            )
+            XCTFail("codec output must preserve the source profile fact advertised by the probe")
+        } catch let failure as PipelineFailure {
+            XCTAssertEqual(failure.category, .internalFailure)
+            XCTAssertEqual(failure.stage, .decode)
+            XCTAssertEqual(failure.reasonCode, "codec-output-source-profile-mismatch")
+        }
+    }
+
+    func testProgressiveDecodeRejectsPreviewThatExceedsWorkingSetLimitCodecPt017() async throws {
+        let output = DecodedImage(
+            cgImage: try makeTestCGImage(width: 10, height: 10, bytesPerRow: 4_096)
+        )
+        let decoder = ContractProgressiveOutputDecoder(output: output)
+        let stage = DecodeStage(
+            codec: decoder,
+            limits: .coreV1,
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 1,
+            maximumDecodeWorkingSetBytes: 4_096,
+            maximumQueuedDecodes: 1
+        )
+        let request = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/progressive-resident-output.png")),
+            target: TargetPixels(width: 10, height: 10),
+            appID: "codec-contract-tests"
+        )
+        let session = try XCTUnwrap(stage.makeProgressiveSession(for: request, format: .jpeg))
+
+        do {
+            _ = try await stage.appendProgressive(
+                Data([1, 2, 3]), to: session, for: request
+            )
+            XCTFail("progressive output resident bytes must remain below the host hard limit")
+        } catch let failure as PipelineFailure {
+            XCTAssertEqual(failure.category, .internalFailure)
+            XCTAssertEqual(failure.stage, .decode)
+            XCTAssertEqual(
+                failure.reasonCode,
+                "codec-progressive-output-exceeds-working-set-limit"
+            )
+        }
+    }
+
+    func testProgressiveDecodeRejectsPreviewThatExceedsRequestedTargetCodecPt016() async throws {
+        let decoder = ContractProgressiveOutputDecoder(
+            output: DecodedImage(cgImage: try makeTestCGImage(width: 11, height: 10))
+        )
+        let stage = DecodeStage(
+            codec: decoder,
+            limits: .coreV1,
+            diagnostics: NullDiagnosticsSink(),
+            maximumConcurrentDecodes: 1,
+            maximumDecodeWorkingSetBytes: 64 * 1024,
+            maximumQueuedDecodes: 1
+        )
+        let request = try ImageRequest.publicImage(
+            url: XCTUnwrap(URL(string: "https://example.test/progressive-output.png")),
+            target: TargetPixels(width: 10, height: 10),
+            appID: "codec-contract-tests"
+        )
+        let session = try XCTUnwrap(stage.makeProgressiveSession(for: request, format: .jpeg))
+
+        do {
+            _ = try await stage.appendProgressive(
+                Data([1, 2, 3]), to: session, for: request
+            )
+            XCTFail("oversized progressive pixels must not be published")
+        } catch let failure as PipelineFailure {
+            XCTAssertEqual(failure.category, .internalFailure)
+            XCTAssertEqual(failure.stage, .decode)
+            XCTAssertEqual(failure.reasonCode, "codec-output-exceeds-target")
+        }
+    }
+
+}
+
+private final class ContractProgressiveOutputDecoder:
+    ImageCodec, ProgressiveImageDecoding, Sendable
+{
+    let codecDescriptor = ImageCodecDescriptor(
+        identifier: ImageCodecIdentifier(rawValue: "test.contract-progressive-output"),
+        implementationVersion: 1,
+        capabilities: ImageCodecCapabilities(
+            formats: [.jpeg],
+            deliveryModes: [.completeFrame, .progressiveGenerations],
+            progressiveFormats: [.jpeg],
+            trackModes: [.primaryFrame],
+            metadata: [.orientation, .sourceColorProfile],
+            dynamicRanges: [.standard],
+            outputRepresentations: [.coreGraphicsImage],
+            cancellationMode: .operationBoundary
+        )
+    )
+    private let output: DecodedImage
+
+    init(output: DecodedImage) { self.output = output }
+
+    func probe(data _: Data, limits _: DecodeLimits) throws -> ImageProbe {
+        try ImageProbe(pixelWidth: 20, pixelHeight: 20, frameCount: 1, format: .jpeg)
+    }
+
+    func decode(
+        data _: Data,
+        probe _: ImageProbe,
+        request _: ImageDecodeRequest,
+        limits _: DecodeLimits
+    ) throws -> DecodedImage { output }
+
+    func resourceEstimate(
+        probe _: ImageProbe, request _: ImageDecodeRequest
+    ) throws -> ImageDecodeResourceEstimate {
+        try ImageDecodeResourceEstimate(workingSetBytes: 16 * 1024)
+    }
+
+    func makeProgressiveSession(
+        format: EncodedImageFormat,
+        request _: ImageDecodeRequest,
+        limits _: DecodeLimits
+    ) throws -> any ImageProgressiveDecodeSession {
+        guard format == .jpeg else { throw ImageCraftError.progressiveDecodingUnsupported }
+        return Session(output: output)
+    }
+
+    private final class Session: ImageProgressiveDecodeSession, Sendable {
+        private let output: DecodedImage
+
+        init(output: DecodedImage) { self.output = output }
+        var receivedByteCount: Int { 0 }
+
+        func append(_ chunk: Data) throws -> ImageProgressiveDecodeGeneration? {
+            ImageProgressiveDecodeGeneration(
+                image: output, generation: 1, sourceByteCount: chunk.count
+            )
+        }
+
+        func finish() throws {}
+        func cancel() {}
+    }
+}
+
+private final class ContractOutputDecoder: ImageCodec, Sendable {
+    let codecDescriptor = ImageCodecDescriptor(
+        identifier: ImageCodecIdentifier(rawValue: "test.contract-output"),
+        implementationVersion: 1,
+        capabilities: .foveaTestBaseline
+    )
+    private let expectedProbe: ImageProbe
+    private let output: DecodedImage
+    private let backendWorkingSetBytes: Int
+
+    init(probe: ImageProbe, output: DecodedImage, backendWorkingSetBytes: Int) throws {
+        self.expectedProbe = probe
+        self.output = output
+        self.backendWorkingSetBytes = backendWorkingSetBytes
+    }
+
+    func probe(data _: Data, limits _: DecodeLimits) throws -> ImageProbe { expectedProbe }
+
+    func decode(
+        data _: Data,
+        probe _: ImageProbe,
+        request _: ImageDecodeRequest,
+        limits _: DecodeLimits
+    ) throws -> DecodedImage { output }
+
+    func resourceEstimate(
+        probe _: ImageProbe,
+        request _: ImageDecodeRequest
+    ) throws -> ImageDecodeResourceEstimate {
+        try ImageDecodeResourceEstimate(workingSetBytes: backendWorkingSetBytes)
+    }
 }
 
 private final class ContractTestPreparedDecoder: PreparedImageDecoding,
@@ -826,14 +1160,37 @@ private func makePNGWithTextMetadata(payloadBytes: Int) throws -> Data {
     guard let iend = data.range(of: iendSignature)?.lowerBound else {
         throw ImageFixtureError.creationFailed
     }
-    var chunk = Data()
-    let length = UInt32(payloadBytes).bigEndian
-    withUnsafeBytes(of: length) { chunk.append(contentsOf: $0) }
-    chunk.append(contentsOf: Data("tEXt".utf8))
-    chunk.append(Data(repeating: 65, count: payloadBytes))
-    chunk.append(Data(repeating: 0, count: 4))
+    let payload = Data(repeating: 65, count: payloadBytes)
+    let chunk = makePNGChunk(type: "tEXt", payload: payload)
     data.insert(contentsOf: chunk, at: iend)
     return data
+}
+
+private func makePNGChunk(type: String, payload: Data) -> Data {
+    precondition(type.utf8.count == 4)
+    let typeData = Data(type.utf8)
+    var chunk = Data()
+    var length = UInt32(payload.count).bigEndian
+    withUnsafeBytes(of: &length) { chunk.append(contentsOf: $0) }
+    chunk.append(typeData)
+    chunk.append(payload)
+
+    var crcInput = typeData
+    crcInput.append(payload)
+    var crc = pngCRC32(crcInput).bigEndian
+    withUnsafeBytes(of: &crc) { chunk.append(contentsOf: $0) }
+    return chunk
+}
+
+private func pngCRC32(_ data: Data) -> UInt32 {
+    var crc = UInt32.max
+    for byte in data {
+        crc ^= UInt32(byte)
+        for _ in 0..<8 {
+            crc = (crc & 1) == 0 ? crc >> 1 : (crc >> 1) ^ 0xedb8_8320
+        }
+    }
+    return ~crc
 }
 
 private func makeAnimatedGIF() throws -> Data {
@@ -874,8 +1231,12 @@ private func makeOrientedJPEG(
     return data as Data
 }
 
-private func makeTestCGImage(width: Int, height: Int) throws -> CGImage {
-    let bytesPerRow = width * 4
+private func makeTestCGImage(
+    width: Int,
+    height: Int,
+    bytesPerRow explicitBytesPerRow: Int? = nil
+) throws -> CGImage {
+    let bytesPerRow = explicitBytesPerRow ?? width * 4
     let bytes = Data(repeating: 127, count: bytesPerRow * height)
     guard let provider = CGDataProvider(data: bytes as CFData),
         let image = CGImage(

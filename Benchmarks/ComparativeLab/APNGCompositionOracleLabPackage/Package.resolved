@@ -1,0 +1,15 @@
+{
+  "originHash" : "482d16210c1f284dbec01a3285934e33c9badb1799d1d88de20252be5f0147d7",
+  "pins" : [
+    {
+      "identity" : "delegate",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/onevcat/Delegate.git",
+      "state" : {
+        "revision" : "ec3014ca2621c717f758d8718ec90e84b6e774b3",
+        "version" : "1.3.0"
+      }
+    }
+  ],
+  "version" : 3
+}

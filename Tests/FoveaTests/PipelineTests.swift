@@ -418,6 +418,30 @@ final class PipelineTests: XCTestCase {
         XCTAssertNotNil(preservedRecord)
     }
 
+    func testLiveTransportWithoutProgressOnlyCapabilityFailsClosed() async throws {
+        let (pipeline, _, _, _) = try await makePipeline(stubs: [])
+        let request = try TransportRequest(
+            request: URLRequest(
+                url: try XCTUnwrap(URL(string: "https://example.test/unsupported-live.mjpeg"))
+            ),
+            maximumBytes: 1_024,
+            memoryThreshold: 128
+        )
+
+        do {
+            _ = try await pipeline.executeMultipartJPEGLiveTransport(
+                request,
+                priority: .normal,
+                keyDigest: "unsupported-live"
+            )
+            XCTFail("Transport without progress-only execution unexpectedly started live playback")
+        } catch let failure as PipelineFailure {
+            XCTAssertEqual(failure.category, .resourceLimit)
+            XCTAssertEqual(failure.stage, .transport)
+            XCTAssertEqual(failure.reasonCode, "live-progress-transport-unsupported")
+        }
+    }
+
     func testCancellationDuringDecodeDoesNotCommitCache() async throws {
         let root = try makeTemporaryDirectory()
         let body = try makePNG()
@@ -1330,7 +1354,7 @@ private actor CountingSlowImageTransformer: ImageTransforming {
 
     func transform(_ image: DecodedImage) async throws -> DecodedImage {
         transformCount += 1
-        try await Task.sleep(for: .milliseconds(50))
+        try await testSleep(.milliseconds(50))
         return image
     }
 }

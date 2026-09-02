@@ -227,7 +227,7 @@ final class URLSessionTransportTests: XCTestCase {
             }
 
             for _ in 0..<200 where !FileManager.default.fileExists(atPath: ready.path) {
-                try await Task.sleep(for: .milliseconds(10))
+                try await testSleep(.milliseconds(10))
             }
             XCTAssertTrue(FileManager.default.fileExists(atPath: ready.path))
 
@@ -284,6 +284,40 @@ final class URLSessionTransportTests: XCTestCase {
             )
         ) { error in
             XCTAssertEqual(error as? TransportError, .invalidCredentialHeaderMetadata)
+        }
+    }
+
+    func testEmbeddedURLCredentialsFailBeforeTransportAndRedirect_G1_SECURITY_001() async throws {
+        let credentialURL = try XCTUnwrap(
+            URL(string: "https://user:secret@example.test/image.png")
+        )
+        XCTAssertFalse(HTTPURLSecurityPolicy.permits(credentialURL))
+
+        let transport = URLSessionTransport(configuration: .ephemeral)
+        do {
+            _ = try await transport.execute(
+                try TransportRequest(
+                    request: URLRequest(url: credentialURL),
+                    maximumBytes: 1_024
+                )
+            )
+            XCTFail("Embedded URL credentials must fail before URLSession task creation")
+        } catch let error as TransportError {
+            XCTAssertEqual(error, .destinationDisallowed)
+        }
+
+        let original = URLRequest(
+            url: try XCTUnwrap(URL(string: "https://example.test/start.png"))
+        )
+        let proposed = URLRequest(url: credentialURL)
+        XCTAssertThrowsError(
+            try HTTPRedirectPolicy.request(
+                original: original,
+                proposed: proposed,
+                additionalSensitiveNames: []
+            )
+        ) { error in
+            XCTAssertEqual(error as? TransportError, .insecureRedirect)
         }
     }
 
@@ -702,6 +736,80 @@ final class URLSessionTransportTests: XCTestCase {
         XCTAssertTrue(snapshot.dataByteCounts.isEmpty)
     }
 
+    func testProgressOnlyTransportHashesWithoutCreatingStaging_W5_PT_104() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [ChunkedURLProtocol.self]
+        let root = try makeTemporaryDirectory("url-session-progress-only")
+        let staging = root.appendingPathComponent("must-remain-absent", isDirectory: true)
+        let transport = URLSessionTransport(
+            configuration: configuration,
+            stagingDirectory: staging
+        )
+        let url = try XCTUnwrap(URL(string: "https://transport.example.test/progress-only"))
+        let expected = ChunkedURLProtocol.body(for: url)
+        let recorder = TransportProgressRecorder()
+        let completion = try await transport.executeProgressOnly(
+            try TransportRequest(
+                request: URLRequest(url: url),
+                maximumBytes: expected.count + 1,
+                memoryThreshold: 1,
+                credentialHeaderNames: [],
+                priority: .normal,
+                priorityController: TransportPriorityController(priority: .normal),
+                progressObserver: { recorder.record($0) }
+            )
+        )
+
+        let snapshot = recorder.snapshot()
+        XCTAssertEqual(completion.head.statusCode, 200)
+        XCTAssertEqual(completion.byteCount, expected.count)
+        XCTAssertEqual(completion.digestHex, ContentID(data: expected).digestHex)
+        XCTAssertEqual(completion.metrics.receivedBytes, expected.count)
+        XCTAssertFalse(completion.metrics.spilledToDisk)
+        XCTAssertEqual(snapshot.kinds.first, .response)
+        XCTAssertEqual(snapshot.kinds.last, .complete)
+        XCTAssertEqual(snapshot.dataByteCounts.last, expected.count)
+        XCTAssertEqual(snapshot.completionDigestHex, completion.digestHex)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: staging.path))
+    }
+
+    func testProgressOnlyTransportRejectsOversizedChunkBeforeDataPublication_W5_PT_105()
+        async throws
+    {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [OversizedChunkURLProtocol.self]
+        let root = try makeTemporaryDirectory("url-session-progress-only-limit")
+        let staging = root.appendingPathComponent("must-remain-absent", isDirectory: true)
+        let transport = URLSessionTransport(
+            configuration: configuration,
+            stagingDirectory: staging
+        )
+        let url = try XCTUnwrap(URL(string: "https://oversized-chunk.example.test/progress-only"))
+        let recorder = TransportProgressRecorder()
+
+        do {
+            _ = try await transport.executeProgressOnly(
+                try TransportRequest(
+                    request: URLRequest(url: url),
+                    maximumBytes: 1_024,
+                    memoryThreshold: 1,
+                    credentialHeaderNames: [],
+                    priority: .normal,
+                    priorityController: TransportPriorityController(priority: .normal),
+                    progressObserver: { recorder.record($0) }
+                )
+            )
+            XCTFail("Progress-only transport accepted an oversized chunk")
+        } catch let error as TransportError {
+            XCTAssertEqual(error, .bodyTooLarge)
+        }
+
+        let snapshot = recorder.snapshot()
+        XCTAssertEqual(snapshot.kinds, [.response])
+        XCTAssertTrue(snapshot.dataByteCounts.isEmpty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: staging.path))
+    }
+
     func testRedirectPolicyRejectsRemoteCleartextAndAllowsLoopback_SEC_CASE_033() throws {
         var original = URLRequest(
             url: try XCTUnwrap(URL(string: "https://secure.example.test/image.png"))
@@ -773,7 +881,7 @@ final class URLSessionTransportTests: XCTestCase {
         )
 
         router.unregister(taskID: 42)
-        try? await Task.sleep(for: .milliseconds(10))
+        try? await testSleep(.milliseconds(10))
         let removed = await router.redirectContext(for: 42)
         XCTAssertNil(removed, "A missing route must not widen an exact destination policy")
     }

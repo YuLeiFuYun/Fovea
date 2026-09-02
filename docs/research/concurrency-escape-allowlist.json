@@ -1,24 +1,26 @@
 {
-  "schemaVersion": 1,
   "allowlistID": "FOVEA-CONCURRENCY-ESCAPE-ALLOWLIST-V1",
-  "reviewedOn": "2026-08-04",
   "entries": [
     {
-      "path": "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift",
-      "kind": "unchecked-sendable",
+      "evidence": [
+        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift"
+      ],
       "expectedCount": 1,
+      "kind": "unchecked-sendable",
+      "path": "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift",
       "reason": "The demonstration URLProtocol is instantiated and called by Foundation across concurrency domains. Its mutable fixture and client-delivery state are serialized by its explicit lock/queue discipline and it is confined to the non-production Workbench example target.",
       "requiredTokens": [
         "@unchecked Sendable"
-      ],
-      "evidence": [
-        "Examples/FoveaWorkbenchApp/FoveaWorkbench/Networking/DemoURLProtocol.swift"
       ]
     },
     {
-      "path": "Sources/FoveaCore/AdaptiveEncodedWarmupCoordinator.swift",
-      "kind": "detached-task",
+      "evidence": [
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+        "Tests/FoveaTests/SwiftUIStateTests.swift"
+      ],
       "expectedCount": 1,
+      "kind": "detached-task",
+      "path": "Sources/FoveaCore/AdaptiveEncodedWarmupCoordinator.swift",
       "reason": "The actor deliberately starts a utility warmup whose lifetime is independent of the foreground caller. The actor owns the Task handle, bounds entries, exposes namespace/global cancellation, removes the entry on completion, and never lets warmup failure alter foreground semantics.",
       "requiredTokens": [
         "Task.detached(priority: .utility)",
@@ -26,86 +28,166 @@
         "maximumEntryCount",
         "cancelAll(namespace:",
         "private func finish(key: Key)"
-      ],
-      "evidence": [
-        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
-        "Tests/FoveaTests/SwiftUIStateTests.swift"
       ]
     },
     {
-      "path": "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift",
-      "kind": "unchecked-sendable",
+      "evidence": [
+        "Tests/FoveaTests/DerivedRasterCreationCoordinatorTests.swift",
+        "Tests/FoveaTests/DerivedRasterPersistenceTests.swift",
+        "docs/specifications/derived-raster-persistence-contract.md"
+      ],
       "expectedCount": 1,
+      "kind": "detached-task",
+      "path": "Sources/FoveaCore/DerivedRasterCreationCoordinator.swift",
+      "reason": "The package-only coordinator deliberately starts utility-priority derivation outside the foreground request. The actor inserts a bounded token entry before detached work can finish, then attaches an optional task handle without suspension. Exact-identity single-flight, synchronous publication-lease closure, token-matched cleanup and namespace/global cancellation prevent duplicate publication, ABA removal and post-revoke reachability.",
+      "requiredTokens": [
+        "Task.detached(priority: .utility)",
+        "var task: Task<Void, Never>?",
+        "maximumEntryCount",
+        "DerivedRasterPublicationLease",
+        "package func cancel(key:",
+        "package func cancelAll()",
+        "private func finish(keyDigest: String, token: UUID)"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift"
+      ],
+      "expectedCount": 1,
+      "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift",
       "reason": "The deterministic test clock is shared by concurrent test operations; its only mutable UInt64 is read and advanced under one NSLock, and the type is private to the test file.",
       "requiredTokens": [
         "TestMonotonicTimeSource",
         "private let lock = NSLock()",
         "defer { lock.unlock() }"
-      ],
-      "evidence": [
-        "Tests/FoveaTests/AdaptiveImageLoadAdmissionTests.swift"
       ]
     },
     {
-      "path": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
+      "path": "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift",
       "kind": "unchecked-sendable",
       "expectedCount": 1,
+      "reason": "RuntimeBlockingDecodeGate is a test-only cross-task barrier. Its entered/released state and all wait/signal transitions are serialized by one NSCondition, and the helper never escapes the test target.",
+      "requiredTokens": [
+        "RuntimeBlockingDecodeGate: @unchecked Sendable",
+        "private let condition = NSCondition()",
+        "condition.wait()",
+        "condition.broadcast()"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/AnimationPlaybackRuntimeTests.swift"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/AuthenticationRefreshTests.swift"
+      ],
+      "expectedCount": 1,
+      "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/AuthenticationRefreshTests.swift",
       "reason": "The credential-refresh test clock contains one mutable UInt64 and every read/write is serialized by one NSLock. It exists only to deterministically advance authentication expiry in tests.",
       "requiredTokens": [
         "CredentialTestMonotonicTimeSource",
         "private let lock = NSLock()",
         "defer { lock.unlock() }"
-      ],
-      "evidence": [
-        "Tests/FoveaTests/AuthenticationRefreshTests.swift"
       ]
     },
     {
-      "path": "Tests/FoveaTests/ImageDecoderTests.swift",
+      "path": "Tests/FoveaTests/DerivedRasterContainerTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 2,
+      "reason": "The derived-raster concurrency test uses two private wrappers only to cross task boundaries: ConcurrentCGImageBox publishes one immutable CGImage reference after construction, while ConcurrentDrawResult serializes its sole mutable failure slot with one NSLock. Neither wrapper is production code.",
+      "requiredTokens": [
+        "ConcurrentCGImageBox: @unchecked Sendable",
+        "let image: CGImage",
+        "ConcurrentDrawResult: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var storedFailure: String?"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/DerivedRasterContainerTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/FoveaSystemPipelineTests.swift",
       "kind": "unchecked-sendable",
       "expectedCount": 1,
+      "reason": "PressureFallbackRenderedCache is a private test double for the synchronous RenderedImageCaching protocol. Its only mutable observation, removeAllCalls, is read and incremented under one NSLock; all remaining cache methods are stateless test behavior.",
+      "requiredTokens": [
+        "PressureFallbackRenderedCache: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var removeAllCalls = 0",
+        "removeAllCallCount"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/FoveaSystemPipelineTests.swift"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/ImageDecoderTests.swift"
+      ],
+      "expectedCount": 1,
+      "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/ImageDecoderTests.swift",
       "reason": "The private fake prepared decoder must conform to the Sendable production protocol while exposing deterministic counters to the test. All counter mutation and snapshots are serialized by one NSLock; no real decoder or ImageIO object crosses the boundary.",
       "requiredTokens": [
         "ContractTestPreparedDecoder",
         "private let lock = NSLock()",
         "func snapshot() -> Snapshot"
-      ],
-      "evidence": [
-        "Tests/FoveaTests/ImageDecoderTests.swift"
       ]
     },
     {
-      "path": "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
+      "evidence": [
+        "Tests/FoveaTests/MultipartJPEGLivePlaybackTests.swift"
+      ],
+      "expectedCount": 1,
       "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/MultipartJPEGLivePlaybackTests.swift",
+      "reason": "The completion cancellation hook is synchronous and cannot await an actor. LiveSynchronousCounter contains one integer and every read or increment is serialized by one private NSLock; it exists only to prove idempotent terminal ownership in a single test file.",
+      "requiredTokens": [
+        "LiveSynchronousCounter: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "func increment()",
+        "var value: Int"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
+      ],
       "expectedCount": 2,
+      "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/ProgressiveImageLoadingTests.swift",
       "reason": "The prepared-progressive codec and its nested session are deterministic test doubles for one-time preparation adoption and fallback. Both use private NSLock-protected token, byte-count and terminal state; they do not escape the test process or wrap production ImageIO objects.",
       "requiredTokens": [
         "PreparedProgressiveCodec:",
         "@unchecked Sendable",
         "private let lock = NSLock()",
         "private final class Session: ProgressiveImagePreparingSession"
-      ],
-      "evidence": [
-        "Tests/FoveaTests/ProgressiveImageLoadingTests.swift"
       ]
     },
     {
-      "path": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
-      "kind": "dispatch-semaphore",
+      "evidence": [
+        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
+      ],
       "expectedCount": 1,
+      "kind": "dispatch-semaphore",
+      "path": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
       "reason": "A private test publication barrier uses one DispatchSemaphore to deterministically hold and release a background presentation callback while asserting main-thread behavior. It is bounded by the test lifecycle and is never used by production code.",
       "requiredTokens": [
         "DispatchSemaphore",
         "ProgressivePublicationBarrier"
-      ],
-      "evidence": [
-        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
       ]
     },
     {
-      "path": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
-      "kind": "unchecked-sendable",
+      "evidence": [
+        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
+      ],
       "expectedCount": 5,
+      "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
       "reason": "The progressive presentation host tests bridge display-link callbacks, URLProtocol callbacks and deterministic publication barriers across Foundation and UIKit concurrency domains. Every shared mutable trace, transfer and fixture state is confined to this test file and protected by its explicit lock, queue or semaphore protocol.",
       "requiredTokens": [
         "@unchecked Sendable",
@@ -113,38 +195,191 @@
         "ProgressiveHostTrace",
         "ProgressiveURLSessionLoader",
         "ProgressiveURLSessionTransfer"
-      ],
-      "evidence": [
-        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
       ]
     },
     {
-      "path": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
-      "kind": "unsafe-nonisolated",
+      "evidence": [
+        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
+      ],
       "expectedCount": 1,
+      "kind": "unsafe-nonisolated",
+      "path": "Tests/FoveaTests/ProgressivePresentationHostTests.swift",
       "reason": "The test-only URLProtocol fixture exposes immutable static fixture state to Foundation callback entry points that cannot be actor isolated. Mutation is not performed through the unsafe declaration, and all per-request state remains instance-owned and synchronized.",
       "requiredTokens": [
         "nonisolated(unsafe)",
         "ProgressiveFixtureURLProtocol"
-      ],
-      "evidence": [
-        "Tests/FoveaTests/ProgressivePresentationHostTests.swift"
       ]
     },
     {
-      "path": "Tests/FoveaTests/URLSessionTransportTests.swift",
+      "path": "Tests/FoveaTests/ProgressiveResourceEnvelopeTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 2,
+      "reason": "The progressive resource-envelope test crosses task boundaries with two deterministic helpers. ProgressiveCompletionFlag protects its Boolean with NSLock, and ProgressiveFootprintObservationSequence keeps an immutable observation array while serializing its advancing index with NSLock.",
+      "requiredTokens": [
+        "ProgressiveCompletionFlag: @unchecked Sendable",
+        "ProgressiveFootprintObservationSequence: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "lock.withLock"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ProgressiveResourceEnvelopeTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/ResourceLimitTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 2,
+      "reason": "BlockingProgressiveCodec and its nested Session are test-only resource-admission probes. The codec serializes active/peak operation counters with NSLock; the session independently serializes byteCount/isClosed with NSLock before invoking the deterministic blocking operation.",
+      "requiredTokens": [
+        "BlockingProgressiveCodec:",
+        "ProgressiveImageDecoding, @unchecked Sendable",
+        "private var activeOperations = 0",
+        "private final class Session: ImageProgressiveDecodeSession, @unchecked Sendable",
+        "private var isClosed = false"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/ResourceLimitTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/SystemEncodedAnimationPlaybackTests.swift",
       "kind": "unchecked-sendable",
       "expectedCount": 1,
+      "reason": "SystemBlockingDecodeGate is a private deterministic barrier used to prove system animation cancellation and ordering. Its entered/released flags and every wait/signal transition are serialized by one NSCondition and it is confined to the test target.",
+      "requiredTokens": [
+        "SystemBlockingDecodeGate: @unchecked Sendable",
+        "private let condition = NSCondition()",
+        "condition.wait()",
+        "condition.broadcast()"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/SystemEncodedAnimationPlaybackTests.swift"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/SystemMultipartJPEGLivePlaybackTests.swift"
+      ],
+      "expectedCount": 1,
+      "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/SystemMultipartJPEGLivePlaybackTests.swift",
+      "reason": "Foundation invokes the custom URLProtocol fixture from unrelated callback domains. SystemMJPEGURLProtocolState serializes all response bytes, counters and captured requests under one private NSLock and is confined to the test target.",
+      "requiredTokens": [
+        "SystemMJPEGURLProtocolState: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "func recordStart(_ request: URLRequest)",
+        "func snapshot() -> Snapshot"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/T100ProgressivePreviewSessionOwnershipTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 3,
+      "reason": "The T100 progressive ownership fixture has three private Sendable test doubles. The codec publishes immutable descriptor/state references, its session serializes byteCount with NSLock, and T100ProgressiveSessionState serializes all lifecycle counters with its own NSLock. They exist only to observe ownership transitions.",
+      "requiredTokens": [
+        "T100TrackingProgressiveCodec:",
+        "private final class Session: ImageProgressiveDecodeSession, @unchecked Sendable",
+        "T100ProgressiveSessionState: @unchecked Sendable",
+        "private let lock = NSLock()"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/T100ProgressivePreviewSessionOwnershipTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/T100ResourceSpineAdoptionTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 3,
+      "reason": "The T100 resource-spine fixture uses three private Sendable test doubles. The codec holds immutable descriptor/state references, its session serializes byteCount under NSLock, and T100SpineProgressiveState serializes every lifecycle counter under NSLock. No helper escapes the test target.",
+      "requiredTokens": [
+        "T100SpineProgressiveCodec:",
+        "private final class Session: ImageProgressiveDecodeSession, @unchecked Sendable",
+        "T100SpineProgressiveState: @unchecked Sendable",
+        "private let lock = NSLock()"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/T100ResourceSpineAdoptionTests.swift"
+      ]
+    },
+    {
+      "path": "Tests/FoveaTests/T100URLSessionTransportProgressOnlyAdoptionTests.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 2,
+      "reason": "The T100 URLSession adoption test bridges Foundation callback threads with two private recorders. T100TransportProgressRecorder serializes event/completion observations with NSLock and T100CancellationProtocolState serializes the stop flag with a separate NSLock.",
+      "requiredTokens": [
+        "T100TransportProgressRecorder: @unchecked Sendable",
+        "T100CancellationProtocolState: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "func snapshot() -> Snapshot"
+      ],
+      "evidence": [
+        "Tests/FoveaTests/T100URLSessionTransportProgressOnlyAdoptionTests.swift"
+      ]
+    },
+    {
+      "evidence": [
+        "Tests/FoveaTests/URLSessionTransportTests.swift"
+      ],
+      "expectedCount": 1,
+      "kind": "unchecked-sendable",
+      "path": "Tests/FoveaTests/URLSessionTransportTests.swift",
       "reason": "TransportProgressRecorder is a test-only callback recorder invoked by URLSession transport callbacks from unrelated executors. Its event kinds, cumulative byte counts and completion identity are read and mutated only under one private NSLock.",
       "requiredTokens": [
         "TransportProgressRecorder: @unchecked Sendable",
         "private let lock = NSLock()",
         "func record(_ event: TransportProgressEvent)",
         "func snapshot() -> Snapshot"
+      ]
+    },
+    {
+      "path": "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabSupport.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "StrictDispatchSleepState is a lab-only bridge between Task cancellation and a strict DispatchSourceTimer callback. One NSLock serializes timer, continuation and completed state; completion extracts both resources before cancelling/resuming outside the critical section, enforcing one terminal resume.",
+      "requiredTokens": [
+        "StrictDispatchSleepState: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "private var continuation: CheckedContinuation<Void, any Error>?",
+        "guard !completed else",
+        "timer?.cancel()"
       ],
       "evidence": [
-        "Tests/FoveaTests/URLSessionTransportTests.swift"
+        "Tools/FoveaAnimationMacLab/FoveaAnimationMacLabSupport.swift"
+      ]
+    },
+    {
+      "path": "Tools/FoveaDerivedRasterLab/DerivedRasterPixelSupport.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 1,
+      "reason": "PackedRGB24DirectChunkSource is a lab-only random-access provider. Its compressed surface is immutable, decoded chunks are fully materialized before publication, and one NSLock protects the only shared mutable cache identity/reference pair used by concurrent Core Graphics byte requests.",
+      "requiredTokens": [
+        "PackedRGB24DirectChunkSource: @unchecked Sendable",
+        "let surface: PackedRGB24CompressedSurface",
+        "let lock = NSLock()",
+        "var cachedChunkIndex: Int?",
+        "var cachedChunk: DecodedChunk?"
+      ],
+      "evidence": [
+        "Tools/FoveaDerivedRasterLab/DerivedRasterPixelSupport.swift"
+      ]
+    },
+    {
+      "path": "Tools/FoveaNetworkLab/ProgressiveResourceMechanismLab.swift",
+      "kind": "unchecked-sendable",
+      "expectedCount": 3,
+      "reason": "The H013 network lab has three non-production callback bridges: the null rendered cache is stateless, ProgressiveResourceFixtureState serializes fixture bytes/chunk size with NSLock, and ProgressiveResourceProtocolDelivery serializes its weak owner and stopped flag with NSLock while Foundation invokes delivery across threads.",
+      "requiredTokens": [
+        "ProgressiveResourceNullRenderedCache: RenderedImageCaching",
+        "ProgressiveResourceFixtureState: @unchecked Sendable",
+        "ProgressiveResourceProtocolDelivery: @unchecked Sendable",
+        "private let lock = NSLock()",
+        "lock.withLock"
+      ],
+      "evidence": [
+        "Tools/FoveaNetworkLab/ProgressiveResourceMechanismLab.swift"
       ]
     }
-  ]
+  ],
+  "reviewedOn": "2026-08-31",
+  "schemaVersion": 1
 }

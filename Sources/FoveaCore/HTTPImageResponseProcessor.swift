@@ -10,6 +10,7 @@ final class HTTPImageResponseProcessor: Sendable {
     private let delivery: ImageDeliveryCoordinator
     private let namespaceRegistry: NamespaceRegistry
     private let diagnostics: any DiagnosticsSink
+    private let detailedDiagnosticsEnabled: Bool
 
     private enum Cached304Body {
         case data(Data)
@@ -25,7 +26,7 @@ final class HTTPImageResponseProcessor: Sendable {
     private struct Prepared200Execution {
         let data: Data
         let prepared: Prepared200Response
-        let progressivePreparation: ImageDecodePreparation?
+        let progressivePreparation: PipelineProgressivePreparedFinalization?
         let representation: RepresentationRecord?
         let allowsReusableState: Bool
     }
@@ -42,6 +43,7 @@ final class HTTPImageResponseProcessor: Sendable {
         self.delivery = delivery
         self.namespaceRegistry = namespaceRegistry
         self.diagnostics = diagnostics
+        self.detailedDiagnosticsEnabled = detailedDiagnosticsAreEnabled(diagnostics)
     }
 
     func process304(
@@ -138,13 +140,13 @@ final class HTTPImageResponseProcessor: Sendable {
                 preparation: progressivePreparation
             )
         }
-        async let decodedTask = delivery.decode(
+        async let decodedTask = decodePrepared200(
             data: data,
             contentID: prepared.contentID,
             request: request,
             generation: generation,
             keyDigest: prepared.variant.digestHex,
-            preparation: progressivePreparation
+            progressivePreparation: progressivePreparation
         )
         async let commitPreparationTask: OriginalCommitPreparation? = prepareOriginalCommitIfNeeded(
             data: data,
@@ -236,13 +238,43 @@ final class HTTPImageResponseProcessor: Sendable {
         allowReusableState: Bool,
         progressiveFinalization: PipelineProgressiveFinalization?
     ) async throws -> Prepared200Execution {
+        let validationStarted =
+            detailedDiagnosticsEnabled ? DispatchTime.now().uptimeNanoseconds : 0
         let prepared = try await prepare200Response(response, request: request)
+        if detailedDiagnosticsEnabled {
+            await diagnostics.record(
+                DiagnosticEvent(
+                    kind: .responseValidated,
+                    keyDigest: prepared.variant.digestHex,
+                    durationNanoseconds:
+                        DispatchTime.now().uptimeNanoseconds &- validationStarted
+                )
+            )
+        }
         let data = try response.transport.materializedBody()
+        if detailedDiagnosticsEnabled {
+            await diagnostics.record(
+                DiagnosticEvent(
+                    kind: .responseBodyMaterialized,
+                    keyDigest: prepared.variant.digestHex,
+                    byteCount: data.count
+                )
+            )
+        }
         let progressivePreparation = await validatedProgressivePreparation(
             progressiveFinalization,
             response: response,
             data: data
         )
+        if detailedDiagnosticsEnabled {
+            await diagnostics.record(
+                DiagnosticEvent(
+                    kind: .progressiveFinalizationReady,
+                    keyDigest: prepared.variant.digestHex,
+                    reason: progressivePreparation == nil ? "none" : "prepared"
+                )
+            )
+        }
         try Task.checkCancellation()
         let allowsReusableState = allowReusableState && prepared.disposition != .noStore
         let representation =
@@ -270,15 +302,15 @@ final class HTTPImageResponseProcessor: Sendable {
         request: ImageRequest,
         generation: NamespaceGeneration,
         onFullQualityPreview: (@Sendable (DecodedImage) async throws -> Void)?,
-        preparation: ImageDecodePreparation?
+        preparation: PipelineProgressivePreparedFinalization?
     ) async throws -> DecodedImage {
-        let decoded = try await delivery.decode(
+        let decoded = try await decodePrepared200(
             data: data,
             contentID: contentID,
             request: request,
             generation: generation,
             keyDigest: variantDigest,
-            preparation: preparation
+            progressivePreparation: preparation
         )
         let rendered = try await delivery.prepareRenderedImage(
             decoded: decoded,
@@ -301,12 +333,33 @@ final class HTTPImageResponseProcessor: Sendable {
         )
     }
 
+    private func decodePrepared200(
+        data: Data,
+        contentID: ContentID,
+        request: ImageRequest,
+        generation: NamespaceGeneration,
+        keyDigest: String,
+        progressivePreparation: PipelineProgressivePreparedFinalization?
+    ) async throws -> DecodedImage {
+        defer { progressivePreparation?.resourceLease?.release() }
+        return try await delivery.decode(
+            data: data,
+            contentID: contentID,
+            request: request,
+            generation: generation,
+            keyDigest: keyDigest,
+            preparation: progressivePreparation?.preparation
+        )
+    }
+
     private func validatedProgressivePreparation(
         _ finalization: PipelineProgressiveFinalization?,
         response: TimedTransportResponse,
         data: Data
-    ) async -> ImageDecodePreparation? {
-        guard let finalization, let candidate = await finalization.value() else { return nil }
+    ) async -> PipelineProgressivePreparedFinalization? {
+        guard let finalization,
+            let candidate = await finalization.valueAfterResponseCompletion()
+        else { return nil }
         let byteCount = response.transport.bodyByteCount
         guard candidate.transportDigestHex == response.transport.digestHex,
             candidate.transportByteCount == byteCount,
@@ -315,9 +368,10 @@ final class HTTPImageResponseProcessor: Sendable {
             candidate.preparation.probe.format == .jpeg
         else {
             await delivery.discardProgressivePreparation(candidate.preparation)
+            candidate.resourceLease?.release()
             return nil
         }
-        return candidate.preparation
+        return candidate
     }
 
     func retainTransportVerifiedOriginalOnly(
@@ -350,6 +404,130 @@ final class HTTPImageResponseProcessor: Sendable {
             request: request,
             generation: generation
         )
+    }
+
+    func persistValidatedOriginalOnly(
+        _ response: TimedTransportResponse,
+        request: ImageRequest,
+        generation: NamespaceGeneration
+    ) async throws {
+        let prepared = try await prepare200Response(response, request: request)
+        guard prepared.disposition != .noStore else {
+            throw ImagePrefetchError.responseNotReusable
+        }
+        let data = try response.transport.materializedBody()
+        try Task.checkCancellation()
+        try await requireActive(generation, for: request.namespace)
+        try await delivery.validateEncodedData(
+            data,
+            request: request,
+            keyDigest: prepared.variant.digestHex
+        )
+        try Task.checkCancellation()
+        try await requireActive(generation, for: request.namespace)
+        let representation = reusableRecord(
+            response: response,
+            request: request,
+            generation: generation,
+            prepared: prepared
+        )
+        let commit = try await prepareOriginalCommitIfNeeded(
+            data: data,
+            contentID: prepared.contentID,
+            representation: representation,
+            namespace: request.namespace,
+            generation: generation,
+            keyDigest: prepared.variant.digestHex
+        )
+        do {
+            try Task.checkCancellation()
+            try await requireActive(generation, for: request.namespace)
+            try await publishOriginalIfNeeded(
+                commit,
+                contentID: prepared.contentID,
+                representation: representation,
+                namespace: request.namespace,
+                generation: generation,
+                keyDigest: prepared.variant.digestHex
+            )
+        } catch {
+            if let commit {
+                await cache.discardOriginalCommit(commit)
+            }
+            throw error
+        }
+    }
+
+    /// bodyless 304 后只刷新 validated-original record，不进入像素域；仅当已保留 original 无法再读取时返回 false，
+    /// 让调用方执行一次有界的无条件 validated-original 恢复。
+    func refreshValidatedOriginalOnly304(
+        _ response: TimedTransportResponse,
+        existing: RepresentationRecord,
+        request: ImageRequest,
+        generation: NamespaceGeneration
+    ) async throws -> Bool {
+        guard response.head.statusCode == 304 else {
+            throw PipelineFailure.unsupportedStatus(response.head.statusCode)
+        }
+        let cachedData: Data
+        do {
+            cachedData = try await cache.read(existing, namespace: request.namespace)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let failure as PipelineFailure where failure.disposition == .cancelled {
+            throw failure
+        } catch {
+            await diagnostics.record(
+                DiagnosticEvent(
+                    kind: .cacheReadFailed,
+                    keyDigest: existing.variantKeyDigest,
+                    reason: "validated-prefetch-304-body"
+                )
+            )
+            await cache.removeRecord(
+                existing.variantKeyDigest,
+                namespace: request.namespace,
+                generation: generation
+            )
+            return false
+        }
+        await diagnostics.record(
+            DiagnosticEvent(
+                kind: .originalEncodedHit,
+                keyDigest: existing.variantKeyDigest,
+                byteCount: cachedData.count,
+                reason: "validated-prefetch-304"
+            )
+        )
+        try Task.checkCancellation()
+        try await requireActive(generation, for: request.namespace)
+        let metadata = revalidationMetadata(
+            response: response,
+            existing: existing,
+            request: request
+        )
+        if metadata.disposition == .noStore {
+            await cache.discardReusableState(
+                record: existing,
+                namespace: request.namespace,
+                generation: generation
+            )
+            throw ImagePrefetchError.responseNotReusable
+        }
+        let refreshed = refreshedRecord(
+            response: response,
+            existing: existing,
+            request: request,
+            generation: generation,
+            metadata: metadata
+        )
+        try await refreshValidatedOriginalRecord(
+            replacing: existing,
+            with: refreshed,
+            namespace: request.namespace,
+            generation: generation
+        )
+        return true
     }
 
     func persistTransportVerifiedHandoff(
@@ -502,7 +680,7 @@ final class HTTPImageResponseProcessor: Sendable {
         await diagnostics.record(
             DiagnosticEvent(
                 kind: .responseAnomaly,
-                keyDigest: request.fetchBaseKey.digestHex,
+                keyDigest: request.fetchBaseDigest,
                 reason: "missing-content-type"
             )
         )
@@ -529,7 +707,7 @@ final class HTTPImageResponseProcessor: Sendable {
         let record = RepresentationRecord(
             securityNamespace: request.namespace.value,
             namespaceGeneration: generation.value,
-            baseKeyDigest: request.fetchBaseKey.digestHex,
+            baseKeyDigest: request.fetchBaseDigest,
             variantKeyDigest: prepared.variant.digestHex,
             vary: prepared.varySelection ?? .empty,
             statusCode: 200,
@@ -669,7 +847,7 @@ final class HTTPImageResponseProcessor: Sendable {
         return RepresentationRecord(
             securityNamespace: request.namespace.value,
             namespaceGeneration: generation.value,
-            baseKeyDigest: request.fetchBaseKey.digestHex,
+            baseKeyDigest: request.fetchBaseDigest,
             variantKeyDigest: refreshedVariant.digestHex,
             vary: metadata.vary,
             statusCode: existing.statusCode,
@@ -693,6 +871,31 @@ final class HTTPImageResponseProcessor: Sendable {
             payloadLength: existing.payloadLength,
             contentType: existing.contentType
         )
+    }
+
+    private func refreshValidatedOriginalRecord(
+        replacing oldRecord: RepresentationRecord,
+        with newRecord: RepresentationRecord,
+        namespace: SecurityNamespaceID,
+        generation: NamespaceGeneration
+    ) async throws {
+        do {
+            try await cache.refresh(
+                replacing: oldRecord,
+                with: newRecord,
+                namespace: namespace,
+                generation: generation
+            )
+        } catch {
+            await diagnostics.record(
+                DiagnosticEvent(
+                    kind: .cacheWriteFailed,
+                    keyDigest: newRecord.variantKeyDigest,
+                    reason: "validated-prefetch-record-refresh"
+                )
+            )
+            throw error
+        }
     }
 
     private func refreshRecord(

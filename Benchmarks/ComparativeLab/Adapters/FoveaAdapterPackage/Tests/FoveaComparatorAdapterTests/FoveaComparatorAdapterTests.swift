@@ -9,7 +9,7 @@ import XCTest
 @testable import FoveaComparatorAdapter
 
 final class FoveaComparatorAdapterTests: XCTestCase {
-    func testSameURLWithDifferentObservationIDsSharesOneTransport() async throws {
+    func testSameURLWithDifferentObservationIDsSharesOneTransport_COMP_PT_027() async throws {
         let cacheRoot = FileManager.default.temporaryDirectory
             .appendingPathComponent("fovea-comparator-source-identity-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: cacheRoot) }
@@ -34,24 +34,50 @@ final class FoveaComparatorAdapterTests: XCTestCase {
             url: url,
             target: try ComparatorPixelTarget(width: 2, height: 2),
             contentMode: .aspectFit,
-            priority: .visible
+            priority: .visible,
+            headers: ["X-Benchmark-Request-ID": "observation-1"]
         )
         let second = try ComparatorRequest(
             resourceID: "hero|shared-image|3x3",
             url: url,
             target: try ComparatorPixelTarget(width: 3, height: 3),
             contentMode: .aspectFit,
-            priority: .visible
+            priority: .visible,
+            headers: ["X-Benchmark-Request-ID": "observation-2"]
         )
 
         let firstLoad = try await adapter.makeLoad(first)
         let secondLoad = try await adapter.makeLoad(second)
-        async let firstOutput = firstLoad.result()
-        async let secondOutput = secondLoad.result()
-        let outputs = await [firstOutput, secondOutput]
+        let outputsBox = ComparatorOutputBox()
+        Task { await outputsBox.append(await firstLoad.result()) }
+        Task { await outputsBox.append(await secondLoad.result()) }
+        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+        while await outputsBox.count < 2, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        let outputs = await outputsBox.snapshot()
+        if outputs.count != 2 {
+            firstLoad.cancel()
+            secondLoad.cancel()
+            await adapter.cancelAll()
+            let details = outputs.map {
+                "\($0.measurement.outcome.rawValue):"
+                    + "\($0.measurement.pixelWidth ?? -1)x\($0.measurement.pixelHeight ?? -1):"
+                    + "\($0.measurement.failureCategory ?? "none")"
+            }.joined(separator: ",")
+            XCTFail(
+                "shared loads did not both complete; outputs=\(outputs.count) "
+                    + "transportStarts=\(CountingImageURLProtocol.startCount) "
+                    + "details=\(details)"
+            )
+            return
+        }
 
         XCTAssertEqual(outputs.map(\.measurement.outcome), [.completed, .completed])
         XCTAssertEqual(CountingImageURLProtocol.startCount, 1)
+        let requestIDs = CountingImageURLProtocol.capturedRequestIDs
+        XCTAssertEqual(requestIDs.count, 1)
+        XCTAssertTrue(Set(requestIDs).isSubset(of: ["observation-1", "observation-2"]))
         await adapter.cancelAll()
     }
 
@@ -182,6 +208,7 @@ private final class NeverCompletingURLProtocol: URLProtocol, @unchecked Sendable
 private final class CountingImageURLProtocol: URLProtocol, @unchecked Sendable {
     private static let lock = NSLock()
     nonisolated(unsafe) private static var count = 0
+    nonisolated(unsafe) private static var requestIDs: [String] = []
     private static let imageData: Data = {
         let data = NSMutableData()
         let colorSpace = CGColorSpaceCreateDeviceRGB()
@@ -215,9 +242,16 @@ private final class CountingImageURLProtocol: URLProtocol, @unchecked Sendable {
         return count
     }
 
+    static var capturedRequestIDs: [String] {
+        lock.lock()
+        defer { lock.unlock() }
+        return requestIDs
+    }
+
     static func reset() {
         lock.lock()
         count = 0
+        requestIDs.removeAll(keepingCapacity: true)
         lock.unlock()
     }
 
@@ -230,6 +264,9 @@ private final class CountingImageURLProtocol: URLProtocol, @unchecked Sendable {
     override func startLoading() {
         Self.lock.lock()
         Self.count += 1
+        if let requestID = request.value(forHTTPHeaderField: "X-Benchmark-Request-ID") {
+            Self.requestIDs.append(requestID)
+        }
         Self.lock.unlock()
         guard let url = request.url else { return }
         let response = HTTPURLResponse(
@@ -251,4 +288,16 @@ private final class CountingImageURLProtocol: URLProtocol, @unchecked Sendable {
     }
 
     override func stopLoading() {}
+}
+
+private actor ComparatorOutputBox {
+    private var values: [ComparatorLoadOutput] = []
+
+    var count: Int { values.count }
+
+    func append(_ value: ComparatorLoadOutput) {
+        values.append(value)
+    }
+
+    func snapshot() -> [ComparatorLoadOutput] { values }
 }

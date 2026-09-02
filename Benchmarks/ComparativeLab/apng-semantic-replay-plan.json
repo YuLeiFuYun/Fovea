@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "planID": "FOVEA-W5-APNG-SEMANTIC-REPLAY-V1",
+  "status": "preregistered-local-analytical-source-derived-no-product-claim",
+  "objective": "Determine whether YYImage-derived APNG semantic replay reset points can reduce or eliminate retained full-canvas checkpoints without increasing retained or modeled peak bytes, while preserving fail-closed controls where source/disposal semantics do not establish an independent replay start.",
+  "sourceOracle": {
+    "name": "YYImage",
+    "version": "1.0.4",
+    "root": ".artifacts/research/animation-libs/YYImage",
+    "exactCommit": "42ba209608cb332887a33ebcae1bde50c52b151d",
+    "sourceFile": "YYImage/YYImageCoder.m",
+    "sourceFileSHA256": "acdc7da4aa8cbc5c5902ed0220c9ce1abb1aa476100dd941a89d52b0b4798456",
+    "algorithm": "_updateSourceAPNG blendFromIndex/lastBlendIndex"
+  },
+  "compositionEvidenceRoot": ".artifacts/performance/w5-apng-composition-oracle-v5",
+  "realFixtureIDs": [
+    "APNG-OVER-NONE",
+    "APNG-OVER-BACKGROUND",
+    "APNG-OVER-PREVIOUS",
+    "APNG-SUBRECT-NONE",
+    "APNG-SUBRECT-BACKGROUND",
+    "APNG-SUBRECT-PREVIOUS-SOURCE"
+  ],
+  "syntheticScenarios": [
+    {
+      "id": "FULL-BACKGROUND-1024-60",
+      "patternFixture": "APNG-OVER-BACKGROUND",
+      "frameCount": 60,
+      "canvasWidth": 1024,
+      "canvasHeight": 1024,
+      "encodedSourceBytes": 8388608
+    },
+    {
+      "id": "FULL-NONE-1024-60-CONTROL",
+      "patternFixture": "APNG-OVER-NONE",
+      "frameCount": 60,
+      "canvasWidth": 1024,
+      "canvasHeight": 1024,
+      "encodedSourceBytes": 8388608
+    },
+    {
+      "id": "SUBRECT-BACKGROUND-1024-60-CONTROL",
+      "patternFixture": "APNG-SUBRECT-BACKGROUND",
+      "frameCount": 60,
+      "canvasWidth": 1024,
+      "canvasHeight": 1024,
+      "encodedSourceBytes": 4194304
+    },
+    {
+      "id": "MIXED-SOURCE-PREVIOUS-1024-120",
+      "patternFixture": "APNG-SUBRECT-PREVIOUS-SOURCE",
+      "frameCount": 120,
+      "canvasWidth": 1024,
+      "canvasHeight": 1024,
+      "encodedSourceBytes": 8388608
+    },
+    {
+      "id": "FULL-BACKGROUND-2048-120",
+      "patternFixture": "APNG-OVER-BACKGROUND",
+      "frameCount": 120,
+      "canvasWidth": 2048,
+      "canvasHeight": 2048,
+      "encodedSourceBytes": 33554432
+    }
+  ],
+  "retainedBudgetMiB": [32, 64, 128],
+  "maximumReplayFrames": 8,
+  "retentionStrategy": "encoded-source-retained-decode-on-replay",
+  "accessProfile": "uniform",
+  "modelBoundary": [
+    "Semantic replay starts are derived from the exact retained YYImage 1.0.4 _updateSourceAPNG blendFromIndex/lastBlendIndex rules and source-bound ImageCraft frame rect/blend/disposal metadata.",
+    "A full-canvas background-disposal frame may advance the next replay anchor only according to the YYImage source algorithm; subrect background disposal is a negative control and must not receive the same reset.",
+    "A full-canvas source-blend frame establishes an independent replay start at its own index unless disposal is previous; subrect source frames do not establish a full-canvas replay reset.",
+    "The study is analytical. It excludes allocator fragmentation, decode latency, CPU, energy, thermal behavior, physical-device pressure, framework-private state, and production integration.",
+    "The existing FOVEA-W5-APNG-CHECKPOINT-MODEL-V1 report remains unchanged. This plan evaluates an additive semantic-reset model and must not rewrite prior preregistered evidence."
+  ],
+  "claimBoundary": {
+    "formalClaimEligible": false,
+    "allowed": "scoped analytical Pareto statements when retained bytes and modeled peak bytes are equal or lower and replay metrics are strictly lower for the same source-derived scenario",
+    "forbidden": "runtime, device, energy, thermal, universal APNG, or global library superiority claims"
+  }
+}
