@@ -43,6 +43,10 @@ def test_count(output: str) -> int:
     return max(counts, default=0)
 
 
+def decode_strings_output(output: bytes) -> str:
+    return output.decode("utf-8", errors="replace")
+
+
 def latest_xctest_attempt(output: str) -> str:
     attempt_marker = "=== attempt "
     return output[output.rfind(attempt_marker) :] if attempt_marker in output else output
@@ -526,10 +530,12 @@ def verify_release_build(
     if not binary.is_file():
         raise RuntimeError("FoveaWorkbench Release executable is missing")
     strings = "\n".join(
-        subprocess.run(
-            ["strings", str(path)], text=True, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, check=True,
-        ).stdout
+        decode_strings_output(
+            subprocess.run(
+                ["strings", str(path)], stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, check=True,
+            ).stdout
+        )
         for path in [binary, *app.glob("*.dylib")]
     )
     forbidden_tokens = (

@@ -308,6 +308,9 @@ try:
     for fragment, message in source_requirements.items():
         if fragment not in combined_source:
             errors.append(message)
+    decoded_strings = xcode_support.decode_strings_output(b"\xf8--ui-testing")
+    if "--ui-testing" not in decoded_strings:
+        errors.append("Release strings decoding must preserve ASCII routing tokens after invalid UTF-8")
     if "resolve_relative(" in combined_source:
         errors.append("iOS verifier must not call an undefined resolve_relative helper")
     if '"Fovea-Package"' in documentation_source:
