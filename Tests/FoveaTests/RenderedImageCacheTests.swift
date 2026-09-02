@@ -77,7 +77,7 @@ final class RenderedImageCacheTests: XCTestCase {
         let cache = DefaultRenderedImageCache(costLimit: 100, probationCostLimit: 40)
         let image = try makeImage()
 
-        // mainBase=60 and shardCount=1. Sixteen 3-cost identities fit both byte and count bounds.
+        // mainBase=60、shardCount=1；16 个 cost=3 的 identity 同时满足字节与计数上限。
         for index in 0..<16 {
             let key = makeKey(index)
             cache.insert(image, for: key, cost: 3)
@@ -85,10 +85,10 @@ final class RenderedImageCacheTests: XCTestCase {
         }
         XCTAssertEqual(cache.count, 16)
 
-        // Mark 0...11 hot in both main SIEVE and the identity governor. A 76-cost first-hit
-        // large resident leaves only 24 bytes for main, so main must evict eight identities:
-        // cold 12...15 first, then 0...3 after consuming their second chance. Without exact
-        // eviction feedback those four hot-but-gone identities remain hot ghosts in the governor.
+        // 在 main SIEVE 与 identity governor 中同时把 0...11 标成 hot。一个 cost=76 的首次命中
+        // 大对象只给 main 留 24 bytes，因此 main 必须淘汰 8 个 identity：先淘汰 cold 12...15，
+        // 再在消耗 second chance 后淘汰 0...3。若没有精确 eviction feedback，这 4 个已离开的
+        // hot identity 会继续作为 ghost 滞留在 governor 中。
         for index in 0..<12 {
             XCTAssertNotNil(cache.image(for: makeKey(index)))
         }
@@ -96,9 +96,9 @@ final class RenderedImageCacheTests: XCTestCase {
         XCTAssertEqual(cache.currentCost, 100)
         XCTAssertEqual(cache.count, 9)
 
-        // The first small insert discards large probation and restores main to 60 bytes. Five
-        // promoted newcomers should therefore raise the real main count from eight to thirteen.
-        // A stale governor instead skips the hot ghosts and prematurely removes the first newcomer.
+        // 第一次小对象插入会丢弃 large probation，并把 main 恢复到 60 bytes。随后 5 个 promoted
+        // newcomer 应把真实 main count 从 8 提升到 13；若 governor 状态陈旧，则会跳过 hot ghost，
+        // 并过早移除第一个 newcomer。
         for index in 16..<21 {
             let key = makeKey(index)
             cache.insert(image, for: key, cost: 3)

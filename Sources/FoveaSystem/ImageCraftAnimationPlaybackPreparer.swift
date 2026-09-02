@@ -7,10 +7,10 @@ package enum ImageCraftAnimationPlaybackAdapterError: Error, Equatable, Sendable
     case frameDescriptorMismatch
 }
 
-/// FoveaSystem adapter for the pinned public ImageCraft animation decoder.
+/// FoveaSystem 对已固定公共 ImageCraft 动画解码器的适配层。
 ///
-/// Timing normalization remains explicit and caller-versioned; ImageCraft owns encoded animation
-/// parsing/decoding while Fovea owns authorization, request geometry, playback policy and memory admission.
+/// 时间归一化保持显式且由调用方版本化；ImageCraft 负责编码动画的解析/解码，
+/// Fovea 继续拥有授权、请求几何、播放策略和内存准入权威。
 package struct ImageCraftAnimationPlaybackPreparer: EncodedAnimationPlaybackPreparing {
     private let decoder: any ImageAnimationDecoding
     private let limits: ImageAnimationDecodeLimits
