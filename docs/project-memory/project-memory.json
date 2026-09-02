@@ -16,8 +16,8 @@
     },
     {
       "id": "GAP-ANIMATED",
-      "status": "local-public-owned-apng-uikit-and-macos14-appkit-target-timestamp-physical-mac-mechanism-green-byte-window-adapter-overlay-qualified-publication-pin-ios-device-and-performance-evidence-pending",
-      "summary": "Fovea has a decoder-neutral animation player and ImageCraft implementationVersion 2 has a public owned RGBA8 non-interlaced APNG route up to 1024 with aligned ImageIO fallback. Current source-bound captures prove 24/24 Python exact, 21/21 Apple exact where aligned, separate-default 3/3, all seven retained fixtures ownedAPNG, reverse access exact, cancellation fenced and explicit retained/peak accounting. IMG_ANIM_PT_051 prevents repeated random-access work inside frame windows; IMG_ANIM_PT_052 binds single-frame/window fallback pixels. ImageCraft passes 126 ImageIO plus 16 Core tests and warnings-as-errors Release. The current owned APNG hot path is source-bound at ImageCraft working tree f0a2c8b5273b27a76fe78fc41f55cab8a5512d17: on the retained PIA-6 physical-Mac directional endpoint, 200 iterations measure prepare at 1.0033x the direct ImageIO lower bound, selected-frame at 0.8504x direct retained ImageIO and sequential-all-frames at 0.3911x, with exact pixels, reverse random access and cancellation fencing unchanged. This supersedes the earlier-tree Mac latency deficit but remains formalClaimEligible=false. The isolated Fovea adapter is requalified by the v7 manifest-final overlay against the current post-H009/H006 plus compact-Akashic integrated source set. Akashic Git-free verified source identity is 5d31cc1800940332f4fc0928869747721885315006597148b6564b99feb07c45; ImageCraft working tree remains f0a2c8b5273b27a76fe78fc41f55cab8a5512d17. Exact Git working-tree identities for all three repositories are deliberately kept in the external v7 qualification artifact rather than copied into Fovea tracked continuity, avoiding a self-referential Fovea tree hash. W5_ADAPTER_PT_001-008 pass, strict format and warnings-as-errors qualification pass, full sources and selected animation implementation files are unchanged during qualification, production Package.swift/ImageCraft pin are unchanged and formalClaimEligible remains false; publication, production pinning and physical iOS deadline/memory/energy/thermal/reclamation gates remain open. Platform presenters now use deduplicated structural visibility rather than window attachment alone: hidden and alpha-zero views pause, AppKit ancestor hide/unhide is observed, and screen-intersection caching remains explicitly deferred to avoid sticky pause after ancestor scrolling. UIKit presentation now has an opt-in external-tick driver wired to CADisplayLink targetTimestamp: first-frame publication remains immediate, slow callbacks retain only the newest pending target, nonmonotonic timestamps are rejected, and structural invisibility pauses the display link. The production UIKit target builds for iOS 15. AppKit now uses NSView-bound CADisplayLink targetTimestamp external ticks on macOS 14+ while preserving the macOS 12-13 absolute-deadline fallback and macOS 12 deployment floor; detached modern views defer driver startup until first effective visibility so immediate first-frame semantics are preserved. W5_PT_142-143 bind timestamp conversion, external scheduling, deadline-loop suppression, visibility pause/resume and cancellation. AppKit target-buffer counters are package-scoped to FoveaAnimationMacLab, and package-only scheduler/refresh-observer seams now permit a physical-Mac internal control without widening ordinary public API. Physical-iOS timing/memory/energy/thermal evidence remains mandatory. Core eligibility notifications also stop the display link for application inactivity, explicit pause, critical pressure, cancellation and terminal playback; W5_PT_130-131 bind lifecycle suppression and the strictly monotonic constant-space newest-only buffer. A no-deadline first-frame decision is modeled as dormant rather than terminal: it stops display-link work but remains eligible to repopulate after critical pressure returns to normal. W5_PT_132 binds this distinction across external scheduling and the existing runtime/system recovery tests remain green. Frame-window residency is now actual-byte informed rather than frame-count-only after the first observed frame: W5_PT_133 learns the maximum DecodedImage.estimatedByteCost and caps later windows by the shared animation-memory capacity; W5_PT_134 rejects out-of-target or nonresident single-frame provider output before publication; W5_PT_135 proves a tight cache retains the current frame and shrinks later prefetch. The first uncached batch deliberately remains frame-count bounded because targetPixels x 4 is not a universal byte-layout contract. Warning pressure now fences pre-warning in-flight normal-size windows before they can repopulate shared frame memory; W5_PT_136 proves publication revocation followed by a warning-size retry. Fovea intentionally does not copy FLAnimatedImage/YYImage per-player destructive warning trim because frames are shared across independent view clocks; a future trim must union active retention sets at runtime. W5_PT_137 adds saturating newest-only target-buffer counters for accepted, consumed, superseded, nonmonotonic-rejected and lifecycle-cleared presentation targets, separating display-refresh coalescing from timeline dropped-frame accounting. A concrete ImageCraftAnimationPlaybackPreparer candidate now passes W5_ADAPTER_PT_001 in an isolated copied-source Swift package overlay against current ImageCraft tree 5c07f313cf57495b6ffc7f578be8acbdd3e64c13: the real authorized FoveaSystemPipeline fetches a retained separate-default APNG, maps request geometry/color and explicit timing policy into the public ImageCraft animation API, publishes a first frame whose normalized sRGB premultiplied RGBA digest matches direct ImageCraft, then cancels with zero registered drivers. The production ImageCraft pin remains 736d0fb75e9e128642ce418ad984ce5151b1f324 and the candidate adapter remains a noncompiled qualification fixture. The overlay also exposed a pin-upgrade compile blocker in the previously exhaustive ImageCraftError switch; Fovea now fails newly introduced dependency cases closed through unexpectedImageCraftFailure while preserving all old-pin explicit reason mappings. W5_ADAPTER_PT_002 extends the same isolated adapter evidence through normal playback: a deterministic stepping clock drives the retained separate-default APNG through visible frames 0→1→2, all three normalized frame digests match direct ImageCraft, the source declares one play, and cancellation again leaves zero registered drivers. W5_ADAPTER_PT_003 reuses the same adapter on a retained 64-byte two-frame GIF with zero source delays: playOnce visible order is 0→1, both normalized pixels match direct ImageCraft, and the caller-versioned 10 ms zero-duration replacement is observed as 10/20 ms stepping-clock deadlines before zero-driver cleanup. W5_ADAPTER_PT_004 exercises the concrete adapter failure path after a valid ImageCraft GIF prepare: an invalid zero-duration replacement is rejected as invalidZeroDurationReplacement before handle registration, and the runtime remains at zero drivers. UIKit presentation-target counters are now observable without widening the ordinary API: FoveaImageView exposes a BenchmarkDiagnostics SPI snapshot containing accepted, consumed, superseded, nonmonotonic-rejected and lifecycle-cleared target counts plus pending/last-target/display-link-paused/effective-visibility state, so future physical runs can distinguish display-refresh coalescing from timeline dropped frames. UIKit animation lifecycle observation now preserves the existing ordinary public API budget: isHidden/alpha/didMoveToSuperview/layoutSubviews overrides are SPI implementation details, while a focused iOS15 symbol-graph gate proves the default FoveaUIKit surface remains 12/12 and a non-SPI consumer still accesses the inherited UIView members. BenchmarkDiagnostics animation presentation symbols appear only when SPI symbols are explicitly requested. ComparativeLabCore now supplies a common source-frame presentation oracle and tamper-resistant raw trace artifact for cross-player timing evidence; no ranking is activated until production adapters and stable-device runs exist. W5 common-oracle coverage now includes exact-pin Kingfisher, SDWebImage, PINRemoteImage, FLAnimatedImage 1.0.17 and AnimatedImage 0.2.4 adapters plus the Fovea player-only synthetic path. FLAnimatedImage has historical warm-state 61/60 evidence through a public Objective-C displayLayer shim, but current fresh isolated Simulator launches repeatedly stall at count 0 or 1 with zero progression; public cache-prewarm and visibility re-trigger experiments failed and were reverted, so FL is explicitly not comparable in the current fresh protocol. AnimatedImage 0.2.4 is explicitly not comparable on variable delay because its max-integrity prepared state uses one effective delay, but it passes the separate 50 ms uniform targetTimestamp mechanism fixture. All simulator values remain provisional and non-ranking. Gifu now also passes primary variable-delay and uniform structural loops through its public GIFAnimatable composition surface; its Swift 6 manifest raises only the comparator target to iOS16 while Fovea remains iOS15. YYImage 1.0.4 exact-source analysis exposed safe APNG semantic replay anchors. The current unpublished ImageCraft candidate implements the narrower persistent rule: full-background control reaches zero retained checkpoints with maximum resolved replay 1, while full-source+previous remains checkpoint bounded; IMG_ANIM_PT_053-056 and a unique contiguous animation-test-ID gate bind the behavior. APNGKit, SDWebImage and PINRemoteImage encoded-native plus the Fovea player-only path all complete the common 60-frame APNG structural oracle at 61 observations/60 transitions. A physical-Mac fixed-six/no-retry Release mechanism capture passes after W5_PT_144 fixed the future-targetTimestamp lifecycle clock regression: hidden target/provider counts remain flat, resume advances both, and cancellation leaves zero registered drivers. W5_PT_145-148 add a package-only automatic-deadline control, source-frame commit hook, observer-only common display link and exact playback-start clock anchor. The final fixed-six-pair/no-retry Release A/B samples both schedulers on the same NSView.displayLink.timestamp coordinate: every pair has no-worse external start-anchored p95 timing error and no-worse skipped source frames; median anchored p95 is 14.102375 ms versus 75.461355 ms and total skips are 0 versus 82. All retained runs observe a 16.666625 ms median display-link interval although maximumFramesPerSecond reports 120, so max-FPS-derived missed/early counts are supplemental only. This is one-host committed-frame refresh evidence, not hardware scanout or energy/thermal evidence, and formalClaimEligible remains false. The current latest-source local-edited integrated root suite is 830/830; H004 rendered-cache, H005 detach/reattach, H009 body-credit and H046 permit-lifetime regressions are included. This is current-tree local integration evidence, not release evidence. The only physical iPhone visible to Xcode is offline, so no stable iOS ranking or global Pareto claim is permitted.",
+      "status": "production-imagecraft-alpha8-adapter-integrated-workload-capability-gap-formal-physical-release-evidence-pending",
+      "summary": "Fovea current develop exactly pins public ImageCraft 0.1.0-alpha.8 at c16a868f1a1c0ed6b1a916ad082f762969ac5a7e and compiles ImageCraftAnimationPlaybackPreparer into FoveaSystem. The production integration reuses Fovea authorization/identity/cancellation, maps request geometry/color and caller-versioned timing into ImageCraft GIF/APNG preparation, propagates frame-window and whole-track resource estimates, and composes them with host-global animation admission. Local adapter/system qualification is green, but W5 intentionally remains a workload capability gap until its complete held-out corpus, same-semantics comparator/claim family, stable physical-iOS timing-memory-energy-thermal evidence and protected release qualification are closed. Broad animated WebP/HEIF/AVIF/HDR coverage remains separately incomplete, and no global performance claim is permitted.",
       "workloads": [
         "W5"
       ]
@@ -496,14 +496,14 @@
     ],
     "actionsBudgetGovernance": {
       "checker": "scripts/check-actions-budget-governance.py",
-      "nextHostedAction": "none-until-explicit-budget-restoration",
+      "nextHostedAction": "final-candidate-local-qualification-then-identity-then-full",
       "policy": "docs/governance/github-actions-budget-policy.md",
       "remoteWorkflows": {
-        "Diagnostic Workbench Product Patterns": "disabled_manually-branch-deleted",
+        "Diagnostic Workbench Product Patterns": "disabled_manually",
         "Fovea Live Network Lab": "disabled_manually",
-        "Fovea Verification": "disabled_manually"
+        "Fovea Verification": "active"
       },
-      "status": "active-budget-exhausted-hosted-runs-prohibited"
+      "status": "verification-active-budget-balance-unobservable-explicit-approval-required"
     },
     "activeRoadmapFrontier": [
       "P0",
@@ -532,13 +532,13 @@
     "akashicDiskStatus": "independent-local-41-tests-3-full-volume-3-quota-11-exact-process-crash-3-round-78-random-sigkill-12-process-generation-contention-6-platform-3-resource-clean-copy-passed-nonrelease",
     "akashicFaultInjectionArtifactSHA256": "dd234c535d509e10bce902bb29bcf9bce6a38459135369988fcc385d01c78a8d",
     "akashicFaultInjectionStatus": "v5-passed-syscall10-permission1-switch11-random78-full3-quota3-dirty-local-combined-evidence",
-    "akashicFoveaIntegrationStatus": "public-alpha5-clean-copy-478-of-478-cachelab-v4-trusted-clean-source-passed",
+    "akashicFoveaIntegrationStatus": "public-alpha7-exact-pin-production-eviction-report-integrated-historical-cachelab-v4-alpha5-bound-current-performance-physical-requalification-pending",
     "akashicGenerationContentionArtifactSHA256": "f5f46b2392df4e584f0cc9c46b52e56087580a33cd36708fe3b64330cb562f49",
-    "akashicIndependentPackageStatus": "public-alpha5-84-file-release-readiness-v5-ci-green-tagged-physical-qualification-pending",
+    "akashicIndependentPackageStatus": "public-alpha7-ci-green-tagged-dynamic-unassigned-budget-eviction-report-physical-qualification-pending",
     "akashicLocalResourceEnvelopeStatus": "schema2-three-of-three-passed-payload-metadata-separated-current-alpha5-source",
     "akashicNeutralContractADR": "docs/adr/0014-domain-neutral-akashic-contract.md",
     "akashicNeutralContractStatus": "adr-0014-accepted",
-    "akashicPinnedCommit": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
+    "akashicPinnedCommit": "0376b960ec8abe54f2d4a9d7d66e97f395215eaf",
     "akashicPlatformMatrixArtifactSHA256": "d14677a678d6349390ef12d4c392bc2c003c2adb6b31688cc8bcb070ffa10d5a",
     "akashicRealAPFSQuotaArtifactSHA256": "19c215ac52b6cfd8d5c5c6ffce3f065e5128c73e7cf91b80234c83e7a1428d4d",
     "akashicRealAPFSQuotaStatus": "3-real-quota-cases-passed-all-kernel-enospc-current-alpha5-source",
@@ -554,7 +554,7 @@
     "bTierRetainedComparators": [
       "AlamofireImage 4.4.0"
     ],
-    "cacheLabStatus": "v4-local-formal-thirteen-of-thirteen-dominance-public-pin-trusted-clean-source-best-claim-eligible-hosted-fovea-ci-pending",
+    "cacheLabStatus": "v4-historical-alpha5-thirteen-of-thirteen-dominance-current-alpha7-rebind-required-no-current-performance-claim",
     "canonicalActionPlan": "docs/roadmaps/fovea-next-action-direction-2026-08-01.md",
     "codecConformanceKitStatus": "in-repository-package-internal-baseline-cross-repository-neutral-kit-pending",
     "codecContractStatus": "implemented-local-host-postcondition-hardened-imageio-reference-only-progressive-predecode-peak-open",
@@ -562,7 +562,7 @@
     "codecDefaultSelectionPermitted": false,
     "codecFormatExtensibilityStatus": "exact-pin-png-jpeg-gif-only-avif-jpegxl-require-imagecraftcore-contract-version-evolution",
     "codecOutputAuthorityStatus": "complete-frame-host-validates-limits-target-resident-bytes-and-source-profile-progressive-validates-limits-target-resident-hard-cap",
-    "componentCleanCopyStatus": "passed-akashic-alpha5-public-https-exact-revision-478-tests-no-sibling-required",
+    "componentCleanCopyStatus": "historical-alpha5-clean-copy-passed-current-alpha8-alpha7-final-release-qualification-pending",
     "componentPins": "docs/project-memory/component-pins.json",
     "criticalMutationHarnessStatus": "exact-component-checkouts-representative-4-killed-application-audit-101-of-101-full-protected-ci-pending",
     "crossPlatformMechanismAudit": {
@@ -628,7 +628,7 @@
       "status": "watchdog-verified-bounded-host-environment-failure-final-report-pending",
       "totalTimeoutSeconds": 900
     },
-    "externalComponentIntegrationStatus": "imagecraft-alpha4-akashic-alpha5-public-ci-green-exact-current-pins-clean-copy-passed",
+    "externalComponentIntegrationStatus": "imagecraft-alpha8-akashic-alpha7-public-ci-green-exact-current-pins-production-adapters-integrated-release-qualification-pending",
     "externalComponentValidation": {
       "akashicRevision": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
       "cleanCopyArtifactSHA256": "a6b4815a0a230d842b057211cb9db65ffb913f7dd3654dff3729dd691a689492",
@@ -636,7 +636,7 @@
       "cleanCopySourceDigest": "a8e2da06e42d5e6d35398e839f04e8bfcb3b0003fef0c4f02147be37cb0034f2",
       "hostTestsPerScenario": 478,
       "imageCraftRevision": "bc93b8df0337d7a57779b53106dd744ad97b095e",
-      "status": "imagecraft-alpha5-clean-composition-simulator-host-and-portable-source-copy-qualified-public-ci-pending"
+      "status": "historical-alpha5-clean-composition-artifact-retained-not-authority-for-current-alpha8-alpha7-pins"
     },
     "finalATierHeadlessAggregateStatus": "current-clean-source-functional-30-spec-complete-performance-host-quiescence-blocked",
     "finalSwiftUISurfaceAggregateStatus": "current-clean-source-30-run-structural-complete-performance-host-quiescence-blocked",
@@ -647,7 +647,7 @@
     "imageCraftAnimationCandidateRootTestCount": 101,
     "imageCraftAnimationCandidateSourceFileCount": 265,
     "imageCraftAnimationCandidateSourceIdentity": "7d0a1d3cc1b7e64eef11372582dbd67ff6d26bb0186d75dfca0c3528c454f37f",
-    "imageCraftAnimationCandidateStatus": "unpublished-local-release-readiness-passed-not-consumed-by-fovea",
+    "imageCraftAnimationCandidateStatus": "published-alpha8-production-imagecraft-animation-preparer-integrated-local-admission-qualified-physical-ios-release-evidence-pending",
     "imageCraftAspectFitNearestIntegerCandidate": "rejected-42-process-21-target-ab-decode-median-plus1.4-percent-materialization-plus2.1-percent-implementation4-retained",
     "imageCraftGovernanceArtifacts": [
       "docs/project-memory/component-pins.json",
@@ -655,11 +655,11 @@
       "https://github.com/YuLeiFuYun/ImageCraft/actions"
     ],
     "imageCraftGovernanceStatus": "public-mit-ci-green-alpha-tagged-exact-pin-required-check-device-pending",
-    "imageCraftIndependentPackageStatus": "public-current-source-ci-green-alpha-tagged-exact-fovea-pin-physical-device-pending",
+    "imageCraftIndependentPackageStatus": "public-alpha8-ci-green-tagged-exact-fovea-pin-animation-window-cost-contract-physical-device-pending",
     "imageCraftJPEGMarkerScanEvidence": "../ImageCraft/Evidence/Experiments/jpeg-marker-scan-ab-2026-07-31.json",
     "imageCraftJPEGMarkerScanEvidenceSHA256": "d00753208ed7b04954f0e7df9d030c2dc0704eac97b5cfc05f47374b34c65f88",
     "imageCraftJPEGMarkerScanStatus": "interleaved-ab-588-samples-6-paths-paired-median-improvement-8.9-to-16.9-percent",
-    "imageCraftPinnedCommit": "736d0fb75e9e128642ce418ad984ce5151b1f324",
+    "imageCraftPinnedCommit": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
     "imageIOCodecCapabilities": "PNG-JPEG-GIF-complete-primary-frame-SDR-CGImage-operation-boundary-cancellation",
     "independentCodecStatus": "external-development-not-integrated",
     "latestATierFunctionalDiagnostic": ".artifacts/comparative-functional-diagnostics/a-tier-headless-latest/calibration-report-a-tier-headless.json",
@@ -1196,7 +1196,7 @@
     "simulatorRuntimeValidation": "passed-live-device-process-path-23E254a",
     "simulatorSupportTestStatus": "passed-17-tests-resolved-only-six-app-builds-and-runtime-probes",
     "simulatorW2CurrentAttempt": "current-clean-source-functional-cold-warm-disk-warm-memory-passed-performance-host-quiescence-pending",
-    "sourceState": "dirty-working-tree-local-qualification-no-release-claim",
+    "sourceState": "clean-committed-develop-current-alpha8-alpha7-pins-final-release-candidate-preparation-no-release-claim",
     "swift64Adoption": {
       "adopted": [
         "tools-6.4",
@@ -1222,13 +1222,13 @@
       "componentReleases": {
         "Akashic": {
           "ci": "passed-xcode27-main",
-          "commit": "2715f23d50b5a17b7328be41608eaf1b1c99b0d6",
-          "tag": "0.1.0-alpha.5"
+          "commit": "0376b960ec8abe54f2d4a9d7d66e97f395215eaf",
+          "tag": "0.1.0-alpha.7"
         },
         "ImageCraft": {
           "ci": "passed-xcode27-main",
-          "commit": "bc93b8df0337d7a57779b53106dd744ad97b095e",
-          "tag": "0.1.0-alpha.5"
+          "commit": "c16a868f1a1c0ed6b1a916ad082f762969ac5a7e",
+          "tag": "0.1.0-alpha.8"
         }
       },
       "deferred": [
@@ -1239,7 +1239,7 @@
         "manual-specialization-and-forced-inline"
       ],
       "deploymentBaseline": "iOS-15-macOS-12-unchanged",
-      "hostedCI": "fovea-eleventh-root-dual-identity-green-full-verify-failed-actions-budget-exhausted-next-candidate-local-only",
+      "hostedCI": "fovea-verification-active-6cf-identity-green-full-workbench-ui-failed-final-candidate-requalification-pending-budget-balance-unobservable",
       "localTests": {
         "Akashic": 41,
         "CacheLab": 7,
@@ -1356,8 +1356,8 @@
     {
       "id": "OPEN-CACHE-V4-FULL-FORMAL-TRUSTED-REBIND",
       "priority": 1,
-      "status": "pending-published-akashic-exact-fovea-pin-clean-trusted-ci",
-      "summary": "The V4 local full-formal gate is complete. Publish the measured Akashic candidate, update Fovea to that exact revision, and repeat from clean protected trusted CI before any release certificate or production sharded-cache switch."
+      "status": "historical-alpha5-formal-complete-current-alpha7-new-campaign-and-protected-evidence-pending",
+      "summary": "CacheLab V4 remains valid historical evidence for the exact Akashic alpha.5 implementation it measured: the local twenty-block gate passed all 13 applicable comparisons. Fovea now pins Akashic alpha.7, whose dynamic unassigned-budget and eviction-report behavior is a different implementation. Do not rebind V4 results by revision substitution; run a new clean formal campaign on alpha.7 and protected Fovea evidence before any current-stack performance certificate."
     },
     {
       "id": "OPEN-W4-W15-PLANS",
@@ -1398,14 +1398,14 @@
     {
       "id": "OPEN-IMAGECRAFT-PHYSICAL-INTEGRATION",
       "priority": 1,
-      "status": "imagecraft-owned-apng-semantic-replay-local-green-fovea-adapter-qualified-production-pin-and-device-pending",
-      "summary": "Fovea still consumes ImageCraft 736d0fb75e9e128642ce418ad984ce5151b1f324. The unpublished candidate HEAD 04e153795b80164983a57b0b871f10d87ba79ea1 / working tree f0a2c8b5273b27a76fe78fc41f55cab8a5512d17 integrates owned RGBA8 non-interlaced <=1024 APNG plus persistent semantic replay anchors and the current source-bound hot-path optimization. Full-background reset tests eliminate checkpoints while preserving random/batch pixels; full-source+previous remains checkpoint bounded. ImageIO 126/126, Core 16/16 and warnings-as-errors Release pass. The current physical-Mac directional PIA-6 capture measures prepare at 1.0033x the direct lower bound, selected-frame at 0.8504x direct retained ImageIO and sequential-all-frames at 0.3911x while retaining exact pixels/reverse access/cancellation and the same resource policy. The isolated Fovea adapter has been requalified against this exact f0a2c8b5273b27a76fe78fc41f55cab8a5512d17 ImageCraft tree: W5_ADAPTER_PT_001-008 pass with warnings-as-errors and the production pin remains unchanged. Publication/pinning, product policy and physical-device gates remain mandatory."
+      "status": "imagecraft-alpha8-pinned-production-animation-adapter-integrated-physical-ios-and-release-evidence-pending",
+      "summary": "Fovea now pins public ImageCraft 0.1.0-alpha.8 at c16a868f1a1c0ed6b1a916ad082f762969ac5a7e and compiles a production ImageCraftAnimationPlaybackPreparer into FoveaSystem. The adapter maps authorized encoded bytes, request geometry/color and caller-versioned timing policy into ImageCraft, propagates bounded frame-window/whole-track cost estimates, and composes them with Fovea global admission. Local adapter/system qualification is green. Stable physical-iOS timing, memory, energy, thermal/reclamation evidence, comparative player A/B and protected Fovea release qualification remain mandatory."
     },
     {
       "id": "OPEN-AKASHIC-INDEPENDENT-PACKAGE",
       "priority": 1,
-      "status": "production-alpha5-pin-still-authoritative-current-local-candidate-verified-publication-and-device-pending",
-      "summary": "Fovea production still consumes published Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 as the only supported revision. The unpublished current Akashic candidate is separately fully verified at Git-free source identity 5d31cc1800940332f4fc0928869747721885315006597148b6564b99feb07c45 with 63 tests, 140 public symbols, global unassigned-memory capacity semantics and compact manifest v2; Fovea edited integration is 830/830. None of that moves the production pin. Publication/re-pin, physical power-loss and stable-device resource evidence remain open."
+      "status": "current-public-alpha7-pinned-host-integrated-physical-and-current-performance-evidence-pending",
+      "summary": "Akashic 0.1.0-alpha.7 at 0376b960ec8abe54f2d4a9d7d66e97f395215eaf is public, required-core CI green and is Fovea's exact production pin. Fovea consumes its dynamic global-unassigned memory budget and exact eviction reporting, including host rendered-cache residency synchronization. Historical CacheLab V4 formal performance remains bound to the older alpha.5 implementation and is not transferred to alpha.7. Physical power-loss, stable-device resource evidence and a current-implementation formal performance campaign remain open."
     },
     {
       "id": "OPEN-DECODE-RESOURCE-CONTRACT-AUDIT",
@@ -1428,14 +1428,14 @@
     {
       "id": "OPEN-SWIFT64-THREE-REPOSITORY-ADOPTION",
       "priority": 0,
-      "status": "current-components-green-fovea-local-candidate-actions-budget-blocked",
-      "summary": "Fovea, ImageCraft and Akashic use Swift 6.4 under Xcode 27. Component CI is green and the Fovea local candidate is active; the remaining hosted run is blocked by the GitHub Actions budget."
+      "status": "current-components-green-fovea-protected-full-workbench-ui-failure-final-candidate-pending",
+      "summary": "Fovea, ImageCraft and Akashic use Swift 6.4 under Xcode 27. ImageCraft alpha.8 and Akashic alpha.7 are public, main-CI green and pinned by Fovea. Fovea Verification is active; 6cf identity passed but full verification failed in a hosted Workbench UI shard. Final-candidate local qualification plus fresh identity/full evidence remain open; account budget balance is currently unobservable, not known exhausted."
     },
     {
       "id": "OPEN-FOVEA-PUBLICATION",
       "priority": 0,
-      "status": "blocked-actions-budget-exhausted-local-run-scoped-smart-green-release-gates-open",
-      "summary": "Fovea remains private and untagged, and hosted workflows remain disabled after the Actions budget was exhausted. The exclusive schema-3 smart run 20260806T060153.388539Z-23894 binds HEAD 9137539f6222 / tree d7abaff9304b, 26 green phases, 660/660 root tests, CacheLab 7/7, HTTP/loopback, metadata and both external conformance kits. Impact routing fails closed across iteration-to-smart-to-premerge transitions; known Tool/lab paths are explicit; run-level locking and digest-bound logs prevent shared-artifact evidence collisions. Release-profile, clean-copy, DocC, Workbench, stable Simulator/physical-device and protected hosted evidence remain open; no publication or release claim follows."
+      "status": "blocked-protected-full-workbench-ui-failure-final-candidate-requalification-required",
+      "summary": "Fovea public main exists at f4b320b7f995bc565f0ca5ef053a5cd5bfb3a3c7 and 0.1.0-alpha.1 is still absent. Candidate 6cf6175c3c47de64fa9d60341de7e5cd71cd29b7 passed exact local qualification and hosted identity run 33501353676, but hosted full run 33505961407 failed twice in Workbench ui-tests-core-shard-1. Exact local qualification plus two extra shard reproductions were green, so the failure remains hosted-only; d191790f adds terminal XCTest failure capture so the next hosted failure cannot be misclassified after a 240-second wrapper stall. Current develop includes that diagnostic fix plus ImageCraft alpha.8/Akashic alpha.7 production integration. The final candidate must first synchronize current-state docs, pass exact local qualification, then obtain fresh identity and full protected verification before main/tag publication. GitHub Actions verification is active; remaining account budget is not observable with the current token."
     },
     {
       "id": "OPEN-IOS15-TEST-TARGET-COMPATIBILITY",
@@ -1458,11 +1458,11 @@
     {
       "id": "OPEN-CURRENT-CANDIDATE-UNTRACED-PARALLEL-WORK",
       "priority": 0,
-      "status": "blocked-current-source-bound-owner-gap",
-      "summary": "T00 recomputed current authority on 2026-08-11 instead of reusing the 2026-08-09 checkpoint. Across 97 reviewable changed production paths (Package.swift, Package.resolved and Sources/**), six have current-byte source-bound owner evidence because they exactly match committed workflow transaction outputs; 91 paths still lack source-bound owner/change/requirement/evidence trace and zero paths have multiple exact current-byte owner witnesses. T00 separately restored the canonical Akashic pin that an edited-dependency qualification had removed from Package.resolved, but that repair does not make the whole current Package.resolved path T00-owned: after repair its remaining diff from HEAD is only originHash, derived from pre-existing untraced Package.swift changes. Candidate surface identity 3252ccce859d971d5b55616599dc37b1e62ab8fb602302a691960d76375267a4 exactly matches an isolated clean copy. Production exact-pin SwiftPM independently resolves Akashic 2715f23d50b5a17b7328be41608eaf1b1c99b0d6 plus ImageCraft 736d0fb75e9e128642ce418ad984ce5151b1f324, generates a byte-identical Package.resolved and passes 838/838 root tests. Evidence is .artifacts/authority/t00-candidate-authority.json plus its dependency graph and test log. Dependency identity drift is closed, but G0 traceability remains non-merge-ready until the 91 paths receive real source-bound ownership evidence from their owning changes; do not fabricate edges, reset unrelated work, or treat whole-tree test success as ownership proof."
+      "status": "historical-t00-snapshot-no-longer-current-clean-committed-develop-final-authority-requalification-pending",
+      "summary": "The T00 91-path ownership gap described an earlier dirty candidate snapshot and must not be projected onto later bytes. Current develop is a clean committed history with exact public component pins, but that does not retroactively convert the old T00 artifact into current authority evidence. The final release candidate must establish fresh source identity/qualification from its exact commit; historical T00 ownership findings remain evidence for that old snapshot only."
     }
   ],
-  "reviewedOn": "2026-08-11",
+  "reviewedOn": "2026-09-02",
   "schemaVersion": 1,
   "standingRequirements": [
     {
